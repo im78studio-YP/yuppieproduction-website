@@ -5,7 +5,7 @@ backend:
   repo: im78studio-YP/yuppieproduction-website   # owner/repo
   branch: main
   # OAuth proxy (Cloudflare Worker in /oauth-worker). Replace after you deploy it:
-  base_url: https://REPLACE-WITH-YOUR-WORKER.workers.dev
+  base_url: https://yuppie-decap-oauth.im78studio.workers.dev
   auth_endpoint: /auth
 
 # Where uploaded images are committed. NOTE: images bloat the git repo over time.
