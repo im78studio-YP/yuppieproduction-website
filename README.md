@@ -1,27 +1,50 @@
 # Yuppie Production — Website
 
 เว็บไซต์บริษัท Yuppie Production (ยัพพี โปรดักชั่น จำกัด)
-รับออกแบบและผลิตบูธนิทรรศการ คีออส และงานตกแต่งอีเวนต์
+ออกแบบและผลิตบูธนิทรรศการ · คีออส · งานตกแต่งอีเวนต์ — โดเมน **yuppieproduction.com**
 
-โดเมนเป้าหมาย: **yuppieproduction.com**
+Stack: **Vite + React + TypeScript**, ธีมมืด ฟอนต์ Kanit · CMS หลังบ้าน **Decap CMS** (Git-based)
+· Login ผ่าน **GitHub OAuth** (Cloudflare Worker) · Deploy บน **Cloudflare Pages**
 
-## สถานะ
+## รันในเครื่อง
 
-คอนเซ็ปต์ผ่านแล้ว — รอจัด hosting ก่อน deploy
-รายละเอียดการตัดสินใจทั้งหมดอยู่ใน [`docs/YP_Website.md`](docs/YP_Website.md)
+```bash
+npm install
+npm run dev        # เปิด http://localhost:5173
+npm run build      # สร้างไฟล์ production ในโฟลเดอร์ dist/
+```
 
 ## โครงสร้าง
 
-- `concept/YuppieSite.jsx` — คอนเซ็ปต์เดโม (React) ธีมมืด Kanit 5 sections
-- `docs/YP_Website.md` — บันทึกโปรเจกต์: ดีไซน์ / ระบบหลังบ้าน / ขั้นตอนต่อไป
+```
+├── index.html
+├── src/
+│   ├── App.tsx                 รวม 5 sections
+│   ├── index.css               สไตล์ทั้งหมด (ธีมมืด, Kanit)
+│   ├── components/             FadeIn, Magnet, AnimatedText, Placeholder
+│   ├── sections/               Hero, Marquee, About, Services, Projects
+│   └── data/projects.ts        โหลดผลงานจาก content/projects/*.json
+├── content/projects/           ← Decap แก้ไฟล์พวกนี้ (ผลงาน)
+├── public/admin/               หน้า /admin (Decap CMS) + config.yml
+├── public/images/uploads/      ที่เก็บรูปที่อัปผ่าน CMS
+└── oauth-worker/               Cloudflare Worker สำหรับ login GitHub (ดู README ข้างใน)
+```
 
-## แผนงาน
+## ระบบหลังบ้าน (แก้ผลงานเองที่ /admin)
 
-1. จัด hosting (แนะนำ Cloudflare Pages) + ชี้โดเมน
-2. แปลง concept เป็นโปรเจกต์ Vite + TypeScript
-3. ต่อ Decap CMS (Git-based) + OAuth Worker + schema ผลงาน
+1. Deploy OAuth Worker ก่อน — ดู `oauth-worker/README.md`
+2. เอา URL ของ Worker ไปใส่ใน `public/admin/config.yml` → `base_url`
+3. เข้า `yuppieproduction.com/admin` → Login with GitHub → เพิ่ม/แก้ผลงานได้เลย
+   (กด Publish → commit เข้า repo → Cloudflare Pages build ใหม่อัตโนมัติ)
 
-## Backend / CMS
+## Deploy บน Cloudflare Pages
 
-Decap CMS (Git-based, ฟรี) — auth ผ่าน GitHub backend + Cloudflare Worker OAuth proxy
-รูปบูธต้องย่อ/แปลง WebP ก่อน commit หรือ offload ไป Cloudinary เพื่อกัน repo บวม
+1. Cloudflare → Workers & Pages → Create → Pages → เชื่อม repo `im78studio-YP/yuppieproduction-website`
+2. Build command: `npm run build` · Output directory: `dist`
+3. หลัง deploy → Custom domains → เพิ่ม `yuppieproduction.com` (DNS ต้องย้ายมา Cloudflare ก่อน)
+
+## รูปภาพ (ข้อควรระวัง)
+
+รูปที่อัปผ่าน CMS จะถูก commit ลง repo → นานไป repo บวม/build ช้า
+รูปบูธไฟล์หนัก **ต้องย่อ + แปลง WebP ก่อนอัป** (ใช้ booth-reel) หรือย้ายไปใช้ Cloudinary
+(แก้ media_folder ใน config.yml) เมื่อรูปเริ่มเยอะ

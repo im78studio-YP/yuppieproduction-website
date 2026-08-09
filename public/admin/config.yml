@@ -1,0 +1,37 @@
+# Decap CMS configuration
+# Git-based CMS: edits are committed to this repo, then Cloudflare Pages rebuilds.
+backend:
+  name: github
+  repo: im78studio-YP/yuppieproduction-website   # owner/repo
+  branch: main
+  # OAuth proxy (Cloudflare Worker in /oauth-worker). Replace after you deploy it:
+  base_url: https://REPLACE-WITH-YOUR-WORKER.workers.dev
+  auth_endpoint: /auth
+
+# Where uploaded images are committed. NOTE: images bloat the git repo over time.
+# For many/heavy booth photos, switch this to a Cloudinary media library later.
+media_folder: "public/images/uploads"
+public_folder: "/images/uploads"
+
+locale: "en"
+
+collections:
+  - name: "projects"
+    label: "ผลงาน (Projects)"
+    label_singular: "ผลงาน"
+    folder: "content/projects"
+    create: true
+    slug: "{{fields.number}}-{{slug}}"
+    extension: "json"
+    format: "json"
+    summary: "{{fields.number}} — {{fields.name}}"
+    sortable_fields: ["number"]
+    fields:
+      - { name: "number", label: "ลำดับ (เช่น 01)", widget: "string" }
+      - { name: "category", label: "ประเภท", widget: "select", options: ["ลูกค้า", "งานส่วนตัว"], default: "ลูกค้า" }
+      - { name: "name", label: "ชื่อโปรเจกต์", widget: "string" }
+      - name: "images"
+        label: "ภาพบูธ"
+        widget: "list"
+        required: false
+        field: { name: "image", label: "ภาพ", widget: "image" }
