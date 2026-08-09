@@ -1,5 +1,6 @@
 import FadeIn from "../components/FadeIn";
 import AnimatedText from "../components/AnimatedText";
+import { site } from "../data/site";
 import type { CSSProperties } from "react";
 
 type CornerKind = "cube" | "ring" | "frame" | "bars";
@@ -45,17 +46,17 @@ export default function About() {
       <FadeIn as="h2" y={40} delay={0} className="hero-heading"
         style={{ fontWeight: 900, textTransform: "uppercase", lineHeight: 0.9, letterSpacing: "-.02em",
           textAlign: "center", fontSize: "clamp(3rem,12vw,160px)", marginBottom: "clamp(40px,6vw,64px)" }}>
-        เกี่ยวกับเรา
+        {site.aboutHeading}
       </FadeIn>
 
       <AnimatedText
-        text="Yuppie Production ก่อตั้งจากพื้นฐานงานออกแบบ เราจึงรีวิวแบบ แก้แบบ และเขียน shop drawing เพื่อผลิตได้เองในทีม โดยไม่ต้องส่งผ่านดีไซเนอร์ภายนอก งานบูธจึงคุมได้ทั้งความสวยและความเป็นไปได้ในการผลิตตั้งแต่ต้นจนจบ"
+        text={site.aboutText}
         style={{ fontWeight: 500, textAlign: "center", lineHeight: 1.7, maxWidth: 620, color: "#D7E2EA",
           fontSize: "clamp(1rem,2vw,1.35rem)", marginBottom: "clamp(64px,8vw,96px)" }}
       />
 
       <FadeIn y={20} delay={0.2}>
-        <a href="#contact"><button className="btn-contact">คุยกับเรา</button></a>
+        <a href="#contact"><button className="btn-contact">{site.aboutButton}</button></a>
       </FadeIn>
     </section>
   );

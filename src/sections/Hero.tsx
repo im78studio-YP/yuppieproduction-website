@@ -1,15 +1,16 @@
 import FadeIn from "../components/FadeIn";
 import Magnet from "../components/Magnet";
 import Placeholder from "../components/Placeholder";
+import { site } from "../data/site";
 
 export default function Hero() {
   return (
     <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", position: "relative", overflowX: "clip" }}>
       <FadeIn as="nav" y={-20} delay={0} className="nav">
-        <a href="#about">เกี่ยวกับเรา</a>
-        <a href="#services">บริการ</a>
-        <a href="#projects">ผลงาน</a>
-        <a href="#contact">ติดต่อ</a>
+        <a href="#about">{site.menuAbout}</a>
+        <a href="#services">{site.menuServices}</a>
+        <a href="#projects">{site.menuProjects}</a>
+        <a href="#contact">{site.menuContact}</a>
       </FadeIn>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", position: "relative", padding: "0 24px" }}>
@@ -17,7 +18,7 @@ export default function Hero() {
           <FadeIn as="h1" y={40} delay={0.15} className="hero-heading"
             style={{ fontWeight: 900, textTransform: "uppercase", letterSpacing: "-.03em",
               lineHeight: 0.9, whiteSpace: "nowrap", width: "100%", fontSize: "16vw", marginBottom: "-1vw" }}>
-            YUPPIE
+            {site.heroHeading}
           </FadeIn>
         </div>
 
@@ -34,11 +35,11 @@ export default function Hero() {
           <FadeIn y={20} delay={0.35}>
             <p style={{ maxWidth: 260, fontWeight: 300, textTransform: "uppercase", letterSpacing: ".04em",
               lineHeight: 1.35, fontSize: "clamp(.75rem,1.4vw,1.5rem)", color: "#D7E2EA" }}>
-              รับออกแบบและผลิตบูธนิทรรศการ คีออส และงานตกแต่งอีเวนต์ โดยทีมที่เขียนแบบผลิตเองได้ทั้งหมด
+              {site.heroTagline}
             </p>
           </FadeIn>
           <FadeIn y={20} delay={0.5}>
-            <a href="#contact"><button className="btn-contact">ติดต่อเรา</button></a>
+            <a href="#contact"><button className="btn-contact">{site.heroButton}</button></a>
           </FadeIn>
         </div>
       </div>

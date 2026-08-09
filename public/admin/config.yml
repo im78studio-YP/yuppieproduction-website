@@ -4,8 +4,7 @@ backend:
   name: github
   repo: im78studio-YP/yuppieproduction-website   # owner/repo
   branch: main
-  # OAuth proxy (Cloudflare Worker in /oauth-worker). Replace after you deploy it:
-  base_url: https://REPLACE-WITH-YOUR-WORKER.workers.dev
+  base_url: https://yuppie-decap-oauth.im78studio.workers.dev
   auth_endpoint: /auth
 
 # Where uploaded images are committed. NOTE: images bloat the git repo over time.
@@ -16,6 +15,7 @@ public_folder: "/images/uploads"
 locale: "en"
 
 collections:
+  # ---------- ผลงาน ----------
   - name: "projects"
     label: "ผลงาน (Projects)"
     label_singular: "ผลงาน"
@@ -35,3 +35,45 @@ collections:
         widget: "list"
         required: false
         field: { name: "image", label: "ภาพ", widget: "image" }
+
+  # ---------- บริการ ----------
+  - name: "services"
+    label: "บริการ (Services)"
+    label_singular: "บริการ"
+    folder: "content/services"
+    create: true
+    slug: "{{fields.number}}"
+    extension: "json"
+    format: "json"
+    summary: "{{fields.number}} — {{fields.name}}"
+    sortable_fields: ["number"]
+    fields:
+      - { name: "number", label: "ลำดับ (เช่น 01)", widget: "string" }
+      - { name: "name", label: "ชื่อบริการ", widget: "string" }
+      - { name: "description", label: "คำอธิบาย", widget: "text" }
+
+  # ---------- ตั้งค่าเว็บ (ข้อความหลัก) ----------
+  - name: "settings"
+    label: "ตั้งค่าเว็บ (Site Settings)"
+    files:
+      - name: "site"
+        label: "ข้อความหลักของเว็บ"
+        file: "content/settings/site.json"
+        fields:
+          - { name: "menuAbout", label: "เมนู 1 — เกี่ยวกับเรา", widget: "string" }
+          - { name: "menuServices", label: "เมนู 2 — บริการ", widget: "string" }
+          - { name: "menuProjects", label: "เมนู 3 — ผลงาน", widget: "string" }
+          - { name: "menuContact", label: "เมนู 4 — ติดต่อ", widget: "string" }
+          - { name: "heroHeading", label: "หัวข้อใหญ่ (Hero)", widget: "string" }
+          - { name: "heroTagline", label: "ประโยคใต้หัวข้อ (Hero)", widget: "text" }
+          - { name: "heroButton", label: "ปุ่มติดต่อ (Hero)", widget: "string" }
+          - { name: "aboutHeading", label: "หัวข้อ — เกี่ยวกับเรา", widget: "string" }
+          - { name: "aboutText", label: "ข้อความ — เกี่ยวกับเรา", widget: "text" }
+          - { name: "aboutButton", label: "ปุ่ม — เกี่ยวกับเรา", widget: "string" }
+          - { name: "servicesHeading", label: "หัวข้อ — บริการ", widget: "string" }
+          - { name: "projectsHeading", label: "หัวข้อ — ผลงาน", widget: "string" }
+          - { name: "ctaLine1", label: "ปิดท้าย บรรทัด 1", widget: "string" }
+          - { name: "ctaLine2", label: "ปิดท้าย บรรทัด 2", widget: "string" }
+          - { name: "contactButton", label: "ปุ่มติดต่อ (ท้ายเว็บ)", widget: "string" }
+          - { name: "contactEmail", label: "อีเมลติดต่อ", widget: "string" }
+          - { name: "companyName", label: "ชื่อบริษัท (ท้ายเว็บ)", widget: "string" }

@@ -3,6 +3,7 @@ import FadeIn from "../components/FadeIn";
 import Placeholder from "../components/Placeholder";
 import { ArrowUpRight } from "lucide-react";
 import { projects, type Project } from "../data/projects";
+import { site } from "../data/site";
 
 function ProjectCard({ data, index, total }: { data: Project; index: number; total: number }) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -57,7 +58,7 @@ export default function Projects() {
       <FadeIn as="h2" y={40} className="hero-heading"
         style={{ fontWeight: 900, textTransform: "uppercase", lineHeight: 0.9, letterSpacing: "-.02em",
           textAlign: "center", fontSize: "clamp(3rem,12vw,160px)", marginBottom: "clamp(40px,6vw,64px)" }}>
-        ผลงาน
+        {site.projectsHeading}
       </FadeIn>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         {projects.map((p, i) => (
@@ -68,11 +69,11 @@ export default function Projects() {
         <FadeIn y={30}>
           <div className="hero-heading" style={{ fontWeight: 900, textTransform: "uppercase",
             fontSize: "clamp(2rem,8vw,90px)", lineHeight: 0.95, marginBottom: 28 }}>
-            สร้างบูธที่คนจำได้<br />ไปด้วยกัน
+            {site.ctaLine1}<br />{site.ctaLine2}
           </div>
-          <a href="mailto:hello@yuppieproduction.com"><button className="btn-contact">ติดต่อ Yuppie</button></a>
+          <a href={`mailto:${site.contactEmail}`}><button className="btn-contact">{site.contactButton}</button></a>
           <div style={{ marginTop: 40, color: "#5c636b", fontSize: 13, letterSpacing: ".05em" }}>
-            Yuppie Production Co., Ltd. — ยัพพี โปรดักชั่น จำกัด
+            {site.companyName}
           </div>
         </FadeIn>
       </footer>
