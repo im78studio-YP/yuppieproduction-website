@@ -1,11 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import FadeIn from "../components/FadeIn";
 import Placeholder from "../components/Placeholder";
+import Lightbox from "../components/Lightbox";
 import { ArrowUpRight } from "lucide-react";
 import { projects, type Project } from "../data/projects";
 import { site } from "../data/site";
 
-function ProjectCard({ data, index, total }: { data: Project; index: number; total: number }) {
+type OpenFn = (images: string[], index: number) => void;
+
+function ProjectCard({ data, index, total, onOpen }: { data: Project; index: number; total: number; onOpen: OpenFn }) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const stickyTop = 110;
@@ -26,6 +29,9 @@ function ProjectCard({ data, index, total }: { data: Project; index: number; tot
   }, [targetScale]);
 
   const imgs = data.images ?? [];
+  const hasImages = imgs.length > 0;
+  const open = (i: number) => onOpen(imgs, Math.min(i, imgs.length - 1));
+
   return (
     <div ref={wrapRef} style={{ height: "85vh", display: "flex", alignItems: "flex-start" }}>
       <div ref={cardRef} className="proj-card" style={{ position: "sticky", top: stickyTop + index * 28, width: "100%" }}>
@@ -37,14 +43,18 @@ function ProjectCard({ data, index, total }: { data: Project; index: number; tot
               {data.name}
             </div>
           </div>
-          <button className="btn-ghost">ดูผลงาน <ArrowUpRight size={16} /></button>
+          {hasImages && (
+            <button className="btn-ghost" onClick={() => open(0)}>
+              ดูผลงาน <ArrowUpRight size={16} />
+            </button>
+          )}
         </div>
         <div className="proj-grid">
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <Placeholder label="ภาพบูธ 1" src={imgs[0]} style={{ borderRadius: 40, height: "clamp(130px,16vw,230px)" }} />
-            <Placeholder label="ภาพบูธ 2" src={imgs[1]} style={{ borderRadius: 40, height: "clamp(160px,22vw,340px)" }} />
+            <Placeholder label="ภาพบูธ 1" src={imgs[0]} onClick={() => open(0)} style={{ borderRadius: 40, height: "clamp(130px,16vw,230px)" }} />
+            <Placeholder label="ภาพบูธ 2" src={imgs[1]} onClick={() => open(1)} style={{ borderRadius: 40, height: "clamp(160px,22vw,340px)" }} />
           </div>
-          <Placeholder label="ภาพบูธหลัก (แนวตั้ง)" src={imgs[2]} style={{ borderRadius: 40, height: "100%", minHeight: 300 }} />
+          <Placeholder label="ภาพบูธหลัก (แนวตั้ง)" src={imgs[2]} onClick={() => open(2)} style={{ borderRadius: 40, height: "100%", minHeight: 300 }} />
         </div>
       </div>
     </div>
@@ -52,6 +62,11 @@ function ProjectCard({ data, index, total }: { data: Project; index: number; tot
 }
 
 export default function Projects() {
+  const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
+  const openLightbox: OpenFn = (images, index) => {
+    if (images.length) setLightbox({ images, index: Math.max(0, index) });
+  };
+
   return (
     <section id="projects" style={{ background: "#0C0C0C", borderTopLeftRadius: 56, borderTopRightRadius: 56,
       marginTop: -48, position: "relative", zIndex: 10, padding: "clamp(60px,8vw,100px) 20px 40px" }}>
@@ -62,7 +77,7 @@ export default function Projects() {
       </FadeIn>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         {projects.map((p, i) => (
-          <ProjectCard key={p.number} data={p} index={i} total={projects.length} />
+          <ProjectCard key={p.number} data={p} index={i} total={projects.length} onOpen={openLightbox} />
         ))}
       </div>
       <footer id="contact" style={{ textAlign: "center", padding: "clamp(80px,12vw,160px) 0 40px" }}>
@@ -77,6 +92,15 @@ export default function Projects() {
           </div>
         </FadeIn>
       </footer>
+
+      {lightbox && (
+        <Lightbox
+          images={lightbox.images}
+          index={lightbox.index}
+          onClose={() => setLightbox(null)}
+          onIndex={(i) => setLightbox((s) => (s ? { ...s, index: i } : s))}
+        />
+      )}
     </section>
   );
 }
