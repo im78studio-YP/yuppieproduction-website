@@ -2,15 +2,26 @@ import FadeIn from "../components/FadeIn";
 import Magnet from "../components/Magnet";
 import Placeholder from "../components/Placeholder";
 import { site } from "../data/site";
+import { media } from "../data/media";
+
+function toTop(e: React.MouseEvent) {
+  e.preventDefault();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
 export default function Hero() {
   return (
     <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", position: "relative", overflowX: "clip" }}>
       <FadeIn as="nav" y={-20} delay={0} className="nav">
-        <a href="#about">{site.menuAbout}</a>
-        <a href="#services">{site.menuServices}</a>
-        <a href="#projects">{site.menuProjects}</a>
-        <a href="#contact">{site.menuContact}</a>
+        <a href="#top" className="nav-logo" onClick={toTop} aria-label="กลับหน้าแรก">
+          <img src="/logo-nav.png" alt="Yuppie Production" />
+        </a>
+        <div className="nav-links">
+          <a href="#about">{site.menuAbout}</a>
+          <a href="#services">{site.menuServices}</a>
+          <a href="#projects">{site.menuProjects}</a>
+          <a href="#contact">{site.menuContact}</a>
+        </div>
       </FadeIn>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", position: "relative", padding: "0 24px" }}>
@@ -23,11 +34,11 @@ export default function Hero() {
         <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", bottom: 0, zIndex: 10, width: "min(46vw, 520px)" }}>
           <FadeIn y={30} delay={0.6}>
             <Magnet padding={150} strength={3}>
-              {site.heroImage ? (
-                <img src={site.heroImage} alt="Yuppie Production booth render"
+              {media.heroImage ? (
+                <img src={media.heroImage} alt="Yuppie Production booth render"
                   style={{ width: "100%", height: "auto", display: "block", borderRadius: 24 }} />
               ) : (
-                <Placeholder label="ใส่ภาพเรนเดอร์บูธเด่นที่สุดตรงนี้ (PNG พื้นใส) — อัปได้ที่ /admin"
+                <Placeholder label="ใส่ภาพเรนเดอร์บูธเด่นที่สุดตรงนี้ — อัปได้ที่ /admin → ตั้งค่าเว็บ → รูปภาพ"
                   style={{ width: "100%", aspectRatio: "3 / 4", borderRadius: 24 }} />
               )}
             </Magnet>

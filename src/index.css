@@ -46,11 +46,20 @@ a{text-decoration:none}
 .ph img{width:100%;height:100%;object-fit:cover;display:block}
 
 /* navbar */
-.nav{display:flex;justify-content:space-between;padding:26px 24px 0;gap:16px}
-.nav a{color:#D7E2EA;font-weight:500;text-transform:uppercase;letter-spacing:.08em;
-  font-size:clamp(.78rem,1.2vw,1.4rem);transition:opacity .2s}
-.nav a:hover{opacity:.7}
-@media(max-width:640px){.nav{padding:18px 18px 0;gap:10px}}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:20px 24px 0;gap:16px}
+.nav-logo{display:flex;align-items:center;transition:opacity .2s}
+.nav-logo img{height:42px;width:auto;display:block}
+.nav-logo:hover{opacity:.85}
+.nav-links{display:flex;align-items:center;gap:clamp(14px,2.2vw,44px)}
+.nav-links a{color:#D7E2EA;font-weight:500;text-transform:uppercase;letter-spacing:.08em;
+  font-size:clamp(.72rem,1.1vw,1.3rem);transition:opacity .2s}
+.nav-links a:hover{opacity:.7}
+@media(max-width:640px){
+  .nav{padding:14px 16px 0;gap:8px}
+  .nav-logo img{height:30px}
+  .nav-links{gap:11px}
+  .nav-links a{font-size:.66rem;letter-spacing:.03em}
+}
 
 /* hero heading (Thai-safe: no clipping of upper/lower marks) */
 .hero-title{

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import Placeholder from "../components/Placeholder";
-import { site } from "../data/site";
+import { media } from "../data/media";
 
 export default function Marquee() {
   const wrapRef = useRef<HTMLElement | null>(null);
@@ -22,7 +22,7 @@ export default function Marquee() {
   }, []);
 
   const triple = <T,>(a: T[]) => [...a, ...a, ...a];
-  const imgs = site.marqueeImages ?? [];
+  const imgs = media.marqueeImages ?? [];
   const has = imgs.length > 0;
 
   let row1: JSX.Element[];

@@ -49,7 +49,7 @@ collections:
       - { name: "name", label: "ชื่อบริการ", widget: "string" }
       - { name: "description", label: "คำอธิบาย", widget: "text" }
 
-  # ---------- ตั้งค่าเว็บ ----------
+  # ---------- ตั้งค่าเว็บ (2 บรรทัด: ข้อความ / รูปภาพ) ----------
   - name: "settings"
     label: "ตั้งค่าเว็บ (Site Settings)"
     files:
@@ -64,12 +64,6 @@ collections:
           - { name: "heroHeading", label: "หัวข้อใหญ่ (Hero)", widget: "string" }
           - { name: "heroTagline", label: "ประโยคใต้หัวข้อ (Hero)", widget: "text" }
           - { name: "heroButton", label: "ปุ่มติดต่อ (Hero)", widget: "string" }
-          - { name: "heroImage", label: "ภาพ Hero (ตรงกลาง — PNG พื้นใสสวยสุด)", widget: "image", required: false }
-          - name: "marqueeImages"
-            label: "ภาพแถบเลื่อน Marquee (ใส่ได้หลายรูป)"
-            widget: "list"
-            required: false
-            field: { name: "image", label: "ภาพ", widget: "image" }
           - { name: "aboutHeading", label: "หัวข้อ — เกี่ยวกับเรา", widget: "string" }
           - { name: "aboutText", label: "ข้อความ — เกี่ยวกับเรา", widget: "text" }
           - { name: "aboutButton", label: "ปุ่ม — เกี่ยวกับเรา", widget: "string" }
@@ -80,3 +74,14 @@ collections:
           - { name: "contactButton", label: "ปุ่มติดต่อ (ท้ายเว็บ)", widget: "string" }
           - { name: "contactEmail", label: "อีเมลติดต่อ", widget: "string" }
           - { name: "companyName", label: "ชื่อบริษัท (ท้ายเว็บ)", widget: "string" }
+
+      - name: "media"
+        label: "รูปภาพ Hero + Marquee"
+        file: "content/settings/media.json"
+        fields:
+          - { name: "heroImage", label: "ภาพ Hero (ตรงกลาง — PNG พื้นใสสวยสุด)", widget: "image", required: false }
+          - name: "marqueeImages"
+            label: "ภาพแถบเลื่อน Marquee (ใส่ได้หลายรูป)"
+            widget: "list"
+            required: false
+            field: { name: "image", label: "ภาพ", widget: "image" }
