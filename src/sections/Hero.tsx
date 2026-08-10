@@ -1,4 +1,5 @@
 import FadeIn from "../components/FadeIn";
+import Marquee from "./Marquee";
 import { site } from "../data/site";
 
 function toTop(e: React.MouseEvent) {
@@ -21,7 +22,10 @@ export default function Hero() {
         </div>
       </FadeIn>
 
-      <div style={{ padding: "clamp(28px,7vw,90px) 24px 0" }}>
+      {/* Marquee เป็นพระเอก อยู่ใต้เมนู เหนือหัวข้อ */}
+      <Marquee />
+
+      <div style={{ padding: "clamp(20px,4vw,52px) 24px clamp(28px,5vw,64px)" }}>
         <FadeIn as="h1" y={40} delay={0.15} className="hero-heading hero-title">
           {site.heroHeading}
         </FadeIn>

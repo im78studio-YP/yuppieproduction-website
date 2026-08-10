@@ -1,23 +1,24 @@
-import { useState } from "react";
-import Lightbox from "../components/Lightbox";
 import { projects, type Project } from "../data/projects";
 
 export default function Marquee() {
-  const [lb, setLb] = useState<{ images: string[]; index: number } | null>(null);
   const withImg = projects.filter((p) => (p.images?.length ?? 0) > 0);
+
+  const goToProject = (p: Project) => {
+    const el = document.getElementById(`project-${p.number}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const Tile = ({ p }: { p: Project }) => (
     <button
       className="mq2-tile"
-      onClick={() => setLb({ images: p.images ?? [], index: 0 })}
-      aria-label={`ดูอัลบั้มผลงาน ${p.name}`}
+      onClick={() => goToProject(p)}
+      aria-label={`ไปที่ผลงาน ${p.name}`}
     >
       <img src={(p.images ?? [])[0]} alt={p.name} loading="lazy" />
       <span className="mq2-cap">{p.name}</span>
     </button>
   );
 
-  // เว็บยังไม่มีรูปผลงานเลย -> โชว์ placeholder ชั่วคราว
   if (withImg.length === 0) {
     const ph = Array.from({ length: 5 }, (_, i) => i);
     const row = (cls: string) => (
@@ -37,9 +38,8 @@ export default function Marquee() {
     );
   }
 
-  const rowA = [...withImg, ...withImg];              // 2 ชุด เพื่อวนต่อเนื่อง
-  const rowB = [...withImg].reverse();
-  const rowBx = [...rowB, ...rowB];
+  const rowA = [...withImg, ...withImg];
+  const rowBx = [...[...withImg].reverse(), ...[...withImg].reverse()];
 
   return (
     <section className="mq2-section">
@@ -49,15 +49,6 @@ export default function Marquee() {
       <div className="mq2-row mq2-right">
         {rowBx.map((p, i) => <Tile key={`b-${i}`} p={p} />)}
       </div>
-
-      {lb && (
-        <Lightbox
-          images={lb.images}
-          index={lb.index}
-          onClose={() => setLb(null)}
-          onIndex={(i) => setLb((s) => (s ? { ...s, index: i } : s))}
-        />
-      )}
     </section>
   );
 }
