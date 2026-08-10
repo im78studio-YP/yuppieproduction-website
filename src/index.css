@@ -159,11 +159,13 @@ a{text-decoration:none}
 .line-btn:hover .line-btn-label{max-width:140px;opacity:1;margin-left:8px}
 @media(max-width:640px){.line-btn:hover .line-btn-label{max-width:0;opacity:0;margin-left:0}}
 
-/* LINE contact (QR + ปุ่ม) */
-.line-contact{display:flex;flex-direction:column;align-items:center;gap:14px}
+/* LINE contact (QR + ปุ่ม) — QR บน ปุ่มล่าง กว้างเท่ากัน */
+.line-contact{display:flex;flex-direction:column;align-items:center;gap:12px;width:210px;max-width:78vw}
 .line-contact-center{align-items:center}
-.line-qr{display:flex;flex-direction:column;align-items:center;gap:6px}
-.line-qr img{width:120px;height:120px;object-fit:contain;background:#fff;border-radius:12px;padding:7px}
+.line-contact a{display:block;width:100%}
+.line-contact .btn-contact{width:100%;padding:13px 12px;letter-spacing:.05em}
+.line-qr{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
+.line-qr img{width:100%;aspect-ratio:1;height:auto;object-fit:contain;background:#fff;border-radius:12px;padding:8px}
 .line-qr span{font-size:.72rem;color:#9AA6B0;letter-spacing:.03em;white-space:nowrap}
 
 /* social follow (ท้ายเว็บ) */
