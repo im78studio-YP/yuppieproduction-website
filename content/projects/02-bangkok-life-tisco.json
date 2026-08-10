@@ -3,8 +3,6 @@
   "category": "Commart",
   "name": "Booth Corsair",
   "images": [
-    "/images/uploads/s__17875028_0.jpg",
-    "public/images/uploads/image_202602232301.jpeg",
-    "/images/uploads/s__17875026_0.jpg"
+    "public/images/uploads/image_202602232301.jpeg"
   ]
 }
