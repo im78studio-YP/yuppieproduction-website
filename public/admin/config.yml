@@ -75,13 +75,3 @@ collections:
           - { name: "contactEmail", label: "อีเมลติดต่อ", widget: "string" }
           - { name: "companyName", label: "ชื่อบริษัท (ท้ายเว็บ)", widget: "string" }
 
-      - name: "media"
-        label: "รูปภาพ Hero + Marquee"
-        file: "content/settings/media.json"
-        fields:
-          - { name: "heroImage", label: "ภาพ Hero (ตรงกลาง — PNG พื้นใสสวยสุด)", widget: "image", required: false }
-          - name: "marqueeImages"
-            label: "ภาพแถบเลื่อน Marquee (ใส่ได้หลายรูป)"
-            widget: "list"
-            required: false
-            field: { name: "image", label: "ภาพ", widget: "image" }

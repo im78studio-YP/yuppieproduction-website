@@ -1,50 +1,63 @@
-import { useEffect, useRef } from "react";
-import Placeholder from "../components/Placeholder";
-import { media } from "../data/media";
+import { useState } from "react";
+import Lightbox from "../components/Lightbox";
+import { projects, type Project } from "../data/projects";
 
 export default function Marquee() {
-  const wrapRef = useRef<HTMLElement | null>(null);
-  const r1 = useRef<HTMLDivElement | null>(null);
-  const r2 = useRef<HTMLDivElement | null>(null);
+  const [lb, setLb] = useState<{ images: string[]; index: number } | null>(null);
+  const withImg = projects.filter((p) => (p.images?.length ?? 0) > 0);
 
-  useEffect(() => {
-    const onScroll = () => {
-      const el = wrapRef.current;
-      if (!el) return;
-      const top = el.getBoundingClientRect().top;
-      const offset = (window.innerHeight - top) * 0.3;
-      if (r1.current) r1.current.style.transform = `translateX(${offset - 200}px)`;
-      if (r2.current) r2.current.style.transform = `translateX(${-(offset - 200)}px)`;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const Tile = ({ p }: { p: Project }) => (
+    <button
+      className="mq2-tile"
+      onClick={() => setLb({ images: p.images ?? [], index: 0 })}
+      aria-label={`ดูอัลบั้มผลงาน ${p.name}`}
+    >
+      <img src={(p.images ?? [])[0]} alt={p.name} loading="lazy" />
+      <span className="mq2-cap">{p.name}</span>
+    </button>
+  );
 
-  const triple = <T,>(a: T[]) => [...a, ...a, ...a];
-  const imgs = media.marqueeImages ?? [];
-  const has = imgs.length > 0;
-
-  let row1: JSX.Element[];
-  let row2: JSX.Element[];
-  if (has) {
-    const mid = Math.ceil(imgs.length / 2);
-    const a = imgs.slice(0, mid);
-    const bRaw = imgs.slice(mid);
-    const b = bRaw.length ? bRaw : a;
-    row1 = triple(a).map((s, i) => <Placeholder key={i} className="mq-tile" label="" src={s} />);
-    row2 = triple(b).map((s, i) => <Placeholder key={i} className="mq-tile" label="" src={s} />);
-  } else {
-    const p1 = Array.from({ length: 8 }, (_, i) => `เรนเดอร์ / ผลงานบูธ #${i + 1}`);
-    const p2 = Array.from({ length: 8 }, (_, i) => `ภาพหน้างานติดตั้ง #${i + 1}`);
-    row1 = triple(p1).map((l, i) => <Placeholder key={i} className="mq-tile" label={l} />);
-    row2 = triple(p2).map((l, i) => <Placeholder key={i} className="mq-tile" label={l} />);
+  // เว็บยังไม่มีรูปผลงานเลย -> โชว์ placeholder ชั่วคราว
+  if (withImg.length === 0) {
+    const ph = Array.from({ length: 5 }, (_, i) => i);
+    const row = (cls: string) => (
+      <div className={`mq2-row ${cls}`}>
+        {[...ph, ...ph].map((i) => (
+          <div key={`${cls}-${i}`} className="mq2-tile mq2-empty">
+            <span>เพิ่มรูปในเมนู “ผลงาน” แล้วภาพจะมาที่นี่อัตโนมัติ</span>
+          </div>
+        ))}
+      </div>
+    );
+    return (
+      <section className="mq2-section">
+        {row("mq2-left")}
+        {row("mq2-right")}
+      </section>
+    );
   }
 
+  const rowA = [...withImg, ...withImg];              // 2 ชุด เพื่อวนต่อเนื่อง
+  const rowB = [...withImg].reverse();
+  const rowBx = [...rowB, ...rowB];
+
   return (
-    <section ref={wrapRef} className="mq-section">
-      <div className="mq-row" ref={r1}>{row1}</div>
-      <div className="mq-row" ref={r2} style={{ marginTop: 12 }}>{row2}</div>
+    <section className="mq2-section">
+      <div className="mq2-row mq2-left">
+        {rowA.map((p, i) => <Tile key={`a-${i}`} p={p} />)}
+      </div>
+      <div className="mq2-row mq2-right">
+        {rowBx.map((p, i) => <Tile key={`b-${i}`} p={p} />)}
+      </div>
+
+      {lb && (
+        <Lightbox
+          images={lb.images}
+          index={lb.index}
+          onClose={() => setLb(null)}
+          onIndex={(i) => setLb((s) => (s ? { ...s, index: i } : s))}
+        />
+      )}
     </section>
   );
 }

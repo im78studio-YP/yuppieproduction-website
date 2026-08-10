@@ -1,8 +1,5 @@
 import FadeIn from "../components/FadeIn";
-import Magnet from "../components/Magnet";
-import Placeholder from "../components/Placeholder";
 import { site } from "../data/site";
-import { media } from "../data/media";
 
 function toTop(e: React.MouseEvent) {
   e.preventDefault();
@@ -11,7 +8,7 @@ function toTop(e: React.MouseEvent) {
 
 export default function Hero() {
   return (
-    <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", position: "relative", overflowX: "clip" }}>
+    <section style={{ position: "relative", overflowX: "clip" }}>
       <FadeIn as="nav" y={-20} delay={0} className="nav">
         <a href="#top" className="nav-logo" onClick={toTop} aria-label="กลับหน้าแรก">
           <img src="/logo-nav.png" alt="Yuppie Production" />
@@ -24,30 +21,14 @@ export default function Hero() {
         </div>
       </FadeIn>
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", position: "relative", padding: "0 24px" }}>
-        <div style={{ width: "100%" }}>
-          <FadeIn as="h1" y={40} delay={0.15} className="hero-heading hero-title">
-            {site.heroHeading}
-          </FadeIn>
-        </div>
+      <div style={{ padding: "clamp(28px,7vw,90px) 24px 0" }}>
+        <FadeIn as="h1" y={40} delay={0.15} className="hero-heading hero-title">
+          {site.heroHeading}
+        </FadeIn>
 
-        <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", bottom: 0, zIndex: 10, width: "min(46vw, 520px)" }}>
-          <FadeIn y={30} delay={0.6}>
-            <Magnet padding={150} strength={3}>
-              {media.heroImage ? (
-                <img src={media.heroImage} alt="Yuppie Production booth render"
-                  style={{ width: "100%", height: "auto", display: "block", borderRadius: 24 }} />
-              ) : (
-                <Placeholder label="ใส่ภาพเรนเดอร์บูธเด่นที่สุดตรงนี้ — อัปได้ที่ /admin → ตั้งค่าเว็บ → รูปภาพ"
-                  style={{ width: "100%", aspectRatio: "3 / 4", borderRadius: 24 }} />
-              )}
-            </Magnet>
-          </FadeIn>
-        </div>
-
-        <div className="hero-bottom">
+        <div className="hero-bottom" style={{ marginTop: "clamp(16px,3vw,34px)" }}>
           <FadeIn y={20} delay={0.35}>
-            <p style={{ maxWidth: 260, fontWeight: 300, textTransform: "uppercase", letterSpacing: ".04em",
+            <p style={{ maxWidth: 340, fontWeight: 300, textTransform: "uppercase", letterSpacing: ".04em",
               lineHeight: 1.35, fontSize: "clamp(.75rem,1.4vw,1.5rem)", color: "#D7E2EA" }}>
               {site.heroTagline}
             </p>
