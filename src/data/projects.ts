@@ -2,7 +2,7 @@
 // Decap CMS writes/edits these files; a new commit triggers a Cloudflare Pages rebuild.
 export type Project = {
   number: string;
-  category: string;
+  category?: string;
   name: string;
   images?: string[];
 };

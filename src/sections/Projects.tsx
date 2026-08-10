@@ -38,7 +38,7 @@ function ProjectCard({ data, index, total, onOpen }: { data: Project; index: num
         <div className="proj-top">
           <div className="svc-num" style={{ color: "#D7E2EA" }}>{data.number}</div>
           <div style={{ flex: 1, minWidth: 180 }}>
-            <div className="eyebrow">{data.category}</div>
+            {data.category && <div className="eyebrow">{data.category}</div>}
             <div style={{ fontWeight: 600, textTransform: "uppercase", fontSize: "clamp(1.1rem,2.4vw,2rem)", lineHeight: 1.1 }}>
               {data.name}
             </div>
@@ -83,7 +83,7 @@ export default function Projects() {
       <footer id="contact" style={{ textAlign: "center", padding: "clamp(80px,12vw,160px) 0 40px" }}>
         <FadeIn y={30}>
           <div className="hero-heading" style={{ fontWeight: 900, textTransform: "uppercase",
-            fontSize: "clamp(2rem,8vw,90px)", lineHeight: 0.95, marginBottom: 28 }}>
+            fontSize: "clamp(2rem,8vw,84px)", lineHeight: 1.28, paddingTop: ".08em", marginBottom: 28 }}>
             {site.ctaLine1}<br />{site.ctaLine2}
           </div>
           <a href={`mailto:${site.contactEmail}`}><button className="btn-contact">{site.contactButton}</button></a>
