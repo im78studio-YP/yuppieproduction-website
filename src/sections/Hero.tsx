@@ -1,6 +1,5 @@
 import FadeIn from "../components/FadeIn";
 import Marquee from "./Marquee";
-import LineContact from "../components/LineContact";
 import { site } from "../data/site";
 
 function toTop(e: React.MouseEvent) {
@@ -37,9 +36,6 @@ export default function Hero() {
               lineHeight: 1.35, fontSize: "clamp(.75rem,1.4vw,1.5rem)", color: "#D7E2EA" }}>
               {site.heroTagline}
             </p>
-          </FadeIn>
-          <FadeIn y={20} delay={0.5}>
-            <LineContact />
           </FadeIn>
         </div>
       </div>
