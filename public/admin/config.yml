@@ -74,4 +74,5 @@ collections:
           - { name: "contactButton", label: "ปุ่มติดต่อ (ท้ายเว็บ)", widget: "string" }
           - { name: "contactEmail", label: "อีเมลติดต่อ", widget: "string" }
           - { name: "companyName", label: "ชื่อบริษัท (ท้ายเว็บ)", widget: "string" }
+          - { name: "lineLink", label: "ลิงก์ LINE OA (เช่น https://lin.ee/xxxx — เว้นว่าง=ซ่อนปุ่ม)", widget: "string", required: false }
 

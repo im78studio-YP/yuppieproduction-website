@@ -18,6 +18,7 @@ export type Site = {
   contactButton: string;
   contactEmail: string;
   companyName: string;
+  lineLink?: string;
 };
 
 export const site: Site = siteJson as Site;
