@@ -1,5 +1,6 @@
 import FadeIn from "../components/FadeIn";
 import AnimatedText from "../components/AnimatedText";
+import LineContact from "../components/LineContact";
 import { site } from "../data/site";
 import type { CSSProperties } from "react";
 
@@ -57,7 +58,7 @@ export default function About() {
       />
 
       <FadeIn y={20} delay={0.2} style={{ position: "relative", zIndex: 1 }}>
-        <a href="#contact"><button className="btn-contact">{site.aboutButton}</button></a>
+        <LineContact center />
       </FadeIn>
     </section>
   );

@@ -5,6 +5,7 @@ import Lightbox from "../components/Lightbox";
 import { ArrowUpRight } from "lucide-react";
 import { projects, type Project } from "../data/projects";
 import { site } from "../data/site";
+import SocialFollow from "../components/SocialFollow";
 
 type OpenFn = (images: string[], index: number) => void;
 
@@ -86,7 +87,7 @@ export default function Projects() {
             fontSize: "clamp(2rem,8vw,84px)", lineHeight: 1.28, paddingTop: ".08em", marginBottom: 28 }}>
             {site.ctaLine1}<br />{site.ctaLine2}
           </div>
-          <a href={`mailto:${site.contactEmail}`}><button className="btn-contact">{site.contactButton}</button></a>
+          <SocialFollow />
           <div style={{ marginTop: 40, color: "#5c636b", fontSize: 13, letterSpacing: ".05em" }}>
             {site.companyName}
           </div>

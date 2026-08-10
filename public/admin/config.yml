@@ -75,4 +75,15 @@ collections:
           - { name: "contactEmail", label: "อีเมลติดต่อ", widget: "string" }
           - { name: "companyName", label: "ชื่อบริษัท (ท้ายเว็บ)", widget: "string" }
           - { name: "lineLink", label: "ลิงก์ LINE OA (เช่น https://lin.ee/xxxx — เว้นว่าง=ซ่อนปุ่ม)", widget: "string", required: false }
+          - { name: "lineQR", label: "QR code LINE (อัปรูป QR — เว้นว่าง=ไม่โชว์)", widget: "image", required: false }
+          - { name: "followHeading", label: "หัวข้อติดตามผลงาน (ท้ายเว็บ)", widget: "string", required: false, default: "ติดตามผลงานทีมยัพพี ได้ที่ :" }
+          - { name: "facebookUrl", label: "ลิงก์ Facebook Page (เว้นว่าง=ซ่อนไอคอน)", widget: "string", required: false }
+          - { name: "instagramUrl", label: "ลิงก์ Instagram", widget: "string", required: false }
+          - { name: "tiktokUrl", label: "ลิงก์ TikTok", widget: "string", required: false }
+          - { name: "linkedinUrl", label: "ลิงก์ LinkedIn", widget: "string", required: false }
+          - name: "phones"
+            label: "เบอร์โทร (ใส่ได้หลายเบอร์ เว้นว่างได้)"
+            widget: "list"
+            required: false
+            field: { name: "number", label: "เบอร์", widget: "string" }
 

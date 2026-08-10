@@ -19,6 +19,13 @@ export type Site = {
   contactEmail: string;
   companyName: string;
   lineLink?: string;
+  lineQR?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  linkedinUrl?: string;
+  followHeading?: string;
+  phones?: { number: string }[];
 };
 
 export const site: Site = siteJson as Site;
