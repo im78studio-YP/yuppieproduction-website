@@ -7,7 +7,7 @@ export default function Services() {
     <section id="services" className="svc" style={{ padding: "clamp(80px,10vw,128px) 20px", position: "relative", zIndex: 1 }}>
       <FadeIn as="h2" y={40}
         style={{ fontWeight: 900, textTransform: "uppercase", color: "#0C0C0C", textAlign: "center",
-          lineHeight: 0.9, fontSize: "clamp(3rem,12vw,160px)", marginBottom: "clamp(64px,8vw,112px)" }}>
+          lineHeight: 1.12, paddingTop: ".05em", fontSize: "clamp(2.6rem,11vw,150px)", marginBottom: "clamp(64px,8vw,112px)" }}>
         {site.servicesHeading}
       </FadeIn>
       <div style={{ maxWidth: 1024, margin: "0 auto" }}>

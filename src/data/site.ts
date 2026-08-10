@@ -18,6 +18,8 @@ export type Site = {
   contactButton: string;
   contactEmail: string;
   companyName: string;
+  heroImage?: string;
+  marqueeImages?: string[];
 };
 
-export const site: Site = siteJson;
+export const site: Site = siteJson as Site;

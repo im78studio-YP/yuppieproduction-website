@@ -10,8 +10,8 @@ export default function AnimatedText({ text, style }: { text: string; style?: CS
       if (!el) return;
       const r = el.getBoundingClientRect();
       const vh = window.innerHeight;
-      const start = vh * 0.8;
-      const end = vh * 0.2;
+      const start = vh * 0.9;
+      const end = vh * 0.35;
       const prog = (start - r.top) / (start - end + r.height);
       setP(Math.min(1, Math.max(0, prog)));
     };
@@ -25,7 +25,7 @@ export default function AnimatedText({ text, style }: { text: string; style?: CS
   return (
     <p ref={ref} style={style}>
       {chars.map((c, i) => {
-        const op = Math.min(1, Math.max(0.2, p * total - i));
+        const op = Math.min(1, Math.max(0.5, p * total - i));
         return (
           <span key={i} style={{ opacity: op, transition: "opacity .1s linear" }}>
             {c}

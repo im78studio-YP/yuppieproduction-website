@@ -71,7 +71,7 @@ export default function Projects() {
     <section id="projects" style={{ background: "#0C0C0C", borderTopLeftRadius: 56, borderTopRightRadius: 56,
       marginTop: -48, position: "relative", zIndex: 10, padding: "clamp(60px,8vw,100px) 20px 40px" }}>
       <FadeIn as="h2" y={40} className="hero-heading"
-        style={{ fontWeight: 900, textTransform: "uppercase", lineHeight: 0.9, letterSpacing: "-.02em",
+        style={{ fontWeight: 900, textTransform: "uppercase", lineHeight: 1.12, letterSpacing: 0, paddingTop: ".05em",
           textAlign: "center", fontSize: "clamp(3rem,12vw,160px)", marginBottom: "clamp(40px,6vw,64px)" }}>
         {site.projectsHeading}
       </FadeIn>

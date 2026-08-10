@@ -14,10 +14,8 @@ export default function Hero() {
       </FadeIn>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", position: "relative", padding: "0 24px" }}>
-        <div style={{ overflow: "hidden", width: "100%" }}>
-          <FadeIn as="h1" y={40} delay={0.15} className="hero-heading"
-            style={{ fontWeight: 900, textTransform: "uppercase", letterSpacing: "-.03em",
-              lineHeight: 0.9, whiteSpace: "nowrap", width: "100%", fontSize: "16vw", marginBottom: "-1vw" }}>
+        <div style={{ width: "100%" }}>
+          <FadeIn as="h1" y={40} delay={0.15} className="hero-heading hero-title">
             {site.heroHeading}
           </FadeIn>
         </div>
@@ -25,13 +23,18 @@ export default function Hero() {
         <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", bottom: 0, zIndex: 10, width: "min(46vw, 520px)" }}>
           <FadeIn y={30} delay={0.6}>
             <Magnet padding={150} strength={3}>
-              <Placeholder label="ใส่ภาพเรนเดอร์บูธเด่นที่สุดตรงนี้ (PNG พื้นใส)"
-                style={{ width: "100%", aspectRatio: "3 / 4", borderRadius: 24 }} />
+              {site.heroImage ? (
+                <img src={site.heroImage} alt="Yuppie Production booth render"
+                  style={{ width: "100%", height: "auto", display: "block", borderRadius: 24 }} />
+              ) : (
+                <Placeholder label="ใส่ภาพเรนเดอร์บูธเด่นที่สุดตรงนี้ (PNG พื้นใส) — อัปได้ที่ /admin"
+                  style={{ width: "100%", aspectRatio: "3 / 4", borderRadius: 24 }} />
+              )}
             </Magnet>
           </FadeIn>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", paddingBottom: 40, position: "relative", zIndex: 20 }}>
+        <div className="hero-bottom">
           <FadeIn y={20} delay={0.35}>
             <p style={{ maxWidth: 260, fontWeight: 300, textTransform: "uppercase", letterSpacing: ".04em",
               lineHeight: 1.35, fontSize: "clamp(.75rem,1.4vw,1.5rem)", color: "#D7E2EA" }}>

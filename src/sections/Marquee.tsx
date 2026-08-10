@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import Placeholder from "../components/Placeholder";
+import { site } from "../data/site";
 
 export default function Marquee() {
   const wrapRef = useRef<HTMLElement | null>(null);
@@ -20,18 +21,30 @@ export default function Marquee() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const row1 = Array.from({ length: 11 }, (_, i) => `เรนเดอร์ / ผลงานบูธ #${i + 1}`);
-  const row2 = Array.from({ length: 10 }, (_, i) => `ภาพหน้างานติดตั้ง #${i + 1}`);
-  const triple = (a: string[]) => [...a, ...a, ...a];
+  const triple = <T,>(a: T[]) => [...a, ...a, ...a];
+  const imgs = site.marqueeImages ?? [];
+  const has = imgs.length > 0;
+
+  let row1: JSX.Element[];
+  let row2: JSX.Element[];
+  if (has) {
+    const mid = Math.ceil(imgs.length / 2);
+    const a = imgs.slice(0, mid);
+    const bRaw = imgs.slice(mid);
+    const b = bRaw.length ? bRaw : a;
+    row1 = triple(a).map((s, i) => <Placeholder key={i} className="mq-tile" label="" src={s} />);
+    row2 = triple(b).map((s, i) => <Placeholder key={i} className="mq-tile" label="" src={s} />);
+  } else {
+    const p1 = Array.from({ length: 8 }, (_, i) => `เรนเดอร์ / ผลงานบูธ #${i + 1}`);
+    const p2 = Array.from({ length: 8 }, (_, i) => `ภาพหน้างานติดตั้ง #${i + 1}`);
+    row1 = triple(p1).map((l, i) => <Placeholder key={i} className="mq-tile" label={l} />);
+    row2 = triple(p2).map((l, i) => <Placeholder key={i} className="mq-tile" label={l} />);
+  }
 
   return (
-    <section ref={wrapRef} style={{ background: "#0C0C0C", padding: "120px 0 40px", overflow: "hidden" }}>
-      <div className="mq-row" ref={r1}>
-        {triple(row1).map((l, i) => <Placeholder key={i} className="mq-tile" label={l} />)}
-      </div>
-      <div className="mq-row" ref={r2} style={{ marginTop: 12 }}>
-        {triple(row2).map((l, i) => <Placeholder key={i} className="mq-tile" label={l} />)}
-      </div>
+    <section ref={wrapRef} className="mq-section">
+      <div className="mq-row" ref={r1}>{row1}</div>
+      <div className="mq-row" ref={r2} style={{ marginTop: 12 }}>{row2}</div>
     </section>
   );
 }
