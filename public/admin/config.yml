@@ -87,3 +87,13 @@ collections:
             required: false
             field: { name: "number", label: "เบอร์", widget: "string" }
 
+      - name: "popup"
+        label: "Pop-up ประกาศ / โปรโมชั่น"
+        file: "content/settings/popup.json"
+        fields:
+          - { name: "enabled", label: "เปิดใช้งาน Pop-up (ปิด=ไม่เด้ง)", widget: "boolean", default: false }
+          - { name: "image", label: "รูปภาพ เช่น โปสเตอร์ (เว้นว่างได้)", widget: "image", required: false }
+          - { name: "title", label: "หัวข้อ (เว้นว่างได้)", widget: "string", required: false }
+          - { name: "body", label: "ข้อความ (เว้นว่างได้)", widget: "text", required: false }
+          - { name: "buttonLabel", label: "ข้อความบนปุ่ม (เว้นว่าง=ไม่มีปุ่ม)", widget: "string", required: false }
+          - { name: "buttonLink", label: "ลิงก์ปุ่ม เช่น LINE/เพจ (เว้นว่างได้)", widget: "string", required: false }
