@@ -19,6 +19,7 @@ function ProjectCard({ data, index, total, onOpen }: { data: Project; index: num
     const onScroll = () => {
       const w = wrapRef.current, c = cardRef.current;
       if (!w || !c) return;
+      if (window.innerWidth <= 640) { c.style.transform = ""; return; }
       const rectTop = w.getBoundingClientRect().top;
       const raw = (stickyTop - rectTop) / (w.offsetHeight * 0.7);
       const clamped = Math.min(1, Math.max(0, raw));
@@ -34,7 +35,7 @@ function ProjectCard({ data, index, total, onOpen }: { data: Project; index: num
   const open = (i: number) => onOpen(imgs, Math.min(i, imgs.length - 1));
 
   return (
-    <div ref={wrapRef} id={`project-${data.number}`} style={{ height: "85vh", display: "flex", alignItems: "flex-start" }}>
+    <div ref={wrapRef} id={`project-${data.number}`} className="proj-wrap" style={{ height: "85vh", display: "flex", alignItems: "flex-start" }}>
       <div ref={cardRef} className="proj-card" style={{ position: "sticky", top: stickyTop + index * 28, width: "100%" }}>
         <div className="proj-top">
           <div className="svc-num" style={{ color: "#D7E2EA" }}>{data.number}</div>

@@ -25,7 +25,7 @@ export default function Hero() {
       {/* Marquee เป็นพระเอก อยู่ใต้เมนู เหนือหัวข้อ */}
       <Marquee />
 
-      <div style={{ padding: "clamp(20px,4vw,52px) 24px clamp(28px,5vw,64px)" }}>
+      <div style={{ padding: "clamp(40px,9vw,96px) 24px clamp(28px,5vw,64px)" }}>
         <FadeIn as="h1" y={40} delay={0.15} className="hero-heading hero-title">
           {site.heroHeading}
         </FadeIn>
