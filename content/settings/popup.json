@@ -1,7 +1,7 @@
 {
-  "enabled": false,
-  "image": "",
-  "title": "",
+  "enabled": true,
+  "image": "/images/uploads/393119_0.jpg",
+  "title": "Test Pop-Up",
   "body": "",
   "buttonLabel": "",
   "buttonLink": ""
