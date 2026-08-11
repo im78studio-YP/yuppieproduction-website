@@ -27,9 +27,11 @@ export default function Lightbox({ images, index, onClose, onIndex }: LightboxPr
     };
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
+    document.body.classList.add("lightbox-open");
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
+      document.body.classList.remove("lightbox-open");
     };
   }, [onClose, prev, next]);
 

@@ -205,3 +205,7 @@ a{text-decoration:none}
 .popup-title{font-weight:700;color:#fff;font-size:1.3rem;margin-bottom:8px;line-height:1.35}
 .popup-body{color:#B8C2CC;line-height:1.6;font-size:.95rem;white-space:pre-line}
 .popup-cta{display:flex;justify-content:center;padding:18px 22px 22px}
+
+/* ตอนเปิด lightbox ดูรูป -> ซ่อนปุ่มลอย (กันทับ/กดโดนมั่ว) */
+body.lightbox-open .to-top,
+body.lightbox-open .line-btn{display:none!important}
