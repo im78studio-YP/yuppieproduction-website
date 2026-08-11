@@ -1,7 +1,8 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 html,body,#root{background:#0C0C0C}
-body{font-family:'Kanit',sans-serif;color:#D7E2EA;overflow-x:clip}
+html,body{overflow-x:hidden}
+body{font-family:'Kanit',sans-serif;color:#D7E2EA}
 
 .hero-heading{
   background:linear-gradient(180deg,#646973 0%,#BBCCD7 100%);
@@ -188,11 +189,11 @@ a{text-decoration:none}
 }
 
 /* Pop-up ประกาศ / โปรโมชั่น */
-.popup-overlay{position:fixed;inset:0;z-index:1100;background:rgba(12,12,12,.85);
-  display:flex;align-items:center;justify-content:center;padding:24px;animation:popup-fade .3s ease}
+.popup-overlay{position:fixed;inset:0;width:100%;z-index:1100;background:rgba(12,12,12,.85);
+  display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;animation:popup-fade .3s ease}
 @keyframes popup-fade{from{opacity:0}to{opacity:1}}
 .popup-card{position:relative;background:#141418;border:1px solid rgba(215,226,234,.15);
-  border-radius:20px;width:min(90vw,760px);max-height:90vh;overflow-x:hidden;overflow-y:auto;
+  border-radius:20px;width:100%;max-width:760px;max-height:90vh;overflow-x:hidden;overflow-y:auto;
   box-shadow:0 30px 80px rgba(0,0,0,.6);animation:popup-pop .35s cubic-bezier(.2,.8,.3,1)}
 @keyframes popup-pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
 .popup-close{position:absolute;top:10px;right:10px;z-index:2;width:36px;height:36px;border-radius:50%;
