@@ -192,14 +192,14 @@ a{text-decoration:none}
   display:flex;align-items:center;justify-content:center;padding:24px;animation:popup-fade .3s ease}
 @keyframes popup-fade{from{opacity:0}to{opacity:1}}
 .popup-card{position:relative;background:#141418;border:1px solid rgba(215,226,234,.15);
-  border-radius:20px;max-width:420px;width:100%;max-height:88vh;overflow:auto;
+  border-radius:20px;width:min(92vw,760px);max-height:90vh;overflow:auto;
   box-shadow:0 30px 80px rgba(0,0,0,.6);animation:popup-pop .35s cubic-bezier(.2,.8,.3,1)}
 @keyframes popup-pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
 .popup-close{position:absolute;top:10px;right:10px;z-index:2;width:36px;height:36px;border-radius:50%;
   border:none;cursor:pointer;background:rgba(0,0,0,.45);color:#fff;
   display:flex;align-items:center;justify-content:center;transition:background .2s}
 .popup-close:hover{background:rgba(0,0,0,.75)}
-.popup-img{width:100%;height:auto;display:block;border-radius:20px 20px 0 0}
+.popup-img{width:100%;height:auto;max-height:74vh;object-fit:contain;display:block;border-radius:20px 20px 0 0;background:#0C0C0C}
 .popup-text{padding:20px 22px 4px}
 .popup-title{font-weight:700;color:#fff;font-size:1.3rem;margin-bottom:8px;line-height:1.35}
 .popup-body{color:#B8C2CC;line-height:1.6;font-size:.95rem;white-space:pre-line}
