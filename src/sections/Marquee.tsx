@@ -8,16 +8,22 @@ export default function Marquee() {
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const Tile = ({ p }: { p: Project }) => (
-    <button
-      className="mq2-tile"
-      onClick={() => goToProject(p)}
-      aria-label={`ไปที่ผลงาน ${p.name}`}
-    >
-      <img src={(p.images ?? [])[0]} alt={p.name} loading="lazy" />
-      <span className="mq2-cap">{p.name}</span>
-    </button>
-  );
+  // imgIndex: แถวบน = 0 (รูปแรก), แถวล่าง = 1 (รูปที่สอง)
+  // ถ้าอัลบั้มมีรูปไม่ถึง index ที่ขอ ให้ fallback กลับไปรูปแรกกันภาพหาย
+  const Tile = ({ p, imgIndex = 0 }: { p: Project; imgIndex?: number }) => {
+    const imgs = p.images ?? [];
+    const src = imgs[imgIndex] ?? imgs[0];
+    return (
+      <button
+        className="mq2-tile"
+        onClick={() => goToProject(p)}
+        aria-label={`ไปที่ผลงาน ${p.name}`}
+      >
+        <img src={src} alt={p.name} loading="lazy" />
+        <span className="mq2-cap">{p.name}</span>
+      </button>
+    );
+  };
 
   if (withImg.length === 0) {
     const ph = Array.from({ length: 5 }, (_, i) => i);
@@ -44,10 +50,10 @@ export default function Marquee() {
   return (
     <section className="mq2-section">
       <div className="mq2-row mq2-left">
-        {rowA.map((p, i) => <Tile key={`a-${i}`} p={p} />)}
+        {rowA.map((p, i) => <Tile key={`a-${i}`} p={p} imgIndex={0} />)}
       </div>
       <div className="mq2-row mq2-right">
-        {rowBx.map((p, i) => <Tile key={`b-${i}`} p={p} />)}
+        {rowBx.map((p, i) => <Tile key={`b-${i}`} p={p} imgIndex={1} />)}
       </div>
     </section>
   );
