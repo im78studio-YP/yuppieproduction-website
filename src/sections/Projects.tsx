@@ -5,7 +5,7 @@ import Lightbox from "../components/Lightbox";
 import { ArrowUpRight } from "lucide-react";
 import { projects, type Project } from "../data/projects";
 import { site } from "../data/site";
-import SocialFollow from "../components/SocialFollow";
+import SiteFooter from "../components/SiteFooter";
 
 type OpenFn = (images: string[], index: number) => void;
 
@@ -82,18 +82,7 @@ export default function Projects() {
           <ProjectCard key={p.number} data={p} index={i} total={projects.length} onOpen={openLightbox} />
         ))}
       </div>
-      <footer id="contact" style={{ textAlign: "center", padding: "clamp(80px,12vw,160px) 0 40px" }}>
-        <FadeIn y={30}>
-          <div className="hero-heading" style={{ fontWeight: 900, textTransform: "uppercase",
-            fontSize: "clamp(2rem,8vw,84px)", lineHeight: 1.28, paddingTop: ".08em", marginBottom: 28 }}>
-            {site.ctaLine1}<br />{site.ctaLine2}
-          </div>
-          <SocialFollow />
-          <div style={{ marginTop: 40, color: "#5c636b", fontSize: 13, letterSpacing: ".05em" }}>
-            {site.companyName}
-          </div>
-        </FadeIn>
-      </footer>
+      <SiteFooter />
 
       {lightbox && (
         <Lightbox

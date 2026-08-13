@@ -169,18 +169,53 @@ a{text-decoration:none}
 .line-qr img{width:100%;aspect-ratio:1;height:auto;object-fit:contain;background:#fff;border-radius:12px;padding:8px}
 .line-qr span{font-size:.72rem;color:#9AA6B0;letter-spacing:.03em;white-space:nowrap}
 
-/* social follow (ท้ายเว็บ) */
-.follow{display:flex;flex-direction:column;align-items:center;gap:20px;margin:4px 0 8px}
-.follow-heading{font-weight:600;color:#D7E2EA;font-size:clamp(1.1rem,2.4vw,1.6rem);
-  text-align:center;letter-spacing:.02em}
-.social-row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
-.social-btn{width:52px;height:52px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
-  color:#D7E2EA;border:1px solid rgba(215,226,234,.25);background:rgba(215,226,234,.04);transition:all .2s ease}
-.social-btn:hover{color:#fff;background:linear-gradient(123deg,#C2186F,#FF2E88);border-color:transparent;transform:translateY(-2px)}
-.phone-row{display:flex;gap:22px;flex-wrap:wrap;justify-content:center}
-.phone-link{display:inline-flex;align-items:center;gap:8px;color:#D7E2EA;
-  font-size:clamp(1rem,2vw,1.25rem);font-weight:500;transition:color .2s}
-.phone-link:hover{color:#FF2E88}
+/* footer */
+.site-footer{margin:0 -20px -40px;padding-top:clamp(80px,12vw,160px)}
+.footer-cta{text-align:center;padding:0 20px clamp(64px,8vw,104px)}
+.footer-cta-heading{font-weight:900;text-transform:uppercase;font-size:clamp(2rem,8vw,84px);
+  line-height:1.28;padding-top:.08em}
+.footer-panel{background:#fff;color:#29272A;text-align:left}
+.footer-panel-inner{max-width:1240px;margin:0 auto;padding:clamp(48px,5vw,72px) clamp(24px,5vw,64px) 28px}
+.footer-brand-row{display:flex;align-items:flex-end;justify-content:space-between;gap:48px;
+  padding-bottom:clamp(32px,4vw,48px);border-bottom:1px solid #E7E3E6}
+.footer-logo{display:block;width:min(280px,68vw);height:auto}
+.footer-brand-row p{max-width:540px;color:#69656A;font-size:clamp(.95rem,1.4vw,1.1rem);line-height:1.7;text-align:right}
+.footer-grid{display:grid;grid-template-columns:minmax(280px,1.25fr) minmax(150px,.7fr) minmax(170px,.75fr) minmax(250px,.9fr);
+  gap:clamp(32px,4vw,56px);align-items:start;padding-top:clamp(32px,4vw,48px)}
+.footer-column{min-width:0}
+.footer-column h3,.footer-line-card h3{font-size:1rem;line-height:1.3;margin-bottom:16px;color:#29272A;
+  letter-spacing:.02em;white-space:nowrap}
+.footer-link-list,.footer-nav-links,.footer-social-links{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.footer-link-list a,.footer-social-links a{display:flex;align-items:center;gap:10px;min-width:0}
+.footer-panel a{color:#565257;font-size:.95rem;line-height:1.45;transition:color .2s ease}
+.footer-panel a:hover,.footer-panel a:focus-visible{color:#C2186F}
+.footer-panel svg{flex:0 0 auto;color:#E91E8D}
+.footer-link-list a[href^="mailto:"]{font-size:clamp(.76rem,1vw,.9rem);white-space:nowrap}
+.footer-line-card{display:grid;grid-template-columns:minmax(0,1fr) 96px;grid-template-areas:"copy qr" "action qr";
+  width:100%;min-width:0;column-gap:12px;row-gap:10px;align-items:center;padding:16px;
+  background:#F7F8F7;border:1px solid #E4E8E5;border-radius:16px;overflow:hidden}
+.footer-line-copy{grid-area:copy;min-width:0;align-self:end}
+.footer-line-copy h3{margin-bottom:4px}
+.footer-line-copy p{color:#39794F;font-size:.9rem;font-weight:600}
+.footer-qr-link{grid-area:qr;display:block;width:96px;max-width:100%}
+.footer-qr-link img,.footer-qr-image{display:block;width:96px;max-width:100%;height:auto;aspect-ratio:1;object-fit:contain;background:#fff}
+.footer-qr-image{grid-area:qr}
+.footer-line-action{grid-area:action;display:inline-flex;justify-content:center;width:max-content;max-width:100%;padding:7px 12px;
+  color:#fff!important;background:#06C755;border-radius:999px;font-size:.78rem!important;font-weight:600}
+.footer-line-action:hover,.footer-line-action:focus-visible{color:#fff!important;background:#05B94F}
+.footer-bottom{margin-top:clamp(48px,6vw,72px);padding-top:24px;border-top:1px solid #E7E3E6;
+  color:#69656A;font-size:.82rem;line-height:1.6}
+@media(max-width:1080px){
+  .footer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+  .footer-panel-inner{padding:40px 24px 24px}
+  .footer-brand-row{align-items:flex-start;flex-direction:column;gap:24px}
+  .footer-brand-row p{text-align:left}
+  .footer-grid{grid-template-columns:1fr;gap:36px}
+  .footer-line-card{max-width:360px}
+  .footer-bottom{margin-top:44px}
+}
 
 /* มือถือ: การ์ดผลงานไหลปกติ (กัน sticky ล้นทับข้อความ) */
 @media(max-width:640px){

@@ -19,6 +19,7 @@ export type Site = {
   contactEmail: string;
   companyName: string;
   lineLink?: string;
+  lineId?: string;
   lineQR?: string;
   facebookUrl?: string;
   instagramUrl?: string;

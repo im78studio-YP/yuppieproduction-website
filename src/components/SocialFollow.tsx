@@ -1,8 +1,8 @@
 import { site } from "../data/site";
-import { IconLine, IconFacebook, IconInstagram, IconTiktok, IconLinkedin, IconPhone } from "./Icons";
+import { IconLine, IconFacebook, IconInstagram, IconTiktok, IconLinkedin } from "./Icons";
 
 export default function SocialFollow() {
-  const heading = site.followHeading?.trim() || "ติดตามผลงานทีมยัพพี ได้ที่ :";
+  const heading = site.followHeading?.trim() || "ติดตามเรา";
 
   const socials = [
     { url: site.lineLink, label: "LINE", Icon: IconLine },
@@ -12,34 +12,18 @@ export default function SocialFollow() {
     { url: site.linkedinUrl, label: "LinkedIn", Icon: IconLinkedin },
   ].filter((s) => s.url && s.url.trim());
 
-  const phones = (site.phones ?? []).filter((p) => p.number && p.number.trim());
-
   return (
-    <div className="follow">
-      <h3 className="follow-heading">{heading}</h3>
-
-      {socials.length > 0 && (
-        <div className="social-row">
-          {socials.map((s) => (
-            <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer"
-              className="social-btn" aria-label={s.label} title={s.label}
-              data-umami-event={`social-${s.label.toLowerCase()}`}>
-              <s.Icon size={22} />
-            </a>
-          ))}
-        </div>
-      )}
-
-      {phones.length > 0 && (
-        <div className="phone-row">
-          {phones.map((p, i) => (
-            <a key={i} href={`tel:${p.number.replace(/[^0-9+]/g, "")}`} className="phone-link"
-              data-umami-event="phone-click" data-umami-event-number={p.number}>
-              <IconPhone size={18} /> {p.number}
-            </a>
-          ))}
-        </div>
-      )}
-    </div>
+    <section className="footer-column" aria-labelledby="footer-follow-heading">
+      <h3 id="footer-follow-heading">{heading}</h3>
+      <div className="footer-social-links">
+        {socials.map((social) => (
+          <a key={social.label} href={social.url} target="_blank" rel="noopener noreferrer"
+            data-umami-event={`social-${social.label.toLowerCase()}`}>
+            <social.Icon size={20} />
+            <span>{social.label}</span>
+          </a>
+        ))}
+      </div>
+    </section>
   );
 }

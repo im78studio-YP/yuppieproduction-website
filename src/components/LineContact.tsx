@@ -3,10 +3,12 @@ import { site } from "../data/site";
 export default function LineContact({ center = false }: { center?: boolean }) {
   const qr = site.lineQR?.trim();
   const link = site.lineLink?.trim();
+  const lineId = site.lineId?.trim();
+  const accountLabel = lineId ? `LINE ${lineId}` : "LINE";
 
   if (!qr && !link) {
     return (
-      <a href="#contact" data-umami-event="contact-fallback"><button className="btn-contact">ติดต่อเรา</button></a>
+      <a className="btn-contact" href="#contact" data-umami-event="contact-fallback">ติดต่อเรา</a>
     );
   }
 
@@ -14,13 +16,19 @@ export default function LineContact({ center = false }: { center?: boolean }) {
     <div className={`line-contact${center ? " line-contact-center" : ""}`}>
       {qr && (
         <div className="line-qr">
-          <img src={qr} alt="LINE QR code" />
-          <span>สแกนเพื่อแอดไลน์</span>
+          {link ? (
+            <a href={link} target="_blank" rel="noopener noreferrer" data-umami-event="line-qr">
+              <img src={qr} alt={`QR Code สำหรับเพิ่มเพื่อน ${accountLabel}`} />
+            </a>
+          ) : (
+            <img src={qr} alt={`QR Code สำหรับเพิ่มเพื่อน ${accountLabel}`} />
+          )}
+          <span>สแกนเพื่อแอด {accountLabel}</span>
         </div>
       )}
       {link && (
-        <a href={link} target="_blank" rel="noopener noreferrer" data-umami-event="line-about">
-          <button className="btn-contact">แอดไลน์คุยกับเรา</button>
+        <a className="btn-contact" href={link} target="_blank" rel="noopener noreferrer" data-umami-event="line-about">
+          แอด {accountLabel}
         </a>
       )}
     </div>
