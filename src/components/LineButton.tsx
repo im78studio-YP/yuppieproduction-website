@@ -11,6 +11,7 @@ export default function LineButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="แชทกับเราทาง LINE"
+      data-umami-event="line-float"
     >
       <MessageCircle size={26} />
       <span className="line-btn-label">แชทกับเรา</span>

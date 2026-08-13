@@ -22,7 +22,8 @@ export default function SocialFollow() {
         <div className="social-row">
           {socials.map((s) => (
             <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer"
-              className="social-btn" aria-label={s.label} title={s.label}>
+              className="social-btn" aria-label={s.label} title={s.label}
+              data-umami-event={`social-${s.label.toLowerCase()}`}>
               <s.Icon size={22} />
             </a>
           ))}
@@ -32,7 +33,8 @@ export default function SocialFollow() {
       {phones.length > 0 && (
         <div className="phone-row">
           {phones.map((p, i) => (
-            <a key={i} href={`tel:${p.number.replace(/[^0-9+]/g, "")}`} className="phone-link">
+            <a key={i} href={`tel:${p.number.replace(/[^0-9+]/g, "")}`} className="phone-link"
+              data-umami-event="phone-click" data-umami-event-number={p.number}>
               <IconPhone size={18} /> {p.number}
             </a>
           ))}

@@ -6,7 +6,7 @@ export default function LineContact({ center = false }: { center?: boolean }) {
 
   if (!qr && !link) {
     return (
-      <a href="#contact"><button className="btn-contact">ติดต่อเรา</button></a>
+      <a href="#contact" data-umami-event="contact-fallback"><button className="btn-contact">ติดต่อเรา</button></a>
     );
   }
 
@@ -19,7 +19,7 @@ export default function LineContact({ center = false }: { center?: boolean }) {
         </div>
       )}
       {link && (
-        <a href={link} target="_blank" rel="noopener noreferrer">
+        <a href={link} target="_blank" rel="noopener noreferrer" data-umami-event="line-about">
           <button className="btn-contact">แอดไลน์คุยกับเรา</button>
         </a>
       )}

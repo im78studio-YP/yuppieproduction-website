@@ -11,14 +11,14 @@ export default function Hero() {
   return (
     <section style={{ position: "relative", overflowX: "clip" }}>
       <FadeIn as="nav" y={-20} delay={0} className="nav">
-        <a href="#top" className="nav-logo" onClick={toTop} aria-label="กลับหน้าแรก">
+        <a href="#top" className="nav-logo" onClick={toTop} aria-label="กลับหน้าแรก" data-umami-event="nav-home">
           <img src="/logo-nav.png" alt="Yuppie Production" />
         </a>
         <div className="nav-links">
-          <a href="#about">{site.menuAbout}</a>
-          <a href="#services">{site.menuServices}</a>
-          <a href="#projects">{site.menuProjects}</a>
-          <a href="#contact">{site.menuContact}</a>
+          <a href="#about" data-umami-event="nav-about">{site.menuAbout}</a>
+          <a href="#services" data-umami-event="nav-services">{site.menuServices}</a>
+          <a href="#projects" data-umami-event="nav-projects">{site.menuProjects}</a>
+          <a href="#contact" data-umami-event="nav-contact">{site.menuContact}</a>
         </div>
       </FadeIn>
 

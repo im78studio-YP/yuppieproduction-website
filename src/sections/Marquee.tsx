@@ -18,6 +18,8 @@ export default function Marquee() {
         className="mq2-tile"
         onClick={() => goToProject(p)}
         aria-label={`ไปที่ผลงาน ${p.name}`}
+        data-umami-event="project-click"
+        data-umami-event-project={p.name}
       >
         <img src={src} alt={p.name} loading="lazy" />
         <span className="mq2-cap">{p.name}</span>
