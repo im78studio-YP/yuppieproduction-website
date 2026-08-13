@@ -57,7 +57,7 @@ export default function About() {
           fontSize: "clamp(1rem,2vw,1.35rem)", marginBottom: "clamp(56px,7vw,88px)", position: "relative", zIndex: 1 }}
       />
 
-      <FadeIn y={20} delay={0.2} style={{ position: "relative", zIndex: 1 }}>
+      <FadeIn y={20} delay={0.2} className="about-line-contact" style={{ position: "relative", zIndex: 1 }}>
         <LineContact center />
       </FadeIn>
     </section>

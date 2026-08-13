@@ -1,5 +1,5 @@
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;scroll-padding-top:96px}
 html,body,#root{background:#0C0C0C}
 html,body{overflow-x:hidden}
 body{font-family:'Kanit',sans-serif;color:#D7E2EA}
@@ -47,7 +47,9 @@ a{text-decoration:none}
 .ph img{width:100%;height:100%;object-fit:cover;display:block}
 
 /* navbar */
-.nav{display:flex;justify-content:space-between;align-items:center;padding:20px 24px 0;gap:16px}
+.nav{position:fixed;inset:0 0 auto;z-index:800;display:flex;justify-content:space-between;align-items:center;
+  width:100%;padding:12px 24px;gap:16px;background:rgba(12,12,12,.86);
+  border-bottom:1px solid rgba(215,226,234,.1);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .nav-logo{display:flex;align-items:center;transition:opacity .2s}
 .nav-logo img{height:64px;width:auto;display:block}
 .nav-logo:hover{opacity:.85}
@@ -56,8 +58,9 @@ a{text-decoration:none}
   font-size:clamp(.72rem,1.1vw,1.3rem);transition:opacity .2s}
 .nav-links a:hover{opacity:.7}
 @media(max-width:640px){
-  .nav{padding:14px 16px 0;gap:8px}
-  .nav-logo img{height:44px}
+  html{scroll-padding-top:72px}
+  .nav{padding:9px 16px;gap:8px}
+  .nav-logo img{height:42px}
   .nav-links{gap:11px}
   .nav-links a{font-size:.66rem;letter-spacing:.03em}
 }
@@ -78,7 +81,7 @@ a{text-decoration:none}
 
 /* marquee */
 .mq-section{background:#0C0C0C;padding:120px 0 40px;overflow:hidden}
-@media(max-width:640px){.mq-section{padding:56px 0 20px}}
+@media(max-width:640px){.mq-section{padding:84px 0 20px}}
 .mq-row{display:flex;gap:12px;will-change:transform}
 .mq-tile{flex:0 0 auto;width:420px;height:270px;border-radius:16px;overflow:hidden}
 @media(max-width:640px){.mq-tile{width:230px;height:150px}}
@@ -161,10 +164,11 @@ a{text-decoration:none}
 @media(max-width:640px){.line-btn:hover .line-btn-label{max-width:0;opacity:0;margin-left:0}}
 
 /* LINE contact (QR + ปุ่ม) — QR บน ปุ่มล่าง กว้างเท่ากัน */
+.about-line-contact{display:flex;justify-content:center;width:100%}
 .line-contact{display:flex;flex-direction:column;align-items:center;gap:12px;width:210px;max-width:78vw}
-.line-contact-center{align-items:center}
+.line-contact-center{margin-inline:auto}
 .line-contact a{display:block;width:100%}
-.line-contact .btn-contact{width:100%;padding:13px 12px;letter-spacing:.05em}
+.line-contact .btn-contact{width:100%;padding:13px 12px;letter-spacing:.05em;text-align:center}
 .line-qr{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
 .line-qr img{width:100%;aspect-ratio:1;height:auto;object-fit:contain;background:#fff;border-radius:12px;padding:8px}
 .line-qr span{font-size:.72rem;color:#9AA6B0;letter-spacing:.03em;white-space:nowrap}
