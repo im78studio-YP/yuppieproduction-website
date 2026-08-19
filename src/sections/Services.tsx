@@ -1,4 +1,5 @@
 import FadeIn from "../components/FadeIn";
+import { ArrowUpRight } from "lucide-react";
 import { site } from "../data/site";
 import { services } from "../data/services";
 
@@ -13,13 +14,24 @@ export default function Services() {
       <div style={{ maxWidth: 1024, margin: "0 auto" }}>
         {services.map((s, i) => (
           <FadeIn key={s.number} y={30} delay={i * 0.1}>
-            <div className="svc-item">
-              <div className="svc-num">{s.number}</div>
-              <div>
-                <div className="svc-name">{s.name}</div>
-                <div className="svc-desc">{s.description}</div>
+            {s.href ? (
+              <a className="svc-item svc-link" href={s.href} data-umami-event={`service-${s.number}`}>
+                <div className="svc-num">{s.number}</div>
+                <div>
+                  <div className="svc-name">{s.name}</div>
+                  <div className="svc-desc">{s.description}</div>
+                </div>
+                <ArrowUpRight className="svc-link-icon" aria-hidden="true" />
+              </a>
+            ) : (
+              <div className="svc-item">
+                <div className="svc-num">{s.number}</div>
+                <div>
+                  <div className="svc-name">{s.name}</div>
+                  <div className="svc-desc">{s.description}</div>
+                </div>
               </div>
-            </div>
+            )}
           </FadeIn>
         ))}
       </div>

@@ -95,6 +95,9 @@ a{text-decoration:none}
   font-size:clamp(1rem,2.2vw,2.1rem);line-height:1.15}
 .svc-desc{font-weight:300;color:#0C0C0C;opacity:.6;line-height:1.6;max-width:640px;
   margin-top:8px;font-size:clamp(.85rem,1.6vw,1.25rem)}
+.svc-link{color:#0C0C0C;transition:background .2s ease,padding .2s ease}
+.svc-link:hover,.svc-link:focus-visible{background:rgba(194,24,111,.06);padding-inline:clamp(12px,2vw,24px)}
+.svc-link-icon{width:clamp(28px,4vw,52px);height:clamp(28px,4vw,52px);margin-left:auto;flex:0 0 auto;color:#C2186F}
 
 /* projects sticky stack */
 .proj-card{border:2px solid #D7E2EA;background:#0C0C0C;border-radius:48px;
