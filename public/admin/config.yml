@@ -48,6 +48,7 @@ collections:
       - { name: "number", label: "ลำดับ (เช่น 01)", widget: "string" }
       - { name: "name", label: "ชื่อบริการ", widget: "string" }
       - { name: "description", label: "คำอธิบาย", widget: "text" }
+      - { name: "visible", label: "แสดงบนหน้าเว็บ", widget: "boolean", default: true, required: false }
       - { name: "href", label: "ลิงก์ฟังก์ชัน (เว้นว่าง=ไม่กด)", widget: "string", required: false }
 
   # ---------- ตั้งค่าเว็บ (2 บรรทัด: ข้อความ / รูปภาพ) ----------
