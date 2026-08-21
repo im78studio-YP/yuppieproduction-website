@@ -771,8 +771,10 @@ function panelBounds(){
   for(let y=0;y<gh;y++) for(let x=0;x<gw;x++) if(panel[y*gw+x]){
     if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y;
   }
-  if(x1<0) return {mx0:0,my0:0,w:W,h:H,gx0:0,gy0:0,gx1:gw-1,gy1:gh-1,empty:true};
-  return { mx0: W-(x1+1)*px, my0: H-(y1+1)*px,
+  if(x1<0) return {mx0:0,my0:0,ux0:0,w:W,h:H,gx0:0,gy0:0,gx1:gw-1,gy1:gh-1,empty:true};
+  return { mx0: W-(x1+1)*px,          // ออฟเซ็ตสำหรับชิ้นที่กลับแกน x (แผ่นหน้า กรอบ)
+           ux0: x0*px,                // ออฟเซ็ตสำหรับชิ้นที่ไม่กลับแกน x (ฝาหลัง)
+           my0: H-(y1+1)*px,
            w:(x1-x0+1)*px, h:(y1-y0+1)*px,
            gx0:x0, gy0:y0, gx1:x1, gy1:y1, empty:false };
 }
@@ -1018,10 +1020,20 @@ function addBox(M,x0,y0,z0,x1,y1,z1){
   quad(M,A,D,H,E,-1, 0, 0);
   quad(M,B,C,Gp,F, 1, 0, 0);
 }
-function addRects(M,rects,z0,z1){
-  const px=G.px, W=S.box.W, H=S.box.H, ox=PB.mx0, oy=PB.my0;
-  for(const r of rects){
-    addBox(M, W-r.x1*px-ox, H-r.y1*px-oy, z0, W-r.x0*px-ox, H-r.y0*px-oy, z1);
+/* แปลงสี่เหลี่ยมบนกริดเป็นกล่องสามมิติ
+   ปกติกลับแกน x เพราะแผ่นหน้าพิมพ์คว่ำหน้าลงฐาน
+   แต่ "ฝาหลัง" ต้องไม่กลับแกน x เพราะเวลาประกอบมันหันผิวในเข้าหาแผ่นหน้า
+   สองผิวที่ประกบกันเป็นภาพสะท้อนของกันและกันเสมอ — ถ้าใช้ระบบพิกัดเดียวกันจะประกอบไม่ลง */
+function addRects(M,rects,z0,z1,noMirrorX){
+  const px=G.px, W=S.box.W, H=S.box.H, oy=PB.my0;
+  if(noMirrorX){
+    const ox=PB.ux0;
+    for(const r of rects)
+      addBox(M, r.x0*px-ox, H-r.y1*px-oy, z0, r.x1*px-ox, H-r.y0*px-oy, z1);
+  }else{
+    const ox=PB.mx0;
+    for(const r of rects)
+      addBox(M, W-r.x1*px-ox, H-r.y1*px-oy, z0, W-r.x0*px-ox, H-r.y0*px-oy, z1);
   }
 }
 function maskWhere(fn){
@@ -1185,14 +1197,14 @@ function buildParts(nt){
   });
   const PK=platePack();
   const BM=Mesh('แผ่นหลัง'+(J.lip?' + บ่าล็อก':''),'#'+b.frameColor.replace('#',''),nt);
-  addRects(BM,maskToRects(backM,gw,gh), 0, b.back);
+  addRects(BM,maskToRects(backM,gw,gh), 0, b.back, true);
   if(J.lip){
     const i0=(b.frame+J.cl)/px, i1=(b.frame+J.cl+J.lipW)/px;
     const corridor=(x,y)=> S.hw.hole==='frame' && y>=PB.gy1-(b.frame+J.cl+J.lipW+2)/px
                             && Math.abs(x-BI.cx)<=notchHalf+1.5/px;
     const lipM=maskWhere((i,x,y)=> P[i] && DI[i]>i0 && DI[i]<=i1
                             && !(BP.length&&nearBoss(x,y,bwc+J.cl/px)) && !corridor(x,y));
-    addRects(BM,maskToRects(lipM,gw,gh), b.back, b.back+J.lipH);
+    addRects(BM,maskToRects(lipM,gw,gh), b.back, b.back+J.lipH, true);
   }
   BM.place=PK.items.back; BM.kind='back';
   parts.push(BM);
