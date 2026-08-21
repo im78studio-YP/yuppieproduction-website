@@ -218,7 +218,15 @@ PRODUCTION</textarea>
   <div class="sec" data-sec="fit">
     <h3>2 · วางตำแหน่ง</h3>
     <div class="body">
-      <div class="row"><label>ขนาด</label><input type="range" id="trScale" min="10" max="200" step="1" value="88"><span class="unit" id="trScaleV">88%</span></div>
+      <div class="row"><label>ขนาดชิ้นงาน</label>
+        <input type="number" id="sizeW" class="num" step="1"><span class="unit">×</span>
+        <input type="number" id="sizeH" class="num" step="1"><span class="unit">มม.</span></div>
+      <div class="row"><label>ล็อกสัดส่วน</label><input type="checkbox" id="uniformScale" checked>
+        <span class="unit">Uniform Scale — ปิดเพื่อยืด/บีบด้านเดียว</span></div>
+      <p class="hint" style="margin:2px 0 8px">พิมพ์ขนาดที่ต้องการลงไปได้เลย ระบบจะย่อ-ขยายลวดลายให้ชิ้นงานจริงได้ขนาดนั้น
+      (รวมความกว้างขอบแล้ว) · ถ้าใหญ่เกินพื้นที่ทำงาน ระบบจะขยายพื้นที่ให้เอง</p>
+      <div class="row"><label>ขนาดแนวกว้าง</label><input type="range" id="trScale" min="5" max="400" step="1" value="88"><span class="unit" id="trScaleV">88%</span></div>
+      <div class="row" id="rowScaleY" style="display:none"><label>ขนาดแนวสูง</label><input type="range" id="trScaleY" min="5" max="400" step="1" value="88"><span class="unit" id="trScaleYV">88%</span></div>
       <div class="row"><label>เลื่อนซ้าย-ขวา</label><input type="range" id="trDx" min="-50" max="50" step="1" value="0"><span class="unit" id="trDxV">0</span></div>
       <div class="row"><label>เลื่อนขึ้น-ลง</label><input type="range" id="trDy" min="-50" max="50" step="1" value="0"><span class="unit" id="trDyV">0</span></div>
       <div class="row"><label>หมุน</label><input type="range" id="trRot" min="-180" max="180" step="1" value="0"><span class="unit" id="trRotV">0°</span></div>
@@ -254,7 +262,15 @@ PRODUCTION</textarea>
       <div class="row"><label>เติมช่องในตัว</label><input type="checkbox" id="fillHoles" checked>
         <span class="unit">ปิดช่องในตัว O, P, A ไม่ให้ทะลุ</span></div>
       <div class="row"><label>ขอบชั้นใน</label><input type="range" id="ring0w" min="0" max="30" step="0.5" value="4"><span class="unit" id="ring0wV">4 มม.</span></div>
+      <div class="row"><label></label>
+        <span class="sw" id="ring0sw"><input type="color" id="ring0c" value="#ffffff"></span>
+        <button class="glowbtn" id="ring0g">สว่าง</button>
+        <span class="unit" id="ring0n">ขาว</span></div>
       <div class="row"><label>ขอบชั้นนอก</label><input type="range" id="ring1w" min="0" max="30" step="0.5" value="3"><span class="unit" id="ring1wV">3 มม.</span></div>
+      <div class="row"><label></label>
+        <span class="sw" id="ring1sw"><input type="color" id="ring1c" value="#ee3c96"></span>
+        <button class="glowbtn" id="ring1g">ทึบ</button>
+        <span class="unit" id="ring1n">ชมพูบานเย็น</span></div>
       <p class="hint">ขอบคือเส้นที่ขยายออกจากตัวลวดลาย รูปทรงของกล่องจะวิ่งตามขอบชั้นนอกสุด
       แก้สีและกำหนดสว่าง/ทึบ ของแต่ละขอบได้ที่หัวข้อ 3 · สีและชั้น<br>
       ตั้งเป็น 0 เพื่อไม่ใช้ขอบชั้นนั้น · ขอบรวมควรกว้างกว่าผนังกรอบอย่างน้อย 3 มม.</p>
@@ -319,7 +335,7 @@ PRODUCTION</textarea>
   </div>
 
   <div class="sec" data-sec="hw">
-    <h3>6 · รูสายไฟและขาตั้ง</h3>
+    <h3>6 · รูสายไฟและรูแขวน</h3>
     <div class="body">
       <div class="row"><label>รูสายไฟ</label>
         <select id="holeType" class="grow">
@@ -328,12 +344,6 @@ PRODUCTION</textarea>
           <option value="none">ไม่มี</option>
         </select></div>
       <div class="row"><label>ขนาดรู</label><input type="range" id="holeDia" min="3" max="16" step="0.5" value="7"><span class="unit" id="holeDiaV">7 มม.</span></div>
-      <div class="row"><label>ขาตั้ง</label>
-        <select id="baseType" class="grow">
-          <option value="none">ไม่มี (แขวน/ติดผนัง)</option>
-          <option value="feet" selected>ขาตั้ง 2 ชิ้น มีร่องเสียบ</option>
-        </select></div>
-      <div class="row"><label>ความกว้างขา</label><input type="range" id="baseW" min="20" max="80" step="2" value="40"><span class="unit" id="baseWV">40 มม.</span></div>
       <div class="row"><label>รูแขวนผนัง</label><input type="checkbox" id="hangHole"><span class="unit">เจาะรูแขวนที่แผ่นหลัง 2 จุด</span></div>
       <p class="hint">รูสายไฟแบบบากอยู่ที่ <b>ปลายหลัง</b>ของกรอบ สายจึงออกด้านหลัง และตอนพิมพ์เป็นบากเปิดปากบน ไม่ต้องบริดจ์</p>
     </div>
@@ -348,13 +358,16 @@ PRODUCTION</textarea>
           <option value="lip">บ่าล็อกอย่างเดียว (กาว/เทป)</option>
           <option value="butt">ชนหน้าตัดเปล่า (กาวล้วน)</option>
         </select></div>
-      <div class="row"><label>ความสูงบ่า</label><input type="range" id="lipH" min="1.5" max="8" step="0.5" value="3"><span class="unit" id="lipHV">3 มม.</span></div>
+      <div class="row"><label>ความสูงบ่า</label><input type="range" id="lipH" min="1" max="6" step="0.5" value="2"><span class="unit" id="lipHV">2 มม.</span></div>
       <div class="row"><label>ความหนาบ่า</label><input type="range" id="lipW" min="1.6" max="6" step="0.2" value="3"><span class="unit" id="lipWV">3 มม.</span></div>
       <div class="row"><label>เผื่อระยะสวม</label><input type="range" id="lipCl" min="0.1" max="0.6" step="0.05" value="0.2"><span class="unit" id="lipClV">0.2 มม.</span></div>
       <div class="row"><label>ขนาดเสาสกรู</label><input type="range" id="bossW" min="6" max="14" step="0.5" value="8"><span class="unit" id="bossWV">8 มม.</span></div>
-      <div class="row"><label>ความลึกรูนำ</label><input type="range" id="screwDepth" min="6" max="20" step="1" value="10"><span class="unit" id="screwDepthV">10 มม.</span></div>
-      <p class="hint">เสาสกรูอยู่ใน 4 มุม ชิดผนังกรอบ รูนำ Ø2.5 มม. · ฝาหลังเจาะรูผ่าน Ø3.4 มม. ตรงกัน<br>
-      ใช้สกรูเกลียวปล่อยหัวกลม <b>M3 × 12 มม.</b> 4 ตัวต่อกล่อง (ยาว = ความหนาฝาหลัง + ความลึกรูนำ)</p>
+      <div class="row"><label>ความยาวเสารับสกรู</label><input type="range" id="screwDepth" min="6" max="20" step="1" value="10"><span class="unit" id="screwDepthV">10 มม.</span></div>
+      <p class="hint"><b>เสาสกรูวางชิดขอบเสมอ</b> และยาวแค่ตามค่าด้านบน นับจากด้านหลังเข้ามา
+      ไม่ยาวตลอดความลึกกล่อง เพราะเสายาวจะบังแสงเป็นเงาดำตอนติดไฟ<br>
+      ใต้เสามีลาดรับ 45° ไล่ขึ้นมาจากผนังกรอบ จึงพิมพ์ได้โดยไม่ต้องมีซัพพอร์ต<br>
+      รูนำ Ø2.5 มม. · ฝาหลังเจาะรูผ่าน Ø3.4 มม. ตรงกัน · ใช้สกรูเกลียวปล่อยหัวกลม
+      <b>M3 × (ความหนาฝาหลัง + ความยาวเสา)</b> มม.</p>
     </div>
   </div>
 
@@ -437,7 +450,7 @@ function defaults(){ return {
         text:'YUPPIE\nPRODUCTION', font:'Arial Black', weight:700, align:'center',
         track:0, lead:115, outline:0,
         imgData:null, imgName:'', removeBg:true, tol:26 },
-  tr:{ scale:88, dx:0, dy:0, rot:0 },
+  tr:{ scale:88, scaleY:88, uniform:true, dx:0, dy:0, rot:0 },
   art:{ n:2, smooth:1, glowMode:'logo' },
   shape:{ mode:'contour', fillHoles:true },
   rings:[ {w:4, hex:'#ffffff', glow:true},
@@ -445,8 +458,8 @@ function defaults(){ return {
   pal:[ {hex:'#1a1a1a',name:'พื้นหลัง',glow:false},
         {hex:'#ff2d8f',name:'สี 1',glow:true} ],
   box:{ W:200,H:120,depth:35,colorT:0.4,diff:0.6,bgT:1.2,frame:2.4,back:2, frameColor:'#1a1a1a' },
-  hw:{ hole:'frame', dia:7, base:'feet', baseW:40, hang:false,
-       joint:'screw', lipH:3, lipW:3, lipCl:0.2, bossW:8, screwDepth:10 },
+  hw:{ hole:'frame', dia:7, hang:false,
+       joint:'screw', lipH:2, lipW:3, lipCl:0.2, bossW:8, screwDepth:10 },
   price:{ qty:1, fil:750, mach:25, laborMin:25, laborRate:300, led:150, waste:8, margin:45, flush:120 },
   exp:{ res:0.15, fmt:'3mf', layerH:0.2, bed:256 },
   ui:{ showFrame:true, showGrid:false, view:'design' }
@@ -624,15 +637,19 @@ let G = null, SRC_CACHE = null;
 
 function rebuildSource(){ SRC_CACHE = makeSourceCanvas(); }
 
-function drawSourceInto(ctx,gw,gh,cv){
-  const {scale,dx,dy,rot} = S.tr;
+function baseFit(gw,gh,cv){
   const inset = S.box.frame / (S.box.W/gw);            // frame in cells
-  const availW = gw - inset*2, availH = gh - inset*2;
-  const k = Math.min(availW/cv.width, availH/cv.height) * scale/100;
+  return Math.min((gw-inset*2)/cv.width, (gh-inset*2)/cv.height);
+}
+function drawSourceInto(ctx,gw,gh,cv){
+  const {dx,dy,rot} = S.tr;
+  const base = baseFit(gw,gh,cv);
+  const kx = base * S.tr.scale/100;
+  const ky = base * (S.tr.uniform ? S.tr.scale : S.tr.scaleY)/100;
   ctx.save();
   ctx.translate(gw/2 + dx/100*gw/2, gh/2 + dy/100*gh/2);
   ctx.rotate(rot*Math.PI/180);
-  ctx.scale(k,k);
+  ctx.scale(kx,ky);
   ctx.imageSmoothingEnabled = true;
   ctx.drawImage(cv, -cv.width/2, -cv.height/2);
   ctx.restore();
@@ -1056,33 +1073,49 @@ function geomStack(){
 function bedSize(){ return Math.max(80, +S.exp.bed||256); }
 const PGAP=8;
 
-function footDims(){
-  const st=geomStack();
-  const slot=st.total+0.6, rail=3.5, plate=3;
-  return {w:S.hw.baseW, d:slot+rail*2, rail, plate, slot,
-          h:plate+Math.max(9,Math.min(18, st.total*0.5+6))};
-}
-
-/* ขอบล่างของรูปทรง — ใช้วางบากสายไฟและขาตั้ง */
+/* ขอบล่างของรูปทรง — หาช่วงผนังล่างที่ต่อเนื่องยาวพอจะบากสายไฟได้
+   ขอบล่างของโลโก้มักเป็นหยัก ถ้าบากที่ปลายหยักแคบๆ จะกินผนังหายไปทั้งท่อน */
 function bottomInfo(){
-  const {gw,px,panel}=G, y1=PB.gy1;
-  const band=Math.max(1,Math.round(2/px));
-  const xs=[];
-  for(let y=Math.max(0,y1-band); y<=y1; y++)
-    for(let x=0;x<gw;x++) if(panel[y*gw+x]) xs.push(x);
-  xs.sort((a,b)=>a-b);
-  const q=f=>xs.length? xs[Math.min(xs.length-1,Math.floor(xs.length*f))] : (gw>>1);
-  return {y1, cx:q(0.5), left:q(0.22), right:q(0.78), n:xs.length};
+  const {gw,px,panel}=G;
+  const y1=PB.gy1, need=(S.hw.dia+4)/px;
+  const band=Math.max(1,Math.round(10/px));
+  let best=null;
+  for(let y=y1; y>=Math.max(0,y1-band); y--){
+    let x=0, rowBest=null;
+    while(x<gw){
+      if(!panel[y*gw+x]){ x++; continue; }
+      const s=x; while(x<gw&&panel[y*gw+x]) x++;
+      const len=x-s;
+      if(!rowBest||len>rowBest.len) rowBest={y, cx:(s+x)>>1, len};
+    }
+    if(rowBest){
+      if(!best||rowBest.len>best.len) best=rowBest;
+      if(rowBest.len>=need) return {y1:rowBest.y, cx:rowBest.cx, len:rowBest.len, n:rowBest.len};
+    }
+  }
+  return best? {y1:best.y, cx:best.cx, len:best.len, n:best.len}
+             : {y1, cx:gw>>1, len:0, n:0};
 }
 
-/* จุดวางเสาสกรู — หาที่ที่เนื้อหนาพอ แล้วกระจายให้ห่างกันมากที่สุด */
+/* จุดวางเสาสกรู — วางชิดขอบเสมอ ไม่ใช่กลางแผ่น
+   เสากลางแผ่นจะบังแสงเป็นเงาดำตอนติดไฟ และเสาที่ลอยกลางอากาศก็พิมพ์ไม่ได้
+   วางชิดผนังกรอบแล้วทำลาดรับ 45° จากผนัง จึงพิมพ์ได้โดยไม่ต้องซัพพอร์ต */
 function bossPoints(){
   const {gw,gh,px,edtIn}=G;
   if(!edtIn) return [];
-  const need=(S.hw.bossW/2+1.2)/px, minGap=25/px;
+  const half=S.hw.bossW/2/px, minGap=25/px;
   const step=Math.max(1,Math.round(1.5/px));
   const cand=[];
-  for(let y=0;y<gh;y+=step) for(let x=0;x<gw;x+=step) if(edtIn[y*gw+x]>=need) cand.push([x,y]);
+  const lo=half*0.85, hi=half+2.5/px;
+  for(let y=0;y<gh;y+=step) for(let x=0;x<gw;x+=step){
+    const e=edtIn[y*gw+x];
+    if(e>=lo && e<=hi) cand.push([x,y]);
+  }
+  if(!cand.length){                                   // ไม่มีที่ชิดขอบพอ ใช้ที่หนาที่สุดแทน
+    const need=half+1.2/px;
+    for(let y=0;y<gh;y+=step) for(let x=0;x<gw;x+=step)
+      if(edtIn[y*gw+x]>=need) cand.push([x,y]);
+  }
   if(!cand.length) return [];
   const areaMM=G.panelCells*px*px;
   const want=clamp(Math.round(Math.sqrt(areaMM)/60)+2, 2, 8);
@@ -1160,7 +1193,7 @@ function buildParts(nt){
 
   /* --- 3. กรอบ = วงในของรูปทรง + บากสายไฟ + เสาสกรู --- */
   const BI=bottomInfo();
-  const notchHalf=(S.hw.dia/2)/px, notchBandY=PB.gy1-fw*1.4;
+  const notchHalf=(S.hw.dia/2)/px, notchBandY=BI.y1-fw*1.4;
   const frameM=maskWhere(i=>P[i]&&DI[i]<=fw);
   const FM=Mesh('กรอบข้าง'+(J.screw?' + เสาสกรู':''),'#'+b.frameColor.replace('#',''),nt);
   const d=Math.min(S.hw.dia, b.depth-2);
@@ -1176,10 +1209,19 @@ function buildParts(nt){
   const nearBoss=(x,y,r)=>BP.some(p=>Math.abs(x-p[0])<=r&&Math.abs(y-p[1])<=r);
   const inCircle=(x,y,r)=>BP.some(p=>(x-p[0])**2+(y-p[1])**2<r*r);
   if(BP.length){
-    const sd=Math.min(S.hw.screwDepth, b.depth-3);
+    const sd=Math.min(S.hw.screwDepth, b.depth-6);     // ความลึกรูนำ
+    const bossLen=Math.min(sd+1.5, b.depth-4);          // ความยาวเสา นับจากด้านหลังเข้ามา
+    const z0=zTop-bossLen;
     const bossM=maskWhere((i,x,y)=>P[i]&&nearBoss(x,y,bwc));
-    addRects(FM,maskToRects(bossM,gw,gh), st.frameZ0, zTop-sd);
-    addRects(FM,maskToRects(maskWhere((i,x,y)=>bossM[i]&&!inCircle(x,y,prc)),gw,gh), zTop-sd, zTop);
+    /* ตัวเสา + รูนำ */
+    addRects(FM,maskToRects(maskWhere((i,x,y)=>bossM[i]&&!inCircle(x,y,prc)),gw,gh), z0, zTop);
+    /* ลาดรับ 45° จากผนังกรอบขึ้นมาหาเสา — ไม่งั้นเสาลอยกลางอากาศ พิมพ์ไม่ได้ */
+    const NT=8, taperH=Math.min(S.hw.bossW, z0-st.frameZ0);
+    if(taperH>0.4) for(let j=0;j<NT;j++){
+      const t = fw + ((j+1)/NT)*(S.hw.bossW/px);
+      const zA = z0-taperH + j*(taperH/NT), zB = zA + taperH/NT;
+      addRects(FM,maskToRects(maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t),gw,gh), zA, zB);
+    }
   }
   FM.kind='frame'; FM.bossCount=BP.length;
   parts.push(FM);
@@ -1200,7 +1242,7 @@ function buildParts(nt){
   addRects(BM,maskToRects(backM,gw,gh), 0, b.back, true);
   if(J.lip){
     const i0=(b.frame+J.cl)/px, i1=(b.frame+J.cl+J.lipW)/px;
-    const corridor=(x,y)=> S.hw.hole==='frame' && y>=PB.gy1-(b.frame+J.cl+J.lipW+2)/px
+    const corridor=(x,y)=> S.hw.hole==='frame' && y>=BI.y1-(b.frame+J.cl+J.lipW+2)/px
                             && Math.abs(x-BI.cx)<=notchHalf+1.5/px;
     const lipM=maskWhere((i,x,y)=> P[i] && DI[i]>i0 && DI[i]<=i1
                             && !(BP.length&&nearBoss(x,y,bwc+J.cl/px)) && !corridor(x,y));
@@ -1209,44 +1251,15 @@ function buildParts(nt){
   BM.place=PK.items.back; BM.kind='back';
   parts.push(BM);
 
-  /* --- 5. ขาตั้ง — วางตรงจุดที่ขอบล่างแตะพื้นจริง --- */
-  if(S.hw.base==='feet' && BI.n){
-    const F=footDims(), W=S.box.W;
-    const meshX=g=>W-(g+0.5)*px-PB.mx0;                 // กริด → มิลลิเมตรของชิ้นงาน
-    const xs=[meshX(BI.left),meshX(BI.right)].sort((a,b)=>a-b);
-    for(let i=0;i<2;i++){
-      const M=Mesh('ขาตั้ง '+(i+1),'#'+b.frameColor.replace('#',''),nt);
-      addBox(M,0,0,0,F.w,F.d,F.plate);
-      addBox(M,0,0,F.plate,F.w,F.rail,F.h);
-      addBox(M,0,F.d-F.rail,F.plate,F.w,F.d,F.h);
-      M.place=PK.items['foot'+i]; M.kind='foot'; M.footIndex=i; M.foot=F;
-      M.asmX=clamp(xs[i]-F.w/2, 0, Math.max(0,PB.w-F.w));
-      parts.push(M);
-    }
-  }
   return parts;
 }
 
 /* จัดวางชิ้นงานบนฐานพิมพ์ — ใช้ทั้งภาพผังและ transform ใน 3MF */
 function platePack(){
-  const BED=bedSize(), F=(S.hw.base==='feet')?footDims():null;
+  const BED=bedSize();
   const w=PB.w||S.box.W, h=PB.h||S.box.H;
   const items={panel:{x:0,y:0,w,h}};
   items.back={x:0,y:h+PGAP,w,h};
-  if(F){
-    const rx=w+PGAP;
-    if(rx+F.w<=BED && F.d*2+PGAP<=BED){
-      items.foot0={x:rx,y:0,w:F.w,h:F.d};
-      items.foot1={x:rx,y:F.d+PGAP,w:F.w,h:F.d};
-    }else if(rx+F.w*2+PGAP<=BED){
-      items.foot0={x:rx,y:0,w:F.w,h:F.d};
-      items.foot1={x:rx+F.w+PGAP,y:0,w:F.w,h:F.d};
-    }else{
-      const fy=items.back.y+h+PGAP;
-      items.foot0={x:0,y:fy,w:F.w,h:F.d};
-      items.foot1={x:F.w+PGAP,y:fy,w:F.w,h:F.d};
-    }
-  }
   const all=Object.values(items);
   const maxX=Math.max(...all.map(i=>i.x+i.w)), maxY=Math.max(...all.map(i=>i.y+i.h));
   return {items,maxX,maxY,bed:BED,fits:maxX<=BED&&maxY<=BED};
@@ -1556,7 +1569,7 @@ function drawLayers(c,cv,px){
 }
 
 function drawPlate(c,cv,px){
-  const b=S.box, st=geomStack(), BED=bedSize(), PK=platePack(), F=(S.hw.base==='feet')?footDims():null;
+  const b=S.box, st=geomStack(), BED=bedSize(), PK=platePack();
   const m=(BED*1.055-BED)/2*px;
   c.fillStyle='#e7e9ec'; c.fillRect(m,m,BED*px,BED*px);
   c.strokeStyle='#0000000f';
@@ -1575,10 +1588,6 @@ function drawPlate(c,cv,px){
   box(PK.items.panel,'#ff2d8f26','#ff2d8f',
       `แผ่นหน้า+กรอบ ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} · สูง ${(st.frameZ0+b.depth).toFixed(1)} มม.`);
   box(PK.items.back ,'#3ba0ff26','#3ba0ff',`แผ่นหลัง หนา ${b.back} มม.`);
-  if(F){
-    box(PK.items.foot0,'#31c48d26','#31c48d','ขาตั้ง 1');
-    box(PK.items.foot1,'#31c48d26','#31c48d','ขาตั้ง 2');
-  }
   c.font='12px sans-serif'; c.textAlign='right';
   c.fillStyle=PK.fits?'#5b626d':'#c62b39';
   c.fillText(PK.fits?`ใช้พื้นที่ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} จาก ${BED} × ${BED} มม.`
@@ -1768,7 +1777,6 @@ td:last-child,th:last-child{text-align:right}.tot td{font-weight:700;font-size:1
 <tr><td>ขนาดหน้าป้าย</td><td>${b.W} × ${b.H} มม.</td></tr>
 <tr><td>ความหนารวม</td><td>${st.total.toFixed(1)} มม. (ลึกในกล่อง ${b.depth} มม.)</td></tr>
 <tr><td>โครงสร้าง</td><td>ชั้นสี ${b.colorT} · กระจายแสง ${st.diff} · พื้นทึบ ${st.bgT.toFixed(1)} · กรอบ ${b.frame} · หลัง ${b.back} มม.</td></tr>
-<tr><td>ขาตั้ง</td><td>${S.hw.base==='feet'?'ขาตั้ง 2 ชิ้น กว้าง '+S.hw.baseW+' มม.':'ไม่มี (แขวน/ติดผนัง)'}</td></tr>
 <tr><td>รูสายไฟ</td><td>${S.hw.hole==='none'?'ไม่มี':S.hw.hole==='frame'?'บากที่กรอบล่างด้านหลัง Ø'+S.hw.dia+' มม.':'รูกลมแผ่นหลัง Ø'+S.hw.dia+' มม.'}</td></tr>
 <tr><td>การประกบฝาหลัง</td><td>${ {screw:`บ่าล็อกสูง ${S.hw.lipH} มม. + สกรู M3 × ${Math.round(S.box.back+Math.min(S.hw.screwDepth,S.box.depth-3))} มม. 4 ตัว`,
       lip:`บ่าล็อกสูง ${S.hw.lipH} มม. ยึดด้วยกาว`, butt:'ชนหน้าตัด ยึดด้วยกาว'}[jointSpec().mode] }</td></tr>
@@ -1855,9 +1863,7 @@ function readme(parts){
     ,'ลำดับการพิมพ์'
     ,'1) แผ่นหน้า+กรอบ พิมพ์คว่ำหน้าลงฐาน (ผิวสวยอยู่ที่ชั้นแรก) ไม่ต้องมีซัพพอร์ต'
     ,'2) แผ่นหลัง พิมพ์ราบ'
-    ,'3) ขาตั้ง พิมพ์ตั้ง ร่องหงายขึ้น'
     ,'','ความหนารวม '+st.total.toFixed(1)+' มม. · กรอบลึก '+S.box.depth+' มม.'
-    ,(S.hw.base==='feet'?('ขาตั้ง '+S.hw.baseW+'×'+footDims().d.toFixed(1)+'×'+footDims().h.toFixed(1)+' มม. · ร่องกว้าง '+footDims().slot.toFixed(1)+' มม.'):'ไม่มีขาตั้ง')
     ,''
     ,'การประกบฝาหลัง: '+({screw:'บ่าล็อก + สกรู',lip:'บ่าล็อกอย่างเดียว',butt:'ชนหน้าตัด'}[jointSpec().mode])
     ,...(jointSpec().lip?['  บ่าสูง '+S.hw.lipH+' มม. หนา '+S.hw.lipW+' มม. เผื่อระยะสวมข้างละ '+S.hw.lipCl+' มม.']:[])
@@ -1979,19 +1985,13 @@ function glBuild(){
 }
 
 /* ---------- per-part transform per mode ---------- */
-const EXPLODE={color:46,diffuser:28,frame:0,back:-38,foot:0};
+const EXPLODE={color:46,diffuser:28,frame:0,back:-38};
 function partMatrix(M,mode){
   const st=geomStack(), W=PB.w||S.box.W, H=PB.h||S.box.H, BED=bedSize();
   const ex = mode==='exp';
   if(mode==='plate'){
     const px=(M.place?M.place.x:0), py=(M.place?M.place.y:0);
     return mkM(1,0,0, 0,0,1, 0,-1,0, px-BED/2, 0, BED/2-py);
-  }
-  if(M.kind==='foot'){
-    const F=M.foot, fx = (M.asmX!==undefined? M.asmX : (M.footIndex? W*0.76:W*0.24)-F.w/2);
-    const dy = ex? -46 : 0;
-    return mkM(1,0,0, 0,0,1, 0,-1,0,
-               fx-W/2, -H/2-F.plate+dy, -st.total/2+F.d/2);
   }
   if(M.kind==='back'){
     /* ฝาหลังพิมพ์ผิวนอกติดฐาน บ่าชี้ขึ้น — ประกอบโดยหันบ่าเข้าในกล่อง
@@ -2144,6 +2144,8 @@ const BIND=[
  ['imgRemoveBg','src.removeBg','bool',null,null,'s'],
  ['imgTol','src.tol','num','imgTolV',v=>v,'s'],
  ['trScale','tr.scale','num','trScaleV',v=>v+'%',''],
+ ['trScaleY','tr.scaleY','num','trScaleYV',v=>v+'%',''],
+ ['uniformScale','tr.uniform','bool',null,null,''],
  ['trDx','tr.dx','num','trDxV',v=>v,''],
  ['trDy','tr.dy','num','trDyV',v=>v,''],
  ['trRot','tr.rot','num','trRotV',v=>v+'°',''],
@@ -2166,8 +2168,6 @@ const BIND=[
  ['frameColor','box.frameColor','str','frameColorV',v=>v,''],
  ['holeType','hw.hole','str',null,null,''],
  ['holeDia','hw.dia','num','holeDiaV',v=>v+' มม.',''],
- ['baseType','hw.base','str',null,null,''],
- ['baseW','hw.baseW','num','baseWV',v=>v+' มม.',''],
  ['hangHole','hw.hang','bool',null,null,''],
  ['jointType','hw.joint','str',null,null,''],
  ['lipH','hw.lipH','num','lipHV',v=>v+' มม.',''],
@@ -2211,6 +2211,7 @@ function recompute(){
     refreshQuote();
     runChecks();
     updateBadges();
+    syncSizeUI();
   }catch(e){ console.error(e); toast('คำนวณผิดพลาด: '+e.message); }
 }
 function refreshQuote(){
@@ -2256,7 +2257,61 @@ function pushToUI(){
   $$('#left [data-pane]').forEach(p=>p.style.display = p.dataset.pane===S.src.mode?'':'none');
   $$('#viewseg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.ui.view));
   $('#colN').disabled = S.src.mode!=='image';
+  $('#rowScaleY').style.display = S.tr.uniform ? 'none' : '';
+  syncRingUI(); syncSizeUI();
 }
+
+/* ช่องสี/สว่าง-ทึบ ของวงขอบ ในหัวข้อ 4 */
+function syncRingUI(){
+  S.rings.forEach((r,i)=>{
+    const sw=$('#ring'+i+'sw'), c=$('#ring'+i+'c'), g=$('#ring'+i+'g'), n=$('#ring'+i+'n');
+    if(!sw) return;
+    sw.style.background=r.hex; c.value=r.hex;
+    g.textContent=r.glow?'สว่าง':'ทึบ'; g.classList.toggle('on',!!r.glow);
+    n.textContent=nearestFilament(r.hex);
+    const off = (+r.w<=0) || S.shape.mode!=='contour';
+    [sw,g,n].forEach(el=>el.style.opacity = off?0.35:1);
+  });
+}
+/* ช่องขนาดชิ้นงาน — ไม่เขียนทับถ้าผู้ใช้กำลังพิมพ์อยู่ */
+function syncSizeUI(){
+  if(!PB||PB.empty) return;
+  const w=$('#sizeW'), h=$('#sizeH');
+  if(document.activeElement!==w) w.value=PB.w.toFixed(1).replace(/\.0$/,'');
+  if(document.activeElement!==h) h.value=PB.h.toFixed(1).replace(/\.0$/,'');
+}
+/* ตั้งขนาดชิ้นงานเป็นมิลลิเมตร
+   ขนาดจริงขึ้นกับทั้งสเกลและพื้นที่ทำงาน (baseFit เป็น min ของสองแกน)
+   พอขยายพื้นที่ทำงาน ฐานสเกลก็เปลี่ยนตาม แก้สมการก้าวเดียวจึงไม่พอ — ต้องวนซ้ำ */
+function setPartSize(axis,target){
+  if(!PB||PB.empty||!isFinite(target)||target<5||target>2000) return;
+  const R = 2*activeRings().reduce((a,r)=>a+(+r.w),0);
+  const cur0 = axis==='w'? PB.w : PB.h;
+  if(cur0<0.5) return;
+  if(cur0-R<0.5){ toast('ขอบกว้างเกินกว่าจะย่อได้ ลดความกว้างขอบก่อน'); return; }
+
+  /* ขยายพื้นที่ทำงานให้พอก่อน แล้วค่อยวนหาสเกล — ไม่งั้นรูปทรงจะโดนขอบตัด */
+  const M = 2*S.box.frame + 16;
+  const other0 = axis==='w'? PB.h : PB.w;
+  const other  = S.tr.uniform ? other0*(target/cur0) : other0;
+  S.box.W = Math.max(S.box.W, Math.ceil((axis==='w'? target : other)+M));
+  S.box.H = Math.max(S.box.H, Math.ceil((axis==='h'? target : other)+M));
+
+  for(let it=0; it<5; it++){
+    buildGrid();                                   // อัปเดต PB แบบซิงโครนัส
+    const cur = axis==='w'? PB.w : PB.h;
+    if(Math.abs(cur-target) < 0.25) break;
+    const den = cur - R; if(den < 0.5) break;
+    const s0 = (axis==='w' || S.tr.uniform) ? S.tr.scale : S.tr.scaleY;
+    const need = clamp(s0*(target-R)/den, 2, 4000);
+    if(Math.abs(need-s0) < 0.01) break;
+    if(S.tr.uniform){ S.tr.scale=need; S.tr.scaleY=need; }
+    else if(axis==='w') S.tr.scale=need;
+    else S.tr.scaleY=need;
+  }
+  pushToUI(); recompute();
+}
+
 
 function wire(){
   for(const [id,path,kind,lab,fmt,flag] of BIND){
@@ -2366,12 +2421,27 @@ function wire(){
   window.addEventListener('drop',e=>{ e.preventDefault();
     const f=e.dataTransfer.files[0]; if(f&&/^image\//.test(f.type)) loadImg(f); });
 
+  /* สีและสว่าง/ทึบ ของวงขอบ */
+  [0,1].forEach(i=>{
+    const c=$('#ring'+i+'c'), g=$('#ring'+i+'g');
+    if(!c) return;
+    c.addEventListener('input',e=>{ S.rings[i].hex=e.target.value; syncRingUI(); schedule(false); });
+    g.addEventListener('click',()=>{ S.rings[i].glow=!S.rings[i].glow; syncRingUI(); schedule(false); });
+  });
+  /* ขนาดชิ้นงานเป็นมิลลิเมตร */
+  const sizeGo=(el,axis)=>{
+    el.addEventListener('change',()=>setPartSize(axis,+el.value));
+    el.addEventListener('keydown',e=>{ if(e.key==='Enter') setPartSize(axis,+el.value); });
+  };
+  sizeGo($('#sizeW'),'w'); sizeGo($('#sizeH'),'h');
+
   /* auto fit */
   $('#btnAutoFit').addEventListener('click',()=>{
-    S.tr={scale:88,dx:0,dy:0,rot:0};
+    const u=S.tr.uniform;
+    S.tr={scale:88,scaleY:88,uniform:u,dx:0,dy:0,rot:0};
     if(SRC_CACHE&&SRC_CACHE.cv){
       const a=SRC_CACHE.cv.width/SRC_CACHE.cv.height, ap=S.box.W/S.box.H;
-      S.tr.scale = a>ap? 94 : 88;
+      S.tr.scale = S.tr.scaleY = a>ap? 94 : 88;
     }
     pushToUI(); schedule(false);
   });
@@ -2433,7 +2503,7 @@ function boot(){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 window.__LB={get S(){return S;}, get G(){return G;}, buildParts, stlOf, make3mf, estimate, recompute, defaults,
-             jointSpec, partMatrix, footDims, platePack, panelBounds, activeRings, bedSize, bossPoints, bottomInfo, panelClipped, edt,
+             jointSpec, partMatrix, platePack, panelBounds, activeRings, bedSize, bossPoints, bottomInfo, panelClipped, edt,
              get PB(){return PB;}, get PARTS(){return PARTS;},
              set S(v){S=v;}, rebuildSource, buildGrid, geomStack};
 </script>
