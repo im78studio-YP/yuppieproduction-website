@@ -71,7 +71,7 @@ input[type=text],input[type=number],select,textarea{
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc2)}
 textarea{resize:vertical;min-height:62px;line-height:1.5}
 input[type=range]{width:100%;accent-color:var(--acc);background:none;border:0;padding:0}
-.num{width:62px;flex:0 0 62px;text-align:right}
+.num{width:68px;flex:0 0 68px;text-align:right}
 .unit{color:var(--tx2);flex:0 0 auto;font-size:11.5px}
 .tabs{display:flex;gap:4px;background:var(--panel2);padding:3px;border-radius:8px;margin:10px 0}
 .tabs button{flex:1;background:none;border:0;padding:6px;border-radius:6px;cursor:pointer;color:var(--tx2)}
@@ -88,8 +88,12 @@ input[type=range]{width:100%;accent-color:var(--acc);background:none;border:0;pa
 /* palette */
 .pal{display:flex;flex-direction:column;gap:6px}
 .pal .it{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
-.pal .sw{width:26px;height:26px;border-radius:6px;border:1px solid #0006;flex:0 0 auto;cursor:pointer;position:relative;overflow:hidden}
-.pal .sw input{position:absolute;inset:-6px;opacity:0;cursor:pointer}
+.sw{width:26px;height:26px;border-radius:6px;border:1px solid #0006;flex:0 0 auto;cursor:pointer;position:relative;overflow:hidden;display:inline-block;vertical-align:middle}
+.sw input[type=color]{position:absolute;inset:-6px;opacity:0;cursor:pointer;width:auto;padding:0;border:0}
+.hexin{width:74px;flex:0 0 74px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:-0.2px;text-transform:uppercase;padding:5px 4px;text-align:center}
+.hexin.bad{border-color:var(--err)}
+.minibtn{background:none;border:1px solid var(--line);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--tx2);flex:0 0 auto}
+.minibtn:hover{border-color:var(--acc2);color:var(--tx)}
 .pal .nm{flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pal .nm b{display:block;font-weight:600}
 .pal .nm i{font-style:normal;color:var(--tx2);font-size:11px}
@@ -222,15 +226,10 @@ PRODUCTION</textarea>
         <input type="number" id="sizeW" class="num" step="1"><span class="unit">×</span>
         <input type="number" id="sizeH" class="num" step="1"><span class="unit">มม.</span></div>
       <div class="row"><label>ล็อกสัดส่วน</label><input type="checkbox" id="uniformScale" checked>
-        <span class="unit">Uniform Scale — ปิดเพื่อยืด/บีบด้านเดียว</span></div>
+        <span class="unit">Uniform Scale</span></div>
+      <p class="hint" style="margin:0">ติ๊กไว้ = ย่อ-ขยายทั้งสองด้านพร้อมกัน · เอาออก = ยืดหรือบีบทีละด้านได้</p>
       <p class="hint" style="margin:2px 0 8px">พิมพ์ขนาดที่ต้องการลงไปได้เลย ระบบจะย่อ-ขยายลวดลายให้ชิ้นงานจริงได้ขนาดนั้น
       (รวมความกว้างขอบแล้ว) · ถ้าใหญ่เกินพื้นที่ทำงาน ระบบจะขยายพื้นที่ให้เอง</p>
-      <div class="row"><label>ขนาดแนวกว้าง</label><input type="range" id="trScale" min="5" max="400" step="1" value="88"><span class="unit" id="trScaleV">88%</span></div>
-      <div class="row" id="rowScaleY" style="display:none"><label>ขนาดแนวสูง</label><input type="range" id="trScaleY" min="5" max="400" step="1" value="88"><span class="unit" id="trScaleYV">88%</span></div>
-      <div class="row"><label>เลื่อนซ้าย-ขวา</label><input type="range" id="trDx" min="-50" max="50" step="1" value="0"><span class="unit" id="trDxV">0</span></div>
-      <div class="row"><label>เลื่อนขึ้น-ลง</label><input type="range" id="trDy" min="-50" max="50" step="1" value="0"><span class="unit" id="trDyV">0</span></div>
-      <div class="row"><label>หมุน</label><input type="range" id="trRot" min="-180" max="180" step="1" value="0"><span class="unit" id="trRotV">0°</span></div>
-      <div class="row"><button class="btn grow" id="btnAutoFit">จัดให้พอดีอัตโนมัติ</button></div>
     </div>
   </div>
 
@@ -245,8 +244,30 @@ PRODUCTION</textarea>
           <option value="bg">พื้นสว่าง โลโก้ทึบ</option>
         </select>
       </div>
-      <p class="hint" style="margin-bottom:8px">คลิกช่องสีเพื่อแก้เป็นสีเส้นจริง · ปุ่ม “สว่าง/ทึบ” กำหนดว่าชั้นนั้นให้แสงผ่านหรือไม่</p>
+      <div class="row" style="margin-bottom:4px"><label>ชั้นสีทั้งหมด</label>
+        <span class="grow"></span>
+        <button class="minibtn" id="btnPalReset">คืนค่าสีตั้งต้น</button></div>
+      <p class="hint" style="margin:0 0 8px">คลิกช่องสี่เหลี่ยมเพื่อเลือกจากจานสี หรือพิมพ์รหัสสี #RRGGBB
+      ลงช่องข้างๆ ได้เลย · ปุ่ม “สว่าง/ทึบ” กำหนดว่าชั้นนั้นให้แสงผ่านหรือไม่</p>
       <div class="pal" id="palList"></div>
+
+      <div class="row" style="margin:16px 0 4px"><label>สีกล่อง</label>
+        <span class="grow"></span></div>
+      <p class="hint" style="margin:0 0 8px">สีของกรอบข้างและฝาหลัง — ไม่จำเป็นต้องเป็นสีดำ</p>
+      <div class="pal">
+        <div class="it">
+          <span class="sw" id="frameSw"><input type="color" id="frameColor" value="#1a1a1a"></span>
+          <span class="nm"><b>กรอบข้างกล่อง</b><i id="frameColorV">#1A1A1A</i></span>
+          <input type="text" class="hexin" id="frameHex" value="#1A1A1A" spellcheck="false">
+        </div>
+        <div class="it">
+          <span class="sw" id="backSw"><input type="color" id="backColor" value="#1a1a1a"></span>
+          <span class="nm"><b>ฝาหลัง</b><i id="backColorV">#1A1A1A</i></span>
+          <input type="text" class="hexin" id="backHex" value="#1A1A1A" spellcheck="false">
+        </div>
+      </div>
+      <p class="hint">กรอบข้างควรใช้เส้นทึบแสง ถ้าใช้สีอ่อนหรือสีใส แสงจะรอดออกข้างกล่อง
+      · ฝาหลังเลือกสีอะไรก็ได้ เพราะอยู่ด้านที่ไม่เห็น</p>
     </div>
   </div>
 
@@ -254,23 +275,20 @@ PRODUCTION</textarea>
   <div class="sec" data-sec="shape">
     <h3>4 · รูปทรงและขอบ</h3>
     <div class="body">
-      <div class="row"><label>รูปทรงกล่อง</label>
-        <select id="shapeMode" class="grow">
-          <option value="contour">ตามรูปโลโก้ / ตัวอักษร</option>
-          <option value="rect">แผ่นสี่เหลี่ยม</option>
-        </select></div>
       <div class="row"><label>เติมช่องในตัว</label><input type="checkbox" id="fillHoles" checked>
         <span class="unit">ปิดช่องในตัว O, P, A ไม่ให้ทะลุ</span></div>
       <div class="row"><label>ขอบชั้นใน</label><input type="range" id="ring0w" min="0" max="30" step="0.5" value="4"><span class="unit" id="ring0wV">4 มม.</span></div>
-      <div class="row"><label></label>
+      <div class="pal" id="ring0row"><div class="it">
         <span class="sw" id="ring0sw"><input type="color" id="ring0c" value="#ffffff"></span>
-        <button class="glowbtn" id="ring0g">สว่าง</button>
-        <span class="unit" id="ring0n">ขาว</span></div>
+        <span class="nm"><b id="ring0n">ขาว</b><i id="ring0h">#FFFFFF</i></span>
+        <input type="text" class="hexin" id="ring0x" value="#FFFFFF" spellcheck="false">
+        <button class="glowbtn" id="ring0g">สว่าง</button></div></div>
       <div class="row"><label>ขอบชั้นนอก</label><input type="range" id="ring1w" min="0" max="30" step="0.5" value="3"><span class="unit" id="ring1wV">3 มม.</span></div>
-      <div class="row"><label></label>
+      <div class="pal" id="ring1row"><div class="it">
         <span class="sw" id="ring1sw"><input type="color" id="ring1c" value="#ee3c96"></span>
-        <button class="glowbtn" id="ring1g">ทึบ</button>
-        <span class="unit" id="ring1n">ชมพูบานเย็น</span></div>
+        <span class="nm"><b id="ring1n">ชมพูบานเย็น</b><i id="ring1h">#EE3C96</i></span>
+        <input type="text" class="hexin" id="ring1x" value="#EE3C96" spellcheck="false">
+        <button class="glowbtn" id="ring1g">ทึบ</button></div></div>
       <p class="hint">ขอบคือเส้นที่ขยายออกจากตัวลวดลาย รูปทรงของกล่องจะวิ่งตามขอบชั้นนอกสุด
       แก้สีและกำหนดสว่าง/ทึบ ของแต่ละขอบได้ที่หัวข้อ 3 · สีและชั้น<br>
       ตั้งเป็น 0 เพื่อไม่ใช้ขอบชั้นนั้น · ขอบรวมควรกว้างกว่าผนังกรอบอย่างน้อย 3 มม.</p>
@@ -325,12 +343,7 @@ PRODUCTION</textarea>
       <div class="row"><label>ความหนาพื้นทึบ</label><input type="range" id="bBgT" min="0.6" max="3" step="0.1" value="1.2"><span class="unit" id="bBgTV">1.2 มม.</span></div>
       <div class="row"><label>กรอบข้าง</label><input type="range" id="bFrame" min="1.2" max="8" step="0.2" value="2.4"><span class="unit" id="bFrameV">2.4 มม.</span></div>
       <div class="row"><label>แผ่นหลัง</label><input type="range" id="bBack" min="1" max="5" step="0.2" value="2"><span class="unit" id="bBackV">2 มม.</span></div>
-      <div class="row"><label>สีกรอบ/หลัง</label>
-        <span class="sw" style="width:26px;height:26px;border-radius:6px;border:1px solid #0006;position:relative;overflow:hidden;background:#1a1a1a" id="frameSw">
-          <input type="color" id="frameColor" value="#1a1a1a" style="position:absolute;inset:-6px;opacity:0">
-        </span>
-        <span class="unit" id="frameColorV">#1a1a1a</span>
-      </div>
+      <p class="hint">เลือกสีกรอบและสีฝาหลังได้ที่หัวข้อ <b>3 · สีและชั้น</b></p>
     </div>
   </div>
 
@@ -457,7 +470,8 @@ function defaults(){ return {
           {w:3, hex:'#ee3c96', glow:false} ],
   pal:[ {hex:'#1a1a1a',name:'พื้นหลัง',glow:false},
         {hex:'#ff2d8f',name:'สี 1',glow:true} ],
-  box:{ W:200,H:120,depth:35,colorT:0.4,diff:0.6,bgT:1.2,frame:2.4,back:2, frameColor:'#1a1a1a' },
+  box:{ W:200,H:120,depth:35,colorT:0.4,diff:0.6,bgT:1.2,frame:2.4,back:2,
+        frameColor:'#1a1a1a', backColor:'#1a1a1a' },
   hw:{ hole:'frame', dia:7, hang:false,
        joint:'screw', lipH:2, lipW:3, lipCl:0.2, bossW:8, screwDepth:10 },
   price:{ qty:1, fil:750, mach:25, laborMin:25, laborRate:300, led:150, waste:8, margin:45, flush:120 },
@@ -1238,7 +1252,7 @@ function buildParts(nt){
     return true;
   });
   const PK=platePack();
-  const BM=Mesh('แผ่นหลัง'+(J.lip?' + บ่าล็อก':''),'#'+b.frameColor.replace('#',''),nt);
+  const BM=Mesh('แผ่นหลัง'+(J.lip?' + บ่าล็อก':''),'#'+(b.backColor||b.frameColor).replace('#',''),nt);
   addRects(BM,maskToRects(backM,gw,gh), 0, b.back, true);
   if(J.lip){
     const i0=(b.frame+J.cl)/px, i1=(b.frame+J.cl+J.lipW)/px;
@@ -1595,24 +1609,77 @@ function drawPlate(c,cv,px){
            m+BED*px-6, m+BED*px-8);
 }
 
-/* ══════════ PALETTE UI ══════════ */
+/* ══════════ PALETTE UI ══════════
+   สร้างแถวครั้งเดียวแล้วอัปเดตค่าในที่เดิม — ห้ามล้าง innerHTML ทุกครั้งที่คำนวณใหม่
+   เพราะจานสีของระบบปฏิบัติการ/ช่องพิมพ์รหัสสีจะถูกทำลายกลางคัน (พิมพ์ได้ไม่กี่ตัวแล้วเด้ง) */
+const HEXRE=/^#?[0-9a-fA-F]{6}$/;
+const normHex=v=>{ v=(v||'').trim(); if(!HEXRE.test(v)) return null;
+                   return '#'+v.replace('#','').toLowerCase(); };
+/* ตั้งค่าให้ช่องกรอก โดยไม่แตะช่องที่ผู้ใช้กำลังพิมพ์อยู่ */
+function setIfIdle(el,v){ if(el && document.activeElement!==el && el.value!==v) el.value=v; }
+
+function palRow(){
+  const d=document.createElement('div'); d.className='it';
+  d.innerHTML=`<span class="sw"><input type="color"></span>
+    <span class="nm"><b></b><i></i></span>
+    <input type="text" class="hexin" spellcheck="false">
+    <button class="glowbtn"></button>`;
+  d.C=d.querySelector('input[type=color]');
+  d.X=d.querySelector('.hexin');
+  d.SW=d.querySelector('.sw');
+  d.B=d.querySelector('.nm b'); d.I=d.querySelector('.nm i');
+  d.G=d.querySelector('.glowbtn');
+  const put=hex=>{ if(d.onHex) d.onHex(hex); };
+  d.C.addEventListener('input',e=>put(e.target.value));
+  const commit=()=>{ const h=normHex(d.X.value);
+    if(h){ d.X.classList.remove('bad'); put(h); } else d.X.classList.add('bad'); };
+  d.X.addEventListener('input',()=>{ const h=normHex(d.X.value);
+    d.X.classList.toggle('bad',!h && d.X.value.trim()!==''); if(h) put(h); });
+  d.X.addEventListener('change',commit);
+  d.X.addEventListener('blur',()=>{ d.X.classList.remove('bad'); if(d.lastHex) d.X.value=d.lastHex.toUpperCase(); });
+  d.X.addEventListener('keydown',e=>{ if(e.key==='Enter'){ commit(); d.X.blur(); } });
+  d.G.addEventListener('click',()=>{ if(d.onGlow) d.onGlow(); });
+  d.set=(hex,title,sub,glow)=>{
+    d.lastHex=hex;
+    d.SW.style.background=hex;
+    setIfIdle(d.C,hex);
+    setIfIdle(d.X,hex.toUpperCase());
+    d.B.innerHTML=title; d.I.textContent=sub;
+    d.G.textContent=glow?'สว่าง':'ทึบ'; d.G.classList.toggle('on',!!glow);
+  };
+  return d;
+}
+
 function renderPalette(){
-  const el=$('#palList'); el.innerHTML='';
+  const el=$('#palList');
+  while(el.children.length>S.pal.length) el.removeChild(el.lastChild);
+  while(el.children.length<S.pal.length) el.appendChild(palRow());
   S.pal.forEach((p,i)=>{
+    const d=el.children[i];
     const pct=G&&!G.empty? (p.cells/(G.gw*G.gh)*100):0;
-    const d=document.createElement('div'); d.className='it';
     const ring = p.role==='ring' ? S.rings[p.ringIndex] : null;
-    d.innerHTML=`<span class="sw" style="background:${p.hex}"><input type="color" value="${p.hex}"></span>
-      <span class="nm"><b>${p.name||('สี '+i)}${ring?` <span class="badge">${ring.w} มม.</span>`:''}</b>`+
-      `<i>${nearestFilament(p.hex)} · ${p.hex.toUpperCase()} · ${pct.toFixed(1)}%</i></span>
-      <button class="glowbtn ${p.glow?'on':''}">${p.glow?'สว่าง':'ทึบ'}</button>`;
-    d.querySelector('input').addEventListener('input',e=>{
-      if(ring) ring.hex=e.target.value; else { p.hex=e.target.value; p.locked=true; }
-      schedule(false); });
-    d.querySelector('.glowbtn').addEventListener('click',()=>{
-      if(ring) ring.glow=!ring.glow; else p.glow=!p.glow; schedule(false); });
-    el.appendChild(d);
+    d.onHex=hex=>{ if(ring){ ring.hex=hex; syncRingUI(); } else { p.hex=hex; p.locked=true; }
+                   d.SW.style.background=hex; d.lastHex=hex; schedule(false); };
+    d.onGlow=()=>{ if(ring){ ring.glow=!ring.glow; syncRingUI(); } else p.glow=!p.glow; schedule(false); };
+    d.set(p.hex, (p.name||('สี '+i))+(ring?` <span class="badge">${ring.w} มม.</span>`:''),
+          `${nearestFilament(p.hex)} · ${p.hex.toUpperCase()} · ${pct.toFixed(1)}%`,
+          ring? ring.glow : p.glow);
   });
+}
+/* คืนค่าสีทุกชั้นกลับเป็นค่าตั้งต้น */
+function resetPalette(){
+  const D=defaults();
+  S.rings.forEach((r,i)=>{ if(D.rings[i]){ r.hex=D.rings[i].hex; r.glow=D.rings[i].glow; } });
+  S.box.frameColor=D.box.frameColor;
+  S.box.backColor=D.box.backColor;
+  /* คืนสีงาน: ปลดล็อกเพื่อให้โหมดรูปภาพไปดึงสีจริงจากไฟล์ใหม่
+     ส่วนโหมดข้อความใช้ชุดสีตั้งต้นตรงๆ */
+  S.pal = S.pal.filter(p=>p.role!=='ring')
+               .map((p,i)=> D.pal[i] ? {...p, hex:D.pal[i].hex, locked:false}
+                                     : {...p, locked:false});
+  S.pal.forEach((p,i)=>{ p.glow = (S.art.glowMode==='bg')? i===0 : i>0; });
+  pushToUI(); rebuildSource(); recompute();
+  toast('คืนค่าสีตั้งต้นแล้ว');
 }
 
 /* ══════════ CHECKS ══════════ */
@@ -1822,6 +1889,8 @@ const TEMPLATES=[
 function applyTemplate(t){
   const p=JSON.parse(JSON.stringify(t.p));
   Object.assign(S.box,p.box||{});
+  if(p.box&&p.box.frameColor&&!p.box.backColor) S.box.backColor=p.box.frameColor;
+  S.shape.mode='contour';
   Object.assign(S.src,p.src||{});
   Object.assign(S.tr,p.tr||{});
   Object.assign(S.art,p.art||{});
@@ -1910,20 +1979,74 @@ function mkM(a00,a01,a02,a10,a11,a12,a20,a21,a22,tx,ty,tz){
 /* ---------- shaders ---------- */
 const VS=`attribute vec3 aPos; attribute vec3 aNrm;
 uniform mat4 uMVP, uM;
+uniform float uGrow;
 varying vec3 vN, vW;
-void main(){ vN=mat3(uM)*aNrm; vW=(uM*vec4(aPos,1.0)).xyz; gl_Position=uMVP*vec4(aPos,1.0); }`;
+void main(){
+  vec3 p=aPos+aNrm*uGrow;
+  vN=mat3(uM)*aNrm; vW=(uM*vec4(p,1.0)).xyz;
+  gl_Position=uMVP*vec4(p,1.0);
+}`;
+/* uFloor = พื้นสตูดิโอ · uHalo = รอบฟุ้งของชิ้นเรืองแสง (วาดทับแบบบวกสี)
+   uLightCol = สีเฉลี่ยของชั้นที่เรืองแสง ใช้ทั้งฉายลงพื้นและเป็นแสงสะท้อนกลับขึ้นชิ้นงาน
+   uSign = (ครึ่งกว้าง, ครึ่งสูง, ความลึกกล่อง) ทำให้แสงสเกลตามขนาดงานเสมอ */
 const FS=`precision mediump float;
 varying vec3 vN, vW;
 uniform vec3 uCol; uniform float uEmit; uniform float uDark;
+uniform float uFloor, uHalo, uLit;
+uniform vec3 uLightCol, uSign, uBg;
+
+/* แสงจากป้าย มองเป็นแผ่นเรืองแสงตั้งอยู่ที่ระนาบ z=0 หันหน้าไปทาง +z */
+float panelLight(vec3 P, vec3 N){
+  float k=uSign.x*uSign.x*1.35;
+  float acc=0.0;
+  for(int i=0;i<3;i++){
+    for(int j=0;j<3;j++){
+      vec3 lp=vec3((float(i)-1.0)*uSign.x*0.66, (float(j)-1.0)*uSign.y*0.66, 0.0);
+      vec3 dv=lp-P; float r2=dot(dv,dv)+1.0;
+      vec3 ld=dv*inversesqrt(r2);
+      acc += max(dot(N,ld),0.0)*max(-ld.z,0.0)*k/(k+r2);
+    }
+  }
+  return acc/9.0;
+}
+
 void main(){
+  if(uHalo>0.5){
+    vec3 N=normalize(vN);
+    float f=pow(1.0-abs(N.z),1.6);
+    gl_FragColor=vec4(uCol, f*0.42);
+    return;
+  }
+  if(uFloor>0.5){
+    vec3 base = uLit>0.5 ? vec3(0.125,0.132,0.152) : vec3(0.815,0.828,0.855);
+    /* ไล่จางเข้าหาสีพื้นหลังพอดี เพื่อไม่ให้เห็นขอบแผ่นพื้นเป็นเส้นตัด */
+    float r = clamp(length(vW.xz)/max(1.0,uSign.x*3.0), 0.0, 1.0);
+    vec3 c = mix(base, uBg, smoothstep(0.30,1.0,r));
+    /* เงาสัมผัสใต้ชิ้นงาน */
+    float sx=max(abs(vW.x)-uSign.x*0.98,0.0);
+    float sz=max(abs(vW.z+uSign.z*0.5)-uSign.z*0.62,0.0);
+    float sd=length(vec2(sx,sz))/max(1.0,uSign.x*0.30);
+    c *= 1.0-0.62*exp(-sd*sd);
+    if(uLit>0.5) c += uLightCol*panelLight(vW,vec3(0.0,1.0,0.0))*2.35;
+    else         c += uLightCol*panelLight(vW,vec3(0.0,1.0,0.0))*0.30;
+    gl_FragColor=vec4(c,1.0);
+    return;
+  }
   vec3 N=normalize(vN); if(!gl_FrontFacing) N=-N;
   vec3 L1=normalize(vec3(0.35,0.75,0.86)), L2=normalize(vec3(-0.7,0.25,0.35));
   float d=max(dot(N,L1),0.0)*0.78 + max(dot(N,L2),0.0)*0.26;
   vec3 V=normalize(vec3(0.0,0.0,1.0));
   float rim=pow(1.0-max(dot(N,V),0.0),3.0)*0.16;
   vec3 lit=uCol*(0.30+d)+vec3(rim);
-  vec3 dark=uCol*(0.10+d*0.28);
-  vec3 emis=clamp(uCol*1.25+vec3(0.30),0.0,1.0);
+  /* โหมดติดไฟ: ชิ้นทึบยังต้องอ่านรูปทรงออก จึงมีทั้งไฟส่องอ่อนๆ
+     แสงสะท้อนจากหน้าป้าย และขอบเรืองรับแสง */
+  float bounce=panelLight(vW,N);
+  float rim2=pow(1.0-max(dot(N,V),0.0),2.2);
+  vec3 dark=uCol*(0.26+d*0.40) + uLightCol*(bounce*1.15+0.08) + uLightCol*rim2*0.32;
+  /* หน้าป้ายที่ติดไฟ — ดันความสว่างขึ้นแต่คงความอิ่มสีไว้
+     ใจกลางจะขาวขึ้นเล็กน้อยเหมือนแผ่นกระจายแสงจริง ไม่ซีดจนเสียสีเส้น */
+  vec3 e0=clamp(uCol*1.85,0.0,1.0);
+  vec3 emis=clamp(e0+vec3(0.10)+e0*max(dot(N,V),0.0)*0.10,0.0,1.0);
   vec3 c=mix(mix(lit,dark,uDark),emis,uEmit);
   gl_FragColor=vec4(c,1.0);
 }`;
@@ -1946,9 +2069,19 @@ function glInit(){
   V3.loc={aPos:gl.getAttribLocation(p,'aPos'), aNrm:gl.getAttribLocation(p,'aNrm'),
           uMVP:gl.getUniformLocation(p,'uMVP'), uM:gl.getUniformLocation(p,'uM'),
           uCol:gl.getUniformLocation(p,'uCol'), uEmit:gl.getUniformLocation(p,'uEmit'),
-          uDark:gl.getUniformLocation(p,'uDark')};
+          uDark:gl.getUniformLocation(p,'uDark'), uGrow:gl.getUniformLocation(p,'uGrow'),
+          uFloor:gl.getUniformLocation(p,'uFloor'), uHalo:gl.getUniformLocation(p,'uHalo'),
+          uLit:gl.getUniformLocation(p,'uLit'),
+          uLightCol:gl.getUniformLocation(p,'uLightCol'), uSign:gl.getUniformLocation(p,'uSign'),
+          uBg:gl.getUniformLocation(p,'uBg')};
   gl.enable(gl.DEPTH_TEST);
   gl.disable(gl.CULL_FACE);
+  /* แผ่นพื้นสตูดิโอ — ควอดหนึ่งใบ แสงคำนวณต่อพิกเซลทั้งหมด */
+  const fq=new Float32Array([-1,0,-1, 1,0,-1, 1,0,1, -1,0,-1, 1,0,1, -1,0,1]);
+  const fn=new Float32Array([0,1,0, 0,1,0, 0,1,0, 0,1,0, 0,1,0, 0,1,0]);
+  const fb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,fb); gl.bufferData(gl.ARRAY_BUFFER,fq,gl.STATIC_DRAW);
+  const fnb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,fnb); gl.bufferData(gl.ARRAY_BUFFER,fn,gl.STATIC_DRAW);
+  V3.floor={p:fb,n:fnb};
   bindGLEvents(cv);
   V3.ready=true;
   return true;
@@ -2040,7 +2173,8 @@ function glRender(){
   glResize();
   gl.viewport(0,0,cv.width,cv.height);
   const lit=V3.mode==='lit';
-  if(lit) gl.clearColor(0.035,0.04,0.05,1); else gl.clearColor(0.90,0.91,0.93,1);
+  const BG = lit? [0.078,0.083,0.098] : [0.90,0.91,0.93];
+  gl.clearColor(BG[0],BG[1],BG[2],1);
   gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 
   const FOV=0.62, c=V3.cam;
@@ -2057,6 +2191,36 @@ function glRender(){
 
   gl.useProgram(V3.prog);
   gl.enableVertexAttribArray(L.aPos); gl.enableVertexAttribArray(L.aNrm);
+
+  /* สีเฉลี่ยของชั้นที่เรืองแสง — ใช้เป็นสีของแสงที่ตกลงบนพื้นและสะท้อนกลับขึ้นกรอบ */
+  const emitOf=M=>M.glow && (M.kind==='color'||M.kind==='diffuser');
+  let lr=0,lg=0,lb=0,ln=0;
+  for(const B of V3.buf) if(emitOf(B.M)){
+    const c=hex2rgb(B.M.hex); lr+=c[0]; lg+=c[1]; lb+=c[2]; ln++;
+  }
+  const LC = ln? [lr/ln/255,lg/ln/255,lb/ln/255] : [0.85,0.87,0.92];
+  const W3=PB.w||S.box.W, H3=PB.h||S.box.H;
+  gl.uniform3f(L.uLightCol,LC[0],LC[1],LC[2]);
+  gl.uniform3f(L.uSign, W3/2, H3/2, S.box.depth);
+  gl.uniform3f(L.uBg, BG[0],BG[1],BG[2]);
+  gl.uniform1f(L.uLit, lit?1:0);
+  gl.uniform1f(L.uGrow,0);
+  gl.uniform1f(L.uHalo,0);
+  gl.uniform1f(L.uFloor,0);
+
+  /* พื้นสตูดิโอ — วางที่ก้นชิ้นงาน ให้แสงไฟมีที่ตกกระทบ */
+  if(V3.mode!=='plate' && V3.floor){
+    const size=Math.max(W3,H3)*3.6+120, fy=B.mn[1]-0.4;
+    const Fm=mkM(size,0,0, 0,1,0, 0,0,size, 0, fy, 0);
+    gl.uniformMatrix4fv(L.uM,false,Fm);
+    gl.uniformMatrix4fv(L.uMVP,false,m4mul(PV,Fm));
+    gl.uniform1f(L.uFloor,1);
+    gl.uniform1f(L.uEmit,0); gl.uniform1f(L.uDark,0);
+    gl.bindBuffer(gl.ARRAY_BUFFER,V3.floor.p); gl.vertexAttribPointer(L.aPos,3,gl.FLOAT,false,0,0);
+    gl.bindBuffer(gl.ARRAY_BUFFER,V3.floor.n); gl.vertexAttribPointer(L.aNrm,3,gl.FLOAT,false,0,0);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+    gl.uniform1f(L.uFloor,0);
+  }
 
   /* กริดฐานพิมพ์ในโหมดผังพิมพ์ */
   if(V3.mode==='plate' && V3.grid){
@@ -2077,12 +2241,39 @@ function glRender(){
     gl.uniformMatrix4fv(L.uMVP,false,m4mul(PV,Mm));
     const rgb=hex2rgb(M.hex).map(v=>v/255);
     gl.uniform3f(L.uCol,rgb[0],rgb[1],rgb[2]);
-    const emit = lit && M.glow && (M.kind==='color'||M.kind==='diffuser') ? 1 : 0;
+    const emit = lit && emitOf(M) ? 1 : 0;
     gl.uniform1f(L.uEmit,emit);
     gl.uniform1f(L.uDark, lit&&!emit ? 1 : 0);
     gl.bindBuffer(gl.ARRAY_BUFFER,B.p); gl.vertexAttribPointer(L.aPos,3,gl.FLOAT,false,0,0);
     gl.bindBuffer(gl.ARRAY_BUFFER,B.n); gl.vertexAttribPointer(L.aNrm,3,gl.FLOAT,false,0,0);
     gl.drawArrays(gl.TRIANGLES,0,B.count);
+  }
+
+  /* รอบฟุ้งของชั้นเรืองแสง — ขยายเมชออกเล็กน้อยแล้ววาดทับแบบบวกสี
+     ได้ความรู้สึกไฟเรืองโดยไม่ต้องใช้ framebuffer แยก */
+  if(lit){
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+    gl.depthMask(false);
+    gl.uniform1f(L.uHalo,1);
+    const grow=Math.max(0.6,Math.min(W3,H3)*0.012);
+    for(const pass of [grow*0.45,grow*1.3]){
+      gl.uniform1f(L.uGrow,pass);
+      for(const B of V3.buf){
+        const M=B.M; if(!emitOf(M)) continue;
+        const Mm=partMatrix(M,V3.mode);
+        gl.uniformMatrix4fv(L.uM,false,Mm);
+        gl.uniformMatrix4fv(L.uMVP,false,m4mul(PV,Mm));
+        const rgb=hex2rgb(M.hex).map(v=>v/255);
+        gl.uniform3f(L.uCol,rgb[0],rgb[1],rgb[2]);
+        gl.bindBuffer(gl.ARRAY_BUFFER,B.p); gl.vertexAttribPointer(L.aPos,3,gl.FLOAT,false,0,0);
+        gl.bindBuffer(gl.ARRAY_BUFFER,B.n); gl.vertexAttribPointer(L.aNrm,3,gl.FLOAT,false,0,0);
+        gl.drawArrays(gl.TRIANGLES,0,B.count);
+      }
+    }
+    gl.uniform1f(L.uGrow,0); gl.uniform1f(L.uHalo,0);
+    gl.depthMask(true);
+    gl.disable(gl.BLEND);
   }
   return true;
 }
@@ -2143,16 +2334,10 @@ const BIND=[
  ['txtOutline','src.outline','num','txtOutlineV',v=>v+' มม.','s'],
  ['imgRemoveBg','src.removeBg','bool',null,null,'s'],
  ['imgTol','src.tol','num','imgTolV',v=>v,'s'],
- ['trScale','tr.scale','num','trScaleV',v=>v+'%',''],
- ['trScaleY','tr.scaleY','num','trScaleYV',v=>v+'%',''],
  ['uniformScale','tr.uniform','bool',null,null,''],
- ['trDx','tr.dx','num','trDxV',v=>v,''],
- ['trDy','tr.dy','num','trDyV',v=>v,''],
- ['trRot','tr.rot','num','trRotV',v=>v+'°',''],
  ['colN','art.n','num','colNV',v=>v,''],
  ['colSmooth','art.smooth','num','colSmoothV',v=>v,''],
  ['glowMode','art.glowMode','str',null,null,'g'],
- ['shapeMode','shape.mode','str',null,null,''],
  ['fillHoles','shape.fillHoles','bool',null,null,''],
  ['ring0w','rings.0.w','num','ring0wV',v=>v+' มม.',''],
  ['ring1w','rings.1.w','num','ring1wV',v=>v+' มม.',''],
@@ -2165,7 +2350,6 @@ const BIND=[
  ['bBgT','box.bgT','num','bBgTV',v=>v+' มม.',''],
  ['bFrame','box.frame','num','bFrameV',v=>v+' มม.',''],
  ['bBack','box.back','num','bBackV',v=>v+' มม.',''],
- ['frameColor','box.frameColor','str','frameColorV',v=>v,''],
  ['holeType','hw.hole','str',null,null,''],
  ['holeDia','hw.dia','num','holeDiaV',v=>v+' มม.',''],
  ['hangHole','hw.hang','bool',null,null,''],
@@ -2252,25 +2436,36 @@ function pushToUI(){
     if(lab&&fmt) document.getElementById(lab).textContent=fmt(v);
   }
   $('#docname').value=S.name;
-  $('#frameSw').style.background=S.box.frameColor;
   $$('#srcTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.src.mode));
   $$('#left [data-pane]').forEach(p=>p.style.display = p.dataset.pane===S.src.mode?'':'none');
   $$('#viewseg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.ui.view));
   $('#colN').disabled = S.src.mode!=='image';
-  $('#rowScaleY').style.display = S.tr.uniform ? 'none' : '';
-  syncRingUI(); syncSizeUI();
+  syncRingUI(); syncBoxColorUI(); syncSizeUI();
 }
 
 /* ช่องสี/สว่าง-ทึบ ของวงขอบ ในหัวข้อ 4 */
 function syncRingUI(){
   S.rings.forEach((r,i)=>{
-    const sw=$('#ring'+i+'sw'), c=$('#ring'+i+'c'), g=$('#ring'+i+'g'), n=$('#ring'+i+'n');
+    const sw=$('#ring'+i+'sw'), c=$('#ring'+i+'c'), g=$('#ring'+i+'g'),
+          n=$('#ring'+i+'n'), h=$('#ring'+i+'h'), x=$('#ring'+i+'x'), row=$('#ring'+i+'row');
     if(!sw) return;
-    sw.style.background=r.hex; c.value=r.hex;
+    sw.style.background=r.hex;
+    setIfIdle(c,r.hex); setIfIdle(x,r.hex.toUpperCase());
+    if(h) h.textContent=r.hex.toUpperCase();
     g.textContent=r.glow?'สว่าง':'ทึบ'; g.classList.toggle('on',!!r.glow);
     n.textContent=nearestFilament(r.hex);
-    const off = (+r.w<=0) || S.shape.mode!=='contour';
-    [sw,g,n].forEach(el=>el.style.opacity = off?0.35:1);
+    if(row) row.style.opacity = (+r.w<=0)?0.4:1;
+  });
+}
+/* ช่องสีกรอบและสีฝาหลัง ในหัวข้อ 3 */
+function syncBoxColorUI(){
+  [['frame','frameColor'],['back','backColor']].forEach(([k,path])=>{
+    const hex=S.box[path]||'#1a1a1a';
+    const sw=$('#'+k+'Sw'), c=$('#'+k+'Color'), v=$('#'+k+'ColorV'), x=$('#'+k+'Hex');
+    if(!sw) return;
+    sw.style.background=hex;
+    setIfIdle(c,hex); setIfIdle(x,hex.toUpperCase());
+    v.textContent=nearestFilament(hex)+' · '+hex.toUpperCase();
   });
 }
 /* ช่องขนาดชิ้นงาน — ไม่เขียนทับถ้าผู้ใช้กำลังพิมพ์อยู่ */
@@ -2322,7 +2517,6 @@ function wire(){
       if(kind==='num'&&el.value==='') v=0;
       sp(path,v);
       if(lab&&fmt) document.getElementById(lab).textContent=fmt(v);
-      if(id==='frameColor') $('#frameSw').style.background=v;
       if(flag==='g'){ S.pal.forEach((p,i)=> p.glow = (S.art.glowMode==='bg')? i===0 : i>0 ); }
       schedule(flag==='s', flag==='q'?'q':flag==='d'?'d':null);
     });
@@ -2421,30 +2615,40 @@ function wire(){
   window.addEventListener('drop',e=>{ e.preventDefault();
     const f=e.dataTransfer.files[0]; if(f&&/^image\//.test(f.type)) loadImg(f); });
 
+  /* คู่ช่องเลือกสี + ช่องพิมพ์รหัสสี — ผูกครั้งเดียว ไม่สร้าง DOM ใหม่ระหว่างพิมพ์ */
+  const bindColor=(colorEl,hexEl,get,set)=>{
+    const apply=h=>{ set(h); schedule(false); };
+    if(colorEl) colorEl.addEventListener('input',e=>apply(e.target.value));
+    if(!hexEl) return;
+    const commit=()=>{ const h=normHex(hexEl.value);
+      if(h){ hexEl.classList.remove('bad'); apply(h); }
+      else { hexEl.classList.add('bad'); } };
+    hexEl.addEventListener('input',()=>{ const h=normHex(hexEl.value);
+      hexEl.classList.toggle('bad',!h && hexEl.value.trim()!==''); if(h) apply(h); });
+    hexEl.addEventListener('change',commit);
+    hexEl.addEventListener('keydown',e=>{ if(e.key==='Enter'){ commit(); hexEl.blur(); } });
+    hexEl.addEventListener('blur',()=>{ hexEl.classList.remove('bad'); hexEl.value=get().toUpperCase(); });
+  };
+
   /* สีและสว่าง/ทึบ ของวงขอบ */
   [0,1].forEach(i=>{
-    const c=$('#ring'+i+'c'), g=$('#ring'+i+'g');
-    if(!c) return;
-    c.addEventListener('input',e=>{ S.rings[i].hex=e.target.value; syncRingUI(); schedule(false); });
-    g.addEventListener('click',()=>{ S.rings[i].glow=!S.rings[i].glow; syncRingUI(); schedule(false); });
+    const g=$('#ring'+i+'g');
+    bindColor($('#ring'+i+'c'), $('#ring'+i+'x'),
+      ()=>S.rings[i].hex, h=>{ S.rings[i].hex=h; syncRingUI(); });
+    if(g) g.addEventListener('click',()=>{ S.rings[i].glow=!S.rings[i].glow; syncRingUI(); schedule(false); });
   });
+  /* สีกล่อง — กรอบข้างและฝาหลังแยกกัน */
+  bindColor($('#frameColor'), $('#frameHex'),
+    ()=>S.box.frameColor, h=>{ S.box.frameColor=h; syncBoxColorUI(); });
+  bindColor($('#backColor'), $('#backHex'),
+    ()=>S.box.backColor, h=>{ S.box.backColor=h; syncBoxColorUI(); });
+  $('#btnPalReset').addEventListener('click',resetPalette);
   /* ขนาดชิ้นงานเป็นมิลลิเมตร */
   const sizeGo=(el,axis)=>{
     el.addEventListener('change',()=>setPartSize(axis,+el.value));
     el.addEventListener('keydown',e=>{ if(e.key==='Enter') setPartSize(axis,+el.value); });
   };
   sizeGo($('#sizeW'),'w'); sizeGo($('#sizeH'),'h');
-
-  /* auto fit */
-  $('#btnAutoFit').addEventListener('click',()=>{
-    const u=S.tr.uniform;
-    S.tr={scale:88,scaleY:88,uniform:u,dx:0,dy:0,rot:0};
-    if(SRC_CACHE&&SRC_CACHE.cv){
-      const a=SRC_CACHE.cv.width/SRC_CACHE.cv.height, ap=S.box.W/S.box.H;
-      S.tr.scale = S.tr.scaleY = a>ap? 94 : 88;
-    }
-    pushToUI(); schedule(false);
-  });
 
   /* buttons */
   $('#btnExport').addEventListener('click',doExport);
@@ -2479,6 +2683,9 @@ function wire(){
           S=Object.assign(base,o);
           for(const k of ['src','tr','art','box','hw','price','exp','ui']) S[k]=Object.assign(base[k],o[k]||{});
           S.pal=(o.pal||base.pal).map(p=>({...p}));
+          S.shape=Object.assign(base.shape,o.shape||{});
+          S.shape.mode='contour';                      // ไม่มีโหมดแผ่นสี่เหลี่ยมแล้ว
+          if(!S.box.backColor) S.box.backColor=S.box.frameColor;
           S.src.imgData=null;
           const go=()=>{ pushToUI(); rebuildSource(); schedule(false); toast('เปิดโปรเจ็คแล้ว'); };
           if(S.src.imgSrc){ const im=new Image(); im.onload=()=>{S.src.imgData=im;go();}; im.onerror=go; im.src=S.src.imgSrc; }
