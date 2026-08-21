@@ -185,18 +185,22 @@ select:focus{border-color:var(--acc)}
   padding:9px 11px;font-size:11px;color:var(--acc2);margin-top:9px;line-height:1.5}
 .catalog-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .catalog-item{display:grid;grid-template-columns:31px 1fr;align-items:center;gap:8px;min-height:58px;padding:8px 9px;
-  border:1px solid var(--line);border-radius:10px;background:var(--bg2);text-align:left;transition:.15s}
+  border:1px solid var(--line);border-radius:10px;background:var(--bg2);text-align:left;cursor:pointer;transition:.15s}
 .catalog-item:hover{border-color:var(--acc);background:rgba(224,168,60,.07)}
-.catalog-item:active{cursor:grabbing}.catalog-item[draggable=true]{cursor:grab}
-.catalog-icon{width:31px;height:31px;border-radius:8px;display:grid;place-items:center;background:var(--bg4);
+.catalog-item:active{transform:translateY(0)}
+.catalog-icon{position:relative;overflow:hidden;width:31px;height:31px;border-radius:8px;display:grid;place-items:center;background:var(--bg4);
   color:var(--acc2);font:700 16px Inter,sans-serif}
+.catalog-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--bg4)}
 .catalog-copy b{display:block;font-size:11.5px;font-weight:600}.catalog-copy small{display:block;color:var(--tx3);font-size:9.5px;line-height:1.35}
+.catalog-status{min-height:38px;margin-top:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;
+  background:rgba(255,255,255,.025);color:var(--tx2);font-size:10.5px;line-height:1.45}
+.catalog-status:empty{display:none}.catalog-status[data-state=success]{border-color:rgba(91,179,126,.45);color:#9bd9b4}
+.catalog-status[data-state=error]{border-color:rgba(239,139,98,.5);color:#f3aa91}
 .object-selected{margin-top:9px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.025);
   color:var(--tx2);font-size:11px;min-height:39px}
 .object-selected.on{border-color:rgba(224,168,60,.5);color:var(--acc2);background:rgba(224,168,60,.07)}
 .object-actions{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:7px}
 .object-actions .btn{padding:6px 4px;font-size:10.5px}
-.three-host.drop-ready{outline:2px solid var(--acc);outline-offset:-3px}
 
 .dock-rail{grid-column:2;grid-row:1;z-index:18;display:flex;flex-direction:column;align-items:center;gap:5px;
   padding:10px 6px;background:#07090c;border-left:1px solid #222933;border-right:1px solid #222933;overflow-y:auto}
@@ -247,6 +251,14 @@ select:focus{border-color:var(--acc)}
 .signage-page .brandbar .sp,.signage-page .brandbar>.chip2{display:none}
 .finish-page .finish-subhead{margin-bottom:8px}
 .lighting-page #oLightWatts{display:none}
+.light-model-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.light-model-card{overflow:hidden;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--bg2);text-align:left;transition:.15s}
+.light-model-card:hover{border-color:#3a414c}.light-model-card.on{border-color:var(--acc);background:rgba(224,168,60,.08)}
+.light-model-card img{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;background:#151a21;border-bottom:1px solid var(--line)}
+.light-model-copy{display:block;padding:8px 9px}.light-model-copy b{display:block;font-size:11.5px;font-weight:600}
+.light-model-copy small{display:block;margin-top:2px;color:var(--tx3);font-size:9.5px;line-height:1.35}
+.light-model-card.on .light-model-copy b{color:var(--acc2)}
+.light-model-status[data-state="loading"]{color:var(--acc2)}.light-model-status[data-state="error"]{color:var(--warn)}
 .fixed-spec{display:flex;align-items:center;justify-content:space-between;margin-top:9px;padding:9px 11px;border:1px solid var(--line);
   border-radius:9px;background:rgba(255,255,255,.025);font-size:11px;color:var(--tx3)}
 .fixed-spec b{font:600 12px Inter,sans-serif;color:var(--tx2)}
@@ -351,12 +363,13 @@ select:focus{border-color:var(--acc)}
   <div class="panel-intro">
     <div class="panel-eyebrow">FURNITURE</div>
     <h2>เฟอร์นิเจอร์และอุปกรณ์</h2>
-    <p>เพิ่มของใช้งานตามหน้าที่ แล้วลากจัดวางบนพื้นที่บูธ</p>
+    <p>คลิกหรือแตะรายการเพื่อเพิ่มลงบูธ ระบบจะหาตำแหน่งว่างให้อัตโนมัติ</p>
   </div>
 
   <div class="sec catalog-section" id="catalogSection">
     <div class="sech"><h3>รายการพร้อมจัดวาง</h3><span class="hint">8 รายการ</span></div>
     <div class="catalog-groups" id="objectCatalog"></div>
+    <div class="catalog-status" id="objectCatalogStatus" role="status" aria-live="polite"></div>
     <div class="note">เลือกวัตถุบนภาพเพื่อย้าย หมุน ทำสำเนา หรือลบด้วยแถบเครื่องมือใต้ภาพ</div>
   </div>
   </section>
@@ -442,6 +455,8 @@ select:focus{border-color:var(--acc)}
       <div class="g3" id="oStPos"></div>
       <label class="lbl">ด้านที่เปิดประตู</label>
       <div class="g3" id="oStDoor"></div>
+      <label class="lbl">รูปแบบประตู</label>
+      <div class="g2" id="oStDoorType"></div>
       <label class="lbl">ตำแหน่งประตูบนด้านนั้น</label>
       <div class="g3" id="oDoorOff"></div>
       <label class="lbl">ผิวห้อง</label>
@@ -462,6 +477,9 @@ select:focus{border-color:var(--acc)}
     <div class="sech"><h3>ไฟสปอตไลท์</h3><span class="hint">เปิดหรือปิด</span></div>
     <div class="g2" id="oLights"></div>
     <div id="lightBody">
+      <label class="lbl">รูปแบบโคม</label>
+      <div class="light-model-grid" id="oLightModel"></div>
+      <div class="note light-model-status" id="lightModelStatus" role="status" aria-live="polite"></div>
       <label class="lbl">สีแสง</label>
       <div class="g2" id="oLightCol"></div>
       <label class="lbl">กำลังไฟต่อดวง · กำหนดคงที่</label>
@@ -597,6 +615,7 @@ select:focus{border-color:var(--acc)}
       <button class="btn" id="btnUndoObject" type="button" title="ย้อนกลับ" aria-label="ย้อนกลับการแก้ไขวัตถุ">↶ Undo</button>
       <button class="btn" id="btnRedoObject" type="button" title="ทำซ้ำ" aria-label="ทำซ้ำการแก้ไขวัตถุ">↷ Redo</button>
     </div>
+    <div class="sr-only" id="objectLayoutStatus" role="status" aria-live="polite"></div>
     <div class="brandbar">
       <input type="text" id="brand" placeholder="แตะเพื่อใส่ชื่อแบรนด์ หรือชื่อบริษัทของคุณ" maxlength="40">
       <button class="btn sm" id="btnLogo">＋ โลโก้</button>
@@ -733,16 +752,23 @@ const PAIRS=[
   sec:p=>adjust(rotate(p,180),{s:.55,l:.46}),base:()=>'#e6e0d6',floor:()=>'#3a3d44'}];
 
 const PRESETS=[{w:3,d:3},{w:6,d:3},{w:6,d:4},{w:6,d:6},{w:9,d:6},{w:12,d:6}];
+const FURNITURE_CATEGORIES=[
+  {k:'reception',n:'ต้อนรับ'},
+  {k:'display',n:'จัดแสดงสินค้า'},
+  {k:'media',n:'สื่อและป้าย'},
+  {k:'hospitality',n:'ประชุมและรับรอง'},
+  {k:'decor',n:'ตกแต่ง'}];
+const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:null,modelScale:1,modelRotationY:0,initialRotation:0,...item});
 const OBJECT_CATALOG=[
-  {catalogId:'counter-standard',type:'counter',name:'เคาน์เตอร์',icon:'▰',size:{w:1.5,d:.6,h:1},unitPrice:28000,color:'#b88142'},
-  {catalogId:'shelf-standard',type:'shelf',name:'ชั้นโชว์',icon:'▥',size:{w:1,d:.45,h:2},unitPrice:18000,color:'#b99668'},
-  {catalogId:'screen-43',type:'screen',name:'จอแสดงผล',icon:'▣',size:{w:.9,d:.3,h:1.7},unitPrice:22000,color:'#30343b'},
-  {catalogId:'table-standard',type:'table',name:'โต๊ะ',icon:'▱',size:{w:1.2,d:.7,h:.75},unitPrice:12500,color:'#a97b4f'},
-  {catalogId:'chair-standard',type:'chair',name:'เก้าอี้',icon:'⌑',size:{w:.5,d:.5,h:.85},unitPrice:4500,color:'#626b78'},
-  {catalogId:'plant-medium',type:'plant',name:'ต้นไม้',icon:'♧',size:{w:.55,d:.55,h:1.2},unitPrice:3500,color:'#4f8653'},
-  {catalogId:'sign-floor',type:'sign',name:'ป้ายตั้งพื้น',icon:'◇',size:{w:.8,d:.35,h:1.8},unitPrice:8500,color:'#d4a33f'},
-  {catalogId:'display-standard',type:'display',name:'แท่นโชว์สินค้า',icon:'▤',size:{w:1,d:.6,h:1.4},unitPrice:16000,color:'#c8cbd0'}];
-const HEIGHTS=[2.5,3,3.5,4,4.5,5];
+  furnitureItem({catalogId:'counter-standard',category:'reception',type:'counter',name:'เคาน์เตอร์',icon:'▰',size:{w:1.5,d:.6,h:1},unitPrice:28000,color:'#b88142'}),
+  furnitureItem({catalogId:'shelf-standard',category:'display',type:'shelf',name:'ชั้นโชว์',icon:'▥',size:{w:1,d:.45,h:2},unitPrice:18000,color:'#b99668'}),
+  furnitureItem({catalogId:'display-standard',category:'display',type:'display',name:'แท่นโชว์สินค้า',icon:'▤',size:{w:1,d:.6,h:1.4},unitPrice:16000,color:'#c8cbd0'}),
+  furnitureItem({catalogId:'screen-43',category:'media',type:'screen',name:'จอแสดงผล',icon:'▣',size:{w:.9,d:.3,h:1.7},unitPrice:22000,color:'#30343b'}),
+  furnitureItem({catalogId:'sign-floor',category:'media',type:'sign',name:'ป้ายตั้งพื้น',icon:'◇',size:{w:.8,d:.35,h:1.8},unitPrice:8500,color:'#d4a33f'}),
+  furnitureItem({catalogId:'table-standard',category:'hospitality',type:'table',name:'โต๊ะ',icon:'▱',size:{w:1.2,d:.7,h:.75},unitPrice:12500,color:'#a97b4f'}),
+  furnitureItem({catalogId:'chair-standard',category:'hospitality',type:'chair',name:'เก้าอี้',icon:'⌑',size:{w:.5,d:.5,h:.85},unitPrice:4500,color:'#626b78'}),
+  furnitureItem({catalogId:'plant-medium',category:'decor',type:'plant',name:'ต้นไม้',icon:'♧',size:{w:.55,d:.55,h:1.2},unitPrice:3500,color:'#4f8653'})];
+const HEIGHTS=[2.4,3,3.5,4,4.5,5];
 const TYPES=[
  {k:'inline',n:'Inline',s:'เปิด 1 ด้าน',on:true,walls:['back','left','right'],
   note:'ผนัง 3 ด้าน เปิดเฉพาะด้านหน้าที่ติดทางเดิน — ผนังด้านขวาในภาพทำโปร่งไว้ให้มองเห็นข้างใน'},
@@ -756,12 +782,16 @@ const TYPES=[
 const ST_SIZE=[{k:'none',n:'ไม่มี',s:'ค่าเริ่มต้น'},{k:'a',n:'1.2 × 1.2',s:'1.44 ตร.ม.',w:1.2,d:1.2},
   {k:'b',n:'1.2 × 1.5',s:'1.80 ตร.ม.',w:1.2,d:1.5},{k:'c',n:'1.2 × 2.0',s:'2.40 ตร.ม.',w:1.2,d:2.0},
   {k:'full',n:'เต็มผนัง',s:'กว้างสุดเท่าที่ใส่ได้'},{k:'custom',n:'กำหนดเอง',s:'ใส่ขนาดเอง'}];
-const ST_H=[{k:2.0,n:'2.0 ม.',s:'ค่าเริ่มต้น'},{k:0,n:'กำหนดเอง',s:''}];
+const ST_H=[{k:2.4,n:'2.4 ม.',s:'ค่าเริ่มต้น'},{k:0,n:'กำหนดเอง',s:''}];
 const ST_POS=[{k:'left',n:'ชิดซ้าย'},{k:'center',n:'ตรงกลาง'},{k:'right',n:'ชิดขวา'}];
 const ST_DOOR=[{k:'left',n:'ประตูซ้าย'},{k:'front',n:'ประตูหน้า'},{k:'right',n:'ประตูขวา'}];
+const ST_DOOR_TYPE=[{k:'swing',n:'บานเปิด',s:'เปิดเข้าด้านในห้อง'},{k:'slide',n:'บานเลื่อน',s:'เลื่อนไปตามแนวผนัง'}];
 const LIGHTCOL=[{k:'warm',n:'แสงวอร์ม',s:'3000K',c:'#ffd9a0'},
   {k:'white',n:'แสงขาว',s:'6500K',c:'#e2ecff'}];
 const LIGHTWALL=[{k:'back',n:'ผนังหลัง',s:'ค่าเริ่มต้น'},{k:'all',n:'ทุกผนัง',s:'รอบบูธ'}];
+const LIGHT_MODELS=[
+  {k:'clear100',n:'Clear Light',s:'โคมหลัก 100W',url:'./assets/lights/clear-light-100w.glb',thumb:'./assets/lights/clear-light-100w.webp',scale:1},
+  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/arm-light.glb',thumb:'./assets/lights/arm-light.webp',scale:1}];
 const LIGHT_WATTS=[{k:100,n:'100W',price:1500,intensity:52}];
 const LIGHT_SPACING=1.0;
 const STORAGE_LIGHT_BLOCK_RATIO=.70;
@@ -802,16 +832,18 @@ const WHITE='#f2f3f5';
    alias so the proven controls, rules, pricing, and SVG renderer keep one data path. */
 const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
   wallCol:'white',wallMat:'paint',pair:'wood',pairTouched:false,
-  W:6,D:3,H:2.5,type:'inline',
-  stSize:'none',stW:1.2,stD:1.2,stHmode:2.0,stHv:2.0,stPos:'right',stDoor:'left',doorTouched:false,
+  W:6,D:3,H:2.4,type:'inline',
+  stSize:'none',stW:1.2,stD:1.2,stHmode:2.4,stHv:2.4,stPos:'right',stDoor:'left',stDoorType:'swing',doorTouched:false,
   stSurf:'paint',stPaint:'wall',stFace:'front',doorOff:'start',nameScale:5,
-  lights:true,lightCol:'warm',lightWall:'back',lightWatts:100,lightAdj:0,
+  lights:true,lightFixture:'clear100',lightCol:'warm',lightWall:'back',lightWatts:100,lightAdj:0,
   raise:0,floor:'carpet',carpet:'grey',tile:'woodL',
   logoType:'diecut',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
   logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[]};
 const S=BoothSpec;
 const serializeBoothSpec=()=>JSON.stringify(BoothSpec);
-const objectEditor={selectedId:null,past:[],future:[],seq:0,catalogWasDragged:false};
+const objectEditor={selectedId:null,past:[],future:[],seq:0};
+const LAYOUT_KEYS=['W','D','type','stSize','stW','stD','stPos'];
+let lastValidLayout=null;
 
 /* ================= helpers ================= */
 const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
@@ -820,6 +852,118 @@ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'
 const objectSnapshot=()=>JSON.stringify(S.objects);
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
 const objectCatalogDef=id=>OBJECT_CATALOG.find(o=>o.catalogId===id)||null;
+const PLACEMENT_GRID=.1;
+const placementRound=value=>Math.round(value/PLACEMENT_GRID)*PLACEMENT_GRID;
+const clampNumber=(value,min,max)=>Math.max(min,Math.min(max,value));
+function footprintSize(size,rotationY=0){
+  const rad=((rotationY%360)+360)%360*Math.PI/180,c=Math.abs(Math.cos(rad)),s=Math.abs(Math.sin(rad));
+  return{w:size.w*c+size.d*s,d:size.w*s+size.d*c};
+}
+function placementShape(size,x,z,rotationY=0){
+  const rad=((rotationY%360)+360)%360*Math.PI/180,c=Math.cos(rad),s=Math.sin(rad);
+  const axes=[{x:c,z:-s},{x:s,z:c}],half=[size.w/2,size.d/2],corners=[];
+  [-1,1].forEach(a=>[-1,1].forEach(b=>corners.push({x:x+axes[0].x*half[0]*a+axes[1].x*half[1]*b,
+    z:z+axes[0].z*half[0]*a+axes[1].z*half[1]*b})));
+  return{x,z,axes,half,corners};
+}
+function shapesOverlap(a,b,gap=0){
+  return [...a.axes,...b.axes].every(axis=>{
+    const distance=Math.abs((b.x-a.x)*axis.x+(b.z-a.z)*axis.z);
+    const radiusA=a.half[0]*Math.abs(a.axes[0].x*axis.x+a.axes[0].z*axis.z)+
+      a.half[1]*Math.abs(a.axes[1].x*axis.x+a.axes[1].z*axis.z);
+    const radiusB=b.half[0]*Math.abs(b.axes[0].x*axis.x+b.axes[0].z*axis.z)+
+      b.half[1]*Math.abs(b.axes[1].x*axis.x+b.axes[1].z*axis.z);
+    return distance<radiusA+radiusB+gap-.0001;
+  });
+}
+function placementLimits(item,rotationY=0){
+  const footprint=footprintSize(item.size,rotationY),walls=typ().walls,edge=item.clearance??.05,t=BOOTH_WALL_THICKNESS;
+  const edgeMinX=(walls.includes('left')?t:0)+edge,edgeMaxX=S.W-(walls.includes('right')?t:0)-edge;
+  const edgeMinZ=(walls.includes('back')?t:0)+edge,edgeMaxZ=S.D-edge;
+  const minX=edgeMinX+footprint.w/2,maxX=edgeMaxX-footprint.w/2;
+  const minZ=edgeMinZ+footprint.d/2,maxZ=edgeMaxZ-footprint.d/2;
+  return minX<=maxX&&minZ<=maxZ?{minX,maxX,minZ,maxZ,edgeMinX,edgeMaxX,edgeMinZ,edgeMaxZ,footprint}:null;
+}
+function isCatalogPlacementValid(catalogId,x,z,rotationY=0,ignoreId=null){
+  const item=objectCatalogDef(catalogId),limits=item&&placementLimits(item,rotationY);if(!item||!limits)return false;
+  const epsilon=.0001,shape=placementShape(item.size,x,z,rotationY);
+  if(shape.corners.some(corner=>corner.x<limits.edgeMinX-epsilon||corner.x>limits.edgeMaxX+epsilon||
+    corner.z<limits.edgeMinZ-epsilon||corner.z>limits.edgeMaxZ+epsilon))return false;
+  if(hasStore()){
+    const G=storeGeom(BOOTH_WALL_THICKNESS),storeShape=placementShape({w:G.w,d:G.d},G.x+G.w/2,G.y+G.d/2,0);
+    if(shapesOverlap(shape,storeShape,item.clearance??.05))return false;
+  }
+  return !S.objects.some(other=>{
+    if(other.id===ignoreId)return false;
+    const otherItem=objectCatalogDef(other.catalogId),gap=Math.max(item.clearance??.05,otherItem?.clearance??.05);
+    return shapesOverlap(shape,placementShape(other.size,other.position.x,other.position.z,other.rotationY||0),gap);
+  });
+}
+function findCatalogPlacement(catalogId,rotationY=0,preferred=null){
+  const item=objectCatalogDef(catalogId),limits=item&&placementLimits(item,rotationY);if(!item||!limits)return null;
+  const defaultZ=Math.min(limits.maxZ,Math.max(limits.minZ,S.D-.55-limits.footprint.d/2));
+  const startX=placementRound(clampNumber(preferred?.x??S.W/2,limits.minX,limits.maxX));
+  const startZ=placementRound(clampNumber(preferred?.z??defaultZ,limits.minZ,limits.maxZ));
+  const seen=new Set(),maxRadius=Math.ceil(Math.max(S.W,S.D)/PLACEMENT_GRID)+3;
+  const tryOffset=(dx,dz)=>{
+    const x=+placementRound(startX+dx*PLACEMENT_GRID).toFixed(3),z=+placementRound(startZ+dz*PLACEMENT_GRID).toFixed(3);
+    const key=x+':'+z;if(seen.has(key)||x<limits.minX-.0001||x>limits.maxX+.0001||z<limits.minZ-.0001||z>limits.maxZ+.0001)return null;
+    seen.add(key);return isCatalogPlacementValid(catalogId,x,z,rotationY)?{x,z}:null;
+  };
+  for(let radius=0;radius<=maxRadius;radius++){
+    if(radius===0){const point=tryOffset(0,0);if(point)return point;continue;}
+    for(let dx=-radius;dx<=radius;dx++){
+      let point=tryOffset(dx,-radius);if(point)return point;
+      point=tryOffset(dx,radius);if(point)return point;
+    }
+    for(let dz=-radius+1;dz<radius;dz++){
+      let point=tryOffset(-radius,dz);if(point)return point;
+      point=tryOffset(radius,dz);if(point)return point;
+    }
+  }
+  return null;
+}
+function announceCatalog(message,state){
+  const text=(state==='success'?'✓ ':'! ')+message,box=document.getElementById('objectCatalogStatus');
+  if(box){box.dataset.state=state;box.textContent=text;}
+  const global=document.getElementById('objectLayoutStatus'),catalogOpen=document.getElementById('dockCatalogPage')?.classList.contains('on');
+  if(global)global.textContent=catalogOpen?'':text;
+}
+const layoutSnapshot=()=>Object.fromEntries(LAYOUT_KEYS.map(key=>[key,S[key]]));
+function plannedCatalogLayout(){
+  const original=S.objects,planned=[];let possible=true;
+  S.objects=planned;
+  try{
+    for(const object of original){
+      const item=objectCatalogDef(object.catalogId);if(!item){possible=false;break;}
+      const valid=isCatalogPlacementValid(object.catalogId,object.position.x,object.position.z,object.rotationY||0);
+      const position=valid?{x:object.position.x,z:object.position.z}:findCatalogPlacement(object.catalogId,object.rotationY||0,object.position);
+      if(!position){possible=false;break;}
+      planned.push({...object,position:{...object.position,x:position.x,z:position.z}});
+    }
+  }finally{S.objects=original;}
+  return possible?planned:null;
+}
+function syncLayoutInputs(){
+  syncDims();
+  const values={stW:S.stW,stD:S.stD,stHv:S.stHv};
+  Object.entries(values).forEach(([id,value])=>{const input=document.getElementById(id);if(input)input.value=value;});
+}
+function reconcileCatalogLayout(){
+  const current=layoutSnapshot();
+  if(!lastValidLayout){lastValidLayout=current;return true;}
+  const planned=plannedCatalogLayout();
+  if(!planned){
+    Object.assign(S,lastValidLayout);syncLayoutInputs();
+    announceCatalog('เปลี่ยนพื้นที่ไม่ได้ เพราะไม่มีตำแหน่งว่างเพียงพอสำหรับเฟอร์นิเจอร์เดิม','error');return false;
+  }
+  let moved=0;planned.forEach(next=>{const object=objectById(next.id);
+    if(object&&(object.position.x!==next.position.x||object.position.z!==next.position.z)){
+      object.position.x=next.position.x;object.position.z=next.position.z;moved++;}});
+  lastValidLayout=current;
+  if(moved)announceCatalog('ปรับตำแหน่งเฟอร์นิเจอร์ '+moved+' รายการให้พอดีกับพื้นที่ใหม่แล้ว','success');
+  return true;
+}
 function recordObjectHistory(before){
   const after=objectSnapshot();if(before===after)return false;
   objectEditor.past.push(before);if(objectEditor.past.length>50)objectEditor.past.shift();
@@ -835,11 +979,14 @@ function makeCatalogObject(catalogId,x,z){
   const id='obj-'+Date.now().toString(36)+'-'+(++objectEditor.seq).toString(36);
   return{id,type:item.type,catalogId:item.catalogId,
     position:{x:Number.isFinite(x)?x:S.W/2,y:0,z:Number.isFinite(z)?z:S.D/2},
-    rotationY:0,size:{w:item.size.w,d:item.size.d,h:item.size.h},unitPrice:item.unitPrice};
+    rotationY:item.initialRotation||0,size:{w:item.size.w,d:item.size.d,h:item.size.h},unitPrice:item.unitPrice};
 }
-function addCatalogObjectAt(catalogId,x,z){
-  const obj=makeCatalogObject(catalogId,x,z);if(!obj)return;
-  mutateObjects(()=>S.objects.push(obj),obj.id);
+function addCatalogObject(catalogId){
+  const item=objectCatalogDef(catalogId);if(!item)return false;
+  const rotationY=item.initialRotation||0,position=findCatalogPlacement(catalogId,rotationY);
+  if(!position){announceCatalog('พื้นที่ไม่เพียงพอสำหรับเพิ่ม'+item.name,'error');return false;}
+  const obj=makeCatalogObject(catalogId,position.x,position.z);if(!obj)return false;
+  mutateObjects(()=>S.objects.push(obj),obj.id);announceCatalog('เพิ่ม'+item.name+'ลงในบูธแล้ว','success');return true;
 }
 function selectObject(id){
   objectEditor.selectedId=objectById(id)?id:null;
@@ -847,13 +994,19 @@ function selectObject(id){
 }
 function rotateSelectedObject(){
   const obj=objectById(objectEditor.selectedId);if(!obj)return;
-  mutateObjects(()=>{obj.rotationY=(obj.rotationY+45)%360;},obj.id);
+  const rotationY=(obj.rotationY+45)%360,item=objectCatalogDef(obj.catalogId);
+  if(!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,rotationY,obj.id)){
+    announceCatalog('หมุน'+item.name+'ไม่ได้ เพราะพื้นที่ไม่เพียงพอ','error');return;}
+  mutateObjects(()=>{obj.rotationY=rotationY;},obj.id);
 }
 function duplicateSelectedObject(){
   const source=objectById(objectEditor.selectedId);if(!source)return;
-  const copy=makeCatalogObject(source.catalogId,source.position.x+.35,source.position.z+.35);if(!copy)return;
+  const item=objectCatalogDef(source.catalogId),position=findCatalogPlacement(source.catalogId,source.rotationY,
+    {x:source.position.x+.4,z:source.position.z+.4});
+  if(!position){announceCatalog('พื้นที่ไม่เพียงพอสำหรับทำสำเนา'+item.name,'error');return;}
+  const copy=makeCatalogObject(source.catalogId,position.x,position.z);if(!copy)return;
   copy.position.y=source.position.y;copy.rotationY=source.rotationY;copy.size={...source.size};copy.unitPrice=source.unitPrice;
-  mutateObjects(()=>S.objects.push(copy),copy.id);
+  mutateObjects(()=>S.objects.push(copy),copy.id);announceCatalog('ทำสำเนา'+item.name+'แล้ว','success');
 }
 function deleteSelectedObject(){
   const id=objectEditor.selectedId;if(!objectById(id))return;
@@ -962,6 +1115,7 @@ function lightCounts(t){
     n[bi]=Math.max(0,n[bi]+S.lightAdj);}
   return{sp,n,total:n.reduce((a,b)=>a+b,0)};}
 const lightTotal=()=>S.lights?lightCounts(.1).total:0;
+const lightModelDef=()=>LIGHT_MODELS.find(x=>x.k===S.lightFixture)||LIGHT_MODELS[0];
 const lightWattDef=()=>LIGHT_WATTS.find(x=>x.k===S.lightWatts)||LIGHT_WATTS[0];
 const lightTotalWatts=()=>lightTotal()*lightWattDef().k;
 const lightPriceTotal=()=>lightTotal()*lightWattDef().price;
@@ -1077,8 +1231,13 @@ function build(){
   mk('oStH',ST_H,v=>{S.stHmode=v;});
   mk('oStPos',ST_POS,v=>{S.stPos=v; if(!S.doorTouched)S.stDoor=autoDoorFor();});
   mk('oStDoor',ST_DOOR,v=>{if(doorBlocked(v,.1))return;S.stDoor=v;S.doorTouched=true;});
+  mk('oStDoorType',ST_DOOR_TYPE,v=>S.stDoorType=v);
   mk('oDoorOff',DOOROFF,v=>S.doorOff=v,()=>'');
   mk('oLights',[{k:'on',n:'มีไฟ',s:'ค่าเริ่มต้น'},{k:'off',n:'ไม่มี',s:''}],v=>S.lights=(v==='on'));
+  const oLightModel=document.getElementById('oLightModel');oLightModel.innerHTML='';
+  LIGHT_MODELS.forEach(model=>{const b=el('button','light-model-card','<img src="'+model.thumb+'" alt="ภาพตัวอย่างโคม '+model.n+'" loading="lazy">'+
+      '<span class="light-model-copy"><b>'+model.n+'</b><small>'+model.s+'</small></span>');
+    b.type='button';b.dataset.k=model.k;b.setAttribute('aria-pressed','false');b.onclick=()=>{S.lightFixture=model.k;sync();};oLightModel.appendChild(b);});
   mk('oLightCol',LIGHTCOL,v=>S.lightCol=v);
   mk('oLightWatts',LIGHT_WATTS,v=>S.lightWatts=v,o=>o.n+'<small>สเปกมาตรฐาน</small>');
   mk('oLightWall',LIGHTWALL,v=>{S.lightWall=v;S.lightAdj=0;});
@@ -1118,23 +1277,19 @@ function build(){
     b.onclick=()=>{S.sidePos=t.k;sync();};sp.appendChild(b);});
 
   const objectCatalog=document.getElementById('objectCatalog');objectCatalog.innerHTML='';
-  const catalogGroups=[
-    ['ต้อนรับ',['counter']],['จัดแสดงสินค้า',['shelf','display']],['สื่อและป้าย',['screen','sign']],
-    ['ประชุมและรับรอง',['table','chair']],['ตกแต่ง',['plant']]];
-  const groupedTypes=new Set(catalogGroups.flatMap(group=>group[1]));
-  const remainingTypes=[...new Set(OBJECT_CATALOG.map(item=>item.type).filter(type=>!groupedTypes.has(type)))];
-  if(remainingTypes.length)catalogGroups.push(['อื่น ๆ',remainingTypes]);
+  const knownCategories=new Set(FURNITURE_CATEGORIES.map(category=>category.k));
+  const catalogGroups=FURNITURE_CATEGORIES.map(category=>[category.n,category.k]);
+  if(OBJECT_CATALOG.some(item=>!knownCategories.has(item.category)))catalogGroups.push(['อื่น ๆ','other']);
   document.querySelector('#catalogSection .hint').textContent=OBJECT_CATALOG.length+' รายการ';
-  catalogGroups.forEach(([name,types])=>{
+  catalogGroups.forEach(([name,category])=>{
     const group=el('div','catalog-group'),title=el('h5',null,name),grid=el('div','catalog-grid');
-    OBJECT_CATALOG.filter(item=>types.includes(item.type)).forEach(item=>{
-      const b=el('button','catalog-item','<span class="catalog-icon">'+item.icon+'</span><span class="catalog-copy"><b>'+item.name+
-        '</b><small>'+item.size.w+' × '+item.size.d+' × '+item.size.h+' ม.</small></span>');
-      b.type='button';b.draggable=true;b.dataset.catalogId=item.catalogId;
-      b.ondragstart=e=>{objectEditor.catalogWasDragged=true;e.dataTransfer.effectAllowed='copy';
-        e.dataTransfer.setData('application/x-yp-booth-object',item.catalogId);e.dataTransfer.setData('text/plain',item.catalogId);};
-      b.ondragend=()=>setTimeout(()=>{objectEditor.catalogWasDragged=false;},0);
-      b.onclick=()=>{if(!objectEditor.catalogWasDragged)addCatalogObjectAt(item.catalogId,S.W/2,S.D/2);};
+    OBJECT_CATALOG.filter(item=>category==='other'?!knownCategories.has(item.category):item.category===category).forEach(item=>{
+      const b=el('button','catalog-item'),media=el('span','catalog-icon',item.icon),copy=el('span','catalog-copy',
+        '<b>'+item.name+'</b><small>'+item.size.w+' × '+item.size.d+' × '+item.size.h+' ม.</small>');
+      if(item.thumbUrl){const img=document.createElement('img');img.className='catalog-thumb';img.src=item.thumbUrl;
+        img.alt='';img.loading='lazy';img.setAttribute('aria-hidden','true');img.onerror=()=>img.remove();media.appendChild(img);}
+      b.type='button';b.dataset.catalogId=item.catalogId;b.setAttribute('aria-label','เพิ่ม'+item.name+'ลงในบูธ');
+      b.title='คลิกเพื่อเพิ่ม'+item.name+'ลงในบูธ';b.onclick=()=>addCatalogObject(item.catalogId);b.append(media,copy);
       grid.appendChild(b);
     });
     group.append(title,grid);objectCatalog.appendChild(group);
@@ -1185,7 +1340,7 @@ function priceLines(){
     if(S.stSurf==='sticker')st*=1.22;
     r.push(['ห้องเก็บของ · '+stChosenLabel(),st]);}
   const nL=lightTotal();
-  if(nL)r.push(['ไฟสปอตไลท์ '+nL+' จุด · '+lightWattDef().n,lightPriceTotal()]);
+  if(nL)r.push(['ไฟสปอตไลท์ '+nL+' จุด · '+lightModelDef().n+' · '+lightWattDef().n,lightPriceTotal()]);
   const objectGroups=new Map();
   S.objects.forEach(o=>{const row=objectGroups.get(o.catalogId)||{count:0,total:0};row.count++;row.total+=o.unitPrice;objectGroups.set(o.catalogId,row);});
   OBJECT_CATALOG.forEach(item=>{const row=objectGroups.get(item.catalogId);
@@ -1206,6 +1361,7 @@ let threeRenderer=null,threeRendererPromise=null;
 function disposeThreeObject(root){
   root.traverse(o=>{
     if(o.shadow&&o.shadow.map)o.shadow.map.dispose();
+    if(o.userData&&o.userData.sharedAsset)return;
     if(o.geometry)o.geometry.dispose();
     const materials=o.material?(Array.isArray(o.material)?o.material:[o.material]):[];
     materials.forEach(m=>{
@@ -1218,8 +1374,10 @@ function disposeThreeObject(root){
 }
 
 class ThreeBoothRenderer{
-  constructor(THREE,OrbitControls){
+  constructor(THREE,OrbitControls,GLTFLoader){
     this.THREE=THREE;
+    this.modelLoader=new GLTFLoader();this.fixtureTemplates=new Map();this.fixtureLoads=new Map();this.fixtureErrors=new Map();
+    this.furnitureTemplates=new Map();this.furnitureLoads=new Map();this.furnitureErrors=new Map();
     this.shell=el('div','three-shell');
     this.host=el('div','three-host');
     this.tools=el('div','three-tools');
@@ -1259,17 +1417,9 @@ class ThreeBoothRenderer{
     this.objectMeshes=new Map();this.selectionHelper=null;this.pointerDrag=null;
     this.raycaster=new THREE.Raycaster();this.pointer=new THREE.Vector2();
     this.dragPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);this.dragPoint=new THREE.Vector3();
-    this.onCanvasDragOver=e=>{e.preventDefault();e.dataTransfer.dropEffect='copy';this.host.classList.add('drop-ready');};
-    this.onCanvasDragLeave=()=>this.host.classList.remove('drop-ready');
-    this.onCanvasDrop=e=>{e.preventDefault();this.host.classList.remove('drop-ready');
-      const id=e.dataTransfer.getData('application/x-yp-booth-object')||e.dataTransfer.getData('text/plain');
-      const point=this.floorPoint(e);if(objectCatalogDef(id)&&point)addCatalogObjectAt(id,point.x,point.z);};
     this.onObjectPointerDown=e=>this.beginObjectDrag(e);
     this.onObjectPointerMove=e=>this.moveObjectDrag(e);
     this.onObjectPointerUp=e=>this.finishObjectDrag(e);
-    this.renderer.domElement.addEventListener('dragover',this.onCanvasDragOver);
-    this.renderer.domElement.addEventListener('dragleave',this.onCanvasDragLeave);
-    this.renderer.domElement.addEventListener('drop',this.onCanvasDrop);
     this.renderer.domElement.addEventListener('pointerdown',this.onObjectPointerDown);
     this.renderer.domElement.addEventListener('pointermove',this.onObjectPointerMove);
     this.renderer.domElement.addEventListener('pointerup',this.onObjectPointerUp);
@@ -1299,12 +1449,15 @@ class ThreeBoothRenderer{
   dispose(){
     this.active=false;if(this.raf)cancelAnimationFrame(this.raf);this.raf=0;
     const canvas=this.renderer.domElement;
-    canvas.removeEventListener('dragover',this.onCanvasDragOver);canvas.removeEventListener('dragleave',this.onCanvasDragLeave);
-    canvas.removeEventListener('drop',this.onCanvasDrop);canvas.removeEventListener('pointerdown',this.onObjectPointerDown);
+    canvas.removeEventListener('pointerdown',this.onObjectPointerDown);
     canvas.removeEventListener('pointermove',this.onObjectPointerMove);canvas.removeEventListener('pointerup',this.onObjectPointerUp);
     canvas.removeEventListener('pointercancel',this.onObjectPointerUp);
     this.resizeObserver.disconnect();this.controls.dispose();
     this.scene.remove(this.boothGroup);disposeThreeObject(this.boothGroup);this.renderer.dispose();
+    this.fixtureTemplates.forEach(template=>{template.traverse(o=>{if(o.userData)delete o.userData.sharedAsset;});disposeThreeObject(template);});
+    this.fixtureTemplates.clear();this.fixtureLoads.clear();this.fixtureErrors.clear();
+    this.furnitureTemplates.forEach(template=>{template.traverse(o=>{if(o.userData)delete o.userData.sharedAsset;});disposeThreeObject(template);});
+    this.furnitureTemplates.clear();this.furnitureLoads.clear();this.furnitureErrors.clear();
   }
   start(){
     if(this.raf||!this.active)return;
@@ -1342,7 +1495,8 @@ class ThreeBoothRenderer{
   moveObjectDrag(event){
     const drag=this.pointerDrag;if(!drag||drag.pointerId!==event.pointerId)return;
     const obj=objectById(drag.id),root=this.objectMeshes.get(drag.id),point=this.floorPoint(event);if(!obj||!root||!point)return;
-    event.preventDefault();obj.position.x=point.x+drag.offsetX;obj.position.z=point.z+drag.offsetZ;
+    event.preventDefault();obj.position.x=+placementRound(point.x+drag.offsetX).toFixed(3);
+    obj.position.z=+placementRound(point.z+drag.offsetZ).toFixed(3);
     root.position.x=obj.position.x;root.position.z=obj.position.z;
     drag.moved=drag.moved||Math.hypot(obj.position.x-drag.startX,obj.position.z-drag.startZ)>.003;
     if(this.selectionHelper)this.selectionHelper.update();this.renderer.render(this.scene,this.camera);
@@ -1351,7 +1505,14 @@ class ThreeBoothRenderer{
     const drag=this.pointerDrag;if(!drag||drag.pointerId!==event.pointerId)return;
     this.pointerDrag=null;this.controls.enableRotate=true;
     if(this.renderer.domElement.hasPointerCapture(event.pointerId))this.renderer.domElement.releasePointerCapture(event.pointerId);
-    if(drag.moved){recordObjectHistory(drag.before);this.currentKey='';sync();}
+    if(drag.moved){
+      const obj=objectById(drag.id),item=obj&&objectCatalogDef(obj.catalogId);
+      if(!obj||!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,obj.rotationY||0,obj.id)){
+        if(obj){obj.position.x=drag.startX;obj.position.z=drag.startZ;}
+        announceCatalog('ย้าย'+(item?.name||'วัตถุ')+'ไม่ได้ เพราะตำแหน่งไม่ว่าง','error');this.currentKey='';sync();return;
+      }
+      recordObjectHistory(drag.before);this.currentKey='';sync();announceCatalog('ย้าย'+item.name+'แล้ว','success');
+    }
   }
   visualKey(spec){
     const logoKey=spec.logo?spec.logo.length+':'+spec.logo.slice(-32):'';
@@ -1359,7 +1520,7 @@ class ThreeBoothRenderer{
       o.size.w,o.size.d,o.size.h,o.unitPrice]);
     return JSON.stringify([spec.W,spec.D,spec.H,spec.type,spec.raise,spec.floor,spec.carpet,spec.tile,
       spec.wallCol,spec.wallMat,spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
-      spec.stPos,spec.stDoor,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightCol,
+      spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
       spec.lightWall,spec.lightWatts,spec.lightAdj,spec.brand,logoKey,spec.logoType,spec.lockup,spec.logoPos,
       spec.nameScale,spec.sideLogo,spec.sidePos,objects]);
   }
@@ -1474,6 +1635,43 @@ class ThreeBoothRenderer{
     const mesh=new T.Mesh(new T.PlaneGeometry(width,height),material);mesh.position.set(...position);mesh.rotation.y=rotationY;
     mesh.name=name;mesh.castShadow=true;group.add(mesh);return mesh;
   }
+  dimensionLabel(group,text,position,span,name){
+    const T=this.THREE,canvas=document.createElement('canvas');canvas.width=384;canvas.height=96;
+    const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='rgba(9,11,15,.92)';ctx.strokeStyle='#e0a83c';ctx.lineWidth=3;
+    ctx.beginPath();ctx.roundRect(3,3,378,90,14);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#f3c86b';ctx.font='600 28px Inter,"Noto Sans Thai",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(text,canvas.width/2,canvas.height/2+1);
+    const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.minFilter=T.LinearFilter;
+    const material=new T.SpriteMaterial({map:texture,transparent:true,depthTest:false,depthWrite:false,toneMapped:false});
+    const sprite=new T.Sprite(material),height=Math.max(.17,span*.035);sprite.scale.set(height*4,height,1);sprite.position.set(...position);
+    sprite.name=name;sprite.userData.dimensionText=text;sprite.renderOrder=32;group.add(sprite);return sprite;
+  }
+  dimensionGuide(group,points,label,labelPosition,span,name){
+    const T=this.THREE,geometry=new T.BufferGeometry().setFromPoints(points),material=new T.LineBasicMaterial({
+      color:0xe0a83c,transparent:true,opacity:.88,depthTest:false,depthWrite:false});
+    const guide=new T.LineSegments(geometry,material);guide.name=name;guide.renderOrder=31;group.add(guide);
+    this.dimensionLabel(group,label,labelPosition,span,name+'-label');
+  }
+  addBoothDimensions(group,spec,floorY){
+    const T=this.THREE,span=Math.max(spec.W,spec.D,spec.H),offset=Math.max(.24,span*.045),tick=Math.max(.08,span*.015),y=floorY+.035;
+    const p=(x,py,z)=>new T.Vector3(x,py,z),fmt=value=>String(+Number(value).toFixed(2));
+    this.dimensionGuide(group,[
+      p(0,y,spec.D+offset),p(spec.W,y,spec.D+offset),
+      p(0,y,spec.D),p(0,y,spec.D+offset+tick),
+      p(spec.W,y,spec.D),p(spec.W,y,spec.D+offset+tick)
+    ],'กว้าง '+fmt(spec.W)+' ม.',[spec.W/2,y+tick*1.8,spec.D+offset],span,'booth-dimension-width');
+    this.dimensionGuide(group,[
+      p(spec.W+offset,y,0),p(spec.W+offset,y,spec.D),
+      p(spec.W,y,0),p(spec.W+offset+tick,y,0),
+      p(spec.W,y,spec.D),p(spec.W+offset+tick,y,spec.D)
+    ],'ลึก '+fmt(spec.D)+' ม.',[spec.W+offset,y+tick*1.8,spec.D/2],span,'booth-dimension-depth');
+    this.dimensionGuide(group,[
+      p(-offset,0,0),p(-offset,spec.H,0),
+      p(0,0,0),p(-offset-tick,0,0),
+      p(0,spec.H,0),p(-offset-tick,spec.H,0)
+    ],'สูง '+fmt(spec.H)+' ม.',[-offset,spec.H/2,-tick],span,'booth-dimension-height');
+  }
   addBranding(group,spec,t,floorY){
     const a=palette(),place=(s,e,w,align)=>align==='left'?s+w/2:align==='right'?e-w/2:(s+e)/2;
     if(lockOnStore()&&hasStore()){
@@ -1487,47 +1685,133 @@ class ThreeBoothRenderer{
     if(spec.type==='corner'&&spec.sideLogo&&typ().walls.includes('left')){
       const free=sideFreeLen(t);if(free>=.8){const start=spec.D-free,w=Math.min(3,free*.72),h=Math.min(w/2,spec.H*.38),ww=h*2;
         const z=spec.sidePos==='outer'?spec.D-ww/2-Math.min(.18,free*.05):start+free/2;
-        this.brandPlane(group,spec,ww,h,[t+.012,brandCenterY(spec.H,h),z],Math.PI/2,a.wall,'brand-lockup-side');}
+      this.brandPlane(group,spec,ww,h,[t+.012,brandCenterY(spec.H,h),z],Math.PI/2,a.wall,'brand-lockup-side');}
     }
+  }
+  fixtureState(key){
+    return this.fixtureTemplates.has(key)?'ready':this.fixtureLoads.has(key)?'loading':this.fixtureErrors.has(key)?'error':'idle';
+  }
+  requestFixtureTemplate(key){
+    if(this.fixtureTemplates.has(key)||this.fixtureLoads.has(key)||this.fixtureErrors.has(key))return;
+    const def=LIGHT_MODELS.find(model=>model.k===key)||LIGHT_MODELS[0],T=this.THREE;
+    const load=this.modelLoader.loadAsync(def.url).then(gltf=>{
+      const model=gltf.scene,template=new T.Group();model.scale.setScalar(def.scale);template.add(model);
+      template.updateMatrixWorld(true);const box=new T.Box3().setFromObject(template);
+      if(box.isEmpty())throw new Error('Empty light model');
+      const center=box.getCenter(new T.Vector3());model.position.x-=center.x;model.position.y-=center.y;model.position.z-=box.max.z;
+      template.rotation.y=Math.PI;template.name='fixture-template-'+def.k;
+      template.userData.size=box.getSize(new T.Vector3()).toArray();
+      template.traverse(o=>{o.userData.sharedAsset=true;if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+      this.fixtureTemplates.set(key,template);return template;
+    }).catch(error=>{this.fixtureErrors.set(key,error);return null;}).finally(()=>{
+      this.fixtureLoads.delete(key);syncLightModelStatus();
+      if(this.fixtureTemplates.has(key)&&BoothSpec.lightFixture===key){this.currentKey='';this.update(BoothSpec);}
+    });
+    this.fixtureLoads.set(key,load);syncLightModelStatus();
+  }
+  fixtureModel(key){
+    const template=this.fixtureTemplates.get(key);return template?template.clone(true):null;
+  }
+  requestFurnitureTemplate(item){
+    const key=item?.catalogId;if(!key||!item.modelUrl||this.furnitureTemplates.has(key)||this.furnitureLoads.has(key)||this.furnitureErrors.has(key))return;
+    const T=this.THREE,load=this.modelLoader.loadAsync(item.modelUrl).then(gltf=>{
+      const model=gltf.scene,template=new T.Group();model.scale.setScalar(item.modelScale||1);
+      model.rotation.y=T.MathUtils.degToRad(item.modelRotationY||0);template.add(model);template.updateMatrixWorld(true);
+      const box=new T.Box3().setFromObject(template);if(box.isEmpty())throw new Error('Empty furniture model');
+      const center=box.getCenter(new T.Vector3());model.position.x-=center.x;model.position.y-=box.min.y;model.position.z-=center.z;
+      template.name='furniture-template-'+key;template.userData.size=box.getSize(new T.Vector3()).toArray();
+      template.traverse(o=>{o.userData.sharedAsset=true;if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+      this.furnitureTemplates.set(key,template);return template;
+    }).catch(error=>{this.furnitureErrors.set(key,error);return null;}).finally(()=>{
+      this.furnitureLoads.delete(key);
+      if(this.furnitureTemplates.has(key)&&S.objects.some(object=>object.catalogId===key)){this.currentKey='';this.update(BoothSpec);}
+    });
+    this.furnitureLoads.set(key,load);
+  }
+  furnitureModel(item){
+    if(!item?.modelUrl)return null;
+    const template=this.furnitureTemplates.get(item.catalogId);if(template)return template.clone(true);
+    this.requestFurnitureTemplate(item);return null;
   }
   addSpotlights(group,spec,t,floorY){
     if(!spec.lights)return;
     const T=this.THREE,points=lightPoints(t),G=hasStore()?storeGeom(t):null,lightDef=lightWattDef(),tone=LIGHTCOL.find(c=>c.k===spec.lightCol),span=Math.max(spec.W,spec.D,spec.H);
+    const hasModel=this.fixtureTemplates.has(spec.lightFixture);if(!hasModel)this.requestFixtureTemplate(spec.lightFixture);
+    const fixtureTemplate=hasModel?this.fixtureTemplates.get(spec.lightFixture):null;
+    const modelDrop=fixtureTemplate?Math.max(.14,(fixtureTemplate.userData.size?.[1]||0)/2+.02):.14;
     points.forEach((p,i)=>{
-      let position,target,rotation=[0,0,0];
+      let position,target,rotation=[0,0,0],modelPosition,modelFacing=0;
       if(p.w==='storage-front'&&G){
         const front=G.y+G.d,aimZ=Math.min(spec.D,front+Math.max(.55,(spec.D-front)*.55));
-        position=[p.u,floorY+G.h-.14,front+.16];target=[p.u,floorY,aimZ];rotation=[Math.PI/2,0,0];
+        position=[p.u,floorY+G.h-.14,front+.16];modelPosition=[p.u,floorY+G.h-modelDrop,front+.012];target=[p.u,floorY,aimZ];rotation=[Math.PI/2,0,0];
       }
-      else if(p.w==='back'){position=[p.u,spec.H-.14,t+.16];target=[p.u,floorY,spec.D*.55];rotation=[Math.PI/2,0,0];}
-      else if(p.w==='left'){position=[t+.16,spec.H-.14,p.u];target=[spec.W*.55,floorY,p.u];rotation=[0,0,Math.PI/2];}
-      else{position=[spec.W-t-.16,spec.H-.14,p.u];target=[spec.W*.45,floorY,p.u];rotation=[0,0,Math.PI/2];}
-      const fixture=new T.Mesh(new T.CylinderGeometry(.055,.082,.18,12),new T.MeshStandardMaterial({color:0x353a42,roughness:.38,metalness:.72,
-        emissive:new T.Color(tone.c),emissiveIntensity:.08}));fixture.position.set(...position);fixture.rotation.set(...rotation);
-      fixture.name='spotlight-fixture';fixture.castShadow=true;group.add(fixture);
+      else if(p.w==='back'){position=[p.u,spec.H-.14,t+.16];modelPosition=[p.u,spec.H-modelDrop,t+.012];target=[p.u,floorY,spec.D*.55];rotation=[Math.PI/2,0,0];}
+      else if(p.w==='left'){position=[t+.16,spec.H-.14,p.u];modelPosition=[t+.012,spec.H-modelDrop,p.u];modelFacing=Math.PI/2;target=[spec.W*.55,floorY,p.u];rotation=[0,0,Math.PI/2];}
+      else{position=[spec.W-t-.16,spec.H-.14,p.u];modelPosition=[spec.W-t-.012,spec.H-modelDrop,p.u];modelFacing=-Math.PI/2;target=[spec.W*.45,floorY,p.u];rotation=[0,0,Math.PI/2];}
+      const fixture=new T.Group();fixture.name='spotlight-fixture';fixture.userData.fixtureModel=spec.lightFixture;
+      const model=hasModel?this.fixtureModel(spec.lightFixture):null;
+      if(model){fixture.add(model);fixture.position.set(...modelPosition);fixture.rotation.y=modelFacing;}
+      else{const fallback=new T.Mesh(new T.CylinderGeometry(.055,.082,.18,12),new T.MeshStandardMaterial({color:0x353a42,roughness:.38,metalness:.72,
+          emissive:new T.Color(tone.c),emissiveIntensity:.08}));fallback.rotation.set(...rotation);fallback.castShadow=true;fixture.add(fallback);fixture.position.set(...position);fixture.userData.fallback=true;}
+      group.add(fixture);
       const light=new T.SpotLight(tone.c,lightDef.intensity,span*2.2,.43,.58,2);light.position.set(...position);light.name='spotlight';
       light.castShadow=i<Math.min(4,points.length);if(light.castShadow){light.shadow.mapSize.set(256,256);light.shadow.bias=-.001;}
       const aim=new T.Object3D();aim.position.set(...target);group.add(aim);light.target=aim;group.add(light);
     });
   }
-  door(group,G,floorY,spec){
-    const T=this.THREE,dh=Math.min(2.05,G.h*.86),dw=Math.min(.8,G.w*.62),dd=Math.min(.8,G.d*.62);
-    const mat=new T.MeshStandardMaterial({color:0x30343a,roughness:.68,side:T.DoubleSide});
-    let geo,mesh;
-    if(spec.stDoor==='front'){
-      geo=new T.PlaneGeometry(dw,dh);mesh=new T.Mesh(geo,mat);
-      mesh.position.set(G.x+doorAlong(G.w,dw)+dw/2,floorY+dh/2,G.y+G.d+.006);
-    }else{
-      geo=new T.PlaneGeometry(dd,dh);mesh=new T.Mesh(geo,mat);mesh.rotation.y=-Math.PI/2;
-      const z=G.y+doorAlong(G.d,dd)+dd/2;
-      mesh.position.set(spec.stDoor==='left'?G.x-.006:G.x+G.w+.006,floorY+dh/2,z);
+  storageWall(group,G,floorY,spec,face,color){
+    const t=BOOTH_WALL_THICKNESS,front=face==='front'||face==='back',doorFace=spec.stDoor===face;
+    const length=front?G.w:G.d,z=face==='front'?G.y+G.d-t/2:G.y+t/2,x=face==='left'?G.x+t/2:G.x+G.w-t/2;
+    const material=this.storageMaterial(spec,face),add=(size,position,suffix)=>{
+      if(size.some(value=>value<=.008))return;
+      this.box(group,size,position,color,{material,name:'storage-'+face+(suffix?'-'+suffix:'')});
+    };
+    if(!doorFace){
+      if(front)add([G.w,G.h,t],[G.x+G.w/2,floorY+G.h/2,z],'panel');
+      else add([t,G.h,G.d],[x,floorY+G.h/2,G.y+G.d/2],'panel');
+      return;
     }
-    mesh.castShadow=true;group.add(mesh);
-    const eg=new T.EdgesGeometry(geo),em=new T.LineBasicMaterial({color:0xe0a83c});
-    const edge=new T.LineSegments(eg,em);edge.position.copy(mesh.position);edge.rotation.copy(mesh.rotation);group.add(edge);
+    const doorWidth=front?Math.min(.8,G.w*.62):Math.min(.8,G.d*.62),doorHeight=Math.min(2.05,G.h*.86),along=doorAlong(length,doorWidth);
+    if(front){
+      add([along,G.h,t],[G.x+along/2,floorY+G.h/2,z],'before-door');
+      const after=G.w-along-doorWidth;add([after,G.h,t],[G.x+along+doorWidth+after/2,floorY+G.h/2,z],'after-door');
+      add([doorWidth,G.h-doorHeight,t],[G.x+along+doorWidth/2,floorY+doorHeight+(G.h-doorHeight)/2,z],'door-header');
+    }else{
+      add([t,G.h,along],[x,floorY+G.h/2,G.y+along/2],'before-door');
+      const after=G.d-along-doorWidth;add([t,G.h,after],[x,floorY+G.h/2,G.y+along+doorWidth+after/2],'after-door');
+      add([t,G.h-doorHeight,doorWidth],[x,floorY+doorHeight+(G.h-doorHeight)/2,G.y+along+doorWidth/2],'door-header');
+    }
+  }
+  door(group,G,floorY,spec){
+    const T=this.THREE,dh=Math.min(2.05,G.h*.86),front=spec.stDoor==='front';
+    const width=front?Math.min(.8,G.w*.62):Math.min(.8,G.d*.62),run=front?G.w:G.d,along=doorAlong(run,width);
+    const sliding=spec.stDoorType==='slide',assembly=new T.Group();assembly.name='storage-door-'+(sliding?'slide':'swing');
+    if(front)assembly.position.set(G.x+along,floorY,G.y+G.d+.018);
+    else{assembly.position.set(spec.stDoor==='left'?G.x-.018:G.x+G.w+.018,floorY,G.y+along);assembly.rotation.y=-Math.PI/2;}
+    if(!sliding){
+      const angle=Math.PI/5;assembly.rotation.y+=front?angle:(spec.stDoor==='left'?angle:-angle);
+    }
+    const material=new T.MeshStandardMaterial({color:sliding?0x3b414a:0x30343a,roughness:.62,metalness:sliding?.12:.02});
+    const leaf=new T.Mesh(new T.BoxGeometry(width,dh,.035),material);leaf.position.set(width/2,dh/2,0);leaf.castShadow=true;
+    leaf.name=sliding?'storage-door-slide-leaf':'storage-door-swing-leaf';assembly.add(leaf);
+    const edge=new T.LineSegments(new T.EdgesGeometry(leaf.geometry),new T.LineBasicMaterial({color:0xe0a83c}));
+    edge.position.copy(leaf.position);edge.name='storage-door-edge';assembly.add(edge);
+    const hardware=new T.MeshStandardMaterial({color:0xd6b45f,roughness:.3,metalness:.72});
+    const handle=new T.Mesh(new T.BoxGeometry(.025,.18,.045),hardware);handle.position.set(width*(sliding?.5:.84),dh*.52,.035);
+    handle.name='storage-door-handle';assembly.add(handle);
+    if(sliding){
+      const rail=new T.Mesh(new T.BoxGeometry(width*1.28,.04,.055),hardware);rail.position.set(width*.5,dh+.06,0);
+      rail.name='storage-door-slide-rail';assembly.add(rail);
+      const seam=new T.Mesh(new T.BoxGeometry(.018,dh*.92,.042),hardware);seam.position.set(width*.5,dh*.48,.024);
+      seam.name='storage-door-slide-seam';assembly.add(seam);
+    }
+    assembly.userData.doorType=spec.stDoorType;assembly.userData.doorSide=spec.stDoor;group.add(assembly);
   }
   buildCatalogObject(obj){
     const T=this.THREE,item=objectCatalogDef(obj.catalogId),s=obj.size,root=new T.Group(),accent=palette().acc;
+    const furniture=this.furnitureModel(item);
+    if(furniture){root.add(furniture);root.name='catalog-object-'+obj.type;
+      root.traverse(part=>{part.userData.objectId=obj.id;});return root;}
     const base=(item&&item.color)||'#8a919c',dark='#2c3037',light='#e5e3dc';
     const bx=(size,pos,color=base,options={})=>this.box(root,size,pos,color,options);
     const mesh=(geometry,color,position,options={})=>{
@@ -1609,21 +1893,16 @@ class ThreeBoothRenderer{
 
     if(hasStore()){
       const panels=storagePanels(t),G=panels.G,storeColor=stPaintColor(a);
-      this.box(g,[G.w,t,G.d],[G.x+G.w/2,floorY+G.h-t/2,G.y+G.d/2],storeColor,
-        {material:this.storageMaterial(spec,'top'),name:'storage-top'});
-      this.box(g,[G.w,G.h,t],[G.x+G.w/2,floorY+G.h/2,G.y+G.d-t/2],storeColor,
-        {material:this.storageMaterial(spec,'front'),name:'storage-front'});
-      if(panels.back)this.box(g,[G.w,G.h,t],[G.x+G.w/2,floorY+G.h/2,G.y+t/2],storeColor,
-        {material:this.storageMaterial(spec,'back'),name:'storage-back'});
-      if(panels.left)this.box(g,[t,G.h,G.d],[G.x+t/2,floorY+G.h/2,G.y+G.d/2],storeColor,
-        {material:this.storageMaterial(spec,'left'),name:'storage-left'});
-      if(panels.right)this.box(g,[t,G.h,G.d],[G.x+G.w-t/2,floorY+G.h/2,G.y+G.d/2],storeColor,
-        {material:this.storageMaterial(spec,'right'),name:'storage-right'});
+      this.storageWall(g,G,floorY,spec,'front',storeColor);
+      if(panels.back)this.storageWall(g,G,floorY,spec,'back',storeColor);
+      if(panels.left)this.storageWall(g,G,floorY,spec,'left',storeColor);
+      if(panels.right)this.storageWall(g,G,floorY,spec,'right',storeColor);
       this.door(g,G,floorY,spec);
     }
     this.addCatalogObjects(g,spec,floorY);
     this.addBranding(g,spec,t,floorY);
     this.addSpotlights(g,spec,t,floorY);
+    this.addBoothDimensions(g,spec,floorY);
   }
   setCameraView(view){
     const spec=BoothSpec,span=Math.max(spec.W,spec.D,spec.H),floorY=spec.raise/100;
@@ -1650,8 +1929,11 @@ function showThreeFallback(container,message){
 }
 function loadThreeRenderer(){
   if(threeRendererPromise)return threeRendererPromise;
-  threeRendererPromise=Promise.all([import('three'),import('three/addons/controls/OrbitControls.js')])
-    .then(([THREE,controls])=>threeRenderer=new ThreeBoothRenderer(THREE,controls.OrbitControls));
+  threeRendererPromise=Promise.all([
+    import('three'),
+    import('three/addons/controls/OrbitControls.js'),
+    import('three/addons/loaders/GLTFLoader.js')])
+    .then(([THREE,controls,gltf])=>threeRenderer=new ThreeBoothRenderer(THREE,controls.OrbitControls,gltf.GLTFLoader));
   return threeRendererPromise;
 }
 function renderThreeView(container){
@@ -1699,9 +1981,15 @@ function planSVG(){
     const dl=(x1,y1,x2,y2)=>{const A=P(x1,y1),B=P(x2,y2);
       return `<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="#f5c469" stroke-width="3.5"/>`;};
     const ax=G.x+doorAlong(G.w,dw), ay=G.y+doorAlong(G.d,dd);
-    if(S.stDoor==='front')g+=dl(ax,G.y+G.d,ax+dw,G.y+G.d);
-    if(S.stDoor==='left') g+=dl(G.x,ay,G.x,ay+dd);
-    if(S.stDoor==='right')g+=dl(G.x+G.w,ay,G.x+G.w,ay+dd);}
+    if(S.stDoorType==='slide'){
+      if(S.stDoor==='front')g+=dl(ax,G.y+G.d,ax+dw,G.y+G.d)+dl(ax,G.y+G.d-.07,ax+dw,G.y+G.d-.07);
+      if(S.stDoor==='left') g+=dl(G.x,ay,G.x,ay+dd)+dl(G.x+.07,ay,G.x+.07,ay+dd);
+      if(S.stDoor==='right')g+=dl(G.x+G.w,ay,G.x+G.w,ay+dd)+dl(G.x+G.w-.07,ay,G.x+G.w-.07,ay+dd);
+    }else{
+      if(S.stDoor==='front')g+=dl(ax,G.y+G.d,ax,G.y+G.d-dw);
+      if(S.stDoor==='left') g+=dl(G.x,ay,G.x+dd,ay);
+      if(S.stDoor==='right')g+=dl(G.x+G.w,ay,G.x+G.w-dd,ay);
+    }}
   const open=(x1,y1,x2,y2)=>{const p=P(x1,y1),q=P(x2,y2);
     return `<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#e0a83c" stroke-width="2.5"
       stroke-dasharray="6 5" opacity=".85"/>`;};
@@ -1793,7 +2081,7 @@ function isoSVG(){
     }else{cT=shade(s.col,1.24);cL=shade(s.col,.94);cR=shade(s.col,.67);}
     const op=s.ghost?' opacity=".24"':'';
     const E=` stroke="rgba(0,0,0,.3)" stroke-width=".7"${op}`;
-    g+=`<polygon points="${pp([[s.x,s.y,top],[s.x+s.w,s.y,top],[s.x+s.w,s.y+s.d,top],[s.x,s.y+s.d,top]])}" fill="${cT}"${E}/>`;
+    if(s.k!=='store')g+=`<polygon points="${pp([[s.x,s.y,top],[s.x+s.w,s.y,top],[s.x+s.w,s.y+s.d,top],[s.x,s.y+s.d,top]])}" fill="${cT}"${E}/>`;
     g+=`<polygon points="${pp([[s.x,s.y+s.d,s.z],[s.x+s.w,s.y+s.d,s.z],[s.x+s.w,s.y+s.d,top],[s.x,s.y+s.d,top]])}" fill="${cL}"${E}/>`;
     g+=`<polygon points="${pp([[s.x+s.w,s.y,s.z],[s.x+s.w,s.y+s.d,s.z],[s.x+s.w,s.y+s.d,top],[s.x+s.w,s.y,top]])}" fill="${cR}"${E}/>`;
   });
@@ -1909,15 +2197,6 @@ function isoSVG(){
       g+=`<g transform="${M}"><rect x="${dx.toFixed(2)}" y="${(st.h-dh).toFixed(2)}" width="${dw.toFixed(2)}"
         height="${dh.toFixed(2)}" rx=".04" fill="none" stroke="${ink2}" stroke-width=".035"/>
         <circle cx="${(dx+dw*.86).toFixed(2)}" cy="${(st.h-dh*.5).toFixed(2)}" r=".05" fill="${ink2}"/></g>`;
-    }else if(S.stDoor==='left'){
-      /* ด้านซ้ายมองไม่เห็นจากมุมนี้ — ทำเครื่องหมายบนหลังคาห้องแทน */
-      const o=P(st.x,st.y,st.z+st.h);
-      const M=`matrix(${(C30*sc).toFixed(3)},${(S30*sc).toFixed(3)},${(-C30*sc).toFixed(3)},${(S30*sc).toFixed(3)},${o[0].toFixed(2)},${o[1].toFixed(2)})`;
-      const dd=Math.min(.8,st.d*.62);
-      g+=`<g transform="${M}"><rect x="0" y="${doorAlong(st.d,dd).toFixed(2)}" width="${(st.w*.12).toFixed(2)}"
-        height="${dd.toFixed(2)}" fill="${ink2}" opacity=".5"/>
-        <text x="${(st.w*.5).toFixed(2)}" y="${(st.d*.55).toFixed(2)}" font-size="${(st.d*.22).toFixed(3)}"
-        fill="${ink2}" text-anchor="middle" font-family="'Noto Sans Thai',sans-serif" opacity=".75">← ประตู</text></g>`;
     }else if(S.stDoor==='right'){
       const dd=Math.min(.8,st.d*.62),o=P(st.x+st.w,st.y,st.z+st.h);
       const M=`matrix(${(-C30*sc).toFixed(3)},${(S30*sc).toFixed(3)},0,${sc.toFixed(3)},${o[0].toFixed(2)},${o[1].toFixed(2)})`;
@@ -1998,11 +2277,25 @@ function render(){
     v.querySelector('.photoslot').onclick=()=>fp.click();}
 }
 
+function syncLightModelStatus(){
+  const box=document.getElementById('lightModelStatus');if(!box)return;
+  if(!S.lights){box.textContent='';box.dataset.state='idle';return;}
+  const model=lightModelDef(),state=threeRenderer&&threeRenderer.fixtureState?threeRenderer.fixtureState(model.k):'idle';
+  box.dataset.state=state;
+  box.textContent=state==='ready'?'โหลดโมเดล 3D แล้ว · ระบบคิด 100W / จุด':
+    state==='loading'?'กำลังโหลดโมเดล '+model.n+'…':
+    state==='error'?'โหลดโมเดลไม่สำเร็จ · ใช้โคมสำรองและยังคิด 100W / จุด':
+    'โมเดลจะโหลดเมื่อเปิดมุมมอง 3D · ทุกแบบคิด 100W / จุด';
+}
+
 function sync(){
   S.W=Math.max(1,Math.min(30,S.W||1));S.D=Math.max(1,Math.min(30,S.D||1));
   S.H=Math.max(2.4,Math.min(6,S.H||2.4));
+  if(!LIGHT_MODELS.some(model=>model.k===S.lightFixture))S.lightFixture=LIGHT_MODELS[0].k;
+  if(!ST_DOOR_TYPE.some(type=>type.k===S.stDoorType))S.stDoorType='swing';
   S.lightWatts=100;
-  if(S.stHmode===0)S.stHv=Math.max(1.5,Math.min(6,S.stHv||2));
+  if(S.stHmode===0)S.stHv=Math.max(1.5,Math.min(6,S.stHv||2.4));
+  reconcileCatalogLayout();
   if(!objectById(objectEditor.selectedId))objectEditor.selectedId=null;
   syncObjectControls();
 
@@ -2045,14 +2338,15 @@ function sync(){
     if(!S.doorTouched){const ad=autoDoorFor(); if(ad!==S.stDoor)S.stDoor=ad;}
     document.querySelectorAll('#oStH .opt').forEach(b=>{
       b.classList.toggle('on',+b.dataset.k===S.stHmode);
-      if(b.dataset.k==='2'){const cap=maxStH();
-        b.innerHTML= cap<2 ? cap.toFixed(2)+' ม.<small>สูงสุดของบูธนี้</small>' : '2.0 ม.<small>ค่าเริ่มต้น</small>';}});
+      if(b.dataset.k==='2.4'){const cap=maxStH();
+        b.innerHTML= cap<2.4 ? cap.toFixed(2)+' ม.<small>สูงสุดของบูธนี้</small>' : '2.4 ม.<small>ค่าเริ่มต้น</small>';}});
     document.getElementById('stHCustom').style.display=S.stHmode===0?'flex':'none';
     document.querySelectorAll('#oStPos .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.stPos));
     document.querySelectorAll('#oStDoor .opt').forEach(b=>{
       const blocked=doorBlocked(b.dataset.k,.1);
       b.classList.toggle('off',blocked);
       b.classList.toggle('on',!blocked&&b.dataset.k===S.stDoor);});
+    document.querySelectorAll('#oStDoorType .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.stDoorType));
     const sideFace=(S.stDoor!=='front');
     const offLbl=sideFace?['ชิดมุมใน','กึ่งกลาง','ชิดทางเดิน']:['ชิดซ้าย','กึ่งกลาง','ชิดขวา'];
     document.querySelectorAll('#oDoorOff .opt').forEach((b,i)=>{
@@ -2075,13 +2369,15 @@ function sync(){
       n='ห้องชิดผนังทั้งสองข้าง เปิดประตูด้านข้างไม่ได้ ระบบจึงย้ายประตูมาไว้ด้านหน้า';
     else if(lockOnStore())n='ห้องกว้างเกินครึ่งผนัง — ระบบย้ายชุดโลโก้และชื่อมาไว้หน้าห้องเก็บของให้อัตโนมัติ';
     else if(g.h<want-.01)n='ความสูงห้องถูกลดลงเท่าความสูงบูธ ('+S.H+' ม.)';
-    else if(S.stDoor==='left')n='ประตูซ้ายมองไม่เห็นจากมุมนี้ — มีเครื่องหมายบนหลังคาห้อง และดูชัดในแท็บผังพื้น';
+    else if(S.stDoor==='left')n='ประตูซ้ายมองไม่เห็นจากมุมนี้ — ดูตำแหน่งได้ชัดในแท็บผังพื้น';
     else if(!S.doorTouched)n='ระบบเลือกด้านประตูให้หันเข้าในบูธอัตโนมัติ — เปลี่ยนเองได้';
     document.getElementById('stNote').textContent=n;}
 
   document.querySelectorAll('#oLights .opt').forEach(b=>b.classList.toggle('on',(b.dataset.k==='on')===S.lights));
   document.getElementById('lightBody').style.display=S.lights?'block':'none';
   if(S.lights){
+    document.querySelectorAll('#oLightModel .light-model-card').forEach(b=>{const active=b.dataset.k===S.lightFixture;
+      b.classList.toggle('on',active);b.setAttribute('aria-pressed',String(active));});
     document.querySelectorAll('#oLightCol .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightCol));
     document.querySelectorAll('#oLightWatts .opt').forEach(b=>b.classList.toggle('on',+b.dataset.k===S.lightWatts));
     document.querySelectorAll('#oLightWall .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightWall));
@@ -2093,6 +2389,7 @@ function sync(){
     else if(hasStore())ln+=' · ไม่มีจุดไฟที่ต้องย้ายจากผนังเดิม';
     if(S.lightAdj)ln+=' · คุณปรับเป็น '+LC.total+' จุด';
     document.getElementById('lightNote').textContent=ln;}
+  syncLightModelStatus();
   document.querySelectorAll('#oRaise .opt').forEach(b=>b.classList.toggle('on',+b.dataset.k===S.raise));
   document.querySelectorAll('#oFloor .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.floor));
   buildFloorSub();
@@ -2122,6 +2419,7 @@ function sync(){
   document.getElementById('pairName').textContent='ผนัง'+WALLCOL.find(w=>w.k===S.wallCol).n+' · '+WALLMATS.find(w=>w.k===S.wallMat).n;
   document.getElementById('tagSize').textContent='กว้าง '+S.W+' × ลึก '+S.D+' × สูง '+S.H+' ม. · '+(S.W*S.D).toFixed(1)+' ตร.ม.';
   document.getElementById('tagType').textContent=typ().n;
+  document.getElementById('view').setAttribute('aria-label','พื้นที่ออกแบบบูธ กว้าง '+S.W+' เมตร ลึก '+S.D+' เมตร สูง '+S.H+' เมตร');
 
   const gg=hasStore()?storeGeom(.1):null;
   const rows=[['ธุรกิจ',cat().n],
@@ -2130,6 +2428,7 @@ function sync(){
     ['สีหลัก (CI)',S.primary.toUpperCase()],['สีรอง',S.secondary.toUpperCase()],['คู่สีแนะนำ',pair().n],
     ['ห้องเก็บของ',gg?stChosenLabel()+' · สูง '+gg.h.toFixed(2).replace(/0$/,'')+' ม. · '+
       ST_POS.find(x=>x.k===S.stPos).n+' · '+ST_DOOR.find(x=>x.k===S.stDoor).n+' · '+
+      ST_DOOR_TYPE.find(x=>x.k===S.stDoorType).n+' · '+
       (S.stSurf==='paint'?'ทาสี '+ST_PAINT.find(x=>x.k===S.stPaint).n
         :'สติ๊กเกอร์ '+ST_FACE.find(x=>x.k===S.stFace).n):'ไม่มี'],
     ['พื้น',(S.raise?'ยก '+S.raise+' ซม. · ':'ไม่ยกพื้น · ')+floorName()],
@@ -2137,7 +2436,7 @@ function sync(){
     ['โลโก้',LOGOTYPES.find(t=>t.k===S.logoType).n+' · '+LOCKUPS.find(t=>t.k===S.lockup).n+
       ' · '+WALLPOS.find(x=>x.k===S.logoPos).n+(lockOnStore()?' · ติดหน้าห้องเก็บของ':'')+
       (S.type==='corner'&&S.sideLogo?' · +ผนังข้าง ('+SIDEPOS.find(x=>x.k===S.sidePos).n+')':'')],
-    ['ไฟแสงสว่าง',S.lights?('สปอตไลท์ '+lightTotal()+' จุด · '+LIGHTCOL.find(c=>c.k===S.lightCol).n+
+    ['ไฟแสงสว่าง',S.lights?('สปอตไลท์ '+lightTotal()+' จุด · '+lightModelDef().n+' · '+LIGHTCOL.find(c=>c.k===S.lightCol).n+
       ' · '+lightWattDef().n+' / ดวง · '+LIGHTWALL.find(w=>w.k===S.lightWall).n):'ไม่มี'],
     ['เฟอร์นิเจอร์และอุปกรณ์',objectListLabel()]];
   document.getElementById('spec').innerHTML=rows.map(r=>
@@ -2204,7 +2503,7 @@ document.getElementById('cHex2').oninput=e=>{const v=e.target.value.trim();
   if(i===0)S.W=v;if(i===1)S.D=v;if(i===2)S.H=v;sync();};});
 document.getElementById('stW').oninput=e=>{S.stW=parseFloat(e.target.value)||1.2;sync();};
 document.getElementById('stD').oninput=e=>{S.stD=parseFloat(e.target.value)||1.2;sync();};
-document.getElementById('stHv').oninput=e=>{S.stHv=parseFloat(e.target.value)||2;sync();};
+document.getElementById('stHv').oninput=e=>{S.stHv=parseFloat(e.target.value)||2.4;sync();};
 document.addEventListener('keydown',e=>{
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))return;
   const mod=e.ctrlKey||e.metaKey;
@@ -2257,7 +2556,7 @@ function sendQuote(){
 document.querySelectorAll('.qi').forEach(i=>{i.style.cssText=
   'width:100%;padding:10px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);outline:none';});
 document.getElementById('stW').value=1.2;document.getElementById('stD').value=1.2;
-document.getElementById('stHv').value=2.0;
+document.getElementById('stHv').value=2.4;
 build();syncDims();sync();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>render());
 window.getBoothSpec=()=>JSON.parse(serializeBoothSpec());
