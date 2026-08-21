@@ -339,11 +339,13 @@ PRODUCTION</textarea>
       <p class="hint" style="margin:8px 0 2px">พื้นที่ทำงานคือกรอบสำหรับจัดวางเท่านั้น — ขนาดชิ้นงานจริงที่ได้แสดงอยู่บนแถบด้านบนของภาพพรีวิว</p>
       <div class="row"><label>ความลึกกล่อง</label><input type="range" id="bDepth" min="12" max="80" step="1" value="35"><span class="unit" id="bDepthV">35 มม.</span></div>
       <div class="row"><label>ชั้นสีหน้า</label><input type="range" id="bColorT" min="0.2" max="1.2" step="0.1" value="0.4"><span class="unit" id="bColorTV">0.4 มม.</span></div>
-      <div class="row"><label>ชั้นกระจายแสง</label><input type="range" id="bDiff" min="0.2" max="2" step="0.1" value="0.6"><span class="unit" id="bDiffV">0.6 มม.</span></div>
+      <div class="row"><label>ชั้นกระจายแสง</label><input type="range" id="bDiff" min="0.2" max="2" step="0.1" value="0.8"><span class="unit" id="bDiffV">0.8 มม.</span></div>
       <div class="row"><label>ความหนาพื้นทึบ</label><input type="range" id="bBgT" min="0.6" max="3" step="0.1" value="1.2"><span class="unit" id="bBgTV">1.2 มม.</span></div>
       <div class="row"><label>กรอบข้าง</label><input type="range" id="bFrame" min="1.2" max="8" step="0.2" value="2.4"><span class="unit" id="bFrameV">2.4 มม.</span></div>
-      <div class="row"><label>แผ่นหลัง</label><input type="range" id="bBack" min="1" max="5" step="0.2" value="2"><span class="unit" id="bBackV">2 มม.</span></div>
-      <p class="hint">เลือกสีกรอบและสีฝาหลังได้ที่หัวข้อ <b>3 · สีและชั้น</b></p>
+      <div class="row"><label>แผ่นหลัง</label><input type="range" id="bBack" min="1" max="6" step="0.2" value="3"><span class="unit" id="bBackV">3 มม.</span></div>
+      <p class="hint">ค่าเริ่มต้นตามสเปกกล่องไฟของทีม: หน้ากล่อง <b>1.2</b> (0.4 + 0.8 ตรงส่วนสว่าง · 1.2 ตรงส่วนทึบ)
+      · กรอบข้าง <b>2.4</b> · ฝาหลัง <b>3</b> มม.<br>
+      เลือกสีกรอบและสีฝาหลังได้ที่หัวข้อ <b>3 · สีและชั้น</b></p>
     </div>
   </div>
 
@@ -367,15 +369,31 @@ PRODUCTION</textarea>
     <div class="body">
       <div class="row"><label>วิธีประกบ</label>
         <select id="jointType" class="grow">
-          <option value="screw">บ่าล็อก + สกรู M3 (แนะนำ)</option>
+          <option value="snap">กดล็อก Snap-fit + สกรู M3 2 ตัว (แนะนำ)</option>
+          <option value="screw">บ่าล็อก + สกรู M3 ทุกจุด</option>
           <option value="lip">บ่าล็อกอย่างเดียว (กาว/เทป)</option>
           <option value="butt">ชนหน้าตัดเปล่า (กาวล้วน)</option>
         </select></div>
-      <div class="row"><label>ความสูงบ่า</label><input type="range" id="lipH" min="1" max="6" step="0.5" value="2"><span class="unit" id="lipHV">2 มม.</span></div>
-      <div class="row"><label>ความหนาบ่า</label><input type="range" id="lipW" min="1.6" max="6" step="0.2" value="3"><span class="unit" id="lipWV">3 มม.</span></div>
+      <div class="row"><label>ความสูงบ่า</label><input type="range" id="lipH" min="1" max="18" step="0.5" value="10"><span class="unit" id="lipHV">10 มม.</span></div>
+      <div class="row"><label>ความหนาบ่า</label><input type="range" id="lipW" min="1.6" max="6" step="0.2" value="2"><span class="unit" id="lipWV">2 มม.</span></div>
       <div class="row"><label>เผื่อระยะสวม</label><input type="range" id="lipCl" min="0.1" max="0.6" step="0.05" value="0.2"><span class="unit" id="lipClV">0.2 มม.</span></div>
+
+      <div id="snapRows">
+        <div class="row"><label>ระยะขอเกี่ยว</label><input type="range" id="snapBarb" min="0.25" max="1" step="0.05" value="0.45"><span class="unit" id="snapBarbV">0.45 มม.</span></div>
+        <div class="row"><label>ความกว้างขา</label><input type="range" id="snapW" min="8" max="24" step="1" value="12"><span class="unit" id="snapWV">12 มม.</span></div>
+        <div class="row"><label></label><span class="unit grow" id="snapInfo">—</span></div>
+      </div>
+
       <div class="row"><label>ขนาดเสาสกรู</label><input type="range" id="bossW" min="6" max="14" step="0.5" value="8"><span class="unit" id="bossWV">8 มม.</span></div>
       <div class="row"><label>ความยาวเสารับสกรู</label><input type="range" id="screwDepth" min="6" max="20" step="1" value="10"><span class="unit" id="screwDepthV">10 มม.</span></div>
+
+      <p class="hint" id="snapHint"><b>กดล็อก Snap-fit</b> — บ่าฝาหลังถูกเซาะร่องข้างให้เป็น “ขาสปริง” เป็นจุดๆ ชิดขอบ
+      ปลายขามีหัวขอ กดเข้าไปจะดีดเข้าล็อกกับหลุมรับบนผนังกรอบด้านใน (เป็นหลุมตื้น <b>ไม่เจาะทะลุ</b> แสงจึงไม่รอด)<br>
+      หน้าล็อกและหน้ารับเป็นลาด <b>45° ทั้งคู่</b> จึงถอดออกมาซ่อมไฟได้ และพิมพ์ได้โดยไม่ต้องมีซัพพอร์ต<br>
+      ขายิ่งยาว (= ความสูงบ่า) ยิ่งดีดได้มากโดยไม่หัก · <b>PLA เปราะ</b> ถ้าค่าความเครียดด้านบนเกิน 2%
+      ให้ลดระยะขอเกี่ยวลง เพิ่มความสูงบ่า หรือเปลี่ยนไปพิมพ์ฝาหลังด้วย PETG<br>
+      สกรู M3 อีก <b>2 ตัว</b> ยึดที่จุดไกลกันสุด ไว้รั้งไม่ให้ขาสแนปรับแรงคนเดียว</p>
+
       <p class="hint"><b>เสาสกรูวางชิดขอบเสมอ</b> และยาวแค่ตามค่าด้านบน นับจากด้านหลังเข้ามา
       ไม่ยาวตลอดความลึกกล่อง เพราะเสายาวจะบังแสงเป็นเงาดำตอนติดไฟ<br>
       ใต้เสามีลาดรับ 45° ไล่ขึ้นมาจากผนังกรอบ จึงพิมพ์ได้โดยไม่ต้องมีซัพพอร์ต<br>
@@ -470,10 +488,14 @@ function defaults(){ return {
           {w:3, hex:'#ee3c96', glow:false} ],
   pal:[ {hex:'#1a1a1a',name:'พื้นหลัง',glow:false},
         {hex:'#ff2d8f',name:'สี 1',glow:true} ],
-  box:{ W:200,H:120,depth:35,colorT:0.4,diff:0.6,bgT:1.2,frame:2.4,back:2,
+  /* ค่าเริ่มต้นตามสเปกกล่องไฟที่ทีมใช้จริง
+     หน้ากล่อง 1.2 มม. เท่ากันทั้งแผ่น (ส่วนสว่าง 0.4+0.8 · ส่วนทึบ 1.2) = 6 ชั้นที่ layer 0.2
+     กรอบข้าง 2.4 · ฝาหลัง 3 · เผื่อสวม 0.2 · บ่าหนา 2 สูง 10 */
+  box:{ W:200,H:120,depth:35,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:3,
         frameColor:'#1a1a1a', backColor:'#1a1a1a' },
   hw:{ hole:'frame', dia:7, hang:false,
-       joint:'screw', lipH:2, lipW:3, lipCl:0.2, bossW:8, screwDepth:10 },
+       joint:'snap', lipH:10, lipW:2, lipCl:0.2, bossW:8, screwDepth:10,
+       snapBarb:0.45, snapW:12 },
   price:{ qty:1, fil:750, mach:25, laborMin:25, laborRate:300, led:150, waste:8, margin:45, flush:120 },
   exp:{ res:0.15, fmt:'3mf', layerH:0.2, bed:256 },
   ui:{ showFrame:true, showGrid:false, view:'design' }
@@ -1072,6 +1094,19 @@ function maskWhere(fn){
   for(let y=0;y<gh;y++) for(let x=0;x<gw;x++){ const i=y*gw+x; if(fn(i,x,y)) m[i]=1; }
   return m;
 }
+/* เหมือน maskWhere แต่วนเฉพาะกล่องเล็กๆ รอบจุดที่สนใจ — ใช้กับหลุมสแนป
+   ที่ต้องสร้างหลายชั้นตาม z ถ้าวนทั้งกริดทุกชั้นจะช้าโดยเปล่าประโยชน์ */
+function maskWhereNear(pts,rx,fn){
+  const {gw,gh}=G, m=new Uint8Array(gw*gh);
+  const r=Math.ceil(rx);
+  for(const p of pts){
+    const x0=Math.max(0,p[0]-r), x1=Math.min(gw-1,p[0]+r);
+    const y0=Math.max(0,p[1]-r), y1=Math.min(gh-1,p[1]+r);
+    for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){ const i=y*gw+x; if(!m[i]&&fn(i,x,y)) m[i]=1; }
+  }
+  return m;
+}
+const inBoxes=(x,y,pts,r)=>{ for(const p of pts) if(Math.abs(x-p[0])<=r&&Math.abs(y-p[1])<=r) return true; return false; };
 
 /* ══════════════════════════════════════════════════════════════
    BUILD ALL PARTS  — ทุกอย่างอิงจาก G.panel (รูปทรงจริง) ไม่ใช่สี่เหลี่ยม
@@ -1111,13 +1146,11 @@ function bottomInfo(){
              : {y1, cx:gw>>1, len:0, n:0};
 }
 
-/* จุดวางเสาสกรู — วางชิดขอบเสมอ ไม่ใช่กลางแผ่น
-   เสากลางแผ่นจะบังแสงเป็นเงาดำตอนติดไฟ และเสาที่ลอยกลางอากาศก็พิมพ์ไม่ได้
-   วางชิดผนังกรอบแล้วทำลาดรับ 45° จากผนัง จึงพิมพ์ได้โดยไม่ต้องซัพพอร์ต */
-function bossPoints(){
+/* จุดที่วางของกว้าง widthMM ได้พอดีโดยยังชิดขอบ (ไม่ใช่กลางแผ่น) */
+function edgeCandidates(widthMM){
   const {gw,gh,px,edtIn}=G;
   if(!edtIn) return [];
-  const half=S.hw.bossW/2/px, minGap=25/px;
+  const half=widthMM/2/px;
   const step=Math.max(1,Math.round(1.5/px));
   const cand=[];
   const lo=half*0.85, hi=half+2.5/px;
@@ -1130,9 +1163,11 @@ function bossPoints(){
     for(let y=0;y<gh;y+=step) for(let x=0;x<gw;x+=step)
       if(edtIn[y*gw+x]>=need) cand.push([x,y]);
   }
+  return cand;
+}
+/* farthest-point sampling — กระจายจุดให้ห่างกันมากที่สุดเท่าที่ทำได้ */
+function farthestPick(cand,wantN,minGapPx){
   if(!cand.length) return [];
-  const areaMM=G.panelCells*px*px;
-  const want=clamp(Math.round(Math.sqrt(areaMM)/60)+2, 2, 8);
   const taken=new Uint8Array(cand.length), d2=new Float64Array(cand.length).fill(1e18);
   const pick=[];
   const add=i=>{ taken[i]=1; pick.push(cand[i]);
@@ -1141,13 +1176,77 @@ function bossPoints(){
       if(v<d2[j]) d2[j]=v; } };
   let s0=0; for(let i=1;i<cand.length;i++) if(cand[i][0]+cand[i][1]<cand[s0][0]+cand[s0][1]) s0=i;
   add(s0);
-  while(pick.length<want){
+  while(pick.length<wantN){
     let bi=-1,bv=-1;
     for(let j=0;j<cand.length;j++) if(!taken[j]&&d2[j]>bv){ bv=d2[j]; bi=j; }
-    if(bi<0||bv<minGap*minGap) break;
+    if(bi<0||bv<minGapPx*minGapPx) break;
     add(bi);
   }
   return pick;
+}
+
+/* จุดวางเสาสกรู — วางชิดขอบเสมอ ไม่ใช่กลางแผ่น
+   เสากลางแผ่นจะบังแสงเป็นเงาดำตอนติดไฟ และเสาที่ลอยกลางอากาศก็พิมพ์ไม่ได้
+   วางชิดผนังกรอบแล้วทำลาดรับ 45° จากผนัง จึงพิมพ์ได้โดยไม่ต้องซัพพอร์ต */
+function bossPoints(){
+  const cand=edgeCandidates(S.hw.bossW);
+  if(!cand.length) return [];
+  const areaMM=G.panelCells*G.px*G.px;
+  const want=clamp(Math.round(Math.sqrt(areaMM)/60)+2, 2, 8);
+  return farthestPick(cand, want, 25/G.px);
+}
+
+/* จุดที่ยึดสกรูจริง — โหมดสแนปใช้แค่ 2 ตัวที่ไกลกันที่สุด ที่เหลือให้ขาสแนปรับ */
+function screwPoints(){
+  const J=jointSpec();
+  if(!J.screw) return [];
+  const all=bossPoints();
+  if(!J.snap || all.length<=2) return all;
+  let ai=0,bi=1,bd=-1;
+  for(let i=0;i<all.length;i++) for(let j=i+1;j<all.length;j++){
+    const v=(all[i][0]-all[j][0])**2+(all[i][1]-all[j][1])**2;
+    if(v>bd){ bd=v; ai=i; bi=j; }
+  }
+  return [all[ai],all[bi]];
+}
+
+/* จุดบนแถบระยะ diMM จากขอบรูปทรง (ริบบิ้นบางๆ วิ่งตามเส้นรอบรูป) */
+function bandCandidates(diMM,tolMM){
+  const {gw,gh,px,edtIn,panel}=G;
+  if(!edtIn) return [];
+  const lo=(diMM-tolMM)/px, hi=(diMM+tolMM)/px;
+  const step=Math.max(1,Math.round(1/px));
+  const cand=[];
+  for(let y=0;y<gh;y+=step) for(let x=0;x<gw;x+=step){
+    const i=y*gw+x;
+    if(!panel[i]) continue;
+    const e=edtIn[i];
+    if(e>=lo && e<=hi) cand.push([x,y]);
+  }
+  return cand;
+}
+
+/* จุดวางขาสแนป — ต้องอยู่ "บนแนวบ่า" พอดี ไม่ใช่แค่ใกล้ขอบ
+   เพราะกล่องครอบขาถูกวัดจากจุดนี้ ถ้าจุดลอยห่างจากแนวบ่า หัวขอจะหลุดออกนอกกล่อง
+   (เคยพลาดตอนใช้ตัวเลือกจุดชุดเดียวกับเสาสกรู ซึ่งวัดจากกึ่งกลางเสา ไม่ใช่จากแนวบ่า)
+   และต้องเลี่ยง (ก) เสาสกรู เพราะบ่าถูกเว้นไว้ตรงนั้นแล้ว (ข) ช่องบากสายไฟ */
+function snapPoints(){
+  const J=jointSpec();
+  if(!J.snap) return [];
+  const px=G.px, b=S.box, SC=screwPoints();
+  const BI = S.hw.hole==='frame' ? bottomInfo() : null;
+  const keepOff=(J.bw/2+J.fingerW/2+7)/px;
+  const notchHalf=(S.hw.dia/2+J.fingerW/2+3)/px;
+  const mid=b.frame+J.cl+J.lipW/2;                 // กึ่งกลางความหนาบ่า
+  const cand=bandCandidates(mid, Math.min(0.45,J.lipW/3)).filter(p=>{
+    if(SC.some(q=>Math.hypot(p[0]-q[0],p[1]-q[1])<keepOff)) return false;
+    if(BI && p[1]>=BI.y1-(b.frame+J.cl+J.lipW+4)/px && Math.abs(p[0]-BI.cx)<notchHalf) return false;
+    return true;
+  });
+  if(!cand.length) return [];
+  const areaMM=G.panelCells*px*px;
+  const want=clamp(Math.round(Math.sqrt(areaMM)/34)+1, 2, 12);
+  return farthestPick(cand, want, (J.fingerW+26)/px);
 }
 
 /* จุดเจาะรูแขวน — สองจุดบนสุดที่เนื้อหนาพอและห่างกันพอ */
@@ -1168,10 +1267,52 @@ function hangPoints(){
   return (R[0]-L[0] > 30/px) ? [L,R] : [band[band.length>>1]];
 }
 
+/* ══════════════════════════════════════════════════════════════
+   รอยต่อฝาหน้า–ฝาหลัง
+
+   โหมด snap: บ่าฝาหลังถูกเซาะร่องข้างจนกลายเป็น "ขาสปริง" (cantilever) เป็นจุดๆ
+   ปลายขามีหัวขอยื่นออกด้านนอก ไปล็อกกับหลุมตื้นบนผิวในของผนังกรอบ
+
+   ทิศพิมพ์: ฝาหลังพิมพ์ผิวนอกติดฐาน z โตขึ้นเข้าหาปลายบ่า
+             กรอบพิมพ์คว่ำหน้าลงฐาน z โตขึ้นเข้าหาด้านหลัง
+   ⇒ หน้าล็อกของหัวขอ (ฝั่ง z ต่ำของฝาหลัง) เป็นด้านที่ "เนื้อโผล่เพิ่ม" ต้องลาด 45°
+     ปากหลุมบนกรอบ (ฝั่ง z สูงของกรอบ) ก็เป็นด้านที่เนื้อกลับมา ต้องลาด 45° เช่นกัน
+     ได้คู่ 45°/45° = ล็อกแน่นแต่ถอดออกมาซ่อมไฟได้ และไม่ต้องมีซัพพอร์ตทั้งสองชิ้น */
 function jointSpec(){
-  const hw=S.hw, mode=hw.joint||'screw';
-  return {mode, lip:mode!=='butt', screw:mode==='screw',
-          lipH:+hw.lipH, lipW:+hw.lipW, cl:+hw.lipCl, bw:+hw.bossW, PR:1.25, CR:1.7};
+  const hw=S.hw, mode=hw.joint||'screw', b=S.box;
+  const J={mode, lip:mode!=='butt', screw:(mode==='screw'||mode==='snap'), snap:mode==='snap',
+           lipH:+hw.lipH, lipW:+hw.lipW, cl:+hw.lipCl, bw:+hw.bossW, PR:1.25, CR:1.7,
+           barb:+(hw.snapBarb||0.45), fingerW:+(hw.snapW||12), slotW:1.2, flat:0.8, tipGap:0.8};
+  /* ขาสั้นเกินไปจะดีดไม่ไหว บ่าบางเกินก็เช่นกัน — ปิดสแนปให้อัตโนมัติ */
+  if(J.snap && (J.lipH < 5 || J.lipW < 1.6)) { J.snap=false; J.snapOff='บ่าเตี้ยหรือบางเกินกว่าจะทำขาสแนปได้'; }
+  if(!J.snap) return J;
+
+  const q = J.barb + J.cl;                       // ระยะยื่นจากผิวนอกของบ่า (ต้องดีดเข้ามาเท่านี้)
+  J.q = q;
+  J.fingerT = Math.max(1.2, J.lipW - 0.4);       // เซาะผิวในของขาให้บางลง ลดความเครียดที่โคน
+  J.free    = J.lipH;                            // ร่องเซาะถึงโคน ขาจึงยาวเท่าความสูงบ่า
+  J.strain  = 3*J.fingerT*q/(2*J.free*J.free);   // ε ที่โคนขา (คานยื่นปลายกด)
+  J.pocketD = J.barb + 0.2;                      // หลุมบนกรอบ ลึกพอให้หัวขอนั่งได้
+  J.wallLeft= b.frame - J.pocketD;               // เนื้อผนังที่เหลือหลังเจาะหลุม
+  J.lead    = q*1.6;                             // ลาดนำเข้าฝั่งปลายบ่า (ชันน้อยกว่า กดเข้าง่าย)
+
+  /* พิกัดในระบบของฝาหลัง (z=0 ที่ผิวนอก) */
+  const tip = b.back + J.lipH;
+  J.bz1 = tip - J.tipGap - J.lead;               // สิ้นสุดหน้าเรียบของหัวขอ
+  J.bz0 = J.bz1 - J.flat;                        // เริ่มหน้าเรียบ = มุมล็อก
+  J.bzR = J.bz0 - q;                             // เริ่มลาดล็อก 45°
+  J.bzT = J.bz1 + J.lead;                        // ปลายลาดนำเข้า
+  J.tip = tip;
+  if(J.bzR < b.back + 1.0){ J.snap=false; J.snapOff='บ่าเตี้ยเกินกว่าจะใส่หัวขอได้'; return J; }
+
+  /* พิกัดในระบบของกรอบ (z=0 ที่ผิวหน้าป้าย) — สลับทิศกับฝาหลัง */
+  const st=geomStack();
+  J.fz0 = st.total - J.bzT - 0.25;               // ปากหลุมฝั่งปลายบ่า (ล่างในทิศพิมพ์กรอบ)
+  J.fz1 = st.total - J.bzR + 0.25;               // ปากหลุมฝั่งล็อก (บนในทิศพิมพ์กรอบ)
+  J.fzRamp = J.fz1 + J.pocketD;                  // ลาด 45° ปิดหลุมกลับเป็นผนังเต็ม
+  const zTop = st.frameZ0 + b.depth;
+  if(J.fz0 < st.frameZ0 + 1 || J.fzRamp > zTop - 0.5){ J.snap=false; J.snapOff='ความลึกกล่องไม่พอกับความสูงบ่า'; }
+  return J;
 }
 
 function buildParts(nt){
@@ -1209,16 +1350,46 @@ function buildParts(nt){
   const BI=bottomInfo();
   const notchHalf=(S.hw.dia/2)/px, notchBandY=BI.y1-fw*1.4;
   const frameM=maskWhere(i=>P[i]&&DI[i]<=fw);
-  const FM=Mesh('กรอบข้าง'+(J.screw?' + เสาสกรู':''),'#'+b.frameColor.replace('#',''),nt);
+  const SP=J.snap? snapPoints() : [];
+  /* รัศมีกล่อง (chebyshev) รอบจุดสแนป — วัดจากจุดที่อยู่กึ่งกลางแนวบ่าพอดี
+     coreR = ตัวขา · slotR = ขอบนอกของร่องเซาะ · pocketR = ปากหลุมบนกรอบ (กว้างกว่าขานิดหน่อย ไม่ให้ฝืด) */
+  const coreR=(J.fingerW/2)/px, slotR=(J.fingerW/2+J.slotW)/px, pocketR=(J.fingerW/2+1.0)/px;
+  const FM=Mesh('กรอบข้าง'+(J.screw?' + เสาสกรู':'')+(SP.length?' + หลุมสแนป':''),
+                '#'+b.frameColor.replace('#',''),nt);
   const d=Math.min(S.hw.dia, b.depth-2);
+  /* ผนังกรอบหลัก — เว้นกล่องบริเวณหลุมสแนปไว้ก่อน แล้วค่อยเติมเป็นชั้นๆ ทีหลัง */
+  const outSnap=(x,y)=>!(SP.length && inBoxes(x,y,SP,pocketR));
+  const wallM=SP.length? maskWhere((i,x,y)=>frameM[i]&&outSnap(x,y)) : frameM;
   if(S.hw.hole==='frame'){
-    const notched=maskWhere((i,x,y)=> frameM[i] && !(y>=notchBandY && Math.abs(x-BI.cx)<=notchHalf));
-    addRects(FM,maskToRects(frameM,gw,gh), st.frameZ0, zTop-d);
+    const notched=maskWhere((i,x,y)=> wallM[i] && !(y>=notchBandY && Math.abs(x-BI.cx)<=notchHalf));
+    addRects(FM,maskToRects(wallM,gw,gh), st.frameZ0, zTop-d);
     addRects(FM,maskToRects(notched,gw,gh), zTop-d, zTop);
   }else{
-    addRects(FM,maskToRects(frameM,gw,gh), st.frameZ0, zTop);
+    addRects(FM,maskToRects(wallM,gw,gh), st.frameZ0, zTop);
   }
-  const BP=J.screw? bossPoints() : [];
+  /* หลุมรับหัวขอ — ผนังบางลง J.pocketD เฉพาะช่วง z ของหัวขอ
+     ปากหลุมฝั่งล็อกปิดกลับด้วยลาด 45° จึงพิมพ์ได้โดยไม่ต้องบริดจ์ */
+  if(SP.length){
+    const inSnap=(x,y)=>inBoxes(x,y,SP,pocketR);
+    const NP=6, ramp=J.fzRamp-J.fz1;
+    const zs=[st.frameZ0, J.fz0, J.fz1];
+    for(let j=1;j<=NP;j++) zs.push(J.fz1+ramp*j/NP);
+    zs.push(zTop);
+    for(let s=0;s<zs.length-1;s++){
+      const za=zs[s], zb=zs[s+1];
+      if(zb-za<0.02) continue;
+      const zm=(za+zb)/2;
+      let cut=0;                                          // ความลึกที่ผนังถูกเจาะที่ระดับนี้
+      if(zm>=J.fz0 && zm<=J.fz1) cut=J.pocketD;
+      else if(zm>J.fz1 && zm<J.fzRamp) cut=J.pocketD*(1-(zm-J.fz1)/ramp);
+      const lim=(b.frame-cut)/px;
+      const m=maskWhereNear(SP,pocketR+1,(i,x,y)=>
+        frameM[i] && inSnap(x,y) && DI[i]<=lim
+        && !(S.hw.hole==='frame' && zm>=zTop-d && y>=notchBandY && Math.abs(x-BI.cx)<=notchHalf));
+      addRects(FM,maskToRects(m,gw,gh), za, zb);
+    }
+  }
+  const BP=screwPoints();
   const bwc=J.bw/2/px, prc=J.PR/px, crc=J.CR/px;
   const nearBoss=(x,y,r)=>BP.some(p=>Math.abs(x-p[0])<=r&&Math.abs(y-p[1])<=r);
   const inCircle=(x,y,r)=>BP.some(p=>(x-p[0])**2+(y-p[1])**2<r*r);
@@ -1237,7 +1408,7 @@ function buildParts(nt){
       addRects(FM,maskToRects(maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t),gw,gh), zA, zB);
     }
   }
-  FM.kind='frame'; FM.bossCount=BP.length;
+  FM.kind='frame'; FM.bossCount=BP.length; FM.snapCount=SP.length;
   parts.push(FM);
 
   /* --- 4. แผ่นหลัง (+ บ่าล็อก) --- */
@@ -1252,17 +1423,50 @@ function buildParts(nt){
     return true;
   });
   const PK=platePack();
-  const BM=Mesh('แผ่นหลัง'+(J.lip?' + บ่าล็อก':''),'#'+(b.backColor||b.frameColor).replace('#',''),nt);
+  const BM=Mesh('แผ่นหลัง'+(J.lip?(SP.length?' + บ่า + ขาสแนป':' + บ่าล็อก'):''),
+                '#'+(b.backColor||b.frameColor).replace('#',''),nt);
   addRects(BM,maskToRects(backM,gw,gh), 0, b.back, true);
   if(J.lip){
     const i0=(b.frame+J.cl)/px, i1=(b.frame+J.cl+J.lipW)/px;
     const corridor=(x,y)=> S.hw.hole==='frame' && y>=BI.y1-(b.frame+J.cl+J.lipW+2)/px
                             && Math.abs(x-BI.cx)<=notchHalf+1.5/px;
+    /* ตรงจุดสแนป บ่าถูกเซาะเป็นร่องรอบขา — เว้นทั้งกล่องออกก่อน แล้วเติมเฉพาะแกนขากลับเข้าไป */
+    const inCore=(x,y)=>SP.length&&inBoxes(x,y,SP,coreR);
     const lipM=maskWhere((i,x,y)=> P[i] && DI[i]>i0 && DI[i]<=i1
-                            && !(BP.length&&nearBoss(x,y,bwc+J.cl/px)) && !corridor(x,y));
+                            && !(BP.length&&nearBoss(x,y,bwc+J.cl/px)) && !corridor(x,y)
+                            && !(SP.length&&inBoxes(x,y,SP,slotR)));
     addRects(BM,maskToRects(lipM,gw,gh), b.back, b.back+J.lipH, true);
+
+    if(SP.length){
+      /* ตัวขาสปริง — ผิวในเซาะบางลงเหลือ J.fingerT ให้ดีดได้โดยไม่เกินความเครียดที่ PLA รับไหว */
+      const fi1=(b.frame+J.cl+J.fingerT)/px;
+      const fingerM=maskWhereNear(SP,coreR+1,(i,x,y)=>
+        P[i] && DI[i]>i0 && DI[i]<=fi1 && inCore(x,y) && !corridor(x,y));
+      addRects(BM,maskToRects(fingerM,gw,gh), b.back, b.back+J.lipH, true);
+
+      /* หัวขอที่ปลายขา — ยื่นออกด้านนอก J.q
+         ฝั่ง z ต่ำ (หน้าล็อก) เป็นลาด 45° เพราะเป็นด้านที่เนื้อโผล่เพิ่มตอนพิมพ์
+         ฝั่ง z สูง (ปลายบ่า) เป็นลาดนำเข้าที่ชันน้อยกว่า กดเข้าง่าย */
+      const barbSlab=(za,zb,q)=>{
+        if(zb-za<0.02||q<=0.01) return;
+        const lo=(b.frame+J.cl-q)/px;
+        const m=maskWhereNear(SP,coreR+1,(i,x,y)=>
+          P[i] && DI[i]>lo && DI[i]<=i0 && inCore(x,y) && !corridor(x,y));
+        addRects(BM,maskToRects(m,gw,gh), za, zb, true);
+      };
+      const NB=6;
+      for(let j=0;j<NB;j++){                                   // ลาดล็อก 45°
+        const za=J.bzR+(J.bz0-J.bzR)*j/NB, zb=J.bzR+(J.bz0-J.bzR)*(j+1)/NB;
+        barbSlab(za,zb, J.q*(j+0.5)/NB);
+      }
+      barbSlab(J.bz0,J.bz1,J.q);                                // หน้าเรียบ = ส่วนที่นั่งในหลุม
+      for(let j=0;j<NB;j++){                                   // ลาดนำเข้า
+        const za=J.bz1+(J.bzT-J.bz1)*j/NB, zb=J.bz1+(J.bzT-J.bz1)*(j+1)/NB;
+        barbSlab(za,zb, J.q*(1-(j+0.5)/NB));
+      }
+    }
   }
-  BM.place=PK.items.back; BM.kind='back';
+  BM.place=PK.items.back; BM.kind='back'; BM.snapCount=SP.length;
   parts.push(BM);
 
   return parts;
@@ -1768,7 +1972,38 @@ function runChecks(){
       if(wall<1.6) add('warn',`เนื้อรอบรูนำเหลือ ${wall.toFixed(1)} มม. บางไป เสาอาจแตกตอนขันสกรู — ขยายเสาเป็น 8 มม. ขึ้นไป`);
       if(S.hw.screwDepth>b.depth-3) add('warn',`รูนำลึกเกินความลึกกล่อง ระบบตัดเหลือ ${(b.depth-3).toFixed(1)} มม. ให้อัตโนมัติ`);
     }
-    add('ok',`ใช้สกรูเกลียวปล่อย M3 × ${Math.round(b.back+Math.min(S.hw.screwDepth,b.depth-3))} มม. 4 ตัวต่อกล่อง`);
+    const nScrew = (LAST&&LAST.bossCount) || (J.snap?2:4);
+    add('ok',`ใช้สกรูเกลียวปล่อย M3 × ${Math.round(b.back+Math.min(S.hw.screwDepth,b.depth-3))} มม. ${nScrew} ตัวต่อกล่อง`);
+  }
+  /* --- ขาสแนป --- */
+  if(S.hw.joint==='snap'){
+    if(!J.snap) add('err','เปิดโหมดกดล็อกไว้ แต่ทำขาสแนปไม่ได้ — '+(J.snapOff||'ค่าปัจจุบันไม่รองรับ'));
+    else{
+      const nSnap = (LAST&&LAST.snapCount!=null)? LAST.snapCount : null;
+      const pc=J.strain*100;
+      if(nSnap===0)
+        add('err','หาที่วางขาสแนปไม่ได้เลย — ลดความกว้างขา เพิ่มความกว้างขอบ หรือเปลี่ยนไปยึดสกรูทุกจุด');
+      else if(nSnap!==null && nSnap<3)
+        add('warn',`วางขาสแนปได้แค่ ${nSnap} จุด ฝาหลังอาจปิดไม่แน่นทั่วใบ — ลดความกว้างขาลงจะวางได้ถี่ขึ้น`);
+      else if(nSnap!==null)
+        add('ok',`ขาสแนป ${nSnap} จุด + สกรู M3 2 ตัว · ขายาว ${J.free.toFixed(1)} มม. หนา ${J.fingerT.toFixed(1)} มม.`);
+
+      if(pc>2.4)
+        add('err',`ขาสแนปต้องดีดเข้า ${J.q.toFixed(2)} มม. คิดเป็นความเครียดที่โคน ${pc.toFixed(2)}% — `+
+          `เกินที่ PLA รับไหว ขาจะหักตอนประกอบ ลดระยะขอเกี่ยว เพิ่มความสูงบ่า หรือพิมพ์ฝาหลังด้วย PETG`);
+      else if(pc>1.9)
+        add('warn',`ความเครียดที่โคนขาสแนป ${pc.toFixed(2)}% — ค่อนข้างสูงสำหรับ PLA `+
+          `เปิดปิดบ่อยๆ มีโอกาสล้า แนะนำไม่เกิน 1.9% หรือใช้ PETG`);
+      else
+        add('ok',`ความเครียดที่โคนขาสแนป ${pc.toFixed(2)}% อยู่ในเกณฑ์ที่ PLA รับไหว`);
+
+      if(J.wallLeft<1.2)
+        add('err',`หลุมรับลึก ${J.pocketD.toFixed(2)} มม. เหลือเนื้อผนังกรอบแค่ ${J.wallLeft.toFixed(2)} มม. — `+
+          `บางเกินไป เพิ่มความหนากรอบข้างเป็นอย่างน้อย ${(J.pocketD+1.2).toFixed(1)} มม.`);
+      else if(J.wallLeft<1.6)
+        add('warn',`เนื้อผนังกรอบหลังเจาะหลุมรับเหลือ ${J.wallLeft.toFixed(2)} มม. — พอไหวแต่บาง ระวังตอนกดปิด`);
+      add('ok','หลุมรับเป็นหลุมตื้น ไม่เจาะทะลุผนัง แสงจึงไม่รอดออกข้างกล่อง');
+    }
   }
   if(+S.exp.res>=0.25&&art)
     add('warn',`ความละเอียดกริด ${S.exp.res} มม. — ขอบชิ้นงานจะเป็นขั้นบันไดขนาด ${S.exp.res} มม. `+
@@ -1845,8 +2080,11 @@ td:last-child,th:last-child{text-align:right}.tot td{font-weight:700;font-size:1
 <tr><td>ความหนารวม</td><td>${st.total.toFixed(1)} มม. (ลึกในกล่อง ${b.depth} มม.)</td></tr>
 <tr><td>โครงสร้าง</td><td>ชั้นสี ${b.colorT} · กระจายแสง ${st.diff} · พื้นทึบ ${st.bgT.toFixed(1)} · กรอบ ${b.frame} · หลัง ${b.back} มม.</td></tr>
 <tr><td>รูสายไฟ</td><td>${S.hw.hole==='none'?'ไม่มี':S.hw.hole==='frame'?'บากที่กรอบล่างด้านหลัง Ø'+S.hw.dia+' มม.':'รูกลมแผ่นหลัง Ø'+S.hw.dia+' มม.'}</td></tr>
-<tr><td>การประกบฝาหลัง</td><td>${ {screw:`บ่าล็อกสูง ${S.hw.lipH} มม. + สกรู M3 × ${Math.round(S.box.back+Math.min(S.hw.screwDepth,S.box.depth-3))} มม. 4 ตัว`,
-      lip:`บ่าล็อกสูง ${S.hw.lipH} มม. ยึดด้วยกาว`, butt:'ชนหน้าตัด ยึดด้วยกาว'}[jointSpec().mode] }</td></tr>
+<tr><td>การประกบฝาหลัง</td><td>${ (()=>{ const M=Math.round(S.box.back+Math.min(S.hw.screwDepth,S.box.depth-3));
+      const nB=(LAST&&LAST.bossCount)||0, nS=(LAST&&LAST.snapCount)||0;
+      return {snap:`กดล็อก Snap-fit ${nS} จุด บนบ่าสูง ${S.hw.lipH} มม. + สกรู M3 × ${M} มม. ${nB} ตัว — ถอดเปิดซ่อมไฟได้`,
+              screw:`บ่าล็อกสูง ${S.hw.lipH} มม. + สกรู M3 × ${M} มม. ${nB} ตัว`,
+              lip:`บ่าล็อกสูง ${S.hw.lipH} มม. ยึดด้วยกาว`, butt:'ชนหน้าตัด ยึดด้วยกาว'}[jointSpec().mode]; })() }</td></tr>
 </table>
 <h2>สีที่ใช้</h2><ul>${cols}</ul>
 <h2>ประมาณการผลิต</h2>
@@ -1869,19 +2107,19 @@ td:last-child,th:last-child{text-align:right}.tot td{font-weight:700;font-size:1
 
 /* ══════════ TEMPLATES ══════════ */
 const TEMPLATES=[
- {n:'ป้ายโลโก้แนวนอน', p:{box:{W:200,H:90,depth:32,colorT:0.4,diff:0.6,bgT:1.2,frame:2.4,back:2,frameColor:'#1a1a1a'},
+ {n:'ป้ายโลโก้แนวนอน', p:{box:{W:200,H:90,depth:32,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:3,frameColor:'#1a1a1a'},
     src:{mode:'text',text:'YUPPIE\nPRODUCTION',font:'Arial Black',weight:700,align:'center',track:0,lead:112,outline:0},
     tr:{scale:88,dx:0,dy:0,rot:0}, pal:[{hex:'#1a1a1a',glow:false},{hex:'#ff2d8f',glow:true}]}},
- {n:'ป้ายชื่อร้านมีขอบ', p:{box:{W:220,H:110,depth:35,colorT:0.6,diff:0.8,bgT:1.4,frame:3,back:2,frameColor:'#101010'},
+ {n:'ป้ายชื่อร้านมีขอบ', p:{box:{W:220,H:110,depth:35,colorT:0.6,diff:0.8,bgT:1.4,frame:3,back:3,frameColor:'#101010'},
     src:{mode:'text',text:'OPEN',font:'Impact',weight:700,align:'center',track:6,lead:110,outline:2.5},
     tr:{scale:80,dx:0,dy:0,rot:0}, pal:[{hex:'#101010',glow:false},{hex:'#ffd400',glow:true},{hex:'#ff2d8f',glow:true}]}},
- {n:'ป้ายตั้งโต๊ะเล็ก', p:{box:{W:120,H:120,depth:24,colorT:0.4,diff:0.6,bgT:1.0,frame:2,back:1.6,frameColor:'#2b2b2b'},
+ {n:'ป้ายตั้งโต๊ะเล็ก', p:{box:{W:120,H:120,depth:24,colorT:0.4,diff:0.8,bgT:1.0,frame:2,back:2.4,frameColor:'#2b2b2b'},
     src:{mode:'text',text:'78\nSTUDIO',font:'Arial Black',weight:900,align:'center',track:2,lead:105,outline:0},
     tr:{scale:76,dx:0,dy:0,rot:0}, pal:[{hex:'#2b2b2b',glow:false},{hex:'#3ba0ff',glow:true}]}},
- {n:'ป้ายบูธใหญ่ 250 มม.', p:{box:{W:250,H:140,depth:45,colorT:0.6,diff:0.8,bgT:1.6,frame:3.5,back:2.4,frameColor:'#000000'},
+ {n:'ป้ายบูธใหญ่ 250 มม.', p:{box:{W:250,H:140,depth:45,colorT:0.6,diff:0.8,bgT:1.6,frame:3.5,back:3.4,frameColor:'#000000'},
     src:{mode:'text',text:'BOOTH\nDESIGN',font:'Arial Black',weight:700,align:'center',track:1,lead:112,outline:0},
     tr:{scale:86,dx:0,dy:0,rot:0}, pal:[{hex:'#000000',glow:false},{hex:'#ffffff',glow:true}]}},
- {n:'ป้ายพื้นสว่าง ตัวทึบ', p:{box:{W:200,H:110,depth:32,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:2,frameColor:'#1a1a1a'},
+ {n:'ป้ายพื้นสว่าง ตัวทึบ', p:{box:{W:200,H:110,depth:32,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:3,frameColor:'#1a1a1a'},
     src:{mode:'text',text:'WELCOME',font:'Arial Black',weight:700,align:'center',track:3,lead:110,outline:0},
     tr:{scale:78,dx:0,dy:0,rot:0}, art:{glowMode:'bg'},
     pal:[{hex:'#ffffff',glow:true},{hex:'#1a1a1a',glow:false}]}}
@@ -1934,14 +2172,26 @@ function readme(parts){
     ,'2) แผ่นหลัง พิมพ์ราบ'
     ,'','ความหนารวม '+st.total.toFixed(1)+' มม. · กรอบลึก '+S.box.depth+' มม.'
     ,''
-    ,'การประกบฝาหลัง: '+({screw:'บ่าล็อก + สกรู',lip:'บ่าล็อกอย่างเดียว',butt:'ชนหน้าตัด'}[jointSpec().mode])
-    ,...(jointSpec().lip?['  บ่าสูง '+S.hw.lipH+' มม. หนา '+S.hw.lipW+' มม. เผื่อระยะสวมข้างละ '+S.hw.lipCl+' มม.']:[])
-    ,...(jointSpec().screw?[
-       '  เสาสกรู 4 มุม '+S.hw.bossW+'×'+S.hw.bossW+' มม. รูนำ Ø2.5 ลึก '+Math.min(S.hw.screwDepth,S.box.depth-3).toFixed(0)+' มม.',
-       '  ฝาหลังเจาะรูผ่าน Ø3.4 มม. ตรงกัน 4 จุด',
-       '  ใช้สกรูเกลียวปล่อยหัวกลม M3 × '+Math.round(S.box.back+Math.min(S.hw.screwDepth,S.box.depth-3))+' มม. 4 ตัว/กล่อง',
-       '  ขันพอตึงมือ อย่าขันจนสุดแรง เนื้อ PLA ปริได้'
-     ]:['  ยึดด้วยกาวหรือเทปสองหน้า'])
+    ,(()=>{ const J=jointSpec(), fm=parts.find(p=>p.kind==='frame')||{};
+       const nS=fm.snapCount||0, nB=fm.bossCount||0;
+       const L=['การประกบฝาหลัง: '+({snap:'กดล็อก Snap-fit + สกรู M3',screw:'บ่าล็อก + สกรู',
+                                     lip:'บ่าล็อกอย่างเดียว',butt:'ชนหน้าตัด'}[J.mode])];
+       if(J.lip) L.push('  บ่าสูง '+S.hw.lipH+' มม. หนา '+S.hw.lipW+' มม. เผื่อระยะสวมข้างละ '+S.hw.lipCl+' มม.');
+       if(J.snap&&nS) L.push(
+         '  ขาสแนป '+nS+' จุด — กว้าง '+J.fingerW+' มม. ยาว '+J.free+' มม. หนา '+J.fingerT.toFixed(1)+' มม.',
+         '  หัวขอยื่น '+J.q.toFixed(2)+' มม. ลงหลุมรับลึก '+J.pocketD.toFixed(2)+' มม. บนผิวในของผนังกรอบ (ไม่ทะลุ)',
+         '  ความเครียดที่โคนขาตอนกดเข้า '+(J.strain*100).toFixed(2)+'% '+
+           (J.strain*100>2.4?'*** สูงเกินไปสำหรับ PLA ควรพิมพ์ฝาหลังด้วย PETG ***'
+                            :'(เกณฑ์ PLA ไม่เกิน 1.9%)'),
+         '  ประกอบ: กดฝาหลังลงตรงๆ ทีละมุมจนคลิก แล้วขันสกรู',
+         '  ถอด: คลายสกรูก่อน แล้วงัดตามร่องตรงจุดที่ไม่มีขาสแนป');
+       if(J.screw&&nB) L.push(
+         '  เสาสกรู '+nB+' จุด '+S.hw.bossW+'×'+S.hw.bossW+' มม. รูนำ Ø2.5 ลึก '+Math.min(S.hw.screwDepth,S.box.depth-3).toFixed(0)+' มม.',
+         '  ฝาหลังเจาะรูผ่าน Ø3.4 มม. ตรงกัน '+nB+' จุด',
+         '  ใช้สกรูเกลียวปล่อยหัวกลม M3 × '+Math.round(S.box.back+Math.min(S.hw.screwDepth,S.box.depth-3))+' มม. '+nB+' ตัว/กล่อง',
+         '  ขันพอตึงมือ อย่าขันจนสุดแรง เนื้อ PLA ปริได้');
+       if(!J.screw&&!J.snap) L.push('  ยึดด้วยกาวหรือเทปสองหน้า');
+       return L.join('\n'); })()
     ,'','ชิ้นงานและสีที่ใช้:'
     ,...parts.map((p,i)=>`  ${String(i+1).padStart(2,'0')}. ${p.name} — ${p.hex.toUpperCase()} (${nearestFilament(p.hex)})`)
     ,'','หมายเหตุ: ชั้นสีอยู่ล่างสุดของแผ่นหน้า ตามด้วยชั้นกระจายแสงสีขาว/ใส'
@@ -2359,6 +2609,8 @@ const BIND=[
  ['lipCl','hw.lipCl','num','lipClV',v=>v+' มม.',''],
  ['bossW','hw.bossW','num','bossWV',v=>v+' มม.',''],
  ['screwDepth','hw.screwDepth','num','screwDepthV',v=>v+' มม.',''],
+ ['snapBarb','hw.snapBarb','num','snapBarbV',v=>v+' มม.',''],
+ ['snapW','hw.snapW','num','snapWV',v=>v+' มม.',''],
  ['pQty','price.qty','num',null,null,'q'],
  ['pFil','price.fil','num',null,null,'q'],
  ['pMach','price.mach','num',null,null,'q'],
@@ -2395,6 +2647,7 @@ function recompute(){
     refreshQuote();
     runChecks();
     updateBadges();
+    syncJointUI();
     syncSizeUI();
   }catch(e){ console.error(e); toast('คำนวณผิดพลาด: '+e.message); }
 }
@@ -2404,6 +2657,7 @@ function refreshQuote(){
   LAST=LAST||{}; LAST.parts=parts.length;
   const fm=parts.find(p=>p.kind==='frame');
   LAST.bossCount = fm? (fm.bossCount||0) : 0;
+  LAST.snapCount = fm? (fm.snapCount||0) : 0;
   const E=estimate(parts); LAST.E=E;
   renderQuote(E);
 }
@@ -2440,7 +2694,25 @@ function pushToUI(){
   $$('#left [data-pane]').forEach(p=>p.style.display = p.dataset.pane===S.src.mode?'':'none');
   $$('#viewseg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.ui.view));
   $('#colN').disabled = S.src.mode!=='image';
-  syncRingUI(); syncBoxColorUI(); syncSizeUI();
+  syncRingUI(); syncBoxColorUI(); syncJointUI(); syncSizeUI();
+}
+
+/* แถวตั้งค่าสแนป — โผล่เฉพาะตอนเลือกวิธีประกบแบบกดล็อก */
+function syncJointUI(){
+  const on = S.hw.joint==='snap';
+  const rows=$('#snapRows'), hint=$('#snapHint');
+  if(rows) rows.style.display = on?'':'none';
+  if(hint) hint.style.display = on?'':'none';
+  const info=$('#snapInfo'); if(!info) return;
+  if(!on){ info.textContent='—'; return; }
+  let J; try{ J=jointSpec(); }catch(e){ info.textContent='—'; return; }
+  if(!J.snap){ info.innerHTML=`<b style="color:var(--err)">ปิดสแนปอัตโนมัติ</b> — ${J.snapOff||'ค่าปัจจุบันทำไม่ได้'}`; return; }
+  const pc=J.strain*100;
+  const col = pc>2.4?'var(--err)' : pc>1.9?'var(--warn)' : 'var(--ok)';
+  let n='—'; try{ if(G&&!G.empty) n=snapPoints().length; }catch(e){}
+  info.innerHTML=`ขา ${n} จุด · ยาว ${J.free.toFixed(1)} หนา ${J.fingerT.toFixed(1)} มม. · `+
+    `ดีดเข้า ${J.q.toFixed(2)} มม. · ความเครียดที่โคน <b style="color:${col}">${pc.toFixed(2)}%</b> · `+
+    `เนื้อผนังเหลือ ${J.wallLeft.toFixed(2)} มม.`;
 }
 
 /* ช่องสี/สว่าง-ทึบ ของวงขอบ ในหัวข้อ 4 */
@@ -2710,7 +2982,7 @@ function boot(){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 window.__LB={get S(){return S;}, get G(){return G;}, buildParts, stlOf, make3mf, estimate, recompute, defaults,
-             jointSpec, partMatrix, platePack, panelBounds, activeRings, bedSize, bossPoints, bottomInfo, panelClipped, edt,
+             jointSpec, partMatrix, screwPoints, snapPoints, platePack, panelBounds, activeRings, bedSize, bossPoints, bottomInfo, panelClipped, edt,
              get PB(){return PB;}, get PARTS(){return PARTS;},
              set S(v){S=v;}, rebuildSource, buildGrid, geomStack};
 </script>
