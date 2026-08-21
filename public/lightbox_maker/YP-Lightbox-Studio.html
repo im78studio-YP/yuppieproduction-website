@@ -1,0 +1,2009 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YP Lightbox Studio</title>
+<style>
+:root{
+  --bg:#14161a; --panel:#1c1f25; --panel2:#22262e; --line:#2e333c;
+  --tx:#e6e9ee; --tx2:#9aa3b0; --acc:#ff2d8f; --acc2:#3ba0ff; --ok:#31c48d; --warn:#f5a524; --err:#f04a5a;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg); color:var(--tx);
+  font-family:"Leelawadee UI","Sarabun","Noto Sans Thai",Tahoma,"Segoe UI",sans-serif;
+  font-size:13px; overflow:hidden;
+}
+button,input,select,textarea{font-family:inherit;font-size:13px;color:var(--tx)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#3a404a;border-radius:6px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- shell ---------- */
+#app{display:flex;flex-direction:column;height:100%}
+header{
+  display:flex;align-items:center;gap:12px;padding:0 14px;height:48px;
+  background:var(--panel);border-bottom:1px solid var(--line);flex:0 0 auto;
+}
+.brand{font-weight:700;letter-spacing:.3px}
+.brand span{color:var(--acc)}
+.docname{background:#0000;border:1px solid transparent;border-radius:6px;padding:4px 8px;width:230px}
+.docname:hover{border-color:var(--line)}
+.docname:focus{border-color:var(--acc);outline:none;background:var(--panel2)}
+.spacer{flex:1}
+.seg{display:flex;background:var(--panel2);border-radius:8px;padding:3px;gap:2px}
+.seg button{background:none;border:0;padding:6px 14px;border-radius:6px;cursor:pointer;color:var(--tx2)}
+.seg button.on{background:var(--bg);color:var(--tx);box-shadow:0 1px 3px #0006}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 13px;cursor:pointer}
+.btn:hover{border-color:#4a515c}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.gh{background:none}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+main{flex:1;display:flex;min-height:0}
+.col{overflow-y:auto;overflow-x:hidden;flex:0 0 auto}
+#left{width:308px;background:var(--panel);border-right:1px solid var(--line)}
+#right{width:340px;background:var(--panel);border-left:1px solid var(--line)}
+#center{flex:1;min-width:0;display:flex;flex-direction:column;background:#0e1013}
+
+/* ---------- panels ---------- */
+.sec{border-bottom:1px solid var(--line)}
+.sec>h3{
+  margin:0;padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:8px;user-select:none;
+}
+.sec>h3::after{content:"⌄";margin-left:auto;color:var(--tx2);transition:.15s;font-size:15px}
+.sec.closed>h3::after{transform:rotate(-90deg)}
+.sec.closed>.body{display:none}
+.sec>.body{padding:2px 14px 14px}
+.hint{color:var(--tx2);font-size:11.5px;line-height:1.5;margin:6px 0 0}
+
+.row{display:flex;align-items:center;gap:8px;margin:9px 0}
+.row label{flex:0 0 92px;color:var(--tx2)}
+.row .grow{flex:1;min-width:0}
+input[type=text],input[type=number],select,textarea{
+  background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 8px;width:100%;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc2)}
+textarea{resize:vertical;min-height:62px;line-height:1.5}
+input[type=range]{width:100%;accent-color:var(--acc);background:none;border:0;padding:0}
+.num{width:62px;flex:0 0 62px;text-align:right}
+.unit{color:var(--tx2);flex:0 0 auto;font-size:11.5px}
+.tabs{display:flex;gap:4px;background:var(--panel2);padding:3px;border-radius:8px;margin:10px 0}
+.tabs button{flex:1;background:none;border:0;padding:6px;border-radius:6px;cursor:pointer;color:var(--tx2)}
+.tabs button.on{background:var(--bg);color:var(--tx)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer;font-size:12px}
+.chip.on{border-color:var(--acc);color:var(--acc)}
+.drop{
+  border:1.5px dashed var(--line);border-radius:var(--r);padding:18px;text-align:center;color:var(--tx2);
+  cursor:pointer;transition:.15s
+}
+.drop:hover,.drop.over{border-color:var(--acc);color:var(--tx)}
+
+/* palette */
+.pal{display:flex;flex-direction:column;gap:6px}
+.pal .it{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.pal .sw{width:26px;height:26px;border-radius:6px;border:1px solid #0006;flex:0 0 auto;cursor:pointer;position:relative;overflow:hidden}
+.pal .sw input{position:absolute;inset:-6px;opacity:0;cursor:pointer}
+.pal .nm{flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pal .nm b{display:block;font-weight:600}
+.pal .nm i{font-style:normal;color:var(--tx2);font-size:11px}
+.glowbtn{background:none;border:1px solid var(--line);border-radius:6px;padding:3px 7px;cursor:pointer;font-size:11px;color:var(--tx2);flex:0 0 auto}
+.glowbtn.on{border-color:var(--warn);color:var(--warn);background:#f5a5241a}
+
+/* ---------- canvas area ---------- */
+.viewbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:16px}
+#view{max-width:100%;max-height:100%;border-radius:6px;box-shadow:0 8px 40px #000a}
+.stagelabel{position:absolute;left:14px;top:12px;color:var(--tx2);font-size:11.5px;background:#0008;padding:4px 9px;border-radius:6px}
+#gl{border-radius:6px;box-shadow:0 8px 40px #000a;cursor:grab;display:block}
+#gl:active{cursor:grabbing}
+#glFail{position:absolute;inset:0;align-items:center;justify-content:center;color:var(--tx2)}
+.glbar{
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;
+  background:#0b0d10dd;border:1px solid var(--line);padding:4px;border-radius:10px;backdrop-filter:blur(6px)
+}
+.glbar button{background:none;border:0;color:var(--tx2);padding:6px 12px;border-radius:7px;cursor:pointer;font-size:12px}
+.glbar button:hover{color:var(--tx)}
+.glbar button.on{background:var(--acc);color:#fff;font-weight:600}
+.glhint{position:absolute;right:14px;top:12px;color:var(--tx2);font-size:11px;background:#0008;padding:4px 9px;border-radius:6px;display:none}
+.statusbar{display:flex;gap:16px;padding:7px 12px;border-top:1px solid var(--line);background:var(--panel);color:var(--tx2);font-size:11.5px;flex-wrap:wrap}
+.statusbar b{color:var(--tx);font-weight:600}
+
+/* ---------- results ---------- */
+table.kv{width:100%;border-collapse:collapse}
+table.kv td{padding:4px 0;vertical-align:top}
+table.kv td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+table.kv tr.tot td{border-top:1px solid var(--line);padding-top:8px;font-weight:700;font-size:14px}
+table.kv tr.tot td:last-child{color:var(--acc)}
+table.kv tr.sub td{color:var(--tx2)}
+.check{display:flex;gap:8px;padding:7px 9px;border-radius:8px;margin:6px 0;line-height:1.45;font-size:12px;align-items:flex-start}
+.check.ok{background:#31c48d14;color:#8fe3c2}
+.check.warn{background:#f5a52414;color:#f7c76b}
+.check.err{background:#f04a5a14;color:#ff98a2}
+.badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:11px;color:var(--tx2)}
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#000d;border:1px solid var(--line);
+  padding:10px 18px;border-radius:10px;z-index:50;opacity:0;transition:.25s;pointer-events:none
+}
+.toast.on{opacity:1}
+.busy{position:absolute;inset:0;background:#0e1013cc;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:5}
+.busy.on{display:flex}
+.spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<header>
+  <div class="brand">YP <span>Lightbox</span> Studio</div>
+  <input class="docname" id="docname" value="Lightbox — งานใหม่">
+  <div class="spacer"></div>
+  <div class="seg" id="viewseg">
+    <button data-v="design" class="on">แบบ</button>
+    <button data-v="lit">ติดไฟ</button>
+    <button data-v="layers">แยกชั้น</button>
+    <button data-v="plate">แผ่นพิมพ์</button>
+    <button data-v="3d">3 มิติ</button>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn gh" id="btnNew">ล้าง</button>
+  <button class="btn gh" id="btnSaveProj">บันทึกโปรเจ็ค</button>
+  <button class="btn gh" id="btnOpenProj">เปิดไฟล์</button>
+  <button class="btn pri" id="btnExport">ส่งออกไฟล์พิมพ์</button>
+</header>
+
+<main>
+
+<!-- ══════════ LEFT ══════════ -->
+<div class="col" id="left">
+
+  <div class="sec" data-sec="src">
+    <h3>1 · ต้นทางงาน</h3>
+    <div class="body">
+      <div class="tabs" id="srcTabs">
+        <button data-t="text" class="on">ข้อความ</button>
+        <button data-t="image">รูปภาพ</button>
+        <button data-t="tpl">เทมเพลต</button>
+      </div>
+
+      <div data-pane="text">
+        <textarea id="txtContent">YUPPIE
+PRODUCTION</textarea>
+        <div class="row"><label>ฟอนต์</label><select id="txtFont" class="grow"></select></div>
+        <div class="row"><label>อัปโหลดฟอนต์</label>
+          <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" style="display:none">
+          <button class="btn grow" id="btnFontFile">เลือกไฟล์ .ttf / .otf</button>
+        </div>
+        <div class="row"><label>น้ำหนัก</label>
+          <select id="txtWeight" class="grow">
+            <option value="400">ปกติ</option><option value="600">กึ่งหนา</option>
+            <option value="700" selected>หนา</option><option value="900">หนามาก</option>
+          </select>
+        </div>
+        <div class="row"><label>จัดวาง</label>
+          <select id="txtAlign" class="grow"><option value="center">กึ่งกลาง</option><option value="left">ชิดซ้าย</option><option value="right">ชิดขวา</option></select>
+        </div>
+        <div class="row"><label>ระยะห่างตัว</label><input type="range" id="txtTrack" min="-8" max="30" step="1" value="0"><span class="unit" id="txtTrackV">0</span></div>
+        <div class="row"><label>ระยะห่างบรรทัด</label><input type="range" id="txtLead" min="80" max="200" step="5" value="115"><span class="unit" id="txtLeadV">115%</span></div>
+        <div class="row"><label>ขอบรอบตัว</label><input type="range" id="txtOutline" min="0" max="6" step="0.5" value="0"><span class="unit" id="txtOutlineV">0 มม.</span></div>
+        <p class="hint">ขอบรอบตัวอักษรจะกลายเป็นสีที่ 2 อัตโนมัติ — ใช้ทำตัวอักษรมีเส้นขอบเรืองแสงแบบป้ายร้าน</p>
+      </div>
+
+      <div data-pane="image" style="display:none">
+        <div class="drop" id="imgDrop">
+          ลากไฟล์มาวาง หรือคลิกเพื่อเลือก<br>
+          <span style="font-size:11px">PNG · JPG · SVG · WEBP</span>
+        </div>
+        <input type="file" id="imgFile" accept="image/*" style="display:none">
+        <div class="row"><label>ลบพื้นหลัง</label><input type="checkbox" id="imgRemoveBg" checked><span class="unit">ตัดสีมุมภาพออก</span></div>
+        <div class="row"><label>ความคลาดสี</label><input type="range" id="imgTol" min="2" max="90" step="1" value="26"><span class="unit" id="imgTolV">26</span></div>
+        <p class="hint">โลโก้ที่เป็น SVG หรือ PNG พื้นใสจะได้ผลดีที่สุด ภาพถ่ายไม่เหมาะกับงานไลท์บ็อกซ์</p>
+      </div>
+
+      <div data-pane="tpl" style="display:none">
+        <div class="chips" id="tplList"></div>
+        <p class="hint">เทมเพลตคือค่าตั้งต้นทั้งชุด (ขนาด ความหนา สี ตัวอักษร) กดแล้วแก้ต่อได้ทันที</p>
+        <div class="row"><button class="btn grow" id="btnTplSave">บันทึกงานนี้เป็นเทมเพลตไฟล์</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec" data-sec="fit">
+    <h3>2 · วางตำแหน่ง</h3>
+    <div class="body">
+      <div class="row"><label>ขนาด</label><input type="range" id="trScale" min="10" max="200" step="1" value="88"><span class="unit" id="trScaleV">88%</span></div>
+      <div class="row"><label>เลื่อนซ้าย-ขวา</label><input type="range" id="trDx" min="-50" max="50" step="1" value="0"><span class="unit" id="trDxV">0</span></div>
+      <div class="row"><label>เลื่อนขึ้น-ลง</label><input type="range" id="trDy" min="-50" max="50" step="1" value="0"><span class="unit" id="trDyV">0</span></div>
+      <div class="row"><label>หมุน</label><input type="range" id="trRot" min="-180" max="180" step="1" value="0"><span class="unit" id="trRotV">0°</span></div>
+      <div class="row"><button class="btn grow" id="btnAutoFit">จัดให้พอดีอัตโนมัติ</button></div>
+    </div>
+  </div>
+
+  <div class="sec" data-sec="color">
+    <h3>3 · สีและชั้น</h3>
+    <div class="body">
+      <div class="row"><label>จำนวนสีงาน</label><input type="range" id="colN" min="1" max="6" step="1" value="2"><span class="unit" id="colNV">2</span></div>
+      <div class="row"><label>เกลี่ยขอบ</label><input type="range" id="colSmooth" min="0" max="4" step="1" value="1"><span class="unit" id="colSmoothV">1</span></div>
+      <div class="row"><label>โหมดเรืองแสง</label>
+        <select id="glowMode" class="grow">
+          <option value="logo">โลโก้สว่าง พื้นทึบ</option>
+          <option value="bg">พื้นสว่าง โลโก้ทึบ</option>
+        </select>
+      </div>
+      <p class="hint" style="margin-bottom:8px">คลิกช่องสีเพื่อแก้เป็นสีเส้นจริง · ปุ่ม “สว่าง/ทึบ” กำหนดว่าชั้นนั้นให้แสงผ่านหรือไม่</p>
+      <div class="pal" id="palList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════ CENTER ══════════ -->
+<div id="center">
+  <div class="viewbar">
+    <span class="badge" id="dimBadge">— × — มม.</span>
+    <span class="badge" id="colBadge">— สี</span>
+    <span class="badge" id="triBadge">— สามเหลี่ยม</span>
+    <div class="spacer"></div>
+    <label style="color:var(--tx2)"><input type="checkbox" id="showFrame" checked> แสดงกรอบ</label>
+    <label style="color:var(--tx2)"><input type="checkbox" id="showGrid"> เส้นกริด</label>
+    <button class="btn gh" id="btnPng">บันทึกภาพพรีวิว</button>
+  </div>
+  <div class="stage" id="stage">
+    <span class="stagelabel" id="stageLabel">แบบ</span>
+    <canvas id="view" width="900" height="600"></canvas>
+    <canvas id="gl" style="display:none"></canvas>
+    <div id="glFail" style="display:none">เบราว์เซอร์นี้เปิด WebGL ไม่ได้ — ใช้แท็บ “แยกชั้น” แทน</div>
+    <div class="glbar" id="glbar" style="display:none">
+      <button data-m="asm" class="on">ประกอบเสร็จ</button>
+      <button data-m="lit">ติดไฟ</button>
+      <button data-m="exp">แยกชิ้น</button>
+      <button data-m="plate">บนฐานพิมพ์</button>
+      <span style="width:1px;height:18px;background:#ffffff22"></span>
+      <button data-a="reset">รีเซ็ตมุม</button>
+    </div>
+    <div class="glhint" id="glhint">ลากเพื่อหมุน · ล้อเลื่อนเพื่อซูม · Shift+ลาก เลื่อนภาพ · ดับเบิลคลิกรีเซ็ต</div>
+    <div class="busy" id="busy"><div class="spin"></div><div id="busyTx">กำลังคำนวณ…</div></div>
+  </div>
+  <div class="statusbar" id="status"></div>
+</div>
+
+<!-- ══════════ RIGHT ══════════ -->
+<div class="col" id="right">
+
+  <div class="sec" data-sec="dim">
+    <h3>4 · ขนาดกล่อง</h3>
+    <div class="body">
+      <div class="row"><label>กว้าง × สูง</label><input type="number" id="bW" class="num" value="200" step="1">
+        <span class="unit">×</span><input type="number" id="bH" class="num" value="120" step="1"><span class="unit">มม.</span></div>
+      <div class="chips" id="sizePresets"></div>
+      <div class="row"><label>ความลึกกล่อง</label><input type="range" id="bDepth" min="12" max="80" step="1" value="35"><span class="unit" id="bDepthV">35 มม.</span></div>
+      <div class="row"><label>ชั้นสีหน้า</label><input type="range" id="bColorT" min="0.2" max="1.2" step="0.1" value="0.4"><span class="unit" id="bColorTV">0.4 มม.</span></div>
+      <div class="row"><label>ชั้นกระจายแสง</label><input type="range" id="bDiff" min="0.2" max="2" step="0.1" value="0.6"><span class="unit" id="bDiffV">0.6 มม.</span></div>
+      <div class="row"><label>ความหนาพื้นทึบ</label><input type="range" id="bBgT" min="0.6" max="3" step="0.1" value="1.2"><span class="unit" id="bBgTV">1.2 มม.</span></div>
+      <div class="row"><label>กรอบข้าง</label><input type="range" id="bFrame" min="1.2" max="8" step="0.2" value="2.4"><span class="unit" id="bFrameV">2.4 มม.</span></div>
+      <div class="row"><label>แผ่นหลัง</label><input type="range" id="bBack" min="1" max="5" step="0.2" value="2"><span class="unit" id="bBackV">2 มม.</span></div>
+      <div class="row"><label>สีกรอบ/หลัง</label>
+        <span class="sw" style="width:26px;height:26px;border-radius:6px;border:1px solid #0006;position:relative;overflow:hidden;background:#1a1a1a" id="frameSw">
+          <input type="color" id="frameColor" value="#1a1a1a" style="position:absolute;inset:-6px;opacity:0">
+        </span>
+        <span class="unit" id="frameColorV">#1a1a1a</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec" data-sec="hw">
+    <h3>5 · รูสายไฟและขาตั้ง</h3>
+    <div class="body">
+      <div class="row"><label>รูสายไฟ</label>
+        <select id="holeType" class="grow">
+          <option value="frame">บากที่กรอบล่าง</option>
+          <option value="back">รูกลมที่แผ่นหลัง</option>
+          <option value="none">ไม่มี</option>
+        </select></div>
+      <div class="row"><label>ขนาดรู</label><input type="range" id="holeDia" min="3" max="16" step="0.5" value="7"><span class="unit" id="holeDiaV">7 มม.</span></div>
+      <div class="row"><label>ขาตั้ง</label>
+        <select id="baseType" class="grow">
+          <option value="none">ไม่มี (แขวน/ติดผนัง)</option>
+          <option value="feet" selected>ขาตั้ง 2 ชิ้น มีร่องเสียบ</option>
+        </select></div>
+      <div class="row"><label>ความกว้างขา</label><input type="range" id="baseW" min="20" max="80" step="2" value="40"><span class="unit" id="baseWV">40 มม.</span></div>
+      <div class="row"><label>รูแขวนผนัง</label><input type="checkbox" id="hangHole"><span class="unit">เจาะรูแขวนที่แผ่นหลัง 2 จุด</span></div>
+      <p class="hint">รูสายไฟแบบบากอยู่ที่ <b>ปลายหลัง</b>ของกรอบ สายจึงออกด้านหลัง และตอนพิมพ์เป็นบากเปิดปากบน ไม่ต้องบริดจ์</p>
+    </div>
+  </div>
+
+  <div class="sec" data-sec="joint">
+    <h3>6 · การประกบฝาหลัง</h3>
+    <div class="body">
+      <div class="row"><label>วิธีประกบ</label>
+        <select id="jointType" class="grow">
+          <option value="screw">บ่าล็อก + สกรู M3 (แนะนำ)</option>
+          <option value="lip">บ่าล็อกอย่างเดียว (กาว/เทป)</option>
+          <option value="butt">ชนหน้าตัดเปล่า (กาวล้วน)</option>
+        </select></div>
+      <div class="row"><label>ความสูงบ่า</label><input type="range" id="lipH" min="1.5" max="8" step="0.5" value="3"><span class="unit" id="lipHV">3 มม.</span></div>
+      <div class="row"><label>ความหนาบ่า</label><input type="range" id="lipW" min="1.6" max="6" step="0.2" value="3"><span class="unit" id="lipWV">3 มม.</span></div>
+      <div class="row"><label>เผื่อระยะสวม</label><input type="range" id="lipCl" min="0.1" max="0.6" step="0.05" value="0.2"><span class="unit" id="lipClV">0.2 มม.</span></div>
+      <div class="row"><label>ขนาดเสาสกรู</label><input type="range" id="bossW" min="6" max="14" step="0.5" value="8"><span class="unit" id="bossWV">8 มม.</span></div>
+      <div class="row"><label>ความลึกรูนำ</label><input type="range" id="screwDepth" min="6" max="20" step="1" value="10"><span class="unit" id="screwDepthV">10 มม.</span></div>
+      <p class="hint">เสาสกรูอยู่ใน 4 มุม ชิดผนังกรอบ รูนำ Ø2.5 มม. · ฝาหลังเจาะรูผ่าน Ø3.4 มม. ตรงกัน<br>
+      ใช้สกรูเกลียวปล่อยหัวกลม <b>M3 × 12 มม.</b> 4 ตัวต่อกล่อง (ยาว = ความหนาฝาหลัง + ความลึกรูนำ)</p>
+    </div>
+  </div>
+
+  <div class="sec" data-sec="check">
+    <h3>7 · ตรวจก่อนพิมพ์</h3>
+    <div class="body"><div id="checkList"></div></div>
+  </div>
+
+  <div class="sec" data-sec="price">
+    <h3>8 · ต้นทุนและราคา</h3>
+    <div class="body">
+      <div class="row"><label>จำนวนที่ผลิต</label><input type="number" id="pQty" class="num" value="1" min="1" step="1"><span class="unit">ชิ้น</span></div>
+      <div class="row"><label>เส้นพลาสติก</label><input type="number" id="pFil" class="num" value="750" step="10"><span class="unit">บาท/กก.</span></div>
+      <div class="row"><label>ค่าเครื่อง</label><input type="number" id="pMach" class="num" value="25" step="1"><span class="unit">บาท/ชม.</span></div>
+      <div class="row"><label>ค่าแรงประกอบ</label><input type="number" id="pLaborMin" class="num" value="25" step="5"><span class="unit">นาที/ชิ้น</span></div>
+      <div class="row"><label>เรตค่าแรง</label><input type="number" id="pLaborRate" class="num" value="300" step="10"><span class="unit">บาท/ชม.</span></div>
+      <div class="row"><label>ชุดไฟ LED</label><input type="number" id="pLed" class="num" value="150" step="10"><span class="unit">บาท/ชิ้น</span></div>
+      <div class="row"><label>ของเสีย</label><input type="number" id="pWaste" class="num" value="8" step="1"><span class="unit">%</span></div>
+      <div class="row"><label>กำไร</label><input type="number" id="pMargin" class="num" value="45" step="5"><span class="unit">%</span></div>
+      <div class="row"><label>ล้างสีต่อครั้ง</label><input type="number" id="pFlush" class="num" value="120" step="10"><span class="unit">มม³</span></div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
+      <table class="kv" id="quoteTbl"></table>
+      <div class="row" style="margin-top:12px"><button class="btn grow" id="btnQuote">ออกใบเสนอราคา (HTML)</button></div>
+    </div>
+  </div>
+
+  <div class="sec closed" data-sec="exp">
+    <h3>9 · ตัวเลือกไฟล์ส่งออก</h3>
+    <div class="body">
+      <div class="row"><label>ความละเอียด</label>
+        <select id="expRes" class="grow">
+          <option value="0.4">หยาบ 0.4 มม. (ไฟล์เล็ก)</option>
+          <option value="0.25" selected>ปกติ 0.25 มม.</option>
+          <option value="0.15">ละเอียด 0.15 มม. (ไฟล์ใหญ่)</option>
+        </select></div>
+      <div class="row"><label>รูปแบบ</label>
+        <select id="expFmt" class="grow">
+          <option value="3mf" selected>3MF รวมทุกชิ้น (แนะนำ)</option>
+          <option value="stl">STL แยกชิ้น (.zip)</option>
+          <option value="both">ทั้ง 3MF และ STL</option>
+        </select></div>
+      <div class="row"><label>ความสูงชั้น</label><input type="number" id="expLayerH" class="num" value="0.2" step="0.02"><span class="unit">มม.</span></div>
+      <p class="hint">3MF จะรวมทุกชิ้นไว้ในไฟล์เดียว แต่ละชิ้นแยกวัตถุพร้อมชื่อสี — เปิดใน Bambu Studio แล้วกำหนดเส้นให้แต่ละชิ้นได้เลย</p>
+    </div>
+  </div>
+
+</div>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+/* ══════════════════════════════════════════════════════════════
+   YP Lightbox Studio — core: state, raster, quantize, masks, rects
+   ══════════════════════════════════════════════════════════════ */
+"use strict";
+
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const nf = (v,d=0) => v.toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+/* ---------- default state ---------- */
+function defaults(){ return {
+  name:'Lightbox — งานใหม่',
+  src:{ mode:'text',
+        text:'YUPPIE\nPRODUCTION', font:'Arial Black', weight:700, align:'center',
+        track:0, lead:115, outline:0,
+        imgData:null, imgName:'', removeBg:true, tol:26 },
+  tr:{ scale:88, dx:0, dy:0, rot:0 },
+  art:{ n:2, smooth:1, glowMode:'logo' },
+  pal:[ {hex:'#1a1a1a',name:'พื้นหลัง',glow:false},
+        {hex:'#ff2d8f',name:'สี 1',glow:true} ],
+  box:{ W:200,H:120,depth:35,colorT:0.4,diff:0.6,bgT:1.2,frame:2.4,back:2, frameColor:'#1a1a1a' },
+  hw:{ hole:'frame', dia:7, base:'feet', baseW:40, hang:false,
+       joint:'screw', lipH:3, lipW:3, lipCl:0.2, bossW:8, screwDepth:10 },
+  price:{ qty:1, fil:750, mach:25, laborMin:25, laborRate:300, led:150, waste:8, margin:45, flush:120 },
+  exp:{ res:0.25, fmt:'3mf', layerH:0.2 },
+  ui:{ showFrame:true, showGrid:false, view:'design' }
+};}
+let S = defaults();
+
+/* ---------- filament colour library (Bambu PLA Basic-ish) ---------- */
+const FILAMENTS = [
+  ['ดำ','#000000'],['ขาว','#FFFFFF'],['เทา','#8E9089'],['เทาเข้ม','#545454'],['เงิน','#A6A9AA'],
+  ['แดง','#C12E1F'],['แดงสด','#F72A2A'],['ชมพู','#F55A74'],['ชมพูบานเย็น','#EC008C'],['ม่วง','#5E43B7'],
+  ['น้ำเงิน','#0A2989'],['ฟ้า','#0086D6'],['ฟ้าอ่อน','#61B0FF'],['เขียว','#00AE42'],['เขียวอ่อน','#BECF00'],
+  ['เหลือง','#F4EE2A'],['ส้ม','#FF6A13'],['น้ำตาล','#7D6556'],['เบจ','#F7E6DE'],['ทอง','#E4BD68'],
+  ['ใส/ธรรมชาติ','#F2F2E8']
+];
+function hex2rgb(h){ h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join('');
+  return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+function rgb2hex(r,g,b){ return '#'+[r,g,b].map(v=>clamp(Math.round(v),0,255).toString(16).padStart(2,'0')).join(''); }
+function nearestFilament(hex){
+  const [r,g,b]=hex2rgb(hex); let best=FILAMENTS[0],bd=1e18;
+  for(const f of FILAMENTS){ const [R,G,B]=hex2rgb(f[1]);
+    const rm=(r+R)/2, dr=r-R, dg=g-G, db=b-B;          // redmean — ใกล้สายตาคนกว่า RGB ตรงๆ
+    const d=(2+rm/256)*dr*dr + 4*dg*dg + (2+(255-rm)/256)*db*db;
+    if(d<bd){bd=d;best=f;} }
+  return best[0];
+}
+function lum(hex){ const [r,g,b]=hex2rgb(hex); return (0.2126*r+0.7152*g+0.0722*b)/255; }
+
+/* ---------- fonts ---------- */
+const FONT_LIST = ['Arial Black','Impact','Tahoma','Verdana','Georgia','Trebuchet MS','Times New Roman',
+  'Leelawadee UI','Sarabun','Kanit','Prompt','Noto Sans Thai','Angsana New','Cordia New','TH Sarabun New','UserFont'];
+
+/* ══════════════════════════════════════════════════════════════
+   SOURCE RASTER — build a tight artwork canvas on transparent bg
+   returns {cv, fillMask?, kind}
+   ══════════════════════════════════════════════════════════════ */
+const SRC_H = 600;               // internal render height for text
+
+function makeSourceCanvas(){
+  return S.src.mode==='image' ? sourceFromImage() : sourceFromText();
+}
+
+function sourceFromText(){
+  const lines = (S.src.text||'').split('\n').filter(l=>l.length);
+  if(!lines.length) return null;
+  const fs = SRC_H/Math.max(1,lines.length) * 0.72;
+  const lead = fs * S.src.lead/100;
+  const meas = document.createElement('canvas').getContext('2d');
+  const fontStr = `${S.src.weight} ${fs}px "${S.src.font}", "Leelawadee UI", sans-serif`;
+  meas.font = fontStr;
+  if('letterSpacing' in meas) meas.letterSpacing = (S.src.track*fs/100)+'px';
+  // ← ห้ามนับตัวอักษร: วัดด้วย canvas เท่านั้น (ภาษาไทยมีสระ/วรรณยุกต์ที่ไม่กินความกว้าง)
+  let wmax = 0;
+  for(const l of lines) wmax = Math.max(wmax, meas.measureText(l).width);
+  const ow = S.src.outline * 6;                       // outline in source px
+  const pad = Math.ceil(ow + fs*0.35);
+  const W = Math.ceil(wmax) + pad*2;
+  const H = Math.ceil(lead*lines.length) + pad*2;
+
+  const draw = (stroke)=>{
+    const cv = document.createElement('canvas'); cv.width=W; cv.height=H;
+    const c = cv.getContext('2d');
+    c.font = fontStr;
+    if('letterSpacing' in c) c.letterSpacing = (S.src.track*fs/100)+'px';
+    c.textBaseline = 'middle';
+    c.textAlign = S.src.align;
+    c.fillStyle = '#fff'; c.strokeStyle = '#fff';
+    c.lineJoin = 'round'; c.lineCap='round';
+    const x = S.src.align==='center' ? W/2 : S.src.align==='left' ? pad : W-pad;
+    lines.forEach((l,i)=>{
+      const y = pad + lead*(i+0.5);
+      if(stroke && ow>0){ c.lineWidth = ow*2; c.strokeText(l,x,y); }
+      c.fillText(l,x,y);
+    });
+    return cv;
+  };
+  const outer = draw(true);           // fill + outline
+  const inner = draw(false);          // fill only
+  return { cv: outer, inner: (ow>0?inner:null), kind:'text' };
+}
+
+function sourceFromImage(){
+  const im = S.src.imgData;
+  if(!im) return null;
+  const W = im.naturalWidth || im.width, H = im.naturalHeight || im.height;
+  const sc = Math.min(1, 900/Math.max(W,H));
+  const cv = document.createElement('canvas');
+  cv.width = Math.max(1,Math.round(W*sc)); cv.height = Math.max(1,Math.round(H*sc));
+  const c = cv.getContext('2d');
+  c.drawImage(im,0,0,cv.width,cv.height);
+  if(S.src.removeBg) removeBackground(c,cv.width,cv.height,S.src.tol);
+  return { cv, inner:null, kind:'image' };
+}
+
+function removeBackground(ctx,w,h,tol){
+  const d = ctx.getImageData(0,0,w,h), p = d.data;
+  const corners = [[0,0],[w-1,0],[0,h-1],[w-1,h-1]].map(([x,y])=>{
+    const i=(y*w+x)*4; return [p[i],p[i+1],p[i+2],p[i+3]];
+  }).filter(c=>c[3]>10);
+  if(!corners.length){ return; }                       // already transparent
+  const bg = [0,1,2].map(k=>corners.reduce((a,c)=>a+c[k],0)/corners.length);
+  const t2 = tol*tol*3;
+  for(let i=0;i<p.length;i+=4){
+    if(p[i+3]<8) continue;
+    const d2=(p[i]-bg[0])**2+(p[i+1]-bg[1])**2+(p[i+2]-bg[2])**2;
+    if(d2<t2) p[i+3]=0;
+  }
+  ctx.putImageData(d,0,0);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GRID BUILD — draw source into the mm grid, then decide owners
+   G = {gw,gh,px,owner:Uint8Array}  owner 0 = background
+   ══════════════════════════════════════════════════════════════ */
+let G = null, SRC_CACHE = null;
+
+function rebuildSource(){ SRC_CACHE = makeSourceCanvas(); }
+
+function drawSourceInto(ctx,gw,gh,cv){
+  const {scale,dx,dy,rot} = S.tr;
+  const inset = S.box.frame / (S.box.W/gw);            // frame in cells
+  const availW = gw - inset*2, availH = gh - inset*2;
+  const k = Math.min(availW/cv.width, availH/cv.height) * scale/100;
+  ctx.save();
+  ctx.translate(gw/2 + dx/100*gw/2, gh/2 + dy/100*gh/2);
+  ctx.rotate(rot*Math.PI/180);
+  ctx.scale(k,k);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(cv, -cv.width/2, -cv.height/2);
+  ctx.restore();
+}
+
+function buildGrid(){
+  const px = +S.exp.res;
+  const gw = Math.max(8, Math.round(S.box.W/px));
+  const gh = Math.max(8, Math.round(S.box.H/px));
+  const owner = new Uint8Array(gw*gh);                 // 0 = background
+
+  if(!SRC_CACHE) rebuildSource();
+  const src = SRC_CACHE;
+  if(!src){ G = {gw,gh,px,owner,empty:true}; return G; }
+
+  const cv = document.createElement('canvas'); cv.width=gw; cv.height=gh;
+  const c = cv.getContext('2d',{willReadFrequently:true});
+  drawSourceInto(c,gw,gh,src.cv);
+  const outer = c.getImageData(0,0,gw,gh).data;
+
+  let innerData = null;
+  if(src.inner){
+    const cv2 = document.createElement('canvas'); cv2.width=gw; cv2.height=gh;
+    const c2 = cv2.getContext('2d',{willReadFrequently:true});
+    drawSourceInto(c2,gw,gh,src.inner);
+    innerData = c2.getImageData(0,0,gw,gh).data;
+  }
+
+  if(src.kind==='text'){
+    /* palette: 0 bg · 1 fill · 2 outline */
+    ensurePalette(innerData?2:1);
+    for(let i=0,n=gw*gh;i<n;i++){
+      const a = outer[i*4+3];
+      if(a<110){ owner[i]=0; continue; }
+      owner[i] = (innerData && innerData[i*4+3]<110) ? 2 : 1;
+    }
+  }else{
+    /* image: k-means over visible pixels */
+    const n = gw*gh, vis=[];
+    for(let i=0;i<n;i++) if(outer[i*4+3]>=110) vis.push(i);
+    const K = clamp(S.art.n,1,6);
+    ensurePalette(K);
+    if(vis.length){
+      const cents = kmeans(outer,vis,K);
+      cents.forEach((c,i)=>{ if(!S.pal[i+1].locked) S.pal[i+1].hex = rgb2hex(c[0],c[1],c[2]); });
+      for(const i of vis){
+        const r=outer[i*4],g=outer[i*4+1],b=outer[i*4+2];
+        let bi=0,bd=1e18;
+        for(let k=0;k<K;k++){ const c=cents[k];
+          const d=(r-c[0])**2+(g-c[1])**2+(b-c[2])**2; if(d<bd){bd=d;bi=k;} }
+        owner[i]=bi+1;
+      }
+    }
+  }
+
+  for(let p=0;p<S.art.smooth;p++) medianOwner(owner,gw,gh,S.pal.length);
+  G = {gw,gh,px,owner,empty:false};
+  computeAreas();
+  return G;
+}
+
+function ensurePalette(k){
+  const want = k+1;
+  const seeds = ['#ff2d8f','#3ba0ff','#ffd400','#31c48d','#ff6a13','#ffffff'];
+  while(S.pal.length<want) S.pal.push({hex:seeds[(S.pal.length-1)%seeds.length],name:'สี '+S.pal.length,glow:true});
+  if(S.pal.length>want) S.pal.length = want;
+  S.pal[0].glow = (S.art.glowMode==='bg');
+  for(let i=1;i<S.pal.length;i++) if(S.pal[i].glow===undefined) S.pal[i].glow = (S.art.glowMode==='logo');
+}
+
+function kmeans(data,idx,K){
+  /* k-means++ light init */
+  const N = idx.length;
+  const cents = [];
+  const pick = i=>[data[i*4],data[i*4+1],data[i*4+2]];
+  cents.push(pick(idx[(Math.random()*N)|0]));
+  while(cents.length<K){
+    let best=null,bd=-1;
+    for(let t=0;t<Math.min(400,N);t++){
+      const i = idx[(Math.random()*N)|0], p = pick(i);
+      let dm=1e18; for(const c of cents) dm=Math.min(dm,(p[0]-c[0])**2+(p[1]-c[1])**2+(p[2]-c[2])**2);
+      if(dm>bd){bd=dm;best=p;}
+    }
+    cents.push(best||[128,128,128]);
+  }
+  const step = Math.max(1, Math.floor(N/60000));       // sample for speed
+  for(let it=0;it<12;it++){
+    const sum = Array.from({length:K},()=>[0,0,0,0]);
+    for(let t=0;t<N;t+=step){
+      const i=idx[t],r=data[i*4],g=data[i*4+1],b=data[i*4+2];
+      let bi=0,bd=1e18;
+      for(let k=0;k<K;k++){ const c=cents[k]; const d=(r-c[0])**2+(g-c[1])**2+(b-c[2])**2; if(d<bd){bd=d;bi=k;} }
+      const s=sum[bi]; s[0]+=r;s[1]+=g;s[2]+=b;s[3]++;
+    }
+    let moved=0;
+    for(let k=0;k<K;k++){ const s=sum[k]; if(!s[3]) continue;
+      const nc=[s[0]/s[3],s[1]/s[3],s[2]/s[3]];
+      moved += Math.abs(nc[0]-cents[k][0])+Math.abs(nc[1]-cents[k][1])+Math.abs(nc[2]-cents[k][2]);
+      cents[k]=nc; }
+    if(moved<1.5) break;
+  }
+  return cents.map(c=>c.map(v=>Math.round(v)));
+}
+
+function medianOwner(o,gw,gh,K){
+  const src = o.slice(), cnt = new Uint16Array(K);
+  for(let y=1;y<gh-1;y++) for(let x=1;x<gw-1;x++){
+    cnt.fill(0);
+    for(let j=-1;j<=1;j++) for(let i=-1;i<=1;i++) cnt[src[(y+j)*gw+x+i]]++;
+    let bi=0,bv=-1; for(let k=0;k<K;k++) if(cnt[k]>bv){bv=cnt[k];bi=k;}
+    if(bv>=5) o[y*gw+x]=bi;
+  }
+}
+
+function computeAreas(){
+  const K=S.pal.length, cnt=new Float64Array(K);
+  for(let i=0;i<G.owner.length;i++) cnt[G.owner[i]]++;
+  const cell = G.px*G.px;
+  S.pal.forEach((p,i)=>{ p.area = cnt[i]*cell; p.cells = cnt[i]; });
+}
+
+/* ---------- masks + greedy rectangle merge ---------- */
+function maskOf(k){
+  const m = new Uint8Array(G.gw*G.gh);
+  for(let i=0;i<m.length;i++) if(G.owner[i]===k) m[i]=1;
+  return m;
+}
+function maskGlow(){
+  const m = new Uint8Array(G.gw*G.gh);
+  for(let i=0;i<m.length;i++) if(S.pal[G.owner[i]].glow) m[i]=1;
+  return m;
+}
+function maskToRects(mask,gw,gh){
+  const out=[]; let prev=[];
+  for(let y=0;y<gh;y++){
+    const runs=[]; let x=0, row=y*gw;
+    while(x<gw){
+      if(mask[row+x]){ const s=x; while(x<gw&&mask[row+x])x++; runs.push([s,x]); }
+      else x++;
+    }
+    const next=[], used=new Array(prev.length).fill(false);
+    for(const r of runs){
+      let m=-1;
+      for(let k=0;k<prev.length;k++) if(!used[k]&&prev[k].x0===r[0]&&prev[k].x1===r[1]){m=k;break;}
+      if(m>=0){ used[m]=true; next.push(prev[m]); }
+      else next.push({x0:r[0],x1:r[1],y0:y});
+    }
+    for(let k=0;k<prev.length;k++) if(!used[k]) out.push({x0:prev[k].x0,x1:prev[k].x1,y0:prev[k].y0,y1:y});
+    prev=next;
+  }
+  for(const p of prev) out.push({x0:p.x0,x1:p.x1,y0:p.y0,y1:gh});
+  return out;
+}
+/* rasterise an arbitrary shape test into a mask over the panel grid
+   fn รับพิกัดมิลลิเมตร "ของชิ้นงานจริง" (x=0 ซ้าย, y=0 ล่าง) ตรงกับที่ addRects จะเขียนออกมา
+   ไม่ใช่พิกัดกริดของภาพ ซึ่งกลับด้านทั้งแกน x และ y */
+function maskFromFn(fn){
+  const m=new Uint8Array(G.gw*G.gh), W=S.box.W, H=S.box.H;
+  for(let y=0;y<G.gh;y++) for(let x=0;x<G.gw;x++){
+    const mx=W-(x+0.5)*G.px, my=H-(y+0.5)*G.px;
+    if(fn(mx,my)) m[y*G.gw+x]=1;
+  }
+  return m;
+}
+function thinRatio(mask,gw,gh){
+  let tot=0,solid=0;
+  for(let y=1;y<gh-1;y++) for(let x=1;x<gw-1;x++){
+    const i=y*gw+x; if(!mask[i]) continue; tot++;
+    if(mask[i-1]&&mask[i+1]&&mask[i-gw]&&mask[i+gw]) solid++;
+  }
+  return tot? solid/tot : 1;
+}
+/* ══════════════════════════════════════════════════════════════
+   YP Lightbox Studio — geometry + STL + 3MF writers
+   แกน:  x ขวา · y ขึ้น · z ขึ้นจากฐานพิมพ์  (z=0 = ผิวหน้าที่ติดฐาน)
+   หน้ากล่องคว่ำลงฐาน ⇒ ต้องกลับแกน x เวลาแปลงจากกริดเป็นมิลลิเมตร
+   ══════════════════════════════════════════════════════════════ */
+
+/* ---------- growable triangle buffer: 12 floats/tri (n + 3 verts) ---------- */
+function Mesh(name,hex,noTri){ return {name,hex,noTri:!!noTri,a:noTri?new Float32Array(0):new Float32Array(12*4096),n:0,vol:0,
+    x0:1e9,x1:-1e9,y0:1e9,y1:-1e9,z0:1e9,z1:-1e9}; }
+function _grow(M,need){
+  if(M.n+need<=M.a.length) return;
+  let cap=M.a.length; while(cap<M.n+need) cap*=2;
+  const b=new Float32Array(cap); b.set(M.a.subarray(0,M.n)); M.a=b;
+}
+function tri(M,p,q,r,nx,ny,nz){
+  _grow(M,12); const a=M.a; let i=M.n;
+  a[i++]=nx;a[i++]=ny;a[i++]=nz;
+  a[i++]=p[0];a[i++]=p[1];a[i++]=p[2];
+  a[i++]=q[0];a[i++]=q[1];a[i++]=q[2];
+  a[i++]=r[0];a[i++]=r[1];a[i++]=r[2];
+  M.n=i;
+}
+function quad(M,p0,p1,p2,p3,nx,ny,nz){
+  if(M.noTri) return;
+  const ux=p1[0]-p0[0],uy=p1[1]-p0[1],uz=p1[2]-p0[2];
+  const vx=p2[0]-p0[0],vy=p2[1]-p0[1],vz=p2[2]-p0[2];
+  const cx=uy*vz-uz*vy, cy=uz*vx-ux*vz, cz=ux*vy-uy*vx;
+  if(cx*nx+cy*ny+cz*nz<0){ const t=p1; p1=p3; p3=t; }
+  tri(M,p0,p1,p2,nx,ny,nz); tri(M,p0,p2,p3,nx,ny,nz);
+}
+function addBox(M,x0,y0,z0,x1,y1,z1){
+  if(x1<=x0||y1<=y0||z1<=z0) return;
+  M.vol += (x1-x0)*(y1-y0)*(z1-z0);
+  if(x0<M.x0) M.x0=x0; if(x1>M.x1) M.x1=x1;
+  if(y0<M.y0) M.y0=y0; if(y1>M.y1) M.y1=y1;
+  if(z0<M.z0) M.z0=z0; if(z1>M.z1) M.z1=z1;
+  if(M.noTri) return;
+  const A=[x0,y0,z0],B=[x1,y0,z0],C=[x1,y1,z0],D=[x0,y1,z0];
+  const E=[x0,y0,z1],F=[x1,y0,z1],Gp=[x1,y1,z1],H=[x0,y1,z1];
+  quad(M,A,B,C,D, 0, 0,-1);
+  quad(M,E,F,Gp,H,0, 0, 1);
+  quad(M,A,B,F,E, 0,-1, 0);
+  quad(M,D,C,Gp,H,0, 1, 0);
+  quad(M,A,D,H,E,-1, 0, 0);
+  quad(M,B,C,Gp,F, 1, 0, 0);
+}
+function addRects(M,rects,z0,z1){
+  const px=G.px, W=S.box.W, H=S.box.H;
+  for(const r of rects){
+    addBox(M, W-r.x1*px, H-r.y1*px, z0, W-r.x0*px, H-r.y0*px, z1);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BUILD ALL PARTS
+   ══════════════════════════════════════════════════════════════ */
+function geomStack(){
+  const b=S.box;
+  const colorT=b.colorT, diff=b.diff;
+  const bgT = Math.max(b.bgT, colorT+0.2);
+  const frameZ0 = bgT;
+  const total = bgT + b.depth + b.back;
+  return {colorT,diff,bgT,frameZ0,total};
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ข้อกำหนดรอยต่อฝาหน้า–ฝาหลัง
+   butt = ชนหน้าตัด · lip = บ่าล็อก · screw = บ่าล็อก + เสาสกรู 4 มุม
+   ══════════════════════════════════════════════════════════════ */
+function jointSpec(){
+  const b=S.box, hw=S.hw, fh=b.frame;
+  const mode=hw.joint||'screw', lip=mode!=='butt', screw=mode==='screw';
+  const bw=hw.bossW, cl=hw.lipCl, lipH=hw.lipH, lipW=hw.lipW;
+  const PR=1.25, CR=1.7;                       // รูนำ Ø2.5 · รูผ่าน Ø3.4
+  const bx0=fh, bx1=fh+bw, bx2=b.W-fh-bw, bx3=b.W-fh;
+  const by0=fh, by1=fh+bw, by2=b.H-fh-bw, by3=b.H-fh;
+  const inBoss=(x,y)=> ((x>=bx0&&x<bx1)||(x>bx2&&x<=bx3)) && ((y>=by0&&y<by1)||(y>by2&&y<=by3));
+  const inBossPad=(x,y)=> ((x>=bx0-cl&&x<bx1+cl)||(x>bx2-cl&&x<=bx3+cl))
+                       && ((y>=by0-cl&&y<by1+cl)||(y>by2-cl&&y<=by3+cl));
+  const SC=[[bx0+bw/2,by0+bw/2],[bx3-bw/2,by0+bw/2],[bx0+bw/2,by3-bw/2],[bx3-bw/2,by3-bw/2]];
+  const inPilot=(x,y)=>SC.some(c=>(x-c[0])**2+(y-c[1])**2<PR*PR);
+  const inClear=(x,y)=>SC.some(c=>(x-c[0])**2+(y-c[1])**2<CR*CR);
+  const o=fh+cl, i2=fh+cl+lipW;
+  const nx0=b.W/2-hw.dia/2-1.5, nx1=b.W/2+hw.dia/2+1.5;
+  const inLip=(x,y)=>{
+    if(x<o||y<o||x>b.W-o||y>b.H-o) return false;          // นอกกรอบบ่า
+    if(x>i2&&y>i2&&x<b.W-i2&&y<b.H-i2) return false;      // กลางแผ่น (บ่าเป็นวง ไม่ตัน)
+    if(screw && inBossPad(x,y)) return false;             // เว้นมุมให้เสาสกรู
+    if(hw.hole==='frame' && y<i2+0.5 && x>nx0 && x<nx1) return false;  // เว้นช่องสายไฟ
+    return true;
+  };
+  return {mode,lip,screw,lipH,lipW,cl,bw,PR,CR,SC,bx0,bx1,bx2,bx3,by0,by1,by2,by3,
+          inBoss,inPilot,inClear,inLip};
+}
+
+function buildParts(nt){
+  if(!G||G.empty) buildGrid();
+  const b=S.box, st=geomStack(), px=G.px, parts=[];
+  const fh=b.frame;                                   // frame width (mm)
+
+  /* --- 1. colour faces + opaque bodies --- */
+  for(let k=0;k<S.pal.length;k++){
+    const p=S.pal[k];
+    if(!p.cells) continue;
+    const rects = maskToRects(maskOf(k),G.gw,G.gh);
+    if(!rects.length) continue;
+    const M = Mesh(k===0?'พื้นหลัง · '+nearestFilament(p.hex):('ชั้นสี '+k)+' · '+nearestFilament(p.hex), p.hex, nt);
+    if(p.glow) addRects(M,rects,0,st.colorT);
+    else       addRects(M,rects,0,st.bgT);
+    M.kind='color'; M.glow=!!p.glow;
+    parts.push(M);
+  }
+
+  /* --- 2. diffuser behind every glowing area --- */
+  const gm = maskGlow();
+  let any=false; for(let i=0;i<gm.length;i++) if(gm[i]){any=true;break;}
+  if(any){
+    const M=Mesh('ชั้นกระจายแสง · ขาว/ใส','#F2F2E8',nt);
+    addRects(M,maskToRects(gm,G.gw,G.gh),st.colorT,st.colorT+st.diff);
+    M.kind='diffuser'; M.glow=true;
+    parts.push(M);
+  }
+
+  /* --- 3. frame (perimeter wall) + cable notch ที่ปลายหลัง + เสาสกรู --- */
+  const J=jointSpec();
+  const zTop=st.frameZ0+b.depth;
+  const inFrame=(x,y)=> x<fh||y<fh||x>b.W-fh||y>b.H-fh;
+  const frameRects = maskToRects(maskFromFn(inFrame),G.gw,G.gh);
+  const FM=Mesh('กรอบข้าง'+(J.screw?' + เสาสกรู':''),'#'+b.frameColor.replace('#',''),nt);
+  if(S.hw.hole==='frame'){
+    const d=Math.min(S.hw.dia, b.depth-2), x0=b.W/2-S.hw.dia/2, x1=b.W/2+S.hw.dia/2;
+    const notch=(x,y)=> inFrame(x,y) && !(y<fh && x>x0 && x<x1);
+    addRects(FM,frameRects, st.frameZ0, zTop-d);                       // ผนังเต็ม
+    addRects(FM,maskToRects(maskFromFn(notch),G.gw,G.gh), zTop-d, zTop); // บากเปิดปากบน
+  }else{
+    addRects(FM,frameRects, st.frameZ0, zTop);
+  }
+  if(J.screw){
+    const sd=Math.min(S.hw.screwDepth, b.depth-3);
+    addRects(FM, maskToRects(maskFromFn(J.inBoss),G.gw,G.gh), st.frameZ0, zTop-sd);
+    addRects(FM, maskToRects(maskFromFn((x,y)=>J.inBoss(x,y)&&!J.inPilot(x,y)),G.gw,G.gh), zTop-sd, zTop);
+  }
+  FM.kind='frame';
+  parts.push(FM);
+
+  /* --- 4. back plate with holes --- */
+  const R=S.hw.dia/2, cx=b.W/2, cy=b.H/2;
+  const hang=S.hw.hang;
+  const backFn=(x,y)=>{
+    if(S.hw.hole==='back' && (x-cx)**2+(y-cy)**2 < R*R) return false;
+    if(J.screw && J.inClear(x,y)) return false;
+    if(hang){
+      const hy=b.H-fh-7;
+      if((x-b.W*0.25)**2+(y-hy)**2<6.25) return false;
+      if((x-b.W*0.75)**2+(y-hy)**2<6.25) return false;
+    }
+    return true;
+  };
+  const PK=platePack();
+  const BM=Mesh('แผ่นหลัง'+(J.lip?' + บ่าล็อก':''),'#'+b.frameColor.replace('#',''),nt);
+  addRects(BM,maskToRects(maskFromFn(backFn),G.gw,G.gh), 0, b.back);   // วางราบพร้อมพิมพ์ ผิวนอกติดฐาน
+  if(J.lip) addRects(BM,maskToRects(maskFromFn(J.inLip),G.gw,G.gh), b.back, b.back+J.lipH);
+  BM.place=PK.items.back; BM.kind='back';
+  parts.push(BM);
+
+  /* --- 5. feet (ขายึดแบบผนังบาง ไม่ตัน) --- */
+  if(S.hw.base==='feet'){
+    const F=footDims();
+    for(let i=0;i<2;i++){
+      const M=Mesh('ขาตั้ง '+(i+1),'#'+b.frameColor.replace('#',''),nt);
+      addBox(M,0,0,0,F.w,F.d,F.plate);                       // แผ่นฐาน
+      addBox(M,0,0,F.plate,F.w,F.rail,F.h);                  // สันหน้า
+      addBox(M,0,F.d-F.rail,F.plate,F.w,F.d,F.h);            // สันหลัง
+      M.place=PK.items['foot'+i]; M.kind='foot'; M.footIndex=i; M.foot=F;
+      parts.push(M);
+    }
+  }
+  return parts;
+}
+/* จัดวางชิ้นงานบนฐานพิมพ์ — ใช้ทั้งในภาพผังและใน transform ของไฟล์ 3MF */
+const BED=256, PGAP=8;
+function platePack(){
+  const b=S.box, F=(S.hw.base==='feet')?footDims():null;
+  const items={panel:{x:0,y:0,w:b.W,h:b.H}};
+  items.back={x:0,y:b.H+PGAP,w:b.W,h:b.H};
+  if(F){
+    const rx=b.W+PGAP;
+    if(rx+F.w<=BED && F.d*2+PGAP<=BED){                    // เรียงเป็นคอลัมน์ขวา
+      items.foot0={x:rx,y:0,w:F.w,h:F.d};
+      items.foot1={x:rx,y:F.d+PGAP,w:F.w,h:F.d};
+    }else if(rx+F.w*2+PGAP<=BED){                          // เรียงข้างกันทางขวา
+      items.foot0={x:rx,y:0,w:F.w,h:F.d};
+      items.foot1={x:rx+F.w+PGAP,y:0,w:F.w,h:F.d};
+    }else{                                                 // ต่อท้ายด้านล่าง
+      const fy=items.back.y+b.H+PGAP;
+      items.foot0={x:0,y:fy,w:F.w,h:F.d};
+      items.foot1={x:F.w+PGAP,y:fy,w:F.w,h:F.d};
+    }
+  }
+  const all=Object.values(items);
+  const maxX=Math.max(...all.map(i=>i.x+i.w)), maxY=Math.max(...all.map(i=>i.y+i.h));
+  return {items,maxX,maxY,fits:maxX<=BED&&maxY<=BED};
+}
+function footDims(){
+  const st=geomStack();
+  const slot=st.total+0.6, rail=3.5, plate=3;
+  return {w:S.hw.baseW, d:slot+rail*2, rail, plate, slot,
+          h:plate+Math.max(9,Math.min(18, st.total*0.5+6))};
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BINARY STL
+   ══════════════════════════════════════════════════════════════ */
+function stlOf(M){
+  const t=M.n/12;
+  const buf=new ArrayBuffer(84+t*50), dv=new DataView(buf);
+  const head='YP Lightbox Studio';
+  for(let i=0;i<head.length;i++) dv.setUint8(i,head.charCodeAt(i));
+  dv.setUint32(80,t,true);
+  let o=84;
+  for(let i=0;i<t;i++){
+    const s=i*12;
+    for(let j=0;j<12;j++){ dv.setFloat32(o,M.a[s+j],true); o+=4; }
+    dv.setUint16(o,0,true); o+=2;
+  }
+  return new Uint8Array(buf);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   3MF
+   ══════════════════════════════════════════════════════════════ */
+function indexMesh(M){
+  const map=new Map(), V=[], T=[];
+  const t=M.n/12;
+  for(let i=0;i<t;i++){
+    const s=i*12+3, idx=[0,0,0];
+    for(let k=0;k<3;k++){
+      const x=Math.round(M.a[s+k*3]*1000)/1000,
+            y=Math.round(M.a[s+k*3+1]*1000)/1000,
+            z=Math.round(M.a[s+k*3+2]*1000)/1000;
+      const key=x+'|'+y+'|'+z;
+      let id=map.get(key);
+      if(id===undefined){ id=V.length/3; map.set(key,id); V.push(x,y,z); }
+      idx[k]=id;
+    }
+    if(idx[0]!==idx[1]&&idx[1]!==idx[2]&&idx[0]!==idx[2]) T.push(idx[0],idx[1],idx[2]);
+  }
+  return {V,T};
+}
+const xesc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function make3mf(parts,title){
+  let mats='<basematerials id="1">\n';
+  parts.forEach(p=>{ mats+=`  <base name="${xesc(p.name)}" displaycolor="${p.hex.toUpperCase().padEnd(7,'0')}FF"/>\n`; });
+  mats+=' </basematerials>\n';
+
+  let objs='', comps='', id=2;
+  const panelIds=[], standalone=[];
+  parts.forEach((p,i)=>{
+    const {V,T}=indexMesh(p);
+    if(!T.length) return;
+    let v=''; for(let k=0;k<V.length;k+=3) v+=`<vertex x="${V[k]}" y="${V[k+1]}" z="${V[k+2]}"/>`;
+    let t=''; for(let k=0;k<T.length;k+=3) t+=`<triangle v1="${T[k]}" v2="${T[k+1]}" v3="${T[k+2]}"/>`;
+    objs+=`<object id="${id}" type="model" pid="1" pindex="${i}" name="${xesc(p.name)}"><mesh><vertices>${v}</vertices><triangles>${t}</triangles></mesh></object>\n`;
+    if(p.place) standalone.push({id,place:p.place}); else panelIds.push(id);
+    id++;
+  });
+
+  const asmId=id++;
+  comps=`<object id="${asmId}" type="model" name="${xesc(title)} — แผ่นหน้า+กรอบ"><components>`+
+        panelIds.map(o=>`<component objectid="${o}"/>`).join('')+`</components></object>\n`;
+
+  let items=`<item objectid="${asmId}" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>`;
+  standalone.forEach(s=>{ items+=`<item objectid="${s.id}" transform="1 0 0 0 1 0 0 0 1 ${s.place.x} ${s.place.y} 0"/>`; });
+
+  const model=`<?xml version="1.0" encoding="UTF-8"?>
+<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
+ <metadata name="Title">${xesc(title)}</metadata>
+ <metadata name="Application">YP Lightbox Studio</metadata>
+ <resources>
+${mats}${objs}${comps} </resources>
+ <build>${items}</build>
+</model>`;
+
+  const ct=`<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/></Types>`;
+  const rels=`<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>`;
+
+  return zipFiles([
+    {name:'[Content_Types].xml',data:enc(ct)},
+    {name:'_rels/.rels',data:enc(rels)},
+    {name:'3D/3dmodel.model',data:enc(model)}
+  ]);
+}
+const enc = s => new TextEncoder().encode(s);
+
+/* ══════════════════════════════════════════════════════════════
+   ZIP (store + deflate-raw when available)
+   ══════════════════════════════════════════════════════════════ */
+const CRC_T=(()=>{const t=new Uint32Array(256);
+  for(let i=0;i<256;i++){let c=i;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[i]=c>>>0;}return t;})();
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c=CRC_T[(c^u8[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+async function deflateRaw(u8){
+  if(typeof CompressionStream==='undefined') return null;
+  try{
+    const cs=new CompressionStream('deflate-raw');
+    const w=cs.writable.getWriter(); w.write(u8); w.close();
+    const chunks=[]; const rd=cs.readable.getReader();
+    for(;;){ const {done,value}=await rd.read(); if(done)break; chunks.push(value); }
+    let n=0; chunks.forEach(c=>n+=c.length);
+    const out=new Uint8Array(n); let o=0; chunks.forEach(c=>{out.set(c,o);o+=c.length;});
+    return out;
+  }catch(e){ return null; }
+}
+async function zipFiles(files){
+  const parts=[], central=[]; let off=0;
+  for(const f of files){
+    const nameB=enc(f.name), crc=crc32(f.data);
+    let body=await deflateRaw(f.data), method=8;
+    if(!body||body.length>=f.data.length){ body=f.data; method=0; }
+    const lh=new Uint8Array(30+nameB.length), dv=new DataView(lh.buffer);
+    dv.setUint32(0,0x04034b50,true); dv.setUint16(4,20,true); dv.setUint16(6,0,true);
+    dv.setUint16(8,method,true); dv.setUint16(10,0,true); dv.setUint16(12,0x2821,true);
+    dv.setUint32(14,crc,true); dv.setUint32(18,body.length,true); dv.setUint32(22,f.data.length,true);
+    dv.setUint16(26,nameB.length,true); dv.setUint16(28,0,true);
+    lh.set(nameB,30);
+    parts.push(lh,body);
+    const cd=new Uint8Array(46+nameB.length), cv=new DataView(cd.buffer);
+    cv.setUint32(0,0x02014b50,true); cv.setUint16(4,20,true); cv.setUint16(6,20,true);
+    cv.setUint16(8,0,true); cv.setUint16(10,method,true); cv.setUint16(12,0,true); cv.setUint16(14,0x2821,true);
+    cv.setUint32(16,crc,true); cv.setUint32(20,body.length,true); cv.setUint32(24,f.data.length,true);
+    cv.setUint16(28,nameB.length,true); cv.setUint32(42,off,true);
+    cd.set(nameB,46);
+    central.push(cd);
+    off += lh.length + body.length;
+  }
+  let cdSize=0; central.forEach(c=>cdSize+=c.length);
+  const eo=new Uint8Array(22), ev=new DataView(eo.buffer);
+  ev.setUint32(0,0x06054b50,true); ev.setUint16(8,files.length,true); ev.setUint16(10,files.length,true);
+  ev.setUint32(12,cdSize,true); ev.setUint32(16,off,true);
+  return new Blob([...parts,...central,eo],{type:'application/octet-stream'});
+}
+
+function download(blob,name){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+const safeName = s => (s||'lightbox').replace(/[\\/:*?"<>|]/g,'_').trim().slice(0,60);
+/* ══════════════════════════════════════════════════════════════
+   YP Lightbox Studio — preview, checks, pricing, UI
+   ══════════════════════════════════════════════════════════════ */
+
+let PARTS=null, LAST=null;
+const toast=(m)=>{ const t=$('#toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),2200); };
+const busy=(on,m)=>{ $('#busy').classList.toggle('on',!!on); if(m)$('#busyTx').textContent=m; };
+
+/* ══════════ PREVIEW ══════════ */
+function gridImage(mode){
+  const {gw,gh,owner}=G;
+  const cv=document.createElement('canvas'); cv.width=gw; cv.height=gh;
+  const c=cv.getContext('2d'); const im=c.createImageData(gw,gh); const d=im.data;
+  const rgbs=S.pal.map(p=>hex2rgb(p.hex));
+  for(let i=0;i<owner.length;i++){
+    const k=owner[i], p=S.pal[k], col=rgbs[k]; const o=i*4;
+    if(mode==='lit'){
+      if(p.glow){ d[o]=clamp(col[0]*0.62+150,0,255); d[o+1]=clamp(col[1]*0.62+150,0,255); d[o+2]=clamp(col[2]*0.62+150,0,255); d[o+3]=255; }
+      else { d[o]=col[0]*0.16; d[o+1]=col[1]*0.16; d[o+2]=col[2]*0.16; d[o+3]=255; }
+    }else{ d[o]=col[0]; d[o+1]=col[1]; d[o+2]=col[2]; d[o+3]=255; }
+  }
+  c.putImageData(im,0,0);
+  return cv;
+}
+function layerImage(k){
+  const {gw,gh,owner}=G;
+  const cv=document.createElement('canvas'); cv.width=gw; cv.height=gh;
+  const c=cv.getContext('2d'); const im=c.createImageData(gw,gh); const d=im.data;
+  const col=hex2rgb(S.pal[k].hex);
+  for(let i=0;i<owner.length;i++) if(owner[i]===k){ const o=i*4; d[o]=col[0];d[o+1]=col[1];d[o+2]=col[2];d[o+3]=255; }
+  c.putImageData(im,0,0);
+  return cv;
+}
+
+function draw(){
+  const cv=$('#view'), b=S.box;
+  const is3d = S.ui.view==='3d';
+  cv.style.display = is3d?'none':'';
+  $('#gl').style.display = is3d?'':'none';
+  $('#glbar').style.display = is3d?'':'none';
+  $('#glhint').style.display = is3d?'':'none';
+  if(is3d){
+    try{ if(!glRender()) glFail('เบราว์เซอร์นี้เปิด WebGL ไม่ได้ — ใช้แท็บ “แยกชั้น” แทน'); }
+    catch(e){ console.error(e); glFail('แสดงผล 3 มิติไม่สำเร็จ: '+e.message); }
+    return;
+  }
+  $('#glFail').style.display='none';
+  const stage=$('#stage'), maxW=stage.clientWidth-32, maxH=stage.clientHeight-32;
+  const view=S.ui.view;
+  let aw=b.W, ah=b.H;
+  if(view==='plate'){ aw=270; ah=270; }
+  if(view==='layers'){ aw=b.W*1.35; ah=b.H*1.35; }
+  const k=Math.min(maxW/aw, maxH/ah, 8);
+  cv.width=Math.max(200,Math.round(aw*k)); cv.height=Math.max(160,Math.round(ah*k));
+  const c=cv.getContext('2d'); c.imageSmoothingEnabled=true;
+  const px=cv.width/aw;                                   // screen px per mm
+
+  if(view==='lit'){ c.fillStyle='#07080a'; } else { c.fillStyle='#f3f4f6'; }
+  c.fillRect(0,0,cv.width,cv.height);
+  if(G.empty){ c.fillStyle='#888'; c.font='16px sans-serif'; c.textAlign='center';
+    c.fillText('ยังไม่มีงาน — พิมพ์ข้อความหรืออัปโหลดโลโก้',cv.width/2,cv.height/2); return; }
+
+  if(view==='plate'){ drawPlate(c,cv,px); return; }
+  if(view==='layers'){ drawLayers(c,cv,px); return; }
+
+  const img=gridImage(view);
+  if(view==='lit'){
+    c.save(); c.filter='blur('+Math.max(2,px*2.2)+'px)'; c.globalAlpha=.85;
+    c.globalCompositeOperation='lighter';
+    c.drawImage(img,0,0,cv.width,cv.height); c.restore();
+    c.drawImage(img,0,0,cv.width,cv.height);
+    c.save(); c.globalCompositeOperation='lighter'; c.globalAlpha=.4;
+    c.filter='blur('+Math.max(4,px*5)+'px)'; c.drawImage(img,0,0,cv.width,cv.height); c.restore();
+  }else{
+    c.drawImage(img,0,0,cv.width,cv.height);
+  }
+
+  if(S.ui.showGrid){
+    c.strokeStyle=view==='lit'?'#ffffff22':'#00000018'; c.lineWidth=1;
+    for(let x=10;x<b.W;x+=10){ c.beginPath(); c.moveTo(x*px,0); c.lineTo(x*px,cv.height); c.stroke(); }
+    for(let y=10;y<b.H;y+=10){ c.beginPath(); c.moveTo(0,y*px); c.lineTo(cv.width,y*px); c.stroke(); }
+  }
+  if(S.ui.showFrame){
+    const f=b.frame*px;
+    c.strokeStyle=view==='lit'?'#ffffff55':'#00000055'; c.lineWidth=1.5;
+    c.strokeRect(f/2,f/2,cv.width-f,cv.height-f);
+    c.setLineDash([5,4]); c.strokeStyle=view==='lit'?'#ffffff2a':'#00000030';
+    c.strokeRect(f,f,cv.width-f*2,cv.height-f*2); c.setLineDash([]);
+  }
+}
+
+function drawLayers(c,cv,px){
+  const b=S.box, st=geomStack();
+  const stack=[];
+  /* เรียงจากหลังสุด → หน้าสุด (หน้าสุด = ผิวที่ติดฐานพิมพ์) */
+  stack.push({flat:'#31363f',label:`แผ่นหลัง ${b.back} มม.`});
+  stack.push({ring:true,label:`กรอบข้าง ลึก ${b.depth} มม. · หนา ${b.frame} มม.`});
+  const dif=(()=>{ const {gw,gh}=G, q=document.createElement('canvas'); q.width=gw;q.height=gh;
+      const cc=q.getContext('2d'), im=cc.createImageData(gw,gh), d=im.data;
+      for(let i=0;i<G.owner.length;i++) if(S.pal[G.owner[i]].glow){const o=i*4;d[o]=245;d[o+1]=245;d[o+2]=236;d[o+3]=255;}
+      cc.putImageData(im,0,0); return q; })();
+  stack.push({img:dif,label:`ชั้นกระจายแสง ${st.diff} มม.`});
+  for(let k=S.pal.length-1;k>=1;k--) if(S.pal[k].cells)
+    stack.push({img:layerImage(k),label:`ชั้นสี ${k} · ${S.pal[k].hex.toUpperCase()} · ${nearestFilament(S.pal[k].hex)}`});
+  if(S.pal[0].cells) stack.push({img:layerImage(0),label:`พื้นหลัง ${st.bgT.toFixed(1)} มม. · ${nearestFilament(S.pal[0].hex)}`});
+
+  const n=stack.length, SK=0.55, SQ=0.5;                  // ค่าเฉือนของภาพไอโซเมตริก
+  const LABX=cv.width*0.63;                               // คอลัมน์ป้ายชื่อ
+  let w=b.W*px, h=b.H*px;
+  let gap=Math.max(22, cv.height*0.058);
+  let k2=Math.min((cv.width*0.58-24)/(w+SK*h), (cv.height-80)/(SQ*h+(n-1)*gap));
+  if(k2>1.4) k2=1.4;
+  w*=k2; h*=k2; gap*=k2; gap=Math.max(gap,20);
+  const ox=24+SK*h, oy=cv.height/2+(SQ*h+(n-1)*gap)/2-SQ*h;
+  const fx=w*S.box.frame/b.W, fy=h*S.box.frame/b.H;
+  stack.forEach((L,i)=>{
+    const oyy=oy-i*gap;
+    c.save();
+    c.setTransform(1,0,-SK,SQ,ox,oyy);
+    c.shadowColor='#00000030'; c.shadowBlur=9; c.shadowOffsetY=3;
+    if(L.ring){
+      c.fillStyle='#4a505b'; c.beginPath();
+      c.rect(0,0,w,h); c.rect(fx,fy,w-fx*2,h-fy*2); c.fill('evenodd');
+    }else if(L.img){
+      c.fillStyle='#ffffff12'; c.fillRect(0,0,w,h);
+      c.shadowBlur=0; c.drawImage(L.img,0,0,w,h);
+    }else{ c.fillStyle=L.flat; c.fillRect(0,0,w,h); }
+    c.shadowBlur=0; c.strokeStyle='#00000033'; c.lineWidth=1; c.strokeRect(0,0,w,h);
+    c.restore();
+    /* ป้ายชื่อ + เส้นชี้ ในพิกัดจอ */
+    const ex=ox+w-SK*h*0.5, ey=oyy+SQ*h*0.5;
+    c.strokeStyle='#c2c8d0'; c.lineWidth=1;
+    c.beginPath(); c.moveTo(ex,ey); c.lineTo(LABX-8,ey); c.stroke();
+    c.fillStyle='#c2c8d0'; c.beginPath(); c.arc(ex,ey,2.5,0,7); c.fill();
+    c.fillStyle='#4e555f'; c.font='12px sans-serif'; c.textAlign='left';
+    c.fillText(L.label, LABX, ey+4);
+  });
+  c.fillStyle='#8a919b'; c.font='12px sans-serif'; c.textAlign='left';
+  c.fillText(`ความหนารวม ${st.total.toFixed(1)} มม. · ชั้นบนสุดของภาพ = ผิวหน้าที่ติดฐานพิมพ์`,16,cv.height-14);
+}
+
+function drawPlate(c,cv,px){
+  const b=S.box, st=geomStack(), PK=platePack(), F=(S.hw.base==='feet')?footDims():null;
+  const m=(270-BED)/2*px;
+  c.fillStyle='#e7e9ec'; c.fillRect(m,m,BED*px,BED*px);
+  c.strokeStyle='#0000000f';
+  for(let i=16;i<BED;i+=16){ c.beginPath();c.moveTo(m+i*px,m);c.lineTo(m+i*px,m+BED*px);c.stroke();
+    c.beginPath();c.moveTo(m,m+i*px);c.lineTo(m+BED*px,m+i*px);c.stroke(); }
+  c.strokeStyle='#9aa0a8'; c.lineWidth=1.5; c.strokeRect(m,m,BED*px,BED*px);
+  c.font='12px sans-serif'; c.textAlign='left'; c.lineWidth=1.5;
+  const box=(it,fill,line,lab)=>{
+    if(!it) return;
+    const ok = it.x+it.w<=BED && it.y+it.h<=BED;
+    c.fillStyle=ok?fill:'#f04a5a3a'; c.strokeStyle=ok?line:'#f04a5a';
+    c.fillRect(m+it.x*px,m+it.y*px,it.w*px,it.h*px);
+    c.strokeRect(m+it.x*px,m+it.y*px,it.w*px,it.h*px);
+    c.fillStyle='#2a2e35'; c.fillText(lab, m+it.x*px+6, m+it.y*px+16);
+  };
+  box(PK.items.panel,'#ff2d8f26','#ff2d8f',`แผ่นหน้า+กรอบ ${b.W}×${b.H} · สูง ${(st.frameZ0+b.depth).toFixed(1)} มม.`);
+  box(PK.items.back ,'#3ba0ff26','#3ba0ff',`แผ่นหลัง ${b.W}×${b.H} · หนา ${b.back} มม.`);
+  if(F){
+    box(PK.items.foot0,'#31c48d26','#31c48d','ขาตั้ง 1');
+    box(PK.items.foot1,'#31c48d26','#31c48d','ขาตั้ง 2');
+    const it=PK.items.foot0;
+    c.fillStyle='#5b626d'; c.font='11px sans-serif';
+    c.fillText(`${F.w}×${F.d.toFixed(0)}×${F.h.toFixed(0)} มม. · ร่อง ${F.slot.toFixed(1)} มม.`, m+it.x*px+2, m+(it.y+it.h)*px+14);
+  }
+  c.font='12px sans-serif';
+  c.fillStyle=PK.fits?'#5b626d':'#c62b39'; c.textAlign='right';
+  c.fillText(PK.fits?`ใช้พื้นที่ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} จาก 256 × 256 มม.`
+                    :`เกินฐานพิมพ์ — ต้องการ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} มม.`,
+             m+BED*px-6, m+BED*px-8);
+}
+
+/* ══════════ PALETTE UI ══════════ */
+function renderPalette(){
+  const el=$('#palList'); el.innerHTML='';
+  S.pal.forEach((p,i)=>{
+    const pct=G&&!G.empty? (p.cells/(G.gw*G.gh)*100):0;
+    const d=document.createElement('div'); d.className='it';
+    d.innerHTML=`<span class="sw" style="background:${p.hex}"><input type="color" value="${p.hex}"></span>
+      <span class="nm"><b>${i===0?'พื้นหลัง':'สี '+i}</b><i>${nearestFilament(p.hex)} · ${p.hex.toUpperCase()} · ${pct.toFixed(1)}%</i></span>
+      <button class="glowbtn ${p.glow?'on':''}">${p.glow?'สว่าง':'ทึบ'}</button>`;
+    d.querySelector('input').addEventListener('input',e=>{ p.hex=e.target.value; p.locked=true; schedule(false); });
+    d.querySelector('.glowbtn').addEventListener('click',()=>{ p.glow=!p.glow; schedule(false); });
+    el.appendChild(d);
+  });
+}
+
+/* ══════════ CHECKS ══════════ */
+function runChecks(){
+  const out=[], b=S.box, st=geomStack();
+  const add=(t,m)=>out.push({t,m});
+  let art=0; for(let i=0;i<G.owner.length;i++) if(G.owner[i]) art++;
+  if(!art) add('err','ยังไม่มีลวดลาย — พิมพ์ข้อความหรืออัปโหลดโลโก้ก่อน');
+  const PK=platePack();
+  if(b.W>BED||b.H>BED) add('err',`แผ่นหน้า ${b.W}×${b.H} มม. เกินฐานพิมพ์ ${BED}×${BED} — ต้องลดขนาดหรือแบ่งชิ้น`);
+  else if(!PK.fits) add('warn',`วางทุกชิ้นพร้อมกันไม่พอ (ต้องการ ${PK.maxX.toFixed(0)}×${PK.maxY.toFixed(0)} มม.) — แยกพิมพ์คนละรอบได้`);
+  else if(b.W>250||b.H>250) add('warn','ขนาดชิดขอบฐานพิมพ์มาก เผื่อ brim ไม่พอ');
+  if(st.frameZ0+b.depth>250) add('warn','ความสูงตอนพิมพ์เกิน 250 มม. เช็คระยะ Z ของเครื่องก่อน');
+  const used=S.pal.filter(p=>p.cells>0).length;
+  if(used>4) add('warn',`ใช้ ${used} สีในแผ่นเดียว เกิน 4 ช่อง AMS — ต้องต่อ AMS ตัวที่ 2 หรือเปลี่ยนเส้นกลางคัน`);
+  if(b.colorT<0.2) add('warn','ชั้นสีบางกว่า 0.2 มม. สีจะซีดและอาจพิมพ์ไม่ติด');
+  if(st.bgT>b.bgT+0.001) add('warn',`ปรับความหนาพื้นทึบขึ้นเป็น ${st.bgT.toFixed(1)} มม. อัตโนมัติ เพราะต้องหนากว่าชั้นสี`);
+  if(b.bgT<1.0) add('warn','พื้นทึบบางกว่า 1.0 มม. แสงอาจทะลุพื้นหลัง เห็นเป็นฝ้า');
+  if(st.diff<0.4) add('warn','ชั้นกระจายแสงบาง อาจเห็นเป็นจุดไฟ LED แทนที่จะเป็นแสงนวล');
+  /* artwork reaching into the frame band */
+  const f=b.frame, px=G.px; let touch=0;
+  for(let y=0;y<G.gh;y++) for(let x=0;x<G.gw;x++){
+    const mx=(x+0.5)*px,my=(y+0.5)*px;
+    if((mx<f||my<f||mx>b.W-f||my>b.H-f) && S.pal[G.owner[y*G.gw+x]].glow) touch++;
+  }
+  if(touch>20) add('warn','ลวดลายส่วนที่ให้แสงผ่านล้ำเข้าไปในแนวกรอบ — แสงจะรั่วออกข้างกล่อง ลดขนาดหรือขยับเข้ามา');
+  /* thin features */
+  for(let k=1;k<S.pal.length;k++){
+    if(!S.pal[k].cells) continue;
+    const r=thinRatio(maskOf(k),G.gw,G.gh);
+    if(r<0.30) add('warn',`สี ${k} มีรายละเอียดบางมาก (ความตัน ${(r*100).toFixed(0)}%) หัวฉีด 0.4 มม. อาจพิมพ์ไม่ครบ`);
+  }
+  /* --- รอยต่อฝาหน้า–ฝาหลัง --- */
+  const J=jointSpec();
+  if(J.mode==='butt')
+    add('warn','ฝาหลังชนหน้าตัดเปล่า ไม่มีตัวกำหนดตำแหน่ง วางเบี้ยวจะเห็นเป็นขั้นที่ขอบ และแสงจะรั่วตามรอยต่อรอบใบ — แนะนำเปิดบ่าล็อก');
+  if(J.lip){
+    if(J.lipCl<0.15) add('warn',`เผื่อระยะสวม ${J.lipCl} มม. ตึงมาก บ่าอาจสวมไม่ลงหลังพิมพ์ (แนะนำ 0.2–0.3 มม.)`);
+    if(J.lipCl>0.4) add('warn',`เผื่อระยะสวม ${J.lipCl} มม. หลวม ฝาหลังจะขยับได้และแสงยังรั่วได้บ้าง`);
+    if(J.lipH>b.depth-6) add('warn','บ่าสูงเกือบเท่าความลึกกล่อง เหลือที่ให้ไฟ LED น้อย');
+    if(J.lipW<b.frame*0.6) add('warn','บ่าบางกว่าผนังกรอบมาก อาจหักตอนถอดประกอบบ่อยๆ');
+  }
+  if(J.screw){
+    if(J.bx1>=J.bx2 || J.by1>=J.by2)
+      add('err',`เสาสกรู ${J.bw} มม. ใหญ่เกินไปสำหรับป้าย ${b.W}×${b.H} — เสาชนกันกลางแผ่น ลดขนาดเสาหรือขยายป้าย`);
+    else {
+      const wall=J.bw/2-J.PR;
+      if(wall<1.6) add('warn',`เนื้อรอบรูนำเหลือ ${wall.toFixed(1)} มม. บางไป เสาอาจแตกตอนขันสกรู — ขยายเสาเป็น 8 มม. ขึ้นไป`);
+      if(S.hw.screwDepth>b.depth-3) add('warn',`รูนำลึกเกินความลึกกล่อง ระบบตัดเหลือ ${(b.depth-3).toFixed(1)} มม. ให้อัตโนมัติ`);
+    }
+    add('ok',`ใช้สกรูเกลียวปล่อย M3 × ${Math.round(b.back+Math.min(S.hw.screwDepth,b.depth-3))} มม. 4 ตัวต่อกล่อง`);
+  }
+  if(LAST&&LAST.tris>400000) add('warn',`เมช ${nf(LAST.tris)} สามเหลี่ยม ไฟล์จะใหญ่และสไลซ์ช้า — ลดความละเอียดเป็น 0.4 มม. ได้`);
+  if(!out.length) add('ok','ผ่านทุกข้อ พร้อมส่งออกไฟล์พิมพ์');
+  $('#checkList').innerHTML = out.map(o=>`<div class="check ${o.t}"><span>${o.t==='ok'?'✓':o.t==='warn'?'!':'✕'}</span><span>${o.m}</span></div>`).join('');
+}
+
+/* ══════════ COSTING ══════════ */
+const DENSITY=1.24;   // g/cm³ PLA
+function estimate(parts){
+  const p=S.price, b=S.box, st=geomStack(), lh=Math.max(0.06,+S.exp.layerH);
+  const byColor=new Map(); let vol=0, tris=0;
+  parts.forEach(P=>{ vol+=P.vol; tris+=P.n/12;
+    byColor.set(P.hex,(byColor.get(P.hex)||0)+P.vol); });
+
+  /* ทุกชิ้นพิมพ์พร้อมกันบนฐานเดียว — นับการเปลี่ยนสีจากช่วง z ของแต่ละชิ้น */
+  const spans=parts.filter(M=>M.z1>M.z0).map(M=>({z0:M.z0,z1:M.z1,hex:M.hex}));
+  const H=Math.max(1,...spans.map(s=>s.z1)), nLay=Math.max(1,Math.ceil(H/lh));
+  let changes=0;
+  for(let L=0;L<nLay;L++){
+    const a=L*lh, z=a+lh/2, set=new Set();
+    for(const s of spans) if(z>s.z0-1e-6 && z<s.z1+1e-6) set.add(s.hex);
+    if(set.size>1) changes+=set.size;
+  }
+  const purge = changes*p.flush;
+  const totalVol = vol + purge;
+  const grams = totalVol/1000*DENSITY*(1+p.waste/100);
+  const gramsPurge = purge/1000*DENSITY;
+  const flow=10;                                        // mm³/s ที่ใช้ได้จริงเมื่อรวมผนังบางและการชะลอตัว
+  const sec = totalVol/flow + nLay*4 + changes*22;
+  const hrs = sec/3600;
+  const cFil = grams/1000*p.fil;
+  const cMach= hrs*p.mach;
+  const cLab = p.laborMin/60*p.laborRate;
+  const cost = cFil+cMach+cLab+p.led;
+  const price= cost*(1+p.margin/100);
+  return {vol,purge,totalVol,grams,gramsPurge,hrs,changes,nLay,tris,byColor,cFil,cMach,cLab,cost,price};
+}
+function renderQuote(E){
+  const p=S.price, q=Math.max(1,p.qty|0);
+  const rows=[];
+  rows.push(['เนื้อพลาสติกงาน',`${nf(E.vol/1000,1)} ซม³`]);
+  rows.push(['ล้างสีตอนเปลี่ยนเส้น',`${E.changes} ครั้ง · ${nf(E.gramsPurge,1)} ก.`]);
+  rows.push(['น้ำหนักเส้นรวม (เผื่อของเสีย)',`${nf(E.grams,1)} ก.`]);
+  rows.push(['เวลาพิมพ์โดยประมาณ',`${nf(E.hrs,1)} ชม. · ${nf(E.nLay)} ชั้น`]);
+  const r=rows.map(x=>`<tr class="sub"><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
+  const c=[['ค่าเส้นพลาสติก',E.cFil],['ค่าเครื่อง',E.cMach],['ค่าแรงประกอบ',E.cLab],['ชุดไฟ LED',p.led]]
+    .map(x=>`<tr><td>${x[0]}</td><td>${nf(x[1],0)} ฿</td></tr>`).join('');
+  $('#quoteTbl').innerHTML = r +
+    `<tr><td colspan="2" style="height:8px"></td></tr>` + c +
+    `<tr><td>ต้นทุนรวม/ชิ้น</td><td>${nf(E.cost,0)} ฿</td></tr>` +
+    `<tr class="tot"><td>ราคาขาย/ชิ้น</td><td>${nf(E.price,0)} ฿</td></tr>` +
+    (q>1?`<tr class="tot"><td>รวม ${q} ชิ้น</td><td>${nf(E.price*q,0)} ฿</td></tr>`:'');
+}
+
+function quoteDoc(E){
+  const q=Math.max(1,S.price.qty|0), b=S.box, st=geomStack();
+  const cols=S.pal.filter(p=>p.cells>0).map((p,i)=>`<li>${i===0?'พื้นหลัง':'สี '+i}: ${p.hex.toUpperCase()} (${nearestFilament(p.hex)}) — ${p.glow?'ให้แสงผ่าน':'ทึบแสง'}</li>`).join('');
+  return `<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><title>ใบเสนอราคา — ${xesc(S.name)}</title>
+<style>body{font-family:"Leelawadee UI","Sarabun",Tahoma,sans-serif;max-width:760px;margin:32px auto;padding:0 24px;color:#111;line-height:1.6}
+h1{font-size:22px;margin:0 0 2px}h2{font-size:15px;margin:26px 0 8px;border-bottom:2px solid #ff2d8f;padding-bottom:4px}
+table{width:100%;border-collapse:collapse;margin:8px 0}td,th{padding:6px 8px;border-bottom:1px solid #e5e5e5;text-align:left}
+td:last-child,th:last-child{text-align:right}.tot td{font-weight:700;font-size:17px;border-top:2px solid #111;border-bottom:0}
+.muted{color:#666;font-size:12px}ul{margin:6px 0;padding-left:20px}
+@media print{body{margin:0}}</style></head><body>
+<h1>ใบเสนอราคา — ป้ายไลท์บ็อกซ์พิมพ์ 3 มิติ</h1>
+<div class="muted">78 Studio / Yuppie Production · ${new Date().toLocaleDateString('th-TH',{dateStyle:'long'})}</div>
+<h2>รายละเอียดงาน</h2>
+<table>
+<tr><td>ชื่องาน</td><td>${xesc(S.name)}</td></tr>
+<tr><td>ขนาดหน้าป้าย</td><td>${b.W} × ${b.H} มม.</td></tr>
+<tr><td>ความหนารวม</td><td>${st.total.toFixed(1)} มม. (ลึกในกล่อง ${b.depth} มม.)</td></tr>
+<tr><td>โครงสร้าง</td><td>ชั้นสี ${b.colorT} · กระจายแสง ${st.diff} · พื้นทึบ ${st.bgT.toFixed(1)} · กรอบ ${b.frame} · หลัง ${b.back} มม.</td></tr>
+<tr><td>ขาตั้ง</td><td>${S.hw.base==='feet'?'ขาตั้ง 2 ชิ้น กว้าง '+S.hw.baseW+' มม.':'ไม่มี (แขวน/ติดผนัง)'}</td></tr>
+<tr><td>รูสายไฟ</td><td>${S.hw.hole==='none'?'ไม่มี':S.hw.hole==='frame'?'บากที่กรอบล่างด้านหลัง Ø'+S.hw.dia+' มม.':'รูกลมแผ่นหลัง Ø'+S.hw.dia+' มม.'}</td></tr>
+<tr><td>การประกบฝาหลัง</td><td>${ {screw:`บ่าล็อกสูง ${S.hw.lipH} มม. + สกรู M3 × ${Math.round(S.box.back+Math.min(S.hw.screwDepth,S.box.depth-3))} มม. 4 ตัว`,
+      lip:`บ่าล็อกสูง ${S.hw.lipH} มม. ยึดด้วยกาว`, butt:'ชนหน้าตัด ยึดด้วยกาว'}[jointSpec().mode] }</td></tr>
+</table>
+<h2>สีที่ใช้</h2><ul>${cols}</ul>
+<h2>ประมาณการผลิต</h2>
+<table>
+<tr><td>น้ำหนักเส้นพลาสติก</td><td>${nf(E.grams,1)} ก./ชิ้น</td></tr>
+<tr><td>เวลาพิมพ์</td><td>${nf(E.hrs,1)} ชม./ชิ้น (${nf(E.nLay)} ชั้น · เปลี่ยนสี ${E.changes} ครั้ง)</td></tr>
+</table>
+<h2>ราคา</h2>
+<table>
+<tr><td>ค่าเส้นพลาสติก</td><td>${nf(E.cFil,0)} ฿</td></tr>
+<tr><td>ค่าเครื่องพิมพ์</td><td>${nf(E.cMach,0)} ฿</td></tr>
+<tr><td>ค่าแรงประกอบ</td><td>${nf(E.cLab,0)} ฿</td></tr>
+<tr><td>ชุดไฟ LED + สายไฟ</td><td>${nf(S.price.led,0)} ฿</td></tr>
+<tr><td>ราคาต่อชิ้น</td><td>${nf(E.price,0)} ฿</td></tr>
+<tr class="tot"><td>รวม ${q} ชิ้น</td><td>${nf(E.price*q,0)} ฿</td></tr>
+</table>
+<p class="muted">ราคานี้ยังไม่รวมภาษีมูลค่าเพิ่มและค่าจัดส่ง · ประมาณการเวลาพิมพ์คำนวณจากปริมาตรเนื้องาน อาจต่างจากเวลาจริงในสไลเซอร์ ±20% · ยืนราคา 30 วัน</p>
+</body></html>`;
+}
+
+/* ══════════ TEMPLATES ══════════ */
+const TEMPLATES=[
+ {n:'ป้ายโลโก้แนวนอน', p:{box:{W:200,H:90,depth:32,colorT:0.4,diff:0.6,bgT:1.2,frame:2.4,back:2,frameColor:'#1a1a1a'},
+    src:{mode:'text',text:'YUPPIE\nPRODUCTION',font:'Arial Black',weight:700,align:'center',track:0,lead:112,outline:0},
+    tr:{scale:88,dx:0,dy:0,rot:0}, pal:[{hex:'#1a1a1a',glow:false},{hex:'#ff2d8f',glow:true}]}},
+ {n:'ป้ายชื่อร้านมีขอบ', p:{box:{W:220,H:110,depth:35,colorT:0.6,diff:0.8,bgT:1.4,frame:3,back:2,frameColor:'#101010'},
+    src:{mode:'text',text:'OPEN',font:'Impact',weight:700,align:'center',track:6,lead:110,outline:2.5},
+    tr:{scale:80,dx:0,dy:0,rot:0}, pal:[{hex:'#101010',glow:false},{hex:'#ffd400',glow:true},{hex:'#ff2d8f',glow:true}]}},
+ {n:'ป้ายตั้งโต๊ะเล็ก', p:{box:{W:120,H:120,depth:24,colorT:0.4,diff:0.6,bgT:1.0,frame:2,back:1.6,frameColor:'#2b2b2b'},
+    src:{mode:'text',text:'78\nSTUDIO',font:'Arial Black',weight:900,align:'center',track:2,lead:105,outline:0},
+    tr:{scale:76,dx:0,dy:0,rot:0}, pal:[{hex:'#2b2b2b',glow:false},{hex:'#3ba0ff',glow:true}]}},
+ {n:'ป้ายบูธใหญ่ 250 มม.', p:{box:{W:250,H:140,depth:45,colorT:0.6,diff:0.8,bgT:1.6,frame:3.5,back:2.4,frameColor:'#000000'},
+    src:{mode:'text',text:'BOOTH\nDESIGN',font:'Arial Black',weight:700,align:'center',track:1,lead:112,outline:0},
+    tr:{scale:86,dx:0,dy:0,rot:0}, pal:[{hex:'#000000',glow:false},{hex:'#ffffff',glow:true}]}},
+ {n:'ป้ายพื้นสว่าง ตัวทึบ', p:{box:{W:200,H:110,depth:32,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:2,frameColor:'#1a1a1a'},
+    src:{mode:'text',text:'WELCOME',font:'Arial Black',weight:700,align:'center',track:3,lead:110,outline:0},
+    tr:{scale:78,dx:0,dy:0,rot:0}, art:{glowMode:'bg'},
+    pal:[{hex:'#ffffff',glow:true},{hex:'#1a1a1a',glow:false}]}}
+];
+function applyTemplate(t){
+  const p=JSON.parse(JSON.stringify(t.p));
+  Object.assign(S.box,p.box||{});
+  Object.assign(S.src,p.src||{});
+  Object.assign(S.tr,p.tr||{});
+  Object.assign(S.art,p.art||{});
+  if(p.pal) S.pal=p.pal.map((x,i)=>({name:i?'สี '+i:'พื้นหลัง',...x}));
+  S.src.imgData=null; S.src.imgSrc='';
+  pushToUI(); rebuildSource(); schedule(false); toast('ใช้เทมเพลต: '+t.n);
+}
+
+/* ══════════ EXPORT ══════════ */
+async function doExport(){
+  busy(true,'กำลังสร้างเมช…');
+  await new Promise(r=>setTimeout(r,30));
+  try{
+    buildGrid();
+    const parts=buildParts();
+    PARTS=parts;
+    const name=safeName(S.name);
+    const fmt=S.exp.fmt;
+    if(fmt==='3mf'||fmt==='both'){
+      busy(true,'กำลังเขียนไฟล์ 3MF…'); await new Promise(r=>setTimeout(r,20));
+      const blob=await make3mf(parts,S.name);
+      download(blob,name+'.3mf');
+    }
+    if(fmt==='stl'||fmt==='both'){
+      busy(true,'กำลังเขียนไฟล์ STL…'); await new Promise(r=>setTimeout(r,20));
+      const files=parts.map((p,i)=>({name:`${String(i+1).padStart(2,'0')}_${safeName(p.name)}.stl`,data:stlOf(p)}));
+      files.push({name:'อ่านก่อนพิมพ์.txt',data:enc(readme(parts))});
+      download(await zipFiles(files), name+'_STL.zip');
+    }
+    LAST={tris:parts.reduce((a,p)=>a+p.n/12,0)};
+    updateBadges(); runChecks();
+    toast('ส่งออกเรียบร้อย');
+  }catch(e){ console.error(e); toast('ส่งออกไม่สำเร็จ: '+e.message); }
+  busy(false);
+}
+function readme(parts){
+  const st=geomStack();
+  return ['YP Lightbox Studio — '+S.name,''
+    ,'ลำดับการพิมพ์'
+    ,'1) แผ่นหน้า+กรอบ พิมพ์คว่ำหน้าลงฐาน (ผิวสวยอยู่ที่ชั้นแรก) ไม่ต้องมีซัพพอร์ต'
+    ,'2) แผ่นหลัง พิมพ์ราบ'
+    ,'3) ขาตั้ง พิมพ์ตั้ง ร่องหงายขึ้น'
+    ,'','ความหนารวม '+st.total.toFixed(1)+' มม. · กรอบลึก '+S.box.depth+' มม.'
+    ,(S.hw.base==='feet'?('ขาตั้ง '+S.hw.baseW+'×'+footDims().d.toFixed(1)+'×'+footDims().h.toFixed(1)+' มม. · ร่องกว้าง '+footDims().slot.toFixed(1)+' มม.'):'ไม่มีขาตั้ง')
+    ,''
+    ,'การประกบฝาหลัง: '+({screw:'บ่าล็อก + สกรู',lip:'บ่าล็อกอย่างเดียว',butt:'ชนหน้าตัด'}[jointSpec().mode])
+    ,...(jointSpec().lip?['  บ่าสูง '+S.hw.lipH+' มม. หนา '+S.hw.lipW+' มม. เผื่อระยะสวมข้างละ '+S.hw.lipCl+' มม.']:[])
+    ,...(jointSpec().screw?[
+       '  เสาสกรู 4 มุม '+S.hw.bossW+'×'+S.hw.bossW+' มม. รูนำ Ø2.5 ลึก '+Math.min(S.hw.screwDepth,S.box.depth-3).toFixed(0)+' มม.',
+       '  ฝาหลังเจาะรูผ่าน Ø3.4 มม. ตรงกัน 4 จุด',
+       '  ใช้สกรูเกลียวปล่อยหัวกลม M3 × '+Math.round(S.box.back+Math.min(S.hw.screwDepth,S.box.depth-3))+' มม. 4 ตัว/กล่อง',
+       '  ขันพอตึงมือ อย่าขันจนสุดแรง เนื้อ PLA ปริได้'
+     ]:['  ยึดด้วยกาวหรือเทปสองหน้า'])
+    ,'','ชิ้นงานและสีที่ใช้:'
+    ,...parts.map((p,i)=>`  ${String(i+1).padStart(2,'0')}. ${p.name} — ${p.hex.toUpperCase()} (${nearestFilament(p.hex)})`)
+    ,'','หมายเหตุ: ชั้นสีอยู่ล่างสุดของแผ่นหน้า ตามด้วยชั้นกระจายแสงสีขาว/ใส'
+    ,'ถ้าเครื่องไม่มี AMS ให้ใช้คำสั่งหยุดเปลี่ยนเส้นตามความสูงชั้นแทน'].join('\n');
+}
+/* ══════════════════════════════════════════════════════════════
+   YP Lightbox Studio — มุมมอง 3 มิติ (WebGL ล้วน ไม่พึ่งไลบรารีนอก)
+   ทุกทรานส์ฟอร์มเป็นการหมุนแท้ (det=+1) วนขวาถูกต้อง ไม่ต้องกลับ normal
+   ══════════════════════════════════════════════════════════════ */
+const V3 = {
+  gl:null, prog:null, grid:null, buf:[], dirty:true, mode:'asm', raf:0,
+  cam:{yaw:-0.62, pitch:0.28, dist:400, px:0, py:0}, drag:null, ready:false
+};
+
+/* ---------- mat4 (column-major) ---------- */
+function m4mul(a,b){ const o=new Float32Array(16);
+  for(let c=0;c<4;c++)for(let r=0;r<4;r++){ let s=0; for(let k=0;k<4;k++) s+=a[k*4+r]*b[c*4+k]; o[c*4+r]=s; }
+  return o; }
+function m4persp(fov,asp,n,f){ const t=1/Math.tan(fov/2);
+  return new Float32Array([t/asp,0,0,0, 0,t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0]); }
+function m4look(e,c,u){
+  const z=nrm([e[0]-c[0],e[1]-c[1],e[2]-c[2]]);
+  const x=nrm(cross(u,z)), y=cross(z,x);
+  return new Float32Array([x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0,
+    -dot(x,e),-dot(y,e),-dot(z,e),1]);
+}
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const nrm=v=>{const l=Math.hypot(v[0],v[1],v[2])||1;return [v[0]/l,v[1]/l,v[2]/l];};
+/* world = A·local + t  (A เขียนแบบแถว) */
+function mkM(a00,a01,a02,a10,a11,a12,a20,a21,a22,tx,ty,tz){
+  return new Float32Array([a00,a10,a20,0, a01,a11,a21,0, a02,a12,a22,0, tx,ty,tz,1]);
+}
+
+/* ---------- shaders ---------- */
+const VS=`attribute vec3 aPos; attribute vec3 aNrm;
+uniform mat4 uMVP, uM;
+varying vec3 vN, vW;
+void main(){ vN=mat3(uM)*aNrm; vW=(uM*vec4(aPos,1.0)).xyz; gl_Position=uMVP*vec4(aPos,1.0); }`;
+const FS=`precision mediump float;
+varying vec3 vN, vW;
+uniform vec3 uCol; uniform float uEmit; uniform float uDark;
+void main(){
+  vec3 N=normalize(vN); if(!gl_FrontFacing) N=-N;
+  vec3 L1=normalize(vec3(0.35,0.75,0.86)), L2=normalize(vec3(-0.7,0.25,0.35));
+  float d=max(dot(N,L1),0.0)*0.78 + max(dot(N,L2),0.0)*0.26;
+  vec3 V=normalize(vec3(0.0,0.0,1.0));
+  float rim=pow(1.0-max(dot(N,V),0.0),3.0)*0.16;
+  vec3 lit=uCol*(0.30+d)+vec3(rim);
+  vec3 dark=uCol*(0.10+d*0.28);
+  vec3 emis=clamp(uCol*1.25+vec3(0.30),0.0,1.0);
+  vec3 c=mix(mix(lit,dark,uDark),emis,uEmit);
+  gl_FragColor=vec4(c,1.0);
+}`;
+function shader(gl,t,src){ const s=gl.createShader(t); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+
+function glInit(){
+  if(V3.gl) return true;
+  const cv=$('#gl');
+  const gl=cv.getContext('webgl',{antialias:true,preserveDrawingBuffer:true,alpha:false})
+        || cv.getContext('experimental-webgl',{antialias:true,preserveDrawingBuffer:true});
+  if(!gl){ return false; }
+  const p=gl.createProgram();
+  gl.attachShader(p,shader(gl,gl.VERTEX_SHADER,VS));
+  gl.attachShader(p,shader(gl,gl.FRAGMENT_SHADER,FS));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  gl.useProgram(p);
+  V3.gl=gl; V3.prog=p;
+  V3.loc={aPos:gl.getAttribLocation(p,'aPos'), aNrm:gl.getAttribLocation(p,'aNrm'),
+          uMVP:gl.getUniformLocation(p,'uMVP'), uM:gl.getUniformLocation(p,'uM'),
+          uCol:gl.getUniformLocation(p,'uCol'), uEmit:gl.getUniformLocation(p,'uEmit'),
+          uDark:gl.getUniformLocation(p,'uDark')};
+  gl.enable(gl.DEPTH_TEST);
+  gl.disable(gl.CULL_FACE);
+  bindGLEvents(cv);
+  V3.ready=true;
+  return true;
+}
+
+/* ---------- upload meshes ---------- */
+function glBuild(){
+  const gl=V3.gl; if(!gl) return;
+  V3.buf.forEach(b=>{ gl.deleteBuffer(b.p); gl.deleteBuffer(b.n); });
+  V3.buf=[];
+  const parts=buildParts(false);
+  V3.parts=parts;
+  for(const M of parts){
+    const t=M.n/12; if(!t) continue;
+    const pos=new Float32Array(t*9), nor=new Float32Array(t*9);
+    for(let i=0;i<t;i++){
+      const s=i*12;
+      for(let k=0;k<3;k++){
+        nor[i*9+k*3]=M.a[s]; nor[i*9+k*3+1]=M.a[s+1]; nor[i*9+k*3+2]=M.a[s+2];
+        pos[i*9+k*3]=M.a[s+3+k*3]; pos[i*9+k*3+1]=M.a[s+4+k*3]; pos[i*9+k*3+2]=M.a[s+5+k*3];
+      }
+    }
+    const bp=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,bp); gl.bufferData(gl.ARRAY_BUFFER,pos,gl.STATIC_DRAW);
+    const bn=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,bn); gl.bufferData(gl.ARRAY_BUFFER,nor,gl.STATIC_DRAW);
+    V3.buf.push({p:bp,n:bn,count:t*3,M});
+  }
+  /* กริดฐานพิมพ์ (เส้น) */
+  const L=[]; const H=BED/2;
+  for(let i=0;i<=BED;i+=16){ L.push(-H+i,0,-H, -H+i,0,H, -H,0,-H+i, H,0,-H+i); }
+  const g=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,g); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(L),gl.STATIC_DRAW);
+  V3.grid={b:g,count:L.length/3};
+  V3.bounds=null;
+  V3.dirty=false;
+}
+
+/* ---------- per-part transform per mode ---------- */
+const EXPLODE={color:46,diffuser:28,frame:0,back:-38,foot:0};
+function partMatrix(M,mode){
+  const b=S.box, st=geomStack(), W=b.W, H=b.H;
+  const ex = mode==='exp';
+  if(mode==='plate'){
+    const px=(M.place?M.place.x:0), py=(M.place?M.place.y:0);
+    return mkM(1,0,0, 0,0,1, 0,-1,0, px-BED/2, 0, BED/2-py);
+  }
+  if(M.kind==='foot'){
+    const F=M.foot, fx = (M.footIndex? W*0.76 : W*0.24) - F.w/2;
+    const dy = ex? -46 : 0;
+    return mkM(1,0,0, 0,0,1, 0,-1,0,
+               fx-W/2, -H/2-F.plate+dy, -st.total/2+F.d/2);
+  }
+  if(M.kind==='back'){
+    /* ฝาหลังพิมพ์ผิวนอกติดฐาน บ่าชี้ขึ้น — ประกอบโดยหันบ่าเข้าในกล่อง
+       จึงเป็นการหมุนรอบแกน Z (det=+1) ไม่ใช่การพลิก */
+    return mkM(1,0,0, 0,1,0, 0,0,1, -W/2, -H/2, -st.total + (ex?EXPLODE.back:0));
+  }
+  return mkM(-1,0,0, 0,1,0, 0,0,-1, W/2, -H/2, ex?(EXPLODE[M.kind]||0):0);
+}
+
+/* ---------- ขอบเขตฉากต่อโหมด (ใช้ตั้งกล้องให้พอดีเสมอ) ---------- */
+function sceneBounds(mode){
+  if(V3.bounds && V3.bounds[mode]) return V3.bounds[mode];
+  const mn=[1e9,1e9,1e9], mx=[-1e9,-1e9,-1e9];
+  const eat=(x,y,z)=>{ if(x<mn[0])mn[0]=x; if(x>mx[0])mx[0]=x;
+                       if(y<mn[1])mn[1]=y; if(y>mx[1])mx[1]=y;
+                       if(z<mn[2])mn[2]=z; if(z>mx[2])mx[2]=z; };
+  for(const B of V3.buf){
+    const M=B.M, T=partMatrix(M,mode);
+    for(let i=0;i<8;i++){
+      const px=(i&1)?M.x1:M.x0, py=(i&2)?M.y1:M.y0, pz=(i&4)?M.z1:M.z0;
+      eat(T[0]*px+T[4]*py+T[8]*pz+T[12],
+          T[1]*px+T[5]*py+T[9]*pz+T[13],
+          T[2]*px+T[6]*py+T[10]*pz+T[14]);
+    }
+  }
+  if(mode==='plate'){ eat(-BED/2,0,-BED/2); eat(BED/2,0,BED/2); }
+  if(mx[0]<mn[0]){ mn[0]=mn[1]=mn[2]=-50; mx[0]=mx[1]=mx[2]=50; }
+  const r=Math.max(20, 0.5*Math.hypot(mx[0]-mn[0],mx[1]-mn[1],mx[2]-mn[2]));
+  const out={mn,mx,c:[(mn[0]+mx[0])/2,(mn[1]+mx[1])/2,(mn[2]+mx[2])/2],r};
+  V3.bounds=V3.bounds||{}; V3.bounds[mode]=out;
+  return out;
+}
+
+function glResize(){
+  const cv=$('#gl'), st=$('#stage');
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const w=Math.max(1,st.clientWidth-32), h=Math.max(1,st.clientHeight-32);
+  cv.style.width=w+'px'; cv.style.height=h+'px';
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){ cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); }
+}
+
+function glRender(){
+  if(!glInit()){ return false; }
+  if(V3.dirty) glBuild();
+  const gl=V3.gl, L=V3.loc, cv=$('#gl');
+  glResize();
+  gl.viewport(0,0,cv.width,cv.height);
+  const lit=V3.mode==='lit';
+  if(lit) gl.clearColor(0.035,0.04,0.05,1); else gl.clearColor(0.90,0.91,0.93,1);
+  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+
+  const FOV=0.62, c=V3.cam;
+  const B=sceneBounds(V3.mode);
+  const asp=cv.width/cv.height;
+  const fit=B.r/Math.tan(FOV/2)/Math.min(1,asp*0.92);
+  const dist=Math.max(40, fit*1.16*c.dist/400);
+  const cy=Math.cos(c.pitch), sy=Math.sin(c.pitch);
+  const tgt=[B.c[0]+c.px, B.c[1]+c.py, B.c[2]];
+  const eye=[tgt[0]+Math.sin(c.yaw)*cy*dist, tgt[1]+sy*dist, tgt[2]+Math.cos(c.yaw)*cy*dist];
+  const P=m4persp(FOV, asp, Math.max(1,dist*0.02), dist*6);
+  const Vm=m4look(eye,tgt,[0,1,0]);
+  const PV=m4mul(P,Vm);
+
+  gl.useProgram(V3.prog);
+  gl.enableVertexAttribArray(L.aPos); gl.enableVertexAttribArray(L.aNrm);
+
+  /* กริดฐานพิมพ์ในโหมดผังพิมพ์ */
+  if(V3.mode==='plate' && V3.grid){
+    gl.bindBuffer(gl.ARRAY_BUFFER,V3.grid.b);
+    gl.vertexAttribPointer(L.aPos,3,gl.FLOAT,false,0,0);
+    gl.bindBuffer(gl.ARRAY_BUFFER,V3.grid.b);
+    gl.vertexAttribPointer(L.aNrm,3,gl.FLOAT,false,0,0);
+    const I=mkM(1,0,0,0,1,0,0,0,1,0,0,0);
+    gl.uniformMatrix4fv(L.uM,false,I); gl.uniformMatrix4fv(L.uMVP,false,PV);
+    gl.uniform3f(L.uCol,0.62,0.64,0.68); gl.uniform1f(L.uEmit,1); gl.uniform1f(L.uDark,0);
+    gl.drawArrays(gl.LINES,0,V3.grid.count);
+  }
+
+  for(const B of V3.buf){
+    const M=B.M;
+    const Mm=partMatrix(M,V3.mode);
+    gl.uniformMatrix4fv(L.uM,false,Mm);
+    gl.uniformMatrix4fv(L.uMVP,false,m4mul(PV,Mm));
+    const rgb=hex2rgb(M.hex).map(v=>v/255);
+    gl.uniform3f(L.uCol,rgb[0],rgb[1],rgb[2]);
+    const emit = lit && M.glow && (M.kind==='color'||M.kind==='diffuser') ? 1 : 0;
+    gl.uniform1f(L.uEmit,emit);
+    gl.uniform1f(L.uDark, lit&&!emit ? 1 : 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER,B.p); gl.vertexAttribPointer(L.aPos,3,gl.FLOAT,false,0,0);
+    gl.bindBuffer(gl.ARRAY_BUFFER,B.n); gl.vertexAttribPointer(L.aNrm,3,gl.FLOAT,false,0,0);
+    gl.drawArrays(gl.TRIANGLES,0,B.count);
+  }
+  return true;
+}
+
+/* ---------- interaction ---------- */
+function bindGLEvents(cv){
+  cv.addEventListener('mousedown',e=>{
+    V3.drag={x:e.clientX,y:e.clientY,pan:e.shiftKey||e.button===1||e.button===2};
+    e.preventDefault();
+  });
+  cv.addEventListener('contextmenu',e=>e.preventDefault());
+  window.addEventListener('mousemove',e=>{
+    if(!V3.drag) return;
+    const dx=e.clientX-V3.drag.x, dy=e.clientY-V3.drag.y;
+    V3.drag.x=e.clientX; V3.drag.y=e.clientY;
+    if(V3.drag.pan){ V3.cam.px-=dx*0.35; V3.cam.py+=dy*0.35; }
+    else{ V3.cam.yaw-=dx*0.008; V3.cam.pitch=clamp(V3.cam.pitch+dy*0.008,-1.45,1.45); }
+    if(S.ui.view==='3d') glRender();
+  });
+  window.addEventListener('mouseup',()=>V3.drag=null);
+  cv.addEventListener('wheel',e=>{
+    e.preventDefault();
+    V3.cam.dist=clamp(V3.cam.dist*(1+Math.sign(e.deltaY)*0.11),70,2200);
+    glRender();
+  },{passive:false});
+  cv.addEventListener('dblclick',glReset);
+}
+function glReset(){
+  V3.cam.px=0; V3.cam.py=0; V3.cam.dist=400;
+  if(V3.mode==='plate'){ V3.cam.yaw=0; V3.cam.pitch=1.02; }
+  else { V3.cam.yaw=-0.62; V3.cam.pitch=0.24; }
+  glRender();
+}
+function glSetMode(m){
+  const first = V3.mode!==m;
+  V3.mode=m;
+  $$('#glbar button[data-m]').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  if(first) glReset(); else glRender();
+}
+function glFail(msg){
+  const s=$('#glFail'); s.textContent=msg; s.style.display='flex';
+  $('#gl').style.display='none'; $('#glbar').style.display='none';
+}
+/* ══════════════════════════════════════════════════════════════
+   YP Lightbox Studio — wiring & init
+   ══════════════════════════════════════════════════════════════ */
+const gp=p=>p.split('.').reduce((o,k)=>o[k],S);
+const sp=(p,v)=>{const a=p.split('.'),l=a.pop();a.reduce((o,k)=>o[k],S)[l]=v;};
+
+/* el, path, kind, labelEl, fmt, flags: s=needs source rebuild, q=quote only */
+const BIND=[
+ ['txtContent','src.text','str',null,null,'s'],
+ ['txtFont','src.font','str',null,null,'s'],
+ ['txtWeight','src.weight','num',null,null,'s'],
+ ['txtAlign','src.align','str',null,null,'s'],
+ ['txtTrack','src.track','num','txtTrackV',v=>v,'s'],
+ ['txtLead','src.lead','num','txtLeadV',v=>v+'%','s'],
+ ['txtOutline','src.outline','num','txtOutlineV',v=>v+' มม.','s'],
+ ['imgRemoveBg','src.removeBg','bool',null,null,'s'],
+ ['imgTol','src.tol','num','imgTolV',v=>v,'s'],
+ ['trScale','tr.scale','num','trScaleV',v=>v+'%',''],
+ ['trDx','tr.dx','num','trDxV',v=>v,''],
+ ['trDy','tr.dy','num','trDyV',v=>v,''],
+ ['trRot','tr.rot','num','trRotV',v=>v+'°',''],
+ ['colN','art.n','num','colNV',v=>v,''],
+ ['colSmooth','art.smooth','num','colSmoothV',v=>v,''],
+ ['glowMode','art.glowMode','str',null,null,'g'],
+ ['bW','box.W','num',null,null,''],
+ ['bH','box.H','num',null,null,''],
+ ['bDepth','box.depth','num','bDepthV',v=>v+' มม.',''],
+ ['bColorT','box.colorT','num','bColorTV',v=>v+' มม.',''],
+ ['bDiff','box.diff','num','bDiffV',v=>v+' มม.',''],
+ ['bBgT','box.bgT','num','bBgTV',v=>v+' มม.',''],
+ ['bFrame','box.frame','num','bFrameV',v=>v+' มม.',''],
+ ['bBack','box.back','num','bBackV',v=>v+' มม.',''],
+ ['frameColor','box.frameColor','str','frameColorV',v=>v,''],
+ ['holeType','hw.hole','str',null,null,''],
+ ['holeDia','hw.dia','num','holeDiaV',v=>v+' มม.',''],
+ ['baseType','hw.base','str',null,null,''],
+ ['baseW','hw.baseW','num','baseWV',v=>v+' มม.',''],
+ ['hangHole','hw.hang','bool',null,null,''],
+ ['jointType','hw.joint','str',null,null,''],
+ ['lipH','hw.lipH','num','lipHV',v=>v+' มม.',''],
+ ['lipW','hw.lipW','num','lipWV',v=>v+' มม.',''],
+ ['lipCl','hw.lipCl','num','lipClV',v=>v+' มม.',''],
+ ['bossW','hw.bossW','num','bossWV',v=>v+' มม.',''],
+ ['screwDepth','hw.screwDepth','num','screwDepthV',v=>v+' มม.',''],
+ ['pQty','price.qty','num',null,null,'q'],
+ ['pFil','price.fil','num',null,null,'q'],
+ ['pMach','price.mach','num',null,null,'q'],
+ ['pLaborMin','price.laborMin','num',null,null,'q'],
+ ['pLaborRate','price.laborRate','num',null,null,'q'],
+ ['pLed','price.led','num',null,null,'q'],
+ ['pWaste','price.waste','num',null,null,'q'],
+ ['pMargin','price.margin','num',null,null,'q'],
+ ['pFlush','price.flush','num',null,null,'q'],
+ ['expRes','exp.res','num',null,null,''],
+ ['expFmt','exp.fmt','str',null,null,'q'],
+ ['expLayerH','exp.layerH','num',null,null,'q'],
+ ['showFrame','ui.showFrame','bool',null,null,'d'],
+ ['showGrid','ui.showGrid','bool',null,null,'d']
+];
+
+let _t=null, _needSrc=false;
+function schedule(needSrc,mode){
+  if(needSrc) _needSrc=true;
+  clearTimeout(_t);
+  _t=setTimeout(()=>{
+    if(_needSrc){ rebuildSource(); _needSrc=false; }
+    if(mode==='d'){ draw(); return; }
+    if(mode==='q'){ refreshQuote(); return; }
+    recompute();
+  }, needSrc?200:110);
+}
+function recompute(){
+  try{
+    buildGrid();
+    renderPalette();
+    V3.dirty=true;
+    draw();
+    refreshQuote();
+    runChecks();
+    updateBadges();
+  }catch(e){ console.error(e); toast('คำนวณผิดพลาด: '+e.message); }
+}
+function refreshQuote(){
+  if(!G||G.empty){ $('#quoteTbl').innerHTML=''; return; }
+  const parts=buildParts(true);
+  LAST=LAST||{}; LAST.parts=parts.length;
+  const E=estimate(parts); LAST.E=E;
+  renderQuote(E);
+}
+function updateBadges(){
+  const b=S.box, st=geomStack();
+  $('#dimBadge').textContent=`${b.W} × ${b.H} × ${st.total.toFixed(1)} มม.`;
+  $('#colBadge').textContent=`${S.pal.filter(p=>p.cells>0).length} สี`;
+  $('#triBadge').textContent= LAST&&LAST.tris? nf(LAST.tris)+' สามเหลี่ยม' : (LAST&&LAST.E? nf(LAST.E.grams,1)+' ก. · '+nf(LAST.E.hrs,1)+' ชม.':'—');
+  const st2=[];
+  if(LAST&&LAST.E){ const E=LAST.E;
+    st2.push(`เนื้องาน <b>${nf(E.vol/1000,1)} ซม³</b>`);
+    st2.push(`เส้นพลาสติก <b>${nf(E.grams,1)} ก.</b>`);
+    st2.push(`เวลาพิมพ์ <b>${nf(E.hrs,1)} ชม.</b>`);
+    st2.push(`ชั้น <b>${nf(E.nLay)}</b>`);
+    st2.push(`เปลี่ยนสี <b>${E.changes}</b> ครั้ง`);
+    st2.push(`ราคาขาย <b>${nf(E.price,0)} ฿</b>/ชิ้น`);
+  }
+  st2.push(`ความละเอียดกริด <b>${S.exp.res} มม.</b>`);
+  $('#status').innerHTML=st2.join(' · ');
+}
+
+/* ---------- push state → controls ---------- */
+function pushToUI(){
+  for(const [id,path,kind,lab,fmt] of BIND){
+    const el=document.getElementById(id); if(!el) continue;
+    const v=gp(path);
+    if(kind==='bool') el.checked=!!v; else el.value=v;
+    if(lab&&fmt) document.getElementById(lab).textContent=fmt(v);
+  }
+  $('#docname').value=S.name;
+  $('#frameSw').style.background=S.box.frameColor;
+  $$('#srcTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.src.mode));
+  $$('#left [data-pane]').forEach(p=>p.style.display = p.dataset.pane===S.src.mode?'':'none');
+  $$('#viewseg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.ui.view));
+  $('#colN').disabled = S.src.mode!=='image';
+}
+
+function wire(){
+  for(const [id,path,kind,lab,fmt,flag] of BIND){
+    const el=document.getElementById(id); if(!el) continue;
+    const ev = (kind==='bool'||el.tagName==='SELECT')?'change':'input';
+    el.addEventListener(ev,()=>{
+      let v = kind==='bool'?el.checked : kind==='num'? (+el.value||0) : el.value;
+      if(kind==='num'&&el.value==='') v=0;
+      sp(path,v);
+      if(lab&&fmt) document.getElementById(lab).textContent=fmt(v);
+      if(id==='frameColor') $('#frameSw').style.background=v;
+      if(flag==='g'){ S.pal.forEach((p,i)=> p.glow = (S.art.glowMode==='bg')? i===0 : i>0 ); }
+      schedule(flag==='s', flag==='q'?'q':flag==='d'?'d':null);
+    });
+  }
+  $('#docname').addEventListener('input',e=>S.name=e.target.value);
+
+  /* sections collapse */
+  $$('.sec>h3').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('closed')));
+
+  /* source tabs */
+  $$('#srcTabs button').forEach(b=>b.addEventListener('click',()=>{
+    S.src.mode=b.dataset.t; pushToUI(); schedule(true);
+  }));
+  /* view tabs */
+  $$('#viewseg button').forEach(b=>b.addEventListener('click',()=>{
+    S.ui.view=b.dataset.v; pushToUI();
+    $('#stageLabel').textContent={design:'แบบ',lit:'จำลองตอนติดไฟ',layers:'แยกชั้นการพิมพ์',
+      plate:'ผังฐานพิมพ์','3d':'มุมมอง 3 มิติ'}[S.ui.view];
+    draw();
+  }));
+  $$('#glbar button[data-m]').forEach(b=>b.addEventListener('click',()=>glSetMode(b.dataset.m)));
+  $('#glbar button[data-a="reset"]').addEventListener('click',glReset);
+
+  /* size presets */
+  const PRE=[[120,120],[150,80],[200,90],[200,120],[220,110],[250,140],[250,250]];
+  $('#sizePresets').innerHTML=PRE.map(p=>`<span class="chip" data-w="${p[0]}" data-h="${p[1]}">${p[0]}×${p[1]}</span>`).join('');
+  $$('#sizePresets .chip').forEach(c=>c.addEventListener('click',()=>{
+    S.box.W=+c.dataset.w; S.box.H=+c.dataset.h; pushToUI(); schedule(false);
+  }));
+
+  /* templates */
+  $('#tplList').innerHTML=TEMPLATES.map((t,i)=>`<span class="chip" data-i="${i}">${t.n}</span>`).join('');
+  $$('#tplList .chip').forEach(c=>c.addEventListener('click',()=>applyTemplate(TEMPLATES[+c.dataset.i])));
+  $('#btnTplSave').addEventListener('click',()=>{
+    const t={n:S.name,p:{box:{...S.box},src:{...S.src,imgData:null,imgSrc:''},tr:{...S.tr},art:{...S.art},
+      pal:S.pal.map(p=>({hex:p.hex,glow:p.glow}))}};
+    download(new Blob([JSON.stringify(t,null,2)],{type:'application/json'}),safeName(S.name)+'.tpl.json');
+    toast('บันทึกเทมเพลตแล้ว');
+  });
+
+  /* fonts */
+  $('#txtFont').innerHTML=FONT_LIST.map(f=>`<option value="${f}"${f===S.src.font?' selected':''}>${f}</option>`).join('');
+  $('#btnFontFile').addEventListener('click',()=>$('#fontFile').click());
+  $('#fontFile').addEventListener('change',async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{
+      const face=new FontFace('UserFont',await f.arrayBuffer());
+      await face.load(); document.fonts.add(face);
+      S.src.font='UserFont'; pushToUI(); schedule(true); toast('โหลดฟอนต์ '+f.name+' แล้ว (เลือก UserFont)');
+    }catch(err){ toast('อ่านฟอนต์ไม่ได้: '+err.message); }
+  });
+
+  /* image */
+  const loadImg=file=>{
+    if(!file) return;
+    const rd=new FileReader();
+    rd.onload=()=>{
+      const im=new Image();
+      im.onload=()=>{ S.src.imgData=im; S.src.imgSrc=rd.result; S.src.imgName=file.name;
+        S.src.mode='image'; if(S.art.n<2) S.art.n=2;
+        $('#imgDrop').innerHTML=`<b>${file.name}</b><br><span style="font-size:11px">${im.naturalWidth}×${im.naturalHeight} px · คลิกเพื่อเปลี่ยน</span>`;
+        pushToUI(); schedule(true); };
+      im.onerror=()=>toast('เปิดรูปไม่ได้');
+      im.src=rd.result;
+    };
+    rd.readAsDataURL(file);
+  };
+  $('#imgDrop').addEventListener('click',()=>$('#imgFile').click());
+  $('#imgFile').addEventListener('change',e=>loadImg(e.target.files[0]));
+  ['dragenter','dragover'].forEach(k=>$('#imgDrop').addEventListener(k,e=>{e.preventDefault();$('#imgDrop').classList.add('over');}));
+  ['dragleave','drop'].forEach(k=>$('#imgDrop').addEventListener(k,e=>{e.preventDefault();$('#imgDrop').classList.remove('over');}));
+  $('#imgDrop').addEventListener('drop',e=>loadImg(e.dataTransfer.files[0]));
+  window.addEventListener('dragover',e=>e.preventDefault());
+  window.addEventListener('drop',e=>{ e.preventDefault();
+    const f=e.dataTransfer.files[0]; if(f&&/^image\//.test(f.type)) loadImg(f); });
+
+  /* auto fit */
+  $('#btnAutoFit').addEventListener('click',()=>{
+    S.tr={scale:88,dx:0,dy:0,rot:0};
+    if(SRC_CACHE&&SRC_CACHE.cv){
+      const a=SRC_CACHE.cv.width/SRC_CACHE.cv.height, ap=S.box.W/S.box.H;
+      S.tr.scale = a>ap? 94 : 88;
+    }
+    pushToUI(); schedule(false);
+  });
+
+  /* buttons */
+  $('#btnExport').addEventListener('click',doExport);
+  $('#btnPng').addEventListener('click',()=>{
+    if(S.ui.view==='3d'){ glRender(); $('#gl').toBlob(b=>download(b,safeName(S.name)+'_3มิติ.png')); }
+    else $('#view').toBlob(b=>download(b,safeName(S.name)+'_พรีวิว.png'));
+  });
+  $('#btnQuote').addEventListener('click',()=>{
+    if(!LAST||!LAST.E){ toast('ยังไม่มีข้อมูลราคา'); return; }
+    download(new Blob([quoteDoc(LAST.E)],{type:'text/html;charset=utf-8'}),safeName(S.name)+'_ใบเสนอราคา.html');
+  });
+  $('#btnNew').addEventListener('click',()=>{
+    if(!confirm('ล้างงานปัจจุบันและเริ่มใหม่?')) return;
+    S=defaults(); SRC_CACHE=null; LAST=null;
+    $('#imgDrop').innerHTML='ลากไฟล์มาวาง หรือคลิกเพื่อเลือก<br><span style="font-size:11px">PNG · JPG · SVG · WEBP</span>';
+    pushToUI(); schedule(true);
+  });
+  $('#btnSaveProj').addEventListener('click',()=>{
+    const o=JSON.parse(JSON.stringify({...S,src:{...S.src,imgData:null}}));
+    download(new Blob([JSON.stringify(o,null,2)],{type:'application/json'}),safeName(S.name)+'.lightbox.json');
+    toast('บันทึกโปรเจ็คแล้ว');
+  });
+  $('#btnOpenProj').addEventListener('click',()=>{
+    const i=document.createElement('input'); i.type='file'; i.accept='.json';
+    i.onchange=()=>{ const f=i.files[0]; if(!f) return;
+      const rd=new FileReader();
+      rd.onload=()=>{
+        try{
+          const o=JSON.parse(rd.result);
+          if(o.p&&o.n){ applyTemplate(o); return; }            // template file
+          const base=defaults();
+          S=Object.assign(base,o);
+          for(const k of ['src','tr','art','box','hw','price','exp','ui']) S[k]=Object.assign(base[k],o[k]||{});
+          S.pal=(o.pal||base.pal).map(p=>({...p}));
+          S.src.imgData=null;
+          const go=()=>{ pushToUI(); rebuildSource(); schedule(false); toast('เปิดโปรเจ็คแล้ว'); };
+          if(S.src.imgSrc){ const im=new Image(); im.onload=()=>{S.src.imgData=im;go();}; im.onerror=go; im.src=S.src.imgSrc; }
+          else go();
+        }catch(e){ toast('ไฟล์ไม่ถูกต้อง'); }
+      };
+      rd.readAsText(f); };
+    i.click();
+  });
+
+  window.addEventListener('resize',()=>{ clearTimeout(window._rz); window._rz=setTimeout(draw,120); });
+  window.addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); $('#btnSaveProj').click(); }
+    if((e.ctrlKey||e.metaKey)&&e.key==='e'){ e.preventDefault(); doExport(); }
+  });
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  wire(); pushToUI(); rebuildSource(); recompute();
+  $('#stageLabel').textContent='แบบ';
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+window.__LB={get S(){return S;}, get G(){return G;}, buildParts, stlOf, make3mf, estimate, recompute, defaults,
+             jointSpec, partMatrix, footDims, platePack,
+             set S(v){S=v;}, rebuildSource, buildGrid, geomStack};
+</script>
+</body>
+</html>
