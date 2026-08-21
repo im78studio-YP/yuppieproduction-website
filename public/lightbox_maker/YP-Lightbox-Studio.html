@@ -242,6 +242,25 @@ PRODUCTION</textarea>
     </div>
   </div>
 
+
+  <div class="sec" data-sec="shape">
+    <h3>4 · รูปทรงและขอบ</h3>
+    <div class="body">
+      <div class="row"><label>รูปทรงกล่อง</label>
+        <select id="shapeMode" class="grow">
+          <option value="contour">ตามรูปโลโก้ / ตัวอักษร</option>
+          <option value="rect">แผ่นสี่เหลี่ยม</option>
+        </select></div>
+      <div class="row"><label>เติมช่องในตัว</label><input type="checkbox" id="fillHoles" checked>
+        <span class="unit">ปิดช่องในตัว O, P, A ไม่ให้ทะลุ</span></div>
+      <div class="row"><label>ขอบชั้นใน</label><input type="range" id="ring0w" min="0" max="30" step="0.5" value="4"><span class="unit" id="ring0wV">4 มม.</span></div>
+      <div class="row"><label>ขอบชั้นนอก</label><input type="range" id="ring1w" min="0" max="30" step="0.5" value="3"><span class="unit" id="ring1wV">3 มม.</span></div>
+      <p class="hint">ขอบคือเส้นที่ขยายออกจากตัวลวดลาย รูปทรงของกล่องจะวิ่งตามขอบชั้นนอกสุด
+      แก้สีและกำหนดสว่าง/ทึบ ของแต่ละขอบได้ที่หัวข้อ 3 · สีและชั้น<br>
+      ตั้งเป็น 0 เพื่อไม่ใช้ขอบชั้นนั้น · ขอบรวมควรกว้างกว่าผนังกรอบอย่างน้อย 3 มม.</p>
+    </div>
+  </div>
+
 </div>
 
 <!-- ══════════ CENTER ══════════ -->
@@ -278,11 +297,12 @@ PRODUCTION</textarea>
 <div class="col" id="right">
 
   <div class="sec" data-sec="dim">
-    <h3>4 · ขนาดกล่อง</h3>
+    <h3>5 · พื้นที่ทำงานและความหนา</h3>
     <div class="body">
-      <div class="row"><label>กว้าง × สูง</label><input type="number" id="bW" class="num" value="200" step="1">
+      <div class="row"><label>พื้นที่ทำงาน</label><input type="number" id="bW" class="num" value="200" step="1">
         <span class="unit">×</span><input type="number" id="bH" class="num" value="120" step="1"><span class="unit">มม.</span></div>
       <div class="chips" id="sizePresets"></div>
+      <p class="hint" style="margin:8px 0 2px">พื้นที่ทำงานคือกรอบสำหรับจัดวางเท่านั้น — ขนาดชิ้นงานจริงที่ได้แสดงอยู่บนแถบด้านบนของภาพพรีวิว</p>
       <div class="row"><label>ความลึกกล่อง</label><input type="range" id="bDepth" min="12" max="80" step="1" value="35"><span class="unit" id="bDepthV">35 มม.</span></div>
       <div class="row"><label>ชั้นสีหน้า</label><input type="range" id="bColorT" min="0.2" max="1.2" step="0.1" value="0.4"><span class="unit" id="bColorTV">0.4 มม.</span></div>
       <div class="row"><label>ชั้นกระจายแสง</label><input type="range" id="bDiff" min="0.2" max="2" step="0.1" value="0.6"><span class="unit" id="bDiffV">0.6 มม.</span></div>
@@ -299,7 +319,7 @@ PRODUCTION</textarea>
   </div>
 
   <div class="sec" data-sec="hw">
-    <h3>5 · รูสายไฟและขาตั้ง</h3>
+    <h3>6 · รูสายไฟและขาตั้ง</h3>
     <div class="body">
       <div class="row"><label>รูสายไฟ</label>
         <select id="holeType" class="grow">
@@ -320,7 +340,7 @@ PRODUCTION</textarea>
   </div>
 
   <div class="sec" data-sec="joint">
-    <h3>6 · การประกบฝาหลัง</h3>
+    <h3>7 · การประกบฝาหลัง</h3>
     <div class="body">
       <div class="row"><label>วิธีประกบ</label>
         <select id="jointType" class="grow">
@@ -339,12 +359,12 @@ PRODUCTION</textarea>
   </div>
 
   <div class="sec" data-sec="check">
-    <h3>7 · ตรวจก่อนพิมพ์</h3>
+    <h3>8 · ตรวจก่อนพิมพ์</h3>
     <div class="body"><div id="checkList"></div></div>
   </div>
 
   <div class="sec" data-sec="price">
-    <h3>8 · ต้นทุนและราคา</h3>
+    <h3>9 · ต้นทุนและราคา</h3>
     <div class="body">
       <div class="row"><label>จำนวนที่ผลิต</label><input type="number" id="pQty" class="num" value="1" min="1" step="1"><span class="unit">ชิ้น</span></div>
       <div class="row"><label>เส้นพลาสติก</label><input type="number" id="pFil" class="num" value="750" step="10"><span class="unit">บาท/กก.</span></div>
@@ -362,7 +382,7 @@ PRODUCTION</textarea>
   </div>
 
   <div class="sec closed" data-sec="exp">
-    <h3>9 · ตัวเลือกไฟล์ส่งออก</h3>
+    <h3>10 · ตัวเลือกไฟล์ส่งออก</h3>
     <div class="body">
       <div class="row"><label>ความละเอียด</label>
         <select id="expRes" class="grow">
@@ -377,6 +397,16 @@ PRODUCTION</textarea>
           <option value="both">ทั้ง 3MF และ STL</option>
         </select></div>
       <div class="row"><label>ความสูงชั้น</label><input type="number" id="expLayerH" class="num" value="0.2" step="0.02"><span class="unit">มม.</span></div>
+      <div class="row"><label>ฐานพิมพ์</label>
+        <select id="expBed" class="grow">
+          <option value="180">A1 mini · 180 มม.</option>
+          <option value="220">Ender / Prusa · 220 มม.</option>
+          <option value="256" selected>X1C · P1S · A1 · 256 มม.</option>
+          <option value="300">300 มม.</option>
+          <option value="350">350 มม.</option>
+          <option value="500">500 มม.</option>
+        </select></div>
+      <p class="hint">ขนาดฐานพิมพ์ใช้เตือนอย่างเดียว ไม่ได้จำกัดขนาดงาน — งานที่ใหญ่กว่าฐานยังส่งออกได้ ไว้แยกพิมพ์ทีละชิ้นแล้วประกอบ</p>
       <p class="hint">3MF จะรวมทุกชิ้นไว้ในไฟล์เดียว แต่ละชิ้นแยกวัตถุพร้อมชื่อสี — เปิดใน Bambu Studio แล้วกำหนดเส้นให้แต่ละชิ้นได้เลย</p>
     </div>
   </div>
@@ -405,13 +435,16 @@ function defaults(){ return {
         imgData:null, imgName:'', removeBg:true, tol:26 },
   tr:{ scale:88, dx:0, dy:0, rot:0 },
   art:{ n:2, smooth:1, glowMode:'logo' },
+  shape:{ mode:'contour', fillHoles:true },
+  rings:[ {w:4, hex:'#ffffff', glow:true},
+          {w:3, hex:'#ee3c96', glow:false} ],
   pal:[ {hex:'#1a1a1a',name:'พื้นหลัง',glow:false},
         {hex:'#ff2d8f',name:'สี 1',glow:true} ],
   box:{ W:200,H:120,depth:35,colorT:0.4,diff:0.6,bgT:1.2,frame:2.4,back:2, frameColor:'#1a1a1a' },
   hw:{ hole:'frame', dia:7, base:'feet', baseW:40, hang:false,
        joint:'screw', lipH:3, lipW:3, lipCl:0.2, bossW:8, screwDepth:10 },
   price:{ qty:1, fil:750, mach:25, laborMin:25, laborRate:300, led:150, waste:8, margin:45, flush:120 },
-  exp:{ res:0.25, fmt:'3mf', layerH:0.2 },
+  exp:{ res:0.25, fmt:'3mf', layerH:0.2, bed:256 },
   ui:{ showFrame:true, showGrid:false, view:'design' }
 };}
 let S = defaults();
@@ -490,17 +523,77 @@ function sourceFromText(){
   return { cv: outer, inner: (ow>0?inner:null), kind:'text' };
 }
 
+function countOpaque(ctx,w,h){
+  let n=0;
+  try{
+    const d=ctx.getImageData(0,0,w,h).data;
+    const step=Math.max(1,Math.floor((w*h)/200000))*4;
+    for(let i=3;i<d.length;i+=step) if(d[i]>=110) n++;
+  }catch(e){ return -1; }                       // แคนวาสถูก taint (อ่านพิกเซลไม่ได้)
+  return n;
+}
+
 function sourceFromImage(){
   const im = S.src.imgData;
   if(!im) return null;
   const W = im.naturalWidth || im.width, H = im.naturalHeight || im.height;
-  const sc = Math.min(1, 900/Math.max(W,H));
+  if(!W||!H){ S.src.diag={raw:0,reason:'nosize'}; return null; }
+  const cap = 1600;                             // ต้องละเอียดพอ เพราะจะถูกขยายลงกริดอีกที
+  const sc = Math.min(1, cap/Math.max(W,H));
   const cv = document.createElement('canvas');
   cv.width = Math.max(1,Math.round(W*sc)); cv.height = Math.max(1,Math.round(H*sc));
-  const c = cv.getContext('2d');
+  const c = cv.getContext('2d',{willReadFrequently:true});
   c.drawImage(im,0,0,cv.width,cv.height);
-  if(S.src.removeBg) removeBackground(c,cv.width,cv.height,S.src.tol);
+
+  const raw = countOpaque(c,cv.width,cv.height);
+  const diag = S.src.diag = {raw, tainted:raw<0};
+  if(raw>0 && S.src.removeBg){
+    removeBackground(c,cv.width,cv.height,S.src.tol);
+    const after = countOpaque(c,cv.width,cv.height);
+    diag.afterBg = after;
+    if(after===0){                              // ลบพื้นหลังกินหมดทั้งภาพ — ย้อนกลับแล้วค่อยเตือน
+      c.clearRect(0,0,cv.width,cv.height);
+      c.drawImage(im,0,0,cv.width,cv.height);
+      diag.bgAte = true;
+    }
+  }
   return { cv, inner:null, kind:'image' };
+}
+
+/* ── SVG: บังคับขนาดให้ใหญ่พอ + ตรวจสิ่งที่ทำให้วาดออกมาว่าง ──
+   สาเหตุที่เจอบ่อย: ลิงก์รูปภายนอก (เบราว์เซอร์บล็อกเมื่ออยู่ใน <img>),
+   ตัวอักษรที่ยังไม่ convert to outlines, หรือ root ระบุขนาดเป็น % */
+function prepareSVG(text){
+  let doc;
+  try{ doc=new DOMParser().parseFromString(text,'image/svg+xml'); }
+  catch(e){ return {error:'อ่านไฟล์ SVG ไม่ได้'}; }
+  if(doc.querySelector('parsererror')||!doc.documentElement||doc.documentElement.tagName.toLowerCase()!=='svg')
+    return {error:'ไฟล์นี้ไม่ใช่ SVG ที่ถูกต้อง'};
+  const svg=doc.documentElement;
+  const aw=svg.getAttribute('width')||'', ah=svg.getAttribute('height')||'';
+  const vb=(svg.getAttribute('viewBox')||'').trim().split(/[\s,]+/).map(Number);
+  let w=parseFloat(aw), h=parseFloat(ah);
+  const pct=/%/.test(aw)||/%/.test(ah);
+  if(vb.length===4&&vb.every(isFinite)&&(pct||!isFinite(w)||!isFinite(h)||w<=0||h<=0)){ w=vb[2]; h=vb[3]; }
+  if(!isFinite(w)||!isFinite(h)||w<=0||h<=0){ w=300; h=150; }
+  if(!(vb.length===4&&vb.every(isFinite))) svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+  const k=1600/Math.max(w,h);
+  svg.setAttribute('width',String(Math.round(w*k)));
+  svg.setAttribute('height',String(Math.round(h*k)));
+  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+
+  const notes=[];
+  const ext=[...doc.querySelectorAll('image')].map(n=>n.getAttribute('href')||n.getAttribute('xlink:href')||'')
+             .filter(u=>u&&!/^data:/i.test(u));
+  if(ext.length) notes.push({t:'err',m:`ไฟล์นี้ลิงก์ไปหารูปภายนอก ${ext.length} รูป (${ext[0].split(/[\\/]/).pop()}…) `+
+    `เบราว์เซอร์จะไม่โหลดให้ ทำให้วาดออกมาว่าง — เซฟ SVG ใหม่โดยติ๊ก Embed / ฝังรูป หรือส่งเป็น PNG พื้นใสแทน`});
+  const nText=doc.querySelectorAll('text,tspan').length;
+  if(nText) notes.push({t:'warn',m:`ไฟล์นี้ยังเป็นตัวอักษรจริง ${nText} ชิ้น ถ้าเครื่องไม่มีฟอนต์นั้นรูปจะเพี้ยนหรือหาย — `+
+    `ใน Illustrator ใช้ Type ▸ Create Outlines ก่อนเซฟ`});
+  if(/xlink:href\s*=\s*["']\s*#/.test(text)===false && /<use\b/.test(text) && !/<defs\b/.test(text))
+    notes.push({t:'warn',m:'ไฟล์นี้ใช้ <use> อ้างถึงสิ่งที่อาจอยู่นอกไฟล์'});
+  return {url:'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(doc)),
+          w:Math.round(w), h:Math.round(h), notes};
 }
 
 function removeBackground(ctx,w,h,tol){
@@ -591,19 +684,101 @@ function buildGrid(){
     }
   }
 
-  for(let p=0;p<S.art.smooth;p++) medianOwner(owner,gw,gh,S.pal.length);
-  G = {gw,gh,px,owner,empty:false};
+  const K = artCount();
+  for(let p=0;p<S.art.smooth;p++) medianOwner(owner,gw,gh,K+1);
+  G = {gw,gh,px,owner,K,empty:false};
+  applyShape();
   computeAreas();
+  PB = panelBounds();
   return G;
+}
+
+/* จำนวนสีของตัวลวดลาย (ไม่นับพื้นในและวงขอบ) */
+function artCount(){ return S.pal.filter(p=>p.role!=='ring').length-1; }
+function activeRings(){ return (S.shape.mode==='contour') ? S.rings.filter(r=>+r.w>0) : []; }
+
+/* ── แปลงแผ่นสี่เหลี่ยมเป็นรูปทรงตามลวดลาย + วงขอบ ──
+   owner: 255 = ไม่มีเนื้อ · 0 = พื้นด้านใน · 1..K = ลวดลาย · K+1.. = วงขอบ */
+function applyShape(){
+  const {gw,gh,px,owner,K}=G;
+  const N=gw*gh;
+  const panel=new Uint8Array(N);
+  if(S.shape.mode!=='contour'){
+    panel.fill(1);
+    G.panel=panel; G.edtIn=edtToOutside(panel,gw,gh);
+    G.comp=components(panel,gw,gh);
+    return;
+  }
+  const art=new Uint8Array(N);
+  let any=0;
+  for(let i=0;i<N;i++) if(owner[i]>0&&owner[i]<=K){ art[i]=1; any=1; }
+  const R=activeRings();
+  if(!any){                                   // ยังไม่มีลวดลาย — ไม่มีเนื้ออะไรเลย
+    owner.fill(255);
+    G.panel=panel; G.edtIn=new Float64Array(N); G.comp={n:0,boxes:[]};
+    return;
+  }
+  const D=edt(art,gw,gh);
+  const edge=[]; let acc=0;
+  for(const r of R){ acc+=(+r.w)/px; edge.push(acc); }
+  const total=acc;
+  for(let i=0;i<N;i++) if(D[i]<=total+1e-9) panel[i]=1;
+  if(S.shape.fillHoles) fillHoles(panel,gw,gh);
+  for(let i=0;i<N;i++){
+    if(!panel[i]){ owner[i]=255; continue; }
+    if(owner[i]>0&&owner[i]<=K) continue;
+    const d=D[i]; let ring=-1;
+    for(let k=0;k<edge.length;k++) if(d<=edge[k]+1e-9){ ring=k; break; }
+    /* ช่องที่ถูกเติมปิด (ไกลกว่าขอบทุกวง) ให้ใช้สีขอบชั้นนอกสุด จะได้ไม่เป็นจุดดำโดดๆ */
+    owner[i] = ring>=0 ? (1+K+ring) : (edge.length? (1+K+edge.length-1) : 0);
+  }
+  G.panel=panel;
+  G.edtIn=edtToOutside(panel,gw,gh);           // ระยะจากในแผ่นถึงขอบนอก
+  G.comp=components(panel,gw,gh);
+}
+/* ระยะจากในแผ่นถึงขอบนอกสุด — นับขอบภาพเป็น "นอกแผ่น" ด้วย
+   ไม่งั้นโหมดสี่เหลี่ยมที่แผ่นเต็มกริดจะหาขอบไม่เจอเลย แล้วกรอบจะหายไปทั้งใบ */
+function edtToOutside(panel,gw,gh){
+  const inv=new Uint8Array(gw*gh);
+  for(let i=0;i<inv.length;i++) inv[i]=panel[i]?0:1;
+  for(let x=0;x<gw;x++){ inv[x]=1; inv[(gh-1)*gw+x]=1; }
+  for(let y=0;y<gh;y++){ inv[y*gw]=1; inv[y*gw+gw-1]=1; }
+  return edt(inv,gw,gh);
+}
+/* แผ่นแตะขอบพื้นที่ทำงานไหม (แปลว่าถูกตัด) */
+function panelClipped(){
+  const {gw,gh,panel}=G; if(!panel) return false;
+  for(let x=0;x<gw;x++) if(panel[x]||panel[(gh-1)*gw+x]) return true;
+  for(let y=0;y<gh;y++) if(panel[y*gw]||panel[y*gw+gw-1]) return true;
+  return false;
+}
+
+/* กล่องครอบของชิ้นงานจริง (พิกัดมิลลิเมตรแบบเดียวกับเมช) */
+function panelBounds(){
+  const {gw,gh,px,panel}=G, W=S.box.W, H=S.box.H;
+  let x0=gw,y0=gh,x1=-1,y1=-1;
+  for(let y=0;y<gh;y++) for(let x=0;x<gw;x++) if(panel[y*gw+x]){
+    if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y;
+  }
+  if(x1<0) return {mx0:0,my0:0,w:W,h:H,gx0:0,gy0:0,gx1:gw-1,gy1:gh-1,empty:true};
+  return { mx0: W-(x1+1)*px, my0: H-(y1+1)*px,
+           w:(x1-x0+1)*px, h:(y1-y0+1)*px,
+           gx0:x0, gy0:y0, gx1:x1, gy1:y1, empty:false };
 }
 
 function ensurePalette(k){
   const want = k+1;
   const seeds = ['#ff2d8f','#3ba0ff','#ffd400','#31c48d','#ff6a13','#ffffff'];
-  while(S.pal.length<want) S.pal.push({hex:seeds[(S.pal.length-1)%seeds.length],name:'สี '+S.pal.length,glow:true});
-  if(S.pal.length>want) S.pal.length = want;
-  S.pal[0].glow = (S.art.glowMode==='bg');
-  for(let i=1;i<S.pal.length;i++) if(S.pal[i].glow===undefined) S.pal[i].glow = (S.art.glowMode==='logo');
+  const core = S.pal.filter(p=>p.role!=='ring');
+  while(core.length<want) core.push({hex:seeds[(core.length-1)%seeds.length],name:'สี '+core.length,glow:true});
+  if(core.length>want) core.length = want;
+  core[0].glow = (S.art.glowMode==='bg');
+  core[0].name = (S.shape.mode==='contour') ? 'พื้นด้านใน' : 'พื้นหลัง';
+  for(let i=1;i<core.length;i++) if(core[i].glow===undefined) core[i].glow = (S.art.glowMode==='logo');
+  /* วงขอบต่อท้าย — ข้อมูลจริงอยู่ใน S.rings แผงสีแค่สะท้อนออกมา */
+  S.pal = core.concat(activeRings().map((r,i)=>({
+    hex:r.hex, glow:!!r.glow, name:'ขอบชั้น '+(i+1), role:'ring', ringIndex:S.rings.indexOf(r)
+  })));
 }
 
 function kmeans(data,idx,K){
@@ -651,10 +826,12 @@ function medianOwner(o,gw,gh,K){
 }
 
 function computeAreas(){
-  const K=S.pal.length, cnt=new Float64Array(K);
-  for(let i=0;i<G.owner.length;i++) cnt[G.owner[i]]++;
+  const K=S.pal.length, cnt=new Float64Array(K+1);
+  let panelCells=0;
+  for(let i=0;i<G.owner.length;i++){ const o=G.owner[i]; if(o===255) continue; cnt[o]++; panelCells++; }
   const cell = G.px*G.px;
   S.pal.forEach((p,i)=>{ p.area = cnt[i]*cell; p.cells = cnt[i]; });
+  G.panelCells = panelCells;
 }
 
 /* ---------- masks + greedy rectangle merge ---------- */
@@ -665,7 +842,8 @@ function maskOf(k){
 }
 function maskGlow(){
   const m = new Uint8Array(G.gw*G.gh);
-  for(let i=0;i<m.length;i++) if(S.pal[G.owner[i]].glow) m[i]=1;
+  for(let i=0;i<m.length;i++){ const o=G.owner[i];
+    if(o!==255 && S.pal[o] && S.pal[o].glow) m[i]=1; }
   return m;
 }
 function maskToRects(mask,gw,gh){
@@ -689,6 +867,81 @@ function maskToRects(mask,gw,gh){
   for(const p of prev) out.push({x0:p.x0,x1:p.x1,y0:p.y0,y1:gh});
   return out;
 }
+/* ══════════════════════════════════════════════════════════════
+   เครื่องมือเชิงรูปทรง: ระยะทางแบบยุคลิด · เติมรู · แยกชิ้น
+   ══════════════════════════════════════════════════════════════ */
+/* ระยะจากทุกเซลล์ถึงเซลล์ที่ mask=1 ใกล้ที่สุด (หน่วยเป็นเซลล์) — Felzenszwalb & Huttenlocher */
+function edt(mask,gw,gh){
+  const INF=1e20, n=Math.max(gw,gh);
+  const d=new Float64Array(gw*gh);
+  for(let i=0;i<d.length;i++) d[i]=mask[i]?0:INF;
+  const f=new Float64Array(n), out=new Float64Array(n);
+  const v=new Int32Array(n), z=new Float64Array(n+1);
+  const pass=(len)=>{
+    let k=0; v[0]=0; z[0]=-INF; z[1]=INF;
+    for(let q=1;q<len;q++){
+      let s=((f[q]+q*q)-(f[v[k]]+v[k]*v[k]))/(2*q-2*v[k]);
+      while(k>0&&s<=z[k]){ k--; s=((f[q]+q*q)-(f[v[k]]+v[k]*v[k]))/(2*q-2*v[k]); }
+      k++; v[k]=q; z[k]=s; z[k+1]=INF;
+    }
+    k=0;
+    for(let q=0;q<len;q++){
+      while(z[k+1]<q) k++;
+      const dd=q-v[k]; out[q]=dd*dd+f[v[k]];
+    }
+  };
+  for(let x=0;x<gw;x++){
+    for(let y=0;y<gh;y++) f[y]=d[y*gw+x];
+    pass(gh);
+    for(let y=0;y<gh;y++) d[y*gw+x]=out[y];
+  }
+  for(let y=0;y<gh;y++){
+    const row=y*gw;
+    for(let x=0;x<gw;x++) f[x]=d[row+x];
+    pass(gw);
+    for(let x=0;x<gw;x++) d[row+x]=Math.sqrt(out[x]);
+  }
+  return d;
+}
+
+/* เติมช่องว่างที่ถูกปิดล้อม (เช่น ช่องในตัว O) — ท่วมจากขอบภาพเข้ามา */
+function fillHoles(mask,gw,gh){
+  const seen=new Uint8Array(gw*gh), st=[];
+  const push=i=>{ if(!seen[i]&&!mask[i]){ seen[i]=1; st.push(i); } };
+  for(let x=0;x<gw;x++){ push(x); push((gh-1)*gw+x); }
+  for(let y=0;y<gh;y++){ push(y*gw); push(y*gw+gw-1); }
+  while(st.length){
+    const i=st.pop(), x=i%gw, y=(i/gw)|0;
+    if(x>0)push(i-1); if(x<gw-1)push(i+1);
+    if(y>0)push(i-gw); if(y<gh-1)push(i+gw);
+  }
+  let filled=0;
+  for(let i=0;i<mask.length;i++) if(!mask[i]&&!seen[i]){ mask[i]=1; filled++; }
+  return filled;
+}
+
+/* แยกชิ้นที่ไม่ติดกัน — คืนจำนวนชิ้นและกล่องครอบของแต่ละชิ้น */
+function components(mask,gw,gh){
+  const lab=new Int32Array(gw*gh).fill(-1), boxes=[], st=[];
+  let n=0;
+  for(let s=0;s<mask.length;s++){
+    if(!mask[s]||lab[s]>=0) continue;
+    const id=n++; const bx={x0:1e9,y0:1e9,x1:-1,y1:-1,cells:0};
+    lab[s]=id; st.push(s);
+    while(st.length){
+      const i=st.pop(), x=i%gw, y=(i/gw)|0;
+      bx.cells++;
+      if(x<bx.x0)bx.x0=x; if(x>bx.x1)bx.x1=x;
+      if(y<bx.y0)bx.y0=y; if(y>bx.y1)bx.y1=y;
+      const t=(j)=>{ if(mask[j]&&lab[j]<0){ lab[j]=id; st.push(j); } };
+      if(x>0)t(i-1); if(x<gw-1)t(i+1);
+      if(y>0)t(i-gw); if(y<gh-1)t(i+gw);
+    }
+    boxes.push(bx);
+  }
+  return {n,lab,boxes};
+}
+
 /* rasterise an arbitrary shape test into a mask over the panel grid
    fn รับพิกัดมิลลิเมตร "ของชิ้นงานจริง" (x=0 ซ้าย, y=0 ล่าง) ตรงกับที่ addRects จะเขียนออกมา
    ไม่ใช่พิกัดกริดของภาพ ซึ่งกลับด้านทั้งแกน x และ y */
@@ -755,167 +1008,224 @@ function addBox(M,x0,y0,z0,x1,y1,z1){
   quad(M,B,C,Gp,F, 1, 0, 0);
 }
 function addRects(M,rects,z0,z1){
-  const px=G.px, W=S.box.W, H=S.box.H;
+  const px=G.px, W=S.box.W, H=S.box.H, ox=PB.mx0, oy=PB.my0;
   for(const r of rects){
-    addBox(M, W-r.x1*px, H-r.y1*px, z0, W-r.x0*px, H-r.y0*px, z1);
+    addBox(M, W-r.x1*px-ox, H-r.y1*px-oy, z0, W-r.x0*px-ox, H-r.y0*px-oy, z1);
   }
+}
+function maskWhere(fn){
+  const {gw,gh}=G, m=new Uint8Array(gw*gh);
+  for(let y=0;y<gh;y++) for(let x=0;x<gw;x++){ const i=y*gw+x; if(fn(i,x,y)) m[i]=1; }
+  return m;
 }
 
 /* ══════════════════════════════════════════════════════════════
-   BUILD ALL PARTS
+   BUILD ALL PARTS  — ทุกอย่างอิงจาก G.panel (รูปทรงจริง) ไม่ใช่สี่เหลี่ยม
    ══════════════════════════════════════════════════════════════ */
+let PB={mx0:0,my0:0,w:0,h:0};
+
 function geomStack(){
   const b=S.box;
   const colorT=b.colorT, diff=b.diff;
   const bgT = Math.max(b.bgT, colorT+0.2);
-  const frameZ0 = bgT;
-  const total = bgT + b.depth + b.back;
-  return {colorT,diff,bgT,frameZ0,total};
+  return {colorT,diff,bgT,frameZ0:bgT,total:bgT+b.depth+b.back};
+}
+function bedSize(){ return Math.max(80, +S.exp.bed||256); }
+const PGAP=8;
+
+function footDims(){
+  const st=geomStack();
+  const slot=st.total+0.6, rail=3.5, plate=3;
+  return {w:S.hw.baseW, d:slot+rail*2, rail, plate, slot,
+          h:plate+Math.max(9,Math.min(18, st.total*0.5+6))};
 }
 
-/* ══════════════════════════════════════════════════════════════
-   ข้อกำหนดรอยต่อฝาหน้า–ฝาหลัง
-   butt = ชนหน้าตัด · lip = บ่าล็อก · screw = บ่าล็อก + เสาสกรู 4 มุม
-   ══════════════════════════════════════════════════════════════ */
+/* ขอบล่างของรูปทรง — ใช้วางบากสายไฟและขาตั้ง */
+function bottomInfo(){
+  const {gw,px,panel}=G, y1=PB.gy1;
+  const band=Math.max(1,Math.round(2/px));
+  const xs=[];
+  for(let y=Math.max(0,y1-band); y<=y1; y++)
+    for(let x=0;x<gw;x++) if(panel[y*gw+x]) xs.push(x);
+  xs.sort((a,b)=>a-b);
+  const q=f=>xs.length? xs[Math.min(xs.length-1,Math.floor(xs.length*f))] : (gw>>1);
+  return {y1, cx:q(0.5), left:q(0.22), right:q(0.78), n:xs.length};
+}
+
+/* จุดวางเสาสกรู — หาที่ที่เนื้อหนาพอ แล้วกระจายให้ห่างกันมากที่สุด */
+function bossPoints(){
+  const {gw,gh,px,edtIn}=G;
+  if(!edtIn) return [];
+  const need=(S.hw.bossW/2+1.2)/px, minGap=25/px;
+  const step=Math.max(1,Math.round(1.5/px));
+  const cand=[];
+  for(let y=0;y<gh;y+=step) for(let x=0;x<gw;x+=step) if(edtIn[y*gw+x]>=need) cand.push([x,y]);
+  if(!cand.length) return [];
+  const areaMM=G.panelCells*px*px;
+  const want=clamp(Math.round(Math.sqrt(areaMM)/60)+2, 2, 8);
+  const taken=new Uint8Array(cand.length), d2=new Float64Array(cand.length).fill(1e18);
+  const pick=[];
+  const add=i=>{ taken[i]=1; pick.push(cand[i]);
+    for(let j=0;j<cand.length;j++){ if(taken[j]) continue;
+      const dx=cand[j][0]-cand[i][0], dy=cand[j][1]-cand[i][1], v=dx*dx+dy*dy;
+      if(v<d2[j]) d2[j]=v; } };
+  let s0=0; for(let i=1;i<cand.length;i++) if(cand[i][0]+cand[i][1]<cand[s0][0]+cand[s0][1]) s0=i;
+  add(s0);
+  while(pick.length<want){
+    let bi=-1,bv=-1;
+    for(let j=0;j<cand.length;j++) if(!taken[j]&&d2[j]>bv){ bv=d2[j]; bi=j; }
+    if(bi<0||bv<minGap*minGap) break;
+    add(bi);
+  }
+  return pick;
+}
+
+/* จุดเจาะรูแขวน — สองจุดบนสุดที่เนื้อหนาพอและห่างกันพอ */
+function hangPoints(){
+  const {gw,gh,px,edtIn}=G;
+  if(!edtIn) return [];
+  const need=(2.5+1.5)/px;
+  const rows=[];
+  for(let y=PB.gy0;y<=PB.gy0+Math.round(25/px)&&y<gh;y++)
+    for(let x=0;x<gw;x+=Math.max(1,Math.round(1/px)))
+      if(edtIn[y*gw+x]>=need) rows.push([x,y]);
+  if(!rows.length) return [];
+  const minY=Math.min(...rows.map(r=>r[1]));
+  const band=rows.filter(r=>r[1]<=minY+Math.round(8/px));
+  band.sort((a,b)=>a[0]-b[0]);
+  if(band.length<2) return [band[0]];
+  const L=band[Math.floor(band.length*0.15)], R=band[Math.floor(band.length*0.85)];
+  return (R[0]-L[0] > 30/px) ? [L,R] : [band[band.length>>1]];
+}
+
 function jointSpec(){
-  const b=S.box, hw=S.hw, fh=b.frame;
-  const mode=hw.joint||'screw', lip=mode!=='butt', screw=mode==='screw';
-  const bw=hw.bossW, cl=hw.lipCl, lipH=hw.lipH, lipW=hw.lipW;
-  const PR=1.25, CR=1.7;                       // รูนำ Ø2.5 · รูผ่าน Ø3.4
-  const bx0=fh, bx1=fh+bw, bx2=b.W-fh-bw, bx3=b.W-fh;
-  const by0=fh, by1=fh+bw, by2=b.H-fh-bw, by3=b.H-fh;
-  const inBoss=(x,y)=> ((x>=bx0&&x<bx1)||(x>bx2&&x<=bx3)) && ((y>=by0&&y<by1)||(y>by2&&y<=by3));
-  const inBossPad=(x,y)=> ((x>=bx0-cl&&x<bx1+cl)||(x>bx2-cl&&x<=bx3+cl))
-                       && ((y>=by0-cl&&y<by1+cl)||(y>by2-cl&&y<=by3+cl));
-  const SC=[[bx0+bw/2,by0+bw/2],[bx3-bw/2,by0+bw/2],[bx0+bw/2,by3-bw/2],[bx3-bw/2,by3-bw/2]];
-  const inPilot=(x,y)=>SC.some(c=>(x-c[0])**2+(y-c[1])**2<PR*PR);
-  const inClear=(x,y)=>SC.some(c=>(x-c[0])**2+(y-c[1])**2<CR*CR);
-  const o=fh+cl, i2=fh+cl+lipW;
-  const nx0=b.W/2-hw.dia/2-1.5, nx1=b.W/2+hw.dia/2+1.5;
-  const inLip=(x,y)=>{
-    if(x<o||y<o||x>b.W-o||y>b.H-o) return false;          // นอกกรอบบ่า
-    if(x>i2&&y>i2&&x<b.W-i2&&y<b.H-i2) return false;      // กลางแผ่น (บ่าเป็นวง ไม่ตัน)
-    if(screw && inBossPad(x,y)) return false;             // เว้นมุมให้เสาสกรู
-    if(hw.hole==='frame' && y<i2+0.5 && x>nx0 && x<nx1) return false;  // เว้นช่องสายไฟ
-    return true;
-  };
-  return {mode,lip,screw,lipH,lipW,cl,bw,PR,CR,SC,bx0,bx1,bx2,bx3,by0,by1,by2,by3,
-          inBoss,inPilot,inClear,inLip};
+  const hw=S.hw, mode=hw.joint||'screw';
+  return {mode, lip:mode!=='butt', screw:mode==='screw',
+          lipH:+hw.lipH, lipW:+hw.lipW, cl:+hw.lipCl, bw:+hw.bossW, PR:1.25, CR:1.7};
 }
 
 function buildParts(nt){
   if(!G||G.empty) buildGrid();
-  const b=S.box, st=geomStack(), px=G.px, parts=[];
-  const fh=b.frame;                                   // frame width (mm)
+  const b=S.box, st=geomStack(), px=G.px, gw=G.gw, gh=G.gh, N=gw*gh;
+  const P=G.panel, DI=G.edtIn, owner=G.owner, parts=[];
+  PB = panelBounds();
+  if(PB.empty) return parts;
+  const J=jointSpec(), fw=b.frame/px, zTop=st.frameZ0+b.depth;
 
-  /* --- 1. colour faces + opaque bodies --- */
+  /* --- 1. ชั้นสีทั้งหมด (พื้นใน · ลวดลาย · วงขอบ) --- */
   for(let k=0;k<S.pal.length;k++){
     const p=S.pal[k];
     if(!p.cells) continue;
-    const rects = maskToRects(maskOf(k),G.gw,G.gh);
+    const rects=maskToRects(maskOf(k),gw,gh);
     if(!rects.length) continue;
-    const M = Mesh(k===0?'พื้นหลัง · '+nearestFilament(p.hex):('ชั้นสี '+k)+' · '+nearestFilament(p.hex), p.hex, nt);
-    if(p.glow) addRects(M,rects,0,st.colorT);
-    else       addRects(M,rects,0,st.bgT);
+    const M=Mesh((p.name||('สี '+k))+' · '+nearestFilament(p.hex), p.hex, nt);
+    if(p.glow) addRects(M,rects,0,st.colorT); else addRects(M,rects,0,st.bgT);
     M.kind='color'; M.glow=!!p.glow;
     parts.push(M);
   }
 
-  /* --- 2. diffuser behind every glowing area --- */
-  const gm = maskGlow();
-  let any=false; for(let i=0;i<gm.length;i++) if(gm[i]){any=true;break;}
-  if(any){
+  /* --- 2. ชั้นกระจายแสง --- */
+  const gm=maskGlow();
+  let anyGlow=false; for(let i=0;i<N;i++) if(gm[i]){anyGlow=true;break;}
+  if(anyGlow){
     const M=Mesh('ชั้นกระจายแสง · ขาว/ใส','#F2F2E8',nt);
-    addRects(M,maskToRects(gm,G.gw,G.gh),st.colorT,st.colorT+st.diff);
+    addRects(M,maskToRects(gm,gw,gh),st.colorT,st.colorT+st.diff);
     M.kind='diffuser'; M.glow=true;
     parts.push(M);
   }
 
-  /* --- 3. frame (perimeter wall) + cable notch ที่ปลายหลัง + เสาสกรู --- */
-  const J=jointSpec();
-  const zTop=st.frameZ0+b.depth;
-  const inFrame=(x,y)=> x<fh||y<fh||x>b.W-fh||y>b.H-fh;
-  const frameRects = maskToRects(maskFromFn(inFrame),G.gw,G.gh);
+  /* --- 3. กรอบ = วงในของรูปทรง + บากสายไฟ + เสาสกรู --- */
+  const BI=bottomInfo();
+  const notchHalf=(S.hw.dia/2)/px, notchBandY=PB.gy1-fw*1.4;
+  const frameM=maskWhere(i=>P[i]&&DI[i]<=fw);
   const FM=Mesh('กรอบข้าง'+(J.screw?' + เสาสกรู':''),'#'+b.frameColor.replace('#',''),nt);
+  const d=Math.min(S.hw.dia, b.depth-2);
   if(S.hw.hole==='frame'){
-    const d=Math.min(S.hw.dia, b.depth-2), x0=b.W/2-S.hw.dia/2, x1=b.W/2+S.hw.dia/2;
-    const notch=(x,y)=> inFrame(x,y) && !(y<fh && x>x0 && x<x1);
-    addRects(FM,frameRects, st.frameZ0, zTop-d);                       // ผนังเต็ม
-    addRects(FM,maskToRects(maskFromFn(notch),G.gw,G.gh), zTop-d, zTop); // บากเปิดปากบน
+    const notched=maskWhere((i,x,y)=> frameM[i] && !(y>=notchBandY && Math.abs(x-BI.cx)<=notchHalf));
+    addRects(FM,maskToRects(frameM,gw,gh), st.frameZ0, zTop-d);
+    addRects(FM,maskToRects(notched,gw,gh), zTop-d, zTop);
   }else{
-    addRects(FM,frameRects, st.frameZ0, zTop);
+    addRects(FM,maskToRects(frameM,gw,gh), st.frameZ0, zTop);
   }
-  if(J.screw){
+  const BP=J.screw? bossPoints() : [];
+  const bwc=J.bw/2/px, prc=J.PR/px, crc=J.CR/px;
+  const nearBoss=(x,y,r)=>BP.some(p=>Math.abs(x-p[0])<=r&&Math.abs(y-p[1])<=r);
+  const inCircle=(x,y,r)=>BP.some(p=>(x-p[0])**2+(y-p[1])**2<r*r);
+  if(BP.length){
     const sd=Math.min(S.hw.screwDepth, b.depth-3);
-    addRects(FM, maskToRects(maskFromFn(J.inBoss),G.gw,G.gh), st.frameZ0, zTop-sd);
-    addRects(FM, maskToRects(maskFromFn((x,y)=>J.inBoss(x,y)&&!J.inPilot(x,y)),G.gw,G.gh), zTop-sd, zTop);
+    const bossM=maskWhere((i,x,y)=>P[i]&&nearBoss(x,y,bwc));
+    addRects(FM,maskToRects(bossM,gw,gh), st.frameZ0, zTop-sd);
+    addRects(FM,maskToRects(maskWhere((i,x,y)=>bossM[i]&&!inCircle(x,y,prc)),gw,gh), zTop-sd, zTop);
   }
-  FM.kind='frame';
+  FM.kind='frame'; FM.bossCount=BP.length;
   parts.push(FM);
 
-  /* --- 4. back plate with holes --- */
-  const R=S.hw.dia/2, cx=b.W/2, cy=b.H/2;
-  const hang=S.hw.hang;
-  const backFn=(x,y)=>{
-    if(S.hw.hole==='back' && (x-cx)**2+(y-cy)**2 < R*R) return false;
-    if(J.screw && J.inClear(x,y)) return false;
-    if(hang){
-      const hy=b.H-fh-7;
-      if((x-b.W*0.25)**2+(y-hy)**2<6.25) return false;
-      if((x-b.W*0.75)**2+(y-hy)**2<6.25) return false;
-    }
+  /* --- 4. แผ่นหลัง (+ บ่าล็อก) --- */
+  const HP=S.hw.hang? hangPoints() : [];
+  const hrc=2.5/px;
+  const cxG=(PB.gx0+PB.gx1)/2, cyG=(PB.gy0+PB.gy1)/2, holeR=(S.hw.dia/2)/px;
+  const backM=maskWhere((i,x,y)=>{
+    if(!P[i]) return false;
+    if(S.hw.hole==='back' && (x-cxG)**2+(y-cyG)**2 < holeR*holeR) return false;
+    if(BP.length && inCircle(x,y,crc)) return false;
+    if(HP.some(p=>(x-p[0])**2+(y-p[1])**2<hrc*hrc)) return false;
     return true;
-  };
+  });
   const PK=platePack();
   const BM=Mesh('แผ่นหลัง'+(J.lip?' + บ่าล็อก':''),'#'+b.frameColor.replace('#',''),nt);
-  addRects(BM,maskToRects(maskFromFn(backFn),G.gw,G.gh), 0, b.back);   // วางราบพร้อมพิมพ์ ผิวนอกติดฐาน
-  if(J.lip) addRects(BM,maskToRects(maskFromFn(J.inLip),G.gw,G.gh), b.back, b.back+J.lipH);
+  addRects(BM,maskToRects(backM,gw,gh), 0, b.back);
+  if(J.lip){
+    const i0=(b.frame+J.cl)/px, i1=(b.frame+J.cl+J.lipW)/px;
+    const corridor=(x,y)=> S.hw.hole==='frame' && y>=PB.gy1-(b.frame+J.cl+J.lipW+2)/px
+                            && Math.abs(x-BI.cx)<=notchHalf+1.5/px;
+    const lipM=maskWhere((i,x,y)=> P[i] && DI[i]>i0 && DI[i]<=i1
+                            && !(BP.length&&nearBoss(x,y,bwc+J.cl/px)) && !corridor(x,y));
+    addRects(BM,maskToRects(lipM,gw,gh), b.back, b.back+J.lipH);
+  }
   BM.place=PK.items.back; BM.kind='back';
   parts.push(BM);
 
-  /* --- 5. feet (ขายึดแบบผนังบาง ไม่ตัน) --- */
-  if(S.hw.base==='feet'){
-    const F=footDims();
+  /* --- 5. ขาตั้ง — วางตรงจุดที่ขอบล่างแตะพื้นจริง --- */
+  if(S.hw.base==='feet' && BI.n){
+    const F=footDims(), W=S.box.W;
+    const meshX=g=>W-(g+0.5)*px-PB.mx0;                 // กริด → มิลลิเมตรของชิ้นงาน
+    const xs=[meshX(BI.left),meshX(BI.right)].sort((a,b)=>a-b);
     for(let i=0;i<2;i++){
       const M=Mesh('ขาตั้ง '+(i+1),'#'+b.frameColor.replace('#',''),nt);
-      addBox(M,0,0,0,F.w,F.d,F.plate);                       // แผ่นฐาน
-      addBox(M,0,0,F.plate,F.w,F.rail,F.h);                  // สันหน้า
-      addBox(M,0,F.d-F.rail,F.plate,F.w,F.d,F.h);            // สันหลัง
+      addBox(M,0,0,0,F.w,F.d,F.plate);
+      addBox(M,0,0,F.plate,F.w,F.rail,F.h);
+      addBox(M,0,F.d-F.rail,F.plate,F.w,F.d,F.h);
       M.place=PK.items['foot'+i]; M.kind='foot'; M.footIndex=i; M.foot=F;
+      M.asmX=clamp(xs[i]-F.w/2, 0, Math.max(0,PB.w-F.w));
       parts.push(M);
     }
   }
   return parts;
 }
-/* จัดวางชิ้นงานบนฐานพิมพ์ — ใช้ทั้งในภาพผังและใน transform ของไฟล์ 3MF */
-const BED=256, PGAP=8;
+
+/* จัดวางชิ้นงานบนฐานพิมพ์ — ใช้ทั้งภาพผังและ transform ใน 3MF */
 function platePack(){
-  const b=S.box, F=(S.hw.base==='feet')?footDims():null;
-  const items={panel:{x:0,y:0,w:b.W,h:b.H}};
-  items.back={x:0,y:b.H+PGAP,w:b.W,h:b.H};
+  const BED=bedSize(), F=(S.hw.base==='feet')?footDims():null;
+  const w=PB.w||S.box.W, h=PB.h||S.box.H;
+  const items={panel:{x:0,y:0,w,h}};
+  items.back={x:0,y:h+PGAP,w,h};
   if(F){
-    const rx=b.W+PGAP;
-    if(rx+F.w<=BED && F.d*2+PGAP<=BED){                    // เรียงเป็นคอลัมน์ขวา
+    const rx=w+PGAP;
+    if(rx+F.w<=BED && F.d*2+PGAP<=BED){
       items.foot0={x:rx,y:0,w:F.w,h:F.d};
       items.foot1={x:rx,y:F.d+PGAP,w:F.w,h:F.d};
-    }else if(rx+F.w*2+PGAP<=BED){                          // เรียงข้างกันทางขวา
+    }else if(rx+F.w*2+PGAP<=BED){
       items.foot0={x:rx,y:0,w:F.w,h:F.d};
       items.foot1={x:rx+F.w+PGAP,y:0,w:F.w,h:F.d};
-    }else{                                                 // ต่อท้ายด้านล่าง
-      const fy=items.back.y+b.H+PGAP;
+    }else{
+      const fy=items.back.y+h+PGAP;
       items.foot0={x:0,y:fy,w:F.w,h:F.d};
       items.foot1={x:F.w+PGAP,y:fy,w:F.w,h:F.d};
     }
   }
   const all=Object.values(items);
   const maxX=Math.max(...all.map(i=>i.x+i.w)), maxY=Math.max(...all.map(i=>i.y+i.h));
-  return {items,maxX,maxY,fits:maxX<=BED&&maxY<=BED};
-}
-function footDims(){
-  const st=geomStack();
-  const slot=st.total+0.6, rail=3.5, plate=3;
-  return {w:S.hw.baseW, d:slot+rail*2, rail, plate, slot,
-          h:plate+Math.max(9,Math.min(18, st.total*0.5+6))};
+  return {items,maxX,maxY,bed:BED,fits:maxX<=BED&&maxY<=BED};
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1073,7 +1383,9 @@ function gridImage(mode){
   const c=cv.getContext('2d'); const im=c.createImageData(gw,gh); const d=im.data;
   const rgbs=S.pal.map(p=>hex2rgb(p.hex));
   for(let i=0;i<owner.length;i++){
-    const k=owner[i], p=S.pal[k], col=rgbs[k]; const o=i*4;
+    const k=owner[i], o=i*4;
+    if(k===255||!S.pal[k]){ d[o+3]=0; continue; }
+    const p=S.pal[k], col=rgbs[k];
     if(mode==='lit'){
       if(p.glow){ d[o]=clamp(col[0]*0.62+150,0,255); d[o+1]=clamp(col[1]*0.62+150,0,255); d[o+2]=clamp(col[2]*0.62+150,0,255); d[o+3]=255; }
       else { d[o]=col[0]*0.16; d[o+1]=col[1]*0.16; d[o+2]=col[2]*0.16; d[o+3]=255; }
@@ -1117,8 +1429,22 @@ function draw(){
 
   if(view==='lit'){ c.fillStyle='#07080a'; } else { c.fillStyle='#f3f4f6'; }
   c.fillRect(0,0,cv.width,cv.height);
-  if(G.empty){ c.fillStyle='#888'; c.font='16px sans-serif'; c.textAlign='center';
-    c.fillText('ยังไม่มีงาน — พิมพ์ข้อความหรืออัปโหลดโลโก้',cv.width/2,cv.height/2); return; }
+  let anyArt=0; if(!G.empty) for(let i=0;i<G.owner.length;i++){ const o=G.owner[i];
+    if(o>0&&o<=G.K){anyArt=1;break;} }
+  if(G.empty||!anyArt){
+    c.fillStyle=view==='lit'?'#e7e9ec':'#3a3f47';
+    c.textAlign='center'; c.font='600 16px sans-serif';
+    const d=S.src.diag, img=S.src.mode==='image'&&S.src.imgData;
+    let t1='ยังไม่มีงาน', t2='พิมพ์ข้อความ หรืออัปโหลดโลโก้ทางแผงซ้าย';
+    if(img&&d&&d.tainted){ t1='อ่านพิกเซลของรูปนี้ไม่ได้'; t2='ลองเซฟเป็น PNG แล้วอัปโหลดใหม่'; }
+    else if(img&&d&&d.raw===0){ t1='ไฟล์เปิดได้ แต่วาดออกมาว่างเปล่า'; t2='ดูสาเหตุที่หัวข้อ 7 · ตรวจก่อนพิมพ์ ทางแผงขวา'; }
+    else if(img&&d&&d.bgAte){ t1='ลบพื้นหลังตัดทั้งภาพออกหมด'; t2='ลดค่า “ความคลาดสี” หรือปิดตัวเลือกลบพื้นหลัง'; }
+    else if(img){ t1='แปลงรูปเป็นชั้นสีไม่ได้'; t2='ลองปิดลบพื้นหลัง หรือใช้ PNG พื้นใส'; }
+    c.fillText(t1,cv.width/2,cv.height/2-8);
+    c.font='13px sans-serif'; c.fillStyle=view==='lit'?'#9aa3b0':'#6b7280';
+    c.fillText(t2,cv.width/2,cv.height/2+16);
+    return;
+  }
 
   if(view==='plate'){ drawPlate(c,cv,px); return; }
   if(view==='layers'){ drawLayers(c,cv,px); return; }
@@ -1140,7 +1466,7 @@ function draw(){
     for(let x=10;x<b.W;x+=10){ c.beginPath(); c.moveTo(x*px,0); c.lineTo(x*px,cv.height); c.stroke(); }
     for(let y=10;y<b.H;y+=10){ c.beginPath(); c.moveTo(0,y*px); c.lineTo(cv.width,y*px); c.stroke(); }
   }
-  if(S.ui.showFrame){
+  if(S.ui.showFrame && S.shape.mode!=='contour'){
     const f=b.frame*px;
     c.strokeStyle=view==='lit'?'#ffffff55':'#00000055'; c.lineWidth=1.5;
     c.strokeRect(f/2,f/2,cv.width-f,cv.height-f);
@@ -1153,16 +1479,22 @@ function drawLayers(c,cv,px){
   const b=S.box, st=geomStack();
   const stack=[];
   /* เรียงจากหลังสุด → หน้าสุด (หน้าสุด = ผิวที่ติดฐานพิมพ์) */
-  stack.push({flat:'#31363f',label:`แผ่นหลัง ${b.back} มม.`});
-  stack.push({ring:true,label:`กรอบข้าง ลึก ${b.depth} มม. · หนา ${b.frame} มม.`});
-  const dif=(()=>{ const {gw,gh}=G, q=document.createElement('canvas'); q.width=gw;q.height=gh;
+  const shaped=S.shape.mode==='contour';
+  const maskImg=(test,rgb)=>{ const {gw,gh}=G, q=document.createElement('canvas'); q.width=gw;q.height=gh;
       const cc=q.getContext('2d'), im=cc.createImageData(gw,gh), d=im.data;
-      for(let i=0;i<G.owner.length;i++) if(S.pal[G.owner[i]].glow){const o=i*4;d[o]=245;d[o+1]=245;d[o+2]=236;d[o+3]=255;}
-      cc.putImageData(im,0,0); return q; })();
+      for(let i=0;i<G.owner.length;i++) if(test(i)){const o=i*4;d[o]=rgb[0];d[o+1]=rgb[1];d[o+2]=rgb[2];d[o+3]=255;}
+      cc.putImageData(im,0,0); return q; };
+  const gmL=maskGlow();
+  const dif=maskImg(i=>gmL[i],[245,245,236]);
+  const backImg=maskImg(i=>G.panel&&G.panel[i],[49,54,63]);
+  const fwc=b.frame/G.px;
+  const frameImg=maskImg(i=>G.panel&&G.panel[i]&&G.edtIn[i]<=fwc,[74,80,91]);
+  stack.push({img:backImg,label:`แผ่นหลัง ${b.back} มม.`});
+  stack.push({img:frameImg,label:`กรอบข้าง ลึก ${b.depth} มม. · หนา ${b.frame} มม.`});
   stack.push({img:dif,label:`ชั้นกระจายแสง ${st.diff} มม.`});
   for(let k=S.pal.length-1;k>=1;k--) if(S.pal[k].cells)
-    stack.push({img:layerImage(k),label:`ชั้นสี ${k} · ${S.pal[k].hex.toUpperCase()} · ${nearestFilament(S.pal[k].hex)}`});
-  if(S.pal[0].cells) stack.push({img:layerImage(0),label:`พื้นหลัง ${st.bgT.toFixed(1)} มม. · ${nearestFilament(S.pal[0].hex)}`});
+    stack.push({img:layerImage(k),label:`${S.pal[k].name} · ${S.pal[k].hex.toUpperCase()} · ${nearestFilament(S.pal[k].hex)}`});
+  if(S.pal[0].cells) stack.push({img:layerImage(0),label:`${S.pal[0].name} ${st.bgT.toFixed(1)} มม. · ${nearestFilament(S.pal[0].hex)}`});
 
   const n=stack.length, SK=0.55, SQ=0.5;                  // ค่าเฉือนของภาพไอโซเมตริก
   const LABX=cv.width*0.63;                               // คอลัมน์ป้ายชื่อ
@@ -1178,10 +1510,7 @@ function drawLayers(c,cv,px){
     c.save();
     c.setTransform(1,0,-SK,SQ,ox,oyy);
     c.shadowColor='#00000030'; c.shadowBlur=9; c.shadowOffsetY=3;
-    if(L.ring){
-      c.fillStyle='#4a505b'; c.beginPath();
-      c.rect(0,0,w,h); c.rect(fx,fy,w-fx*2,h-fy*2); c.fill('evenodd');
-    }else if(L.img){
+    if(L.img){
       c.fillStyle='#ffffff12'; c.fillRect(0,0,w,h);
       c.shadowBlur=0; c.drawImage(L.img,0,0,w,h);
     }else{ c.fillStyle=L.flat; c.fillRect(0,0,w,h); }
@@ -1200,8 +1529,8 @@ function drawLayers(c,cv,px){
 }
 
 function drawPlate(c,cv,px){
-  const b=S.box, st=geomStack(), PK=platePack(), F=(S.hw.base==='feet')?footDims():null;
-  const m=(270-BED)/2*px;
+  const b=S.box, st=geomStack(), BED=bedSize(), PK=platePack(), F=(S.hw.base==='feet')?footDims():null;
+  const m=(BED*1.055-BED)/2*px;
   c.fillStyle='#e7e9ec'; c.fillRect(m,m,BED*px,BED*px);
   c.strokeStyle='#0000000f';
   for(let i=16;i<BED;i+=16){ c.beginPath();c.moveTo(m+i*px,m);c.lineTo(m+i*px,m+BED*px);c.stroke();
@@ -1216,20 +1545,18 @@ function drawPlate(c,cv,px){
     c.strokeRect(m+it.x*px,m+it.y*px,it.w*px,it.h*px);
     c.fillStyle='#2a2e35'; c.fillText(lab, m+it.x*px+6, m+it.y*px+16);
   };
-  box(PK.items.panel,'#ff2d8f26','#ff2d8f',`แผ่นหน้า+กรอบ ${b.W}×${b.H} · สูง ${(st.frameZ0+b.depth).toFixed(1)} มม.`);
-  box(PK.items.back ,'#3ba0ff26','#3ba0ff',`แผ่นหลัง ${b.W}×${b.H} · หนา ${b.back} มม.`);
+  box(PK.items.panel,'#ff2d8f26','#ff2d8f',
+      `แผ่นหน้า+กรอบ ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} · สูง ${(st.frameZ0+b.depth).toFixed(1)} มม.`);
+  box(PK.items.back ,'#3ba0ff26','#3ba0ff',`แผ่นหลัง หนา ${b.back} มม.`);
   if(F){
     box(PK.items.foot0,'#31c48d26','#31c48d','ขาตั้ง 1');
     box(PK.items.foot1,'#31c48d26','#31c48d','ขาตั้ง 2');
-    const it=PK.items.foot0;
-    c.fillStyle='#5b626d'; c.font='11px sans-serif';
-    c.fillText(`${F.w}×${F.d.toFixed(0)}×${F.h.toFixed(0)} มม. · ร่อง ${F.slot.toFixed(1)} มม.`, m+it.x*px+2, m+(it.y+it.h)*px+14);
   }
-  c.font='12px sans-serif';
-  c.fillStyle=PK.fits?'#5b626d':'#c62b39'; c.textAlign='right';
-  c.fillText(PK.fits?`ใช้พื้นที่ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} จาก 256 × 256 มม.`
-                    :`เกินฐานพิมพ์ — ต้องการ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} มม.`,
-             m+BED*px-6, m+BED*px-8);
+  c.font='12px sans-serif'; c.textAlign='right';
+  c.fillStyle=PK.fits?'#5b626d':'#c62b39';
+  c.fillText(PK.fits?`ใช้พื้นที่ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} จาก ${BED} × ${BED} มม.`
+                    :`เกินฐาน ${BED} มม. — ต้องการ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} มม. (แยกพิมพ์คนละรอบได้)`,
+           m+BED*px-6, m+BED*px-8);
 }
 
 /* ══════════ PALETTE UI ══════════ */
@@ -1238,11 +1565,16 @@ function renderPalette(){
   S.pal.forEach((p,i)=>{
     const pct=G&&!G.empty? (p.cells/(G.gw*G.gh)*100):0;
     const d=document.createElement('div'); d.className='it';
+    const ring = p.role==='ring' ? S.rings[p.ringIndex] : null;
     d.innerHTML=`<span class="sw" style="background:${p.hex}"><input type="color" value="${p.hex}"></span>
-      <span class="nm"><b>${i===0?'พื้นหลัง':'สี '+i}</b><i>${nearestFilament(p.hex)} · ${p.hex.toUpperCase()} · ${pct.toFixed(1)}%</i></span>
+      <span class="nm"><b>${p.name||('สี '+i)}${ring?` <span class="badge">${ring.w} มม.</span>`:''}</b>`+
+      `<i>${nearestFilament(p.hex)} · ${p.hex.toUpperCase()} · ${pct.toFixed(1)}%</i></span>
       <button class="glowbtn ${p.glow?'on':''}">${p.glow?'สว่าง':'ทึบ'}</button>`;
-    d.querySelector('input').addEventListener('input',e=>{ p.hex=e.target.value; p.locked=true; schedule(false); });
-    d.querySelector('.glowbtn').addEventListener('click',()=>{ p.glow=!p.glow; schedule(false); });
+    d.querySelector('input').addEventListener('input',e=>{
+      if(ring) ring.hex=e.target.value; else { p.hex=e.target.value; p.locked=true; }
+      schedule(false); });
+    d.querySelector('.glowbtn').addEventListener('click',()=>{
+      if(ring) ring.glow=!ring.glow; else p.glow=!p.glow; schedule(false); });
     el.appendChild(d);
   });
 }
@@ -1251,12 +1583,31 @@ function renderPalette(){
 function runChecks(){
   const out=[], b=S.box, st=geomStack();
   const add=(t,m)=>out.push({t,m});
-  let art=0; for(let i=0;i<G.owner.length;i++) if(G.owner[i]) art++;
-  if(!art) add('err','ยังไม่มีลวดลาย — พิมพ์ข้อความหรืออัปโหลดโลโก้ก่อน');
-  const PK=platePack();
-  if(b.W>BED||b.H>BED) add('err',`แผ่นหน้า ${b.W}×${b.H} มม. เกินฐานพิมพ์ ${BED}×${BED} — ต้องลดขนาดหรือแบ่งชิ้น`);
-  else if(!PK.fits) add('warn',`วางทุกชิ้นพร้อมกันไม่พอ (ต้องการ ${PK.maxX.toFixed(0)}×${PK.maxY.toFixed(0)} มม.) — แยกพิมพ์คนละรอบได้`);
-  else if(b.W>250||b.H>250) add('warn','ขนาดชิดขอบฐานพิมพ์มาก เผื่อ brim ไม่พอ');
+  let art=0; for(let i=0;i<G.owner.length;i++){ const o=G.owner[i]; if(o>0&&o<=G.K) art++; }
+  if(!art){
+    const d=S.src.diag;
+    if(S.src.mode!=='image'||!S.src.imgData) add('err','ยังไม่มีลวดลาย — พิมพ์ข้อความหรืออัปโหลดโลโก้ก่อน');
+    else if(d&&d.tainted) add('err','เบราว์เซอร์ไม่ยอมให้อ่านพิกเซลของรูปนี้ — ลองเซฟเป็น PNG แล้วอัปโหลดใหม่');
+    else if(d&&d.raw===0) add('err',`ไฟล์ ${S.src.imgName||'นี้'} เปิดได้แต่วาดออกมาว่างเปล่า — เนื้อรูปไม่ถูกเรนเดอร์`);
+    else if(d&&d.bgAte) add('err','ลบพื้นหลังตัดทั้งภาพออกหมด — ลดค่า “ความคลาดสี” ลง หรือปิดตัวเลือกลบพื้นหลัง');
+    else add('err','แปลงรูปเป็นชั้นสีไม่ได้ — ลองปิดลบพื้นหลัง หรือใช้ไฟล์ PNG พื้นใส');
+  }
+  if(S.src.mode==='image'&&S.src.svgNotes) for(const n of S.src.svgNotes) add(n.t,n.m);
+  if(S.src.mode==='image'&&S.src.diag&&S.src.diag.bgAte&&art)
+    add('warn','ลบพื้นหลังตัดภาพหมด ระบบจึงข้ามขั้นนั้นให้ — ปรับ “ความคลาดสี” แล้วลองใหม่ได้');
+  const PK=platePack(), BED=bedSize();
+  if(art){
+    const nComp=G.comp?G.comp.n:1;
+    add('ok',`ขนาดชิ้นงานจริง ${PB.w.toFixed(0)} × ${PB.h.toFixed(0)} × ${st.total.toFixed(1)} มม.`+
+             (nComp>1?` · แยกเป็น ${nComp} ชิ้นที่ไม่ติดกัน พิมพ์ทีละชิ้นแล้วประกอบได้`:''));
+    if(PB.w>BED||PB.h>BED){
+      const nx=Math.ceil(PB.w/BED), ny=Math.ceil(PB.h/BED);
+      add('warn',`แผ่นหน้ากว้าง ${PB.w.toFixed(0)} × สูง ${PB.h.toFixed(0)} มม. ใหญ่กว่าฐาน ${BED} มม. — `+
+        (G.comp&&G.comp.n>1? `แต่งานแยกเป็น ${G.comp.n} ชิ้นอยู่แล้ว พิมพ์ทีละชิ้นได้`
+                           : `ต้องหั่นเป็นอย่างน้อย ${nx}×${ny} ท่อนแล้วต่อกัน หรือย่อขนาดลง`));
+    }else if(!PK.fits)
+      add('warn',`วางทุกชิ้นพร้อมกันบนฐาน ${BED} มม. ไม่พอ (ต้องการ ${PK.maxX.toFixed(0)}×${PK.maxY.toFixed(0)}) — แยกพิมพ์คนละรอบได้`);
+  }
   if(st.frameZ0+b.depth>250) add('warn','ความสูงตอนพิมพ์เกิน 250 มม. เช็คระยะ Z ของเครื่องก่อน');
   const used=S.pal.filter(p=>p.cells>0).length;
   if(used>4) add('warn',`ใช้ ${used} สีในแผ่นเดียว เกิน 4 ช่อง AMS — ต้องต่อ AMS ตัวที่ 2 หรือเปลี่ยนเส้นกลางคัน`);
@@ -1264,13 +1615,32 @@ function runChecks(){
   if(st.bgT>b.bgT+0.001) add('warn',`ปรับความหนาพื้นทึบขึ้นเป็น ${st.bgT.toFixed(1)} มม. อัตโนมัติ เพราะต้องหนากว่าชั้นสี`);
   if(b.bgT<1.0) add('warn','พื้นทึบบางกว่า 1.0 มม. แสงอาจทะลุพื้นหลัง เห็นเป็นฝ้า');
   if(st.diff<0.4) add('warn','ชั้นกระจายแสงบาง อาจเห็นเป็นจุดไฟ LED แทนที่จะเป็นแสงนวล');
-  /* artwork reaching into the frame band */
-  const f=b.frame, px=G.px; let touch=0;
-  for(let y=0;y<G.gh;y++) for(let x=0;x<G.gw;x++){
-    const mx=(x+0.5)*px,my=(y+0.5)*px;
-    if((mx<f||my<f||mx>b.W-f||my>b.H-f) && S.pal[G.owner[y*G.gw+x]].glow) touch++;
+  /* ส่วนที่ให้แสงผ่านล้ำเข้าไปในแนวผนังกรอบ */
+  if(art&&G.panel&&G.edtIn){
+    const fwc=b.frame/G.px; let touch=0, glowTot=0;
+    for(let i=0;i<G.owner.length;i++){
+      const o=G.owner[i];
+      if(o===255||!S.pal[o]||!S.pal[o].glow) continue;
+      glowTot++; if(G.edtIn[i]<=fwc) touch++;
+    }
+    if(touch>Math.max(50,glowTot*0.02))
+      add('warn', S.shape.mode==='contour'
+        ? `ส่วนที่ให้แสงผ่านชนแนวผนังกรอบ (${(touch/Math.max(1,glowTot)*100).toFixed(0)}% ของพื้นที่สว่าง) — แสงจะรั่วออกข้าง เพิ่มความกว้างขอบชั้นนอกหรือทำให้ขอบชั้นนอกทึบ`
+        : 'ลวดลายส่วนที่ให้แสงผ่านล้ำเข้าไปในแนวกรอบ — แสงจะรั่วออกข้างกล่อง ลดขนาดหรือขยับเข้ามา');
   }
-  if(touch>20) add('warn','ลวดลายส่วนที่ให้แสงผ่านล้ำเข้าไปในแนวกรอบ — แสงจะรั่วออกข้างกล่อง ลดขนาดหรือขยับเข้ามา');
+  if(art&&panelClipped())
+    add('warn','รูปทรงชนขอบพื้นที่ทำงาน — ขอบด้านนั้นถูกตัดเรียบ ขยายพื้นที่ทำงานหรือลดขนาดลวดลาย');
+  /* โหมดรูปทรง: เตือนเรื่องขอบและเสาสกรู */
+  if(S.shape.mode==='contour'&&art){
+    const R=activeRings(), tot=R.reduce((a,r)=>a+(+r.w),0);
+    if(tot<b.frame+1.2)
+      add('err',`ขอบรวม ${tot.toFixed(1)} มม. บางกว่าผนังกรอบ ${b.frame} มม. — ผนังกรอบจะกินเข้าไปในลวดลาย เพิ่มความกว้างขอบ`);
+    else if(tot<b.frame+3)
+      add('warn',`ขอบรวม ${tot.toFixed(1)} มม. เหลือที่ให้แสงน้อย แนะนำอย่างน้อย ${(b.frame+3).toFixed(1)} มม.`);
+    if(LAST&&LAST.bossCount===0&&jointSpec().screw)
+      add('warn','หาที่วางเสาสกรูไม่ได้เลย เนื้อบางเกินไปทุกจุด — ลดขนาดเสา เพิ่มความกว้างขอบ หรือเปลี่ยนเป็นยึดกาว');
+    else if(LAST&&LAST.bossCount) add('ok',`วางเสาสกรูอัตโนมัติ ${LAST.bossCount} จุด`);
+  }
   /* thin features */
   for(let k=1;k<S.pal.length;k++){
     if(!S.pal[k].cells) continue;
@@ -1570,7 +1940,7 @@ function glBuild(){
     V3.buf.push({p:bp,n:bn,count:t*3,M});
   }
   /* กริดฐานพิมพ์ (เส้น) */
-  const L=[]; const H=BED/2;
+  const L=[]; const BED=bedSize(), H=BED/2;
   for(let i=0;i<=BED;i+=16){ L.push(-H+i,0,-H, -H+i,0,H, -H,0,-H+i, H,0,-H+i); }
   const g=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,g); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(L),gl.STATIC_DRAW);
   V3.grid={b:g,count:L.length/3};
@@ -1581,14 +1951,14 @@ function glBuild(){
 /* ---------- per-part transform per mode ---------- */
 const EXPLODE={color:46,diffuser:28,frame:0,back:-38,foot:0};
 function partMatrix(M,mode){
-  const b=S.box, st=geomStack(), W=b.W, H=b.H;
+  const st=geomStack(), W=PB.w||S.box.W, H=PB.h||S.box.H, BED=bedSize();
   const ex = mode==='exp';
   if(mode==='plate'){
     const px=(M.place?M.place.x:0), py=(M.place?M.place.y:0);
     return mkM(1,0,0, 0,0,1, 0,-1,0, px-BED/2, 0, BED/2-py);
   }
   if(M.kind==='foot'){
-    const F=M.foot, fx = (M.footIndex? W*0.76 : W*0.24) - F.w/2;
+    const F=M.foot, fx = (M.asmX!==undefined? M.asmX : (M.footIndex? W*0.76:W*0.24)-F.w/2);
     const dy = ex? -46 : 0;
     return mkM(1,0,0, 0,0,1, 0,-1,0,
                fx-W/2, -H/2-F.plate+dy, -st.total/2+F.d/2);
@@ -1617,7 +1987,7 @@ function sceneBounds(mode){
           T[2]*px+T[6]*py+T[10]*pz+T[14]);
     }
   }
-  if(mode==='plate'){ eat(-BED/2,0,-BED/2); eat(BED/2,0,BED/2); }
+  if(mode==='plate'){ const B2=bedSize()/2; eat(-B2,0,-B2); eat(B2,0,B2); }
   if(mx[0]<mn[0]){ mn[0]=mn[1]=mn[2]=-50; mx[0]=mx[1]=mx[2]=50; }
   const r=Math.max(20, 0.5*Math.hypot(mx[0]-mn[0],mx[1]-mn[1],mx[2]-mn[2]));
   const out={mn,mx,c:[(mn[0]+mx[0])/2,(mn[1]+mx[1])/2,(mn[2]+mx[2])/2],r};
@@ -1750,6 +2120,11 @@ const BIND=[
  ['colN','art.n','num','colNV',v=>v,''],
  ['colSmooth','art.smooth','num','colSmoothV',v=>v,''],
  ['glowMode','art.glowMode','str',null,null,'g'],
+ ['shapeMode','shape.mode','str',null,null,''],
+ ['fillHoles','shape.fillHoles','bool',null,null,''],
+ ['ring0w','rings.0.w','num','ring0wV',v=>v+' มม.',''],
+ ['ring1w','rings.1.w','num','ring1wV',v=>v+' มม.',''],
+ ['expBed','exp.bed','num',null,null,''],
  ['bW','box.W','num',null,null,''],
  ['bH','box.H','num',null,null,''],
  ['bDepth','box.depth','num','bDepthV',v=>v+' มม.',''],
@@ -1812,12 +2187,15 @@ function refreshQuote(){
   if(!G||G.empty){ $('#quoteTbl').innerHTML=''; return; }
   const parts=buildParts(true);
   LAST=LAST||{}; LAST.parts=parts.length;
+  const fm=parts.find(p=>p.kind==='frame');
+  LAST.bossCount = fm? (fm.bossCount||0) : 0;
   const E=estimate(parts); LAST.E=E;
   renderQuote(E);
 }
 function updateBadges(){
   const b=S.box, st=geomStack();
-  $('#dimBadge').textContent=`${b.W} × ${b.H} × ${st.total.toFixed(1)} มม.`;
+  const w=(PB&&!PB.empty)?PB.w:b.W, h=(PB&&!PB.empty)?PB.h:b.H;
+  $('#dimBadge').textContent=`${w.toFixed(0)} × ${h.toFixed(0)} × ${st.total.toFixed(1)} มม.`;
   $('#colBadge').textContent=`${S.pal.filter(p=>p.cells>0).length} สี`;
   $('#triBadge').textContent= LAST&&LAST.tris? nf(LAST.tris)+' สามเหลี่ยม' : (LAST&&LAST.E? nf(LAST.E.grams,1)+' ก. · '+nf(LAST.E.hrs,1)+' ชม.':'—');
   const st2=[];
@@ -1829,6 +2207,7 @@ function updateBadges(){
     st2.push(`เปลี่ยนสี <b>${E.changes}</b> ครั้ง`);
     st2.push(`ราคาขาย <b>${nf(E.price,0)} ฿</b>/ชิ้น`);
   }
+  if(G&&G.comp&&G.comp.n>1) st2.push(`แยกเป็น <b>${G.comp.n}</b> ชิ้น`);
   st2.push(`ความละเอียดกริด <b>${S.exp.res} มม.</b>`);
   $('#status').innerHTML=st2.join(' · ');
 }
@@ -1912,19 +2291,41 @@ function wire(){
   });
 
   /* image */
+  const useImage=(src,file,label,notes)=>{
+    const im=new Image();
+    im.onload=()=>{
+      S.src.imgData=im; S.src.imgSrc=src; S.src.imgName=file.name;
+      S.src.svgNotes=notes||null; S.src.diag=null;
+      S.src.mode='image'; if(S.art.n<2) S.art.n=2;
+      $('#imgDrop').innerHTML=`<b>${file.name}</b><br><span style="font-size:11px">${label} · คลิกเพื่อเปลี่ยน</span>`;
+      pushToUI(); schedule(true);
+    };
+    im.onerror=()=>toast('เปิดรูปไม่ได้ — ไฟล์อาจเสียหรือไม่ใช่รูปภาพ');
+    im.src=src;
+  };
   const loadImg=file=>{
     if(!file) return;
+    const isSVG = /svg/i.test(file.type) || /\.svg$/i.test(file.name);
     const rd=new FileReader();
-    rd.onload=()=>{
-      const im=new Image();
-      im.onload=()=>{ S.src.imgData=im; S.src.imgSrc=rd.result; S.src.imgName=file.name;
-        S.src.mode='image'; if(S.art.n<2) S.art.n=2;
-        $('#imgDrop').innerHTML=`<b>${file.name}</b><br><span style="font-size:11px">${im.naturalWidth}×${im.naturalHeight} px · คลิกเพื่อเปลี่ยน</span>`;
-        pushToUI(); schedule(true); };
-      im.onerror=()=>toast('เปิดรูปไม่ได้');
-      im.src=rd.result;
-    };
-    rd.readAsDataURL(file);
+    rd.onerror=()=>toast('อ่านไฟล์ไม่ได้');
+    if(isSVG){
+      /* SVG อ่านเป็นข้อความก่อน เพื่อบังคับขนาดให้คมและตรวจปัญหาที่ทำให้วาดออกมาว่าง */
+      rd.onload=()=>{
+        const p=prepareSVG(rd.result);
+        if(p.error){ toast(p.error); return; }
+        if(p.notes&&p.notes.some(n=>n.t==='err')) toast('SVG นี้มีปัญหา ดูรายละเอียดในหัวข้อ 7 ตรวจก่อนพิมพ์');
+        useImage(p.url,file,`${p.w}×${p.h} · เวกเตอร์`,p.notes);
+      };
+      rd.readAsText(file);
+    }else{
+      rd.onload=()=>{
+        const im0=new Image();
+        im0.onload=()=>useImage(rd.result,file,`${im0.naturalWidth}×${im0.naturalHeight} px`,null);
+        im0.onerror=()=>toast('เปิดรูปไม่ได้');
+        im0.src=rd.result;
+      };
+      rd.readAsDataURL(file);
+    }
   };
   $('#imgDrop').addEventListener('click',()=>$('#imgFile').click());
   $('#imgFile').addEventListener('change',e=>loadImg(e.target.files[0]));
@@ -2002,7 +2403,8 @@ function boot(){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 window.__LB={get S(){return S;}, get G(){return G;}, buildParts, stlOf, make3mf, estimate, recompute, defaults,
-             jointSpec, partMatrix, footDims, platePack,
+             jointSpec, partMatrix, footDims, platePack, panelBounds, activeRings, bedSize, bossPoints, bottomInfo, panelClipped, edt,
+             get PB(){return PB;}, get PARTS(){return PARTS;},
              set S(v){S=v;}, rebuildSource, buildGrid, geomStack};
 </script>
 </body>
