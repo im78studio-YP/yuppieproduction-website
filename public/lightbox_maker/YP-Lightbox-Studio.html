@@ -430,14 +430,22 @@ PRODUCTION</textarea>
     <div class="body">
       <div class="row"><label>ความละเอียด</label>
         <select id="expRes" class="grow">
-          <option value="0.4">หยาบ 0.4 มม. — ขอบเป็นขั้นชัด ไฟล์เล็ก</option>
+          <option value="0.4">หยาบ 0.4 มม. — เร็วที่สุด รายละเอียดเล็กหาย</option>
           <option value="0.25">ปกติ 0.25 มม.</option>
           <option value="0.15" selected>ละเอียด 0.15 มม. (แนะนำ)</option>
-          <option value="0.1">ละเอียดสูงสุด 0.1 มม. — ขอบเนียนที่สุด ไฟล์ใหญ่</option>
+          <option value="0.1">ละเอียดสูงสุด 0.1 มม. — ช้าที่สุด</option>
         </select></div>
-      <p class="hint" style="margin:6px 0 10px">ค่านี้คือขนาดช่องกริดที่ใช้แปลงลวดลายเป็นเนื้อสามมิติ
-      <b>ยิ่งเล็ก ขอบยิ่งเนียน</b> เพราะขั้นบันไดที่ขอบมีขนาดเท่ากับค่านี้พอดี<br>
-      อ้างอิงจากโลโก้ 186 มม.: 0.25 → 7 หมื่นสามเหลี่ยม 0.5 MB · 0.15 → 1.2 แสน 0.9 MB · 0.1 → 1.9 แสน 1.3 MB</p>
+      <div class="row"><label>ขอบชิ้นงาน</label><input type="checkbox" id="expSmooth" checked>
+        <span class="unit">ลากเส้นขอบให้เนียน (แนะนำ)</span></div>
+      <p class="hint" style="margin:6px 0 10px"><b>ลากเส้นขอบให้เนียน</b> — ระบบหาเส้นขอบจริงในระดับที่ละเอียดกว่าช่องกริด
+      แล้วขึ้นรูปตามเส้นนั้น ไม่ใช่ต่อกล่องสี่เหลี่ยมทีละช่อง <b>ขอบจึงไม่เป็นขั้นบันไดอีกต่อไป</b><br>
+      ได้ของแถมสองอย่าง: <b>สามเหลี่ยมน้อยลง ~3 เท่า</b> (โลโก้ YP: 1.4 แสน → 4.3 หมื่น · 3MF 1.0 MB → 0.37 MB)
+      สไลซ์เร็วขึ้นมาก · และ <b>ขนาดตรงขึ้น</b> เพราะแบบกล่องสี่เหลี่ยมเนื้อจะล้นออกครึ่งช่องทุกด้าน
+      ชิ้นงานเลยอ้วนกว่าที่ตั้งไว้ 1 ช่อง และกินระยะเผื่อสวมของบ่าไปด้วย
+      (ที่กริด 0.15 กินไป 0.15 จาก 0.2 เหลือจริงแค่ 0.05 มม.)<br>
+      ปิดตัวเลือกนี้เพื่อกลับไปใช้วิธีเดิม ไว้เทียบผลเท่านั้น<br>
+      <b>ความละเอียด</b> ด้านบนตอนนี้คุมแค่ <i>ความคมของรายละเอียดเล็กๆ ในโลโก้</i> และความเร็ว
+      ไม่ได้คุมความเนียนของขอบแล้ว — ขอบเนียนเท่ากันทุกความละเอียด</p>
       <div class="row"><label>รูปแบบ</label>
         <select id="expFmt" class="grow">
           <option value="3mf" selected>3MF รวมทุกชิ้น (แนะนำ)</option>
@@ -497,7 +505,7 @@ function defaults(){ return {
        joint:'snap', lipH:10, lipW:2, lipCl:0.2, bossW:8, screwDepth:10,
        snapBarb:0.45, snapW:12 },
   price:{ qty:1, fil:750, mach:25, laborMin:25, laborRate:300, led:150, waste:8, margin:45, flush:120 },
-  exp:{ res:0.15, fmt:'3mf', layerH:0.2, bed:256 },
+  exp:{ res:0.15, fmt:'3mf', layerH:0.2, bed:256, smooth:true },
   ui:{ showFrame:true, showGrid:false, view:'design' }
 };}
 let S = defaults();
@@ -1028,6 +1036,573 @@ function thinRatio(mask,gw,gh){
   return tot? solid/tot : 1;
 }
 /* ══════════════════════════════════════════════════════════════
+   ขอบเนียน — แปลง mask เป็นรูปหลายเหลี่ยม แล้วอัดขึ้นรูปเป็นปริซึม
+
+   ของเดิมรวม mask เป็นสี่เหลี่ยมแล้วอัดเป็นกล่อง ขอบจึงตั้งฉากเสมอ
+   เห็นเป็นขั้นบันไดขนาดเท่าความละเอียดกริดพอดี
+
+   ของใหม่:
+     1) signed distance field ของ mask (ลบ = อยู่ในเนื้อ)
+        ใช้ EDT จริง ไม่ใช่การเบลอ เพราะขอบที่เอียงน้อยๆ (เช่น ลาด 1:20)
+        การเบลอจะยังเหลือฟันเลื่อยเป็นคาบ ส่วน EDT ให้เส้นตรงเป๊ะ
+     2) marching squares ที่ค่า 0 พร้อม linear interpolation → ละเอียดกว่าเซลล์
+     3) เกลี่ยเส้นเบาๆ (คงมุมแหลมไว้) แล้วลดจำนวนจุดด้วย Douglas–Peucker
+     4) ผนังข้าง = quad ต่อหนึ่งเส้น · ฝาบน/ล่าง = earcut
+        ขอบฝาเป็นเส้นเดียวกับผนังเป๊ะ จึงไม่มี T-junction เมชปิดสนิท
+
+   ผลพลอยได้ที่สำคัญ: เส้นขอบตกที่ "ขนาดตามที่ตั้งจริง"
+   แบบกล่องสี่เหลี่ยมเนื้อจะล้นออกไปครึ่งเซลล์ทุกด้าน ชิ้นงานจึงอ้วนกว่าที่ตั้งไว้ 1 เซลล์
+   และกินระยะเผื่อสวมของบ่าไปด้วย (ที่ 0.15 มม. กินไป 0.15 จาก 0.2 เหลือจริงแค่ 0.05)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ---------- signed distance field ในหน่วย "เซลล์" ---------- */
+/* ครอบเฉพาะกรอบของ mask + ขอบเผื่อ จึงเรียกได้หลายสิบครั้งโดยไม่ช้า */
+function sdfOf(mask,gw,gh,box){
+  let mx0=1e9,my0=1e9,mx1=-1e9,my1=-1e9;
+  const bx0=box?Math.max(0,box[0]):0, by0=box?Math.max(0,box[1]):0;
+  const bx1=box?Math.min(gw-1,box[2]):gw-1, by1=box?Math.min(gh-1,box[3]):gh-1;
+  for(let y=by0;y<=by1;y++){ const r=y*gw;
+    for(let x=bx0;x<=bx1;x++) if(mask[r+x]){
+      if(x<mx0)mx0=x; if(x>mx1)mx1=x; if(y<my0)my0=y; if(y>my1)my1=y; } }
+  if(mx1<mx0) return null;
+  const M=2;
+  const gx0=Math.max(0,mx0-M), gy0=Math.max(0,my0-M);
+  const gx1=Math.min(gw-1,mx1+M), gy1=Math.min(gh-1,my1+M);
+  const W=gx1-gx0+3, H=gy1-gy0+3;
+  const x0=gx0-1, y0=gy0-1;
+  const inb=new Uint8Array(W*H);
+  for(let y=0;y<H;y++){
+    const gyy=y0+y;
+    if(gyy<0||gyy>=gh) continue;
+    const src=gyy*gw, dst=y*W;
+    for(let x=0;x<W;x++){
+      const gxx=x0+x;
+      if(gxx<0||gxx>=gw) continue;
+      if(mask[src+gxx]) inb[dst+x]=1;
+    }
+  }
+  /* ต้องการค่าแม่นเฉพาะแถบใกล้ขอบ (|d| ≤ R) เท่านั้น เพราะ marching squares
+     ใช้ interpolate แค่ตรงที่เครื่องหมายเปลี่ยน ที่เหลือขอแค่เครื่องหมายถูก
+     ⇒ ค้นเพื่อนบ้านในรัศมี R แบบตรงๆ เร็วกว่า EDT เต็มกริดหลายเท่า */
+  const R=3, FAR=R+1;
+  const sd=new Float32Array(W*H);
+  for(let i=0;i<sd.length;i++) sd[i]= inb[i]? -FAR : FAR;
+  /* หาเซลล์ที่ติดขอบก่อน แล้วค่อยคำนวณระยะจริงเฉพาะบริเวณนั้น */
+  const band=[];
+  for(let y=1;y<H-1;y++){
+    const r=y*W;
+    for(let x=1;x<W-1;x++){
+      const i=r+x, v=inb[i];
+      if(v!==inb[i-1]||v!==inb[i+1]||v!==inb[i-W]||v!==inb[i+W]) band.push(i);
+    }
+  }
+  const need=new Uint8Array(W*H);
+  for(const i of band){
+    const bx=i%W, by=(i-bx)/W;
+    const yA=Math.max(0,by-R), yB=Math.min(H-1,by+R);
+    const xA=Math.max(0,bx-R), xB=Math.min(W-1,bx+R);
+    for(let y=yA;y<=yB;y++){ const r=y*W; for(let x=xA;x<=xB;x++) need[r+x]=1; }
+  }
+  for(let j=0;j<sd.length;j++){
+    if(!need[j]) continue;
+    const jx=j%W, jy=(j-jx)/W, want=inb[j]?0:1;
+    let best=FAR*FAR;
+    for(let dy=-R;dy<=R;dy++){
+      const y=jy+dy; if(y<0||y>=H) continue;
+      const rr=y*W, dy2=dy*dy;
+      if(dy2>=best) continue;
+      for(let dx=-R;dx<=R;dx++){
+        const x=jx+dx; if(x<0||x>=W) continue;
+        const d2=dy2+dx*dx;
+        if(d2>=best) continue;
+        if((inb[rr+x]?1:0)===want) best=d2;
+      }
+    }
+    const d=Math.sqrt(best);
+    sd[j]= inb[j]? -d : d;
+  }
+  /* ── เกลี่ยสนามระยะก่อนลากเส้น ──
+     EDT วัดระยะถึง "จุดกึ่งกลางเซลล์" ที่ใกล้ที่สุด ค่าที่ได้จึงเป็นขั้นๆ (1, √2, 2, √5…)
+     ขอบที่เอียงเล็กน้อยจะได้ ±1 เท่ากันหมดทุกเซลล์ริมขอบ เส้นที่ลากออกมาเลยยังเป็นฟันเลื่อย
+     สนามระยะรอบเส้นตรงเป็นฟังก์ชันคี่รอบเส้นนั้น การเกลี่ยแบบสมมาตรจึงไม่ขยับเส้นศูนย์
+     แต่ไปเฉลี่ยความคลาดจากการปัดเป็นเซลล์ทิ้ง — ได้เส้นตรงจริงๆ
+     (เกลี่ยที่ "สนามระยะ" ไม่ใช่ที่ mask จึงลบมุมแหลมน้อยกว่ามาก) */
+  const raw=Float32Array.from(sd);
+  const tmp=new Float32Array(W*H);
+  for(let pass=0;pass<2;pass++){
+    for(let y=0;y<H;y++){ const r=y*W;
+      for(let x=0;x<W;x++){
+        const a=sd[r+Math.max(0,x-2)], b=sd[r+Math.max(0,x-1)], c=sd[r+x];
+        const d2=sd[r+Math.min(W-1,x+1)], e=sd[r+Math.min(W-1,x+2)];
+        tmp[r+x]=(a+2*b+3*c+2*d2+e)/9;
+      } }
+    for(let y=0;y<H;y++){ const r=y*W;
+      const rm2=Math.max(0,y-2)*W, rm1=Math.max(0,y-1)*W;
+      const rp1=Math.min(H-1,y+1)*W, rp2=Math.min(H-1,y+2)*W;
+      for(let x=0;x<W;x++)
+        sd[r+x]=(tmp[rm2+x]+2*tmp[rm1+x]+3*tmp[r+x]+2*tmp[rp1+x]+tmp[rp2+x])/9;
+    }
+  }
+  /* ห้ามการเกลี่ยเปลี่ยน "ใน/นอก" ของเซลล์ใดเลย ไม่งั้นลายเส้นบางๆ จะถูกกลืนหายไปทั้งเส้น
+     (เคยเจอ: ชั้นสีที่บางกว่า 4 ช่อง หายเกลี้ยงทั้งชั้น) */
+  for(let i=0;i<sd.length;i++){
+    const r=raw[i], b=sd[i];
+    if((r<0)!==(b<0) || b===0) sd[i] = r<0? -0.05 : 0.05;
+  }
+  return {sd,W,H,x0,y0};
+}
+
+/* ---------- marching squares ----------
+   วิ่ง CCW รอบสี่มุมของช่อง: จุดที่เปลี่ยน "ใน→นอก" คือหัวเส้น
+   จุดที่เปลี่ยน "นอก→ใน" คือหางเส้น ⇒ เดินตามเส้นแล้วเนื้ออยู่ทางซ้ายเสมอ */
+function msLoops(F,iso){
+  const {sd,W,H}=F;
+  const startOf=new Map();
+  const ipt=(a,b,x,y,horiz)=>{
+    let t=(iso-a)/((b-a)||1e-9);
+    if(!(t>=0)) t=0; else if(t>1) t=1;
+    return horiz? [x+t,y] : [x,y+t];
+  };
+  for(let y=0;y<H-1;y++) for(let x=0;x<W-1;x++){
+    const ia=y*W+x, ib=ia+1, ic=ia+W+1, id=ia+W;
+    const sa=sd[ia],sb=sd[ib],sc=sd[ic],sq=sd[id];
+    const A=sa<iso,B=sb<iso,C=sc<iso,D=sq<iso;
+    if(A===B&&B===C&&C===D) continue;
+    const starts=[], ends=[];
+    /* ขอบล่าง a→b · ขวา b→c · บน d→c · ซ้าย a→d */
+    if(A!==B){ const e=(y*W+x)*2,       p=ipt(sa,sb,x,y,true);      (A?starts:ends).push([e,p]); }
+    if(B!==C){ const e=(y*W+x+1)*2+1,   p=ipt(sb,sc,x+1,y,false);   (B?starts:ends).push([e,p]); }
+    if(C!==D){ const e=((y+1)*W+x)*2,   p=ipt(sq,sc,x,y+1,true);    (C?starts:ends).push([e,p]); }
+    if(D!==A){ const e=(y*W+x)*2+1,     p=ipt(sa,sq,x,y,false);     (D?starts:ends).push([e,p]); }
+    if(starts.length===1){ startOf.set(starts[0][0],{e:ends[0][0],p:starts[0][1]}); continue; }
+    if(starts.length===2){
+      /* อานม้า — ตัดสินด้วยค่ากลางช่องว่าเนื้อเชื่อมถึงกัน หรือช่องว่างเชื่อมถึงกัน */
+      const cIn=((sa+sb+sc+sq)/4)<iso;
+      const pair = cIn? [[0,0],[1,1]] : [[0,1],[1,0]];
+      for(const [si,ei] of pair) startOf.set(starts[si][0],{e:ends[ei][0],p:starts[si][1]});
+    }
+  }
+  const loops=[], used=new Set();
+  for(const s0 of startOf.keys()){
+    if(used.has(s0)) continue;
+    const pts=[]; let k=s0, guard=0;
+    while(!used.has(k)){
+      const S=startOf.get(k); if(!S) break;
+      used.add(k); pts.push(S.p); k=S.e;
+      if(++guard>3e6) break;
+    }
+    if(pts.length>=3) loops.push(pts);
+  }
+  return loops;
+}
+
+/* ---------- เกลี่ยเส้น (คงมุมแหลม) ---------- */
+function smoothLoop(P,passes){
+  const n=P.length; if(n<8) return P;
+  const COS=Math.cos(40*Math.PI/180);
+  let A=P;
+  for(let it=0;it<passes;it++){
+    const B=new Array(n);
+    for(let i=0;i<n;i++){
+      const p=A[(i-1+n)%n], c=A[i], q=A[(i+1)%n];
+      const ax=c[0]-p[0], ay=c[1]-p[1], bx=q[0]-c[0], by=q[1]-c[1];
+      const la=Math.hypot(ax,ay), lb=Math.hypot(bx,by);
+      if(la<1e-9||lb<1e-9){ B[i]=c; continue; }
+      if((ax*bx+ay*by)/(la*lb) < COS){ B[i]=c; continue; }   // มุมหักมาก = มุมแหลมของงาน
+      B[i]=[(p[0]+2*c[0]+q[0])/4, (p[1]+2*c[1]+q[1])/4];
+    }
+    A=B;
+  }
+  return A;
+}
+
+/* ---------- Douglas–Peucker บนวงปิด ---------- */
+function _segD2(p,a,b){
+  let x=a[0],y=a[1], dx=b[0]-x, dy=b[1]-y;
+  if(dx||dy){ const t=((p[0]-x)*dx+(p[1]-y)*dy)/(dx*dx+dy*dy);
+    if(t>1){x=b[0];y=b[1];} else if(t>0){x+=dx*t;y+=dy*t;} }
+  dx=p[0]-x; dy=p[1]-y; return dx*dx+dy*dy;
+}
+function simplifyLoop(P,tol){
+  const n=P.length; if(n<8) return P;
+  /* ยึดจุด 0 กับจุดที่ไกลจากจุด 0 ที่สุด แล้วทำ DP บนสองสายที่เหลือ */
+  let far=0, fd=-1;
+  for(let i=1;i<n;i++){ const dx=P[i][0]-P[0][0], dy=P[i][1]-P[0][1], d=dx*dx+dy*dy;
+    if(d>fd){ fd=d; far=i; } }
+  if(far<2||far>n-2) return P;
+  const keep=new Uint8Array(n); keep[0]=1; keep[far]=1;
+  const t2=tol*tol;
+  const dp=idx=>{
+    const st=[[0,idx.length-1]];
+    while(st.length){
+      const [a,b]=st.pop();
+      if(b-a<2) continue;
+      let mi=-1,md=-1;
+      for(let k=a+1;k<b;k++){ const d=_segD2(P[idx[k]],P[idx[a]],P[idx[b]]); if(d>md){md=d;mi=k;} }
+      if(md>t2&&mi>=0){ keep[idx[mi]]=1; st.push([a,mi],[mi,b]); }
+    }
+  };
+  const chain1=[]; for(let i=0;i<=far;i++) chain1.push(i);
+  const chain2=[]; for(let i=far;i<n;i++) chain2.push(i); chain2.push(0);
+  dp(chain1); dp(chain2);
+  const out=[]; for(let i=0;i<n;i++) if(keep[i]) out.push(P[i]);
+  return out.length>=3? out : P;
+}
+const loopArea=P=>{ let a=0; for(let i=0,n=P.length;i<n;i++){ const p=P[i],q=P[(i+1)%n]; a+=p[0]*q[1]-q[0]*p[1]; } return a/2; };
+
+/* ══════════ earcut — ear clipping + เจาะรูด้วยสะพาน ══════════ */
+function ecNode(i,x,y){ return {i,x,y,prev:null,next:null,steiner:false}; }
+function ecInsert(i,x,y,last){
+  const p=ecNode(i,x,y);
+  if(!last){ p.prev=p; p.next=p; }
+  else { p.next=last.next; p.prev=last; last.next.prev=p; last.next=p; }
+  return p;
+}
+function ecRemove(p){ p.next.prev=p.prev; p.prev.next=p.next; }
+function ecArea(p,q,r){ return (q.y-p.y)*(r.x-q.x)-(q.x-p.x)*(r.y-q.y); }
+function ecEq(a,b){ return a.x===b.x && a.y===b.y; }
+function ecPointInTri(ax,ay,bx,by,cx,cy,px,py){
+  return (cx-px)*(ay-py)-(ax-px)*(cy-py)>=0 &&
+         (ax-px)*(by-py)-(bx-px)*(ay-py)>=0 &&
+         (bx-px)*(cy-py)-(cx-px)*(by-py)>=0;
+}
+function ecSignedArea(pts,start,end){
+  let s=0;
+  for(let i=start,j=end-1;i<end;j=i++) s+=(pts[j][0]-pts[i][0])*(pts[i][1]+pts[j][1]);
+  return s;
+}
+function ecLinked(pts,start,end,ccw){
+  let last=null;
+  if(ccw === (ecSignedArea(pts,start,end)>0))
+    for(let i=start;i<end;i++) last=ecInsert(i,pts[i][0],pts[i][1],last);
+  else
+    for(let i=end-1;i>=start;i--) last=ecInsert(i,pts[i][0],pts[i][1],last);
+  if(last && ecEq(last,last.next)){ ecRemove(last); last=last.next; }
+  return last;
+}
+function ecFilter(start,end){
+  if(!start) return start;
+  if(!end) end=start;
+  let p=start, again;
+  do{
+    again=false;
+    if(!p.steiner && (ecEq(p,p.next) || ecArea(p.prev,p,p.next)===0)){
+      ecRemove(p); p=end=p.prev;
+      if(p===p.next) break;
+      again=true;
+    } else p=p.next;
+  } while(again||p!==end);
+  return end;
+}
+function ecIsEar(ear){
+  const a=ear.prev, b=ear, c=ear.next;
+  if(ecArea(a,b,c)>=0) return false;
+  let p=ear.next.next;
+  while(p!==ear.prev){
+    if(ecPointInTri(a.x,a.y,b.x,b.y,c.x,c.y,p.x,p.y) && ecArea(p.prev,p,p.next)>=0) return false;
+    p=p.next;
+  }
+  return true;
+}
+const ecSign=n=>n>0?1:n<0?-1:0;
+const ecOnSeg=(p,q,r)=>q.x<=Math.max(p.x,r.x)&&q.x>=Math.min(p.x,r.x)&&q.y<=Math.max(p.y,r.y)&&q.y>=Math.min(p.y,r.y);
+function ecIntersects(p1,q1,p2,q2){
+  const o1=ecSign(ecArea(p1,q1,p2)), o2=ecSign(ecArea(p1,q1,q2));
+  const o3=ecSign(ecArea(p2,q2,p1)), o4=ecSign(ecArea(p2,q2,q1));
+  if(o1!==o2&&o3!==o4) return true;
+  if(o1===0&&ecOnSeg(p1,p2,q1)) return true;
+  if(o2===0&&ecOnSeg(p1,q2,q1)) return true;
+  if(o3===0&&ecOnSeg(p2,p1,q2)) return true;
+  if(o4===0&&ecOnSeg(p2,q1,q2)) return true;
+  return false;
+}
+function ecLocallyInside(a,b){
+  return ecArea(a.prev,a,a.next)<0 ? ecArea(a,b,a.next)>=0&&ecArea(a,a.prev,b)>=0
+                                   : ecArea(a,b,a.prev)<0||ecArea(a,a.next,b)<0;
+}
+function ecMiddleInside(a,b){
+  let p=a, inside=false;
+  const px=(a.x+b.x)/2, py=(a.y+b.y)/2;
+  do{
+    if(((p.y>py)!==(p.next.y>py)) && p.next.y!==p.y &&
+       (px<(p.next.x-p.x)*(py-p.y)/(p.next.y-p.y)+p.x)) inside=!inside;
+    p=p.next;
+  } while(p!==a);
+  return inside;
+}
+function ecIntersectsPolygon(a,b){
+  let p=a;
+  do{
+    if(p.i!==a.i && p.next.i!==a.i && p.i!==b.i && p.next.i!==b.i && ecIntersects(p,p.next,a,b)) return true;
+    p=p.next;
+  } while(p!==a);
+  return false;
+}
+function ecIsValidDiagonal(a,b){
+  return a.next.i!==b.i && a.prev.i!==b.i && !ecIntersectsPolygon(a,b) &&
+         ecLocallyInside(a,b) && ecLocallyInside(b,a) && ecMiddleInside(a,b);
+}
+function ecSplitPolygon(a,b){
+  const a2=ecNode(a.i,a.x,a.y), b2=ecNode(b.i,b.x,b.y);
+  const an=a.next, bp=b.prev;
+  a.next=b; b.prev=a;
+  a2.next=an; an.prev=a2;
+  b2.next=a2; a2.prev=b2;
+  bp.next=b2; b2.prev=bp;
+  return b2;
+}
+function ecCure(start,tri){
+  let p=start;
+  do{
+    const a=p.prev, b=p.next.next;
+    if(!ecEq(a,b) && ecIntersects(a,p,p.next,b) && ecLocallyInside(a,b) && ecLocallyInside(b,a)){
+      tri.push(a.i,p.i,b.i);
+      ecRemove(p); ecRemove(p.next);
+      p=start=b;
+    }
+    p=p.next;
+  } while(p!==start);
+  return ecFilter(p);
+}
+function ecSplitEarcut(start,tri,depth){
+  if(depth>40) return;
+  let a=start;
+  do{
+    let b=a.next.next;
+    while(b!==a.prev){
+      if(a.i!==b.i && ecIsValidDiagonal(a,b)){
+        let c=ecSplitPolygon(a,b);
+        a=ecFilter(a,a.next); c=ecFilter(c,c.next);
+        ecEarcutLinked(a,tri,0,depth+1);
+        ecEarcutLinked(c,tri,0,depth+1);
+        return;
+      }
+      b=b.next;
+    }
+    a=a.next;
+  } while(a!==start);
+}
+function ecEarcutLinked(ear,tri,pass,depth){
+  if(!ear) return;
+  let stop=ear, prev, next, guard=0;
+  while(ear.prev!==ear.next){
+    if(++guard>3e6) return;
+    prev=ear.prev; next=ear.next;
+    if(ecIsEar(ear)){
+      tri.push(prev.i,ear.i,next.i);
+      ecRemove(ear);
+      ear=next.next; stop=next.next;
+      continue;
+    }
+    ear=next;
+    if(ear===stop){
+      if(!pass) ecEarcutLinked(ecFilter(ear),tri,1,depth);
+      else if(pass===1){ ear=ecCure(ecFilter(ear),tri); ecEarcutLinked(ear,tri,2,depth); }
+      else if(pass===2) ecSplitEarcut(ear,tri,depth);
+      break;
+    }
+  }
+}
+function ecSectorContains(m,p){ return ecArea(m.prev,m,p.prev)<0 && ecArea(p.next,m,m.next)<0; }
+function ecFindHoleBridge(hole,outer){
+  let p=outer, qx=-Infinity, m=null;
+  const hx=hole.x, hy=hole.y;
+  do{
+    if(hy<=p.y && hy>=p.next.y && p.next.y!==p.y){
+      const x=p.x+(hy-p.y)*(p.next.x-p.x)/(p.next.y-p.y);
+      if(x<=hx && x>qx){ qx=x; m=p.x<p.next.x? p : p.next; }
+    }
+    p=p.next;
+  } while(p!==outer);
+  if(!m) return null;
+  const stop=m, mx=m.x, my=m.y;
+  let tanMin=Infinity;
+  p=m;
+  do{
+    if(hx>=p.x && p.x>=mx && hx!==p.x &&
+       ecPointInTri(hy<my?hx:qx, hy, mx, my, hy<my?qx:hx, hy, p.x, p.y)){
+      const tan=Math.abs(hy-p.y)/(hx-p.x);
+      if(ecLocallyInside(p,hole) &&
+         (tan<tanMin || (tan===tanMin && (p.x>m.x || (p.x===m.x && ecSectorContains(m,p)))))){
+        m=p; tanMin=tan;
+      }
+    }
+    p=p.next;
+  } while(p!==stop);
+  return m;
+}
+function ecEliminateHole(hole,outer){
+  const bridge=ecFindHoleBridge(hole,outer);
+  if(!bridge) return outer;
+  const rev=ecSplitPolygon(bridge,hole);
+  ecFilter(rev,rev.next);
+  return ecFilter(bridge,bridge.next);
+}
+function earcut(pts,holeStarts){
+  const hasHoles=holeStarts.length>0;
+  const outerEnd=hasHoles? holeStarts[0] : pts.length;
+  let outer=ecLinked(pts,0,outerEnd,true);
+  const tri=[];
+  if(!outer || outer.next===outer.prev) return tri;
+  if(hasHoles){
+    const queue=[];
+    for(let i=0;i<holeStarts.length;i++){
+      const s=holeStarts[i], e=i<holeStarts.length-1? holeStarts[i+1] : pts.length;
+      const list=ecLinked(pts,s,e,false);
+      if(!list) continue;
+      if(list===list.next) list.steiner=true;
+      let lm=list, p=list;                      // จุดซ้ายสุดของรู — สะพานยิงไปทาง −x
+      do{ if(p.x<lm.x || (p.x===lm.x&&p.y<lm.y)) lm=p; p=p.next; } while(p!==list);
+      queue.push(lm);
+    }
+    queue.sort((a,b)=> a.x-b.x || a.y-b.y);
+    for(const h of queue) outer=ecEliminateHole(h,outer);
+  }
+  ecEarcutLinked(outer,tri,0,0);
+  return tri;
+}
+
+/* ---------- สามเหลี่ยมที่แก้ทิศวนให้เองตาม normal ที่ต้องการ ---------- */
+function triN(M,p,q,r,nx,ny,nz){
+  if(M.noTri) return;
+  const ux=q[0]-p[0],uy=q[1]-p[1],uz=q[2]-p[2];
+  const vx=r[0]-p[0],vy=r[1]-p[1],vz=r[2]-p[2];
+  const cx=uy*vz-uz*vy, cy=uz*vx-ux*vz, cz=ux*vy-uy*vx;
+  if(cx*cx+cy*cy+cz*cz<1e-16) return;
+  if(cx*nx+cy*ny+cz*nz<0){ const t=q; q=r; r=t; }
+  tri(M,p,q,r,nx,ny,nz);
+}
+
+/* ---------- mask → กลุ่มรูปหลายเหลี่ยม (มิลลิเมตรของชิ้นงาน) ---------- */
+/* ความคลาดที่ยอมให้ตอนลดจำนวนจุด — คิดเป็นมิลลิเมตรจริง ไม่ใช่จำนวนช่อง
+   จะได้ไม่เปลี่ยนคุณภาพเมื่อผู้ใช้เปลี่ยนความละเอียดกริด
+   0.045 มม. อยู่ต่ำกว่าความกว้างเส้นพิมพ์ (0.42) และความสูงชั้น (0.2) มาก มองไม่เห็นแน่นอน */
+const SMOOTH_MM=0.045;
+let SMOOTH_PASS=3, SMOOTH_TOL=0.3;
+function contoursOf(mask,gw,gh,noMirrorX,boxes){
+  /* ชิ้นเล็กๆ ที่กระจายอยู่คนละมุมของแผ่น (หลุมสแนป เสาสกรู หัวขอ) ถ้าใช้กรอบเดียว
+     กรอบจะกินเกือบทั้งแผ่น แล้วเสียเวลากวาดช่องว่างเปล่าๆ — แยกกรอบทีละจุดเร็วกว่ามาก */
+  if(boxes&&boxes.length>1){
+    let all=[];
+    for(const bx of boxes) all=all.concat(contoursOf(mask,gw,gh,noMirrorX,[bx]));
+    return all;
+  }
+  const F=sdfOf(mask,gw,gh,boxes&&boxes[0]);
+  if(!F) return [];
+  const loops=msLoops(F,0);
+  if(!loops.length) return [];
+  const px=G.px, W=S.box.W, H=S.box.H, oy=PB.my0;
+  const ox = noMirrorX? PB.ux0 : PB.mx0;
+  SMOOTH_TOL=clamp(SMOOTH_MM/px,0.12,0.6);
+  const outs=[], holes=[];
+  for(let L of loops){
+    const a0=loopArea(L);
+    /* เศษจุดเล็กกว่า 2 ช่อง เป็นสัญญาณรบกวนจากการแยกสี พิมพ์ไม่ออกอยู่แล้ว
+       (หัวฉีด 0.4 มม. เล็กสุดที่พิมพ์ได้ ≈ 0.16 มม² ≈ 7 ช่องที่กริด 0.15)
+       ตัดทิ้งตั้งแต่ต้นทาง ประหยัดทั้งเวลาและจำนวนสามเหลี่ยม */
+    if(Math.abs(a0)<2) continue;
+    const isOuter = a0>0;                          // ในพิกัดกริด เนื้ออยู่ซ้าย ⇒ วงนอกเป็นบวก
+    L=smoothLoop(L,SMOOTH_PASS);
+    L=simplifyLoop(L,SMOOTH_TOL);
+    if(L.length<3) continue;
+    /* กริด → มิลลิเมตรของชิ้นงาน · ฝั่งหน้ากลับแกน x เพราะพิมพ์คว่ำหน้าลงฐาน */
+    const P=L.map(p=>{
+      const gx=F.x0+p[0], gy=F.y0+p[1];
+      return noMirrorX? [gx*px-ox, H-gy*px-oy] : [W-gx*px-ox, H-gy*px-oy];
+    });
+    /* การแปลงพิกัดอาจกลับทิศวน (ฝาหลังกลับแกน y อย่างเดียว) — บังคับให้ถูกเสมอ
+       วงนอกทวนเข็ม (พื้นที่บวก) · วงรูตามเข็ม เพื่อให้ normal ของผนังชี้ออกถูกด้าน */
+    const am=loopArea(P);
+    if((am>0)!==isOuter) P.reverse();
+    (isOuter? outs : holes).push(P);
+  }
+  if(!outs.length) return [];
+  const bbox=P=>{ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+    for(const p of P){ if(p[0]<x0)x0=p[0]; if(p[0]>x1)x1=p[0]; if(p[1]<y0)y0=p[1]; if(p[1]>y1)y1=p[1]; }
+    return [x0,y0,x1,y1]; };
+  const inPoly=(pt,P)=>{ let c=false;
+    for(let i=0,j=P.length-1;i<P.length;j=i++)
+      if(((P[i][1]>pt[1])!==(P[j][1]>pt[1])) &&
+         (pt[0] < (P[j][0]-P[i][0])*(pt[1]-P[i][1])/(P[j][1]-P[i][1])+P[i][0])) c=!c;
+    return c; };
+  const groups=outs.map(o=>({out:o,holes:[],bb:bbox(o),ar:Math.abs(loopArea(o))}));
+  groups.sort((a,b)=>a.ar-b.ar);                   // เล็กก่อน จะได้เจอวงในสุดที่ครอบรูอยู่
+  for(const h of holes){
+    const bb=bbox(h), pt=h[0];
+    let host=null;
+    for(const g of groups){
+      if(bb[0]<g.bb[0]-1e-6||bb[1]<g.bb[1]-1e-6||bb[2]>g.bb[2]+1e-6||bb[3]>g.bb[3]+1e-6) continue;
+      if(inPoly(pt,g.out)){ host=g; break; }
+    }
+    if(host) host.holes.push(h);
+  }
+  return groups.map(g=>({out:g.out,holes:g.holes}));
+}
+
+/* ---------- อัดขึ้นรูปเป็นปริซึม ----------
+   จุดสำคัญ: earcut จะ "ตัดจุดที่อยู่บนเส้นตรงพอดีทิ้ง" ระหว่างเชื่อมรู
+   ถ้าเอารูปหลายเหลี่ยมเดิมไปทำผนัง ผนังกับฝาจะใช้จุดคนละชุด → ขอบไม่จับคู่ เมชไม่ปิด
+   จึงต้องสร้างผนังจาก "ขอบนอกของผลลัพธ์ earcut" แทน ปิดสนิทโดยโครงสร้างเสมอ */
+function addPrism(M,groups,z0,z1){
+  if(z1<=z0) return;
+  for(const g of groups){
+    let area=Math.abs(loopArea(g.out));
+    for(const h of g.holes) area-=Math.abs(loopArea(h));
+    M.vol += Math.max(0,area)*(z1-z0);
+    for(const R of [g.out].concat(g.holes)) for(const p of R){
+      if(p[0]<M.x0)M.x0=p[0]; if(p[0]>M.x1)M.x1=p[0];
+      if(p[1]<M.y0)M.y0=p[1]; if(p[1]>M.y1)M.y1=p[1];
+    }
+    if(z0<M.z0)M.z0=z0; if(z1>M.z1)M.z1=z1;
+    if(M.noTri) continue;
+
+    const pts=g.out.slice(), holeStarts=[];
+    for(const h of g.holes){ holeStarts.push(pts.length); for(const p of h) pts.push(p); }
+    const idx=earcut(pts,holeStarts);
+    if(!idx.length) continue;
+
+    /* ฝาบน: earcut คืนสามเหลี่ยมวนทวนเข็ม → normal +z ตามลำดับเดิม
+       ฝาล่าง: สลับสองจุดหลัง → normal −z และขอบกลับทิศพอดี */
+    for(let i=0;i<idx.length;i+=3){
+      const A=pts[idx[i]], B=pts[idx[i+1]], C=pts[idx[i+2]];
+      tri(M,[A[0],A[1],z1],[B[0],B[1],z1],[C[0],C[1],z1], 0,0, 1);
+      tri(M,[A[0],A[1],z0],[C[0],C[1],z0],[B[0],B[1],z0], 0,0,-1);
+    }
+    /* ขอบที่ปรากฏทิศเดียว = ขอบนอกของฝา → เอามาทำผนัง */
+    const dir=new Set();
+    for(let i=0;i<idx.length;i+=3){
+      const t=[idx[i],idx[i+1],idx[i+2]];
+      for(let k=0;k<3;k++) dir.add(t[k]+'_'+t[(k+1)%3]);
+    }
+    for(const key of dir){
+      const s=key.indexOf('_');
+      const ai=+key.slice(0,s), bi=+key.slice(s+1);
+      if(dir.has(bi+'_'+ai)) continue;
+      const p=pts[ai], q=pts[bi];
+      const dx=q[0]-p[0], dy=q[1]-p[1];
+      const L=Math.hypot(dx,dy); if(L<1e-12) continue;
+      /* ลำดับนี้ให้ขอบ a→b ที่ z0 และ b→a ที่ z1 ซึ่งจับคู่กับฝาพอดี
+         normal ที่ส่งไปตรงกับลำดับนี้อยู่แล้ว quad จึงไม่สลับจุดให้ */
+      quad(M,[p[0],p[1],z0],[q[0],q[1],z0],[q[0],q[1],z1],[p[0],p[1],z1], dy/L,-dx/L,0);
+    }
+  }
+}
+
+/* ---------- ทางเข้าเดียวที่ buildParts เรียกใช้ ---------- */
+function addSolid(M,mask,z0,z1,noMirrorX,boxes){
+  if(z1<=z0) return;
+  if(M.noTri){
+    /* รอบคิดราคา ต้องการแค่ปริมาตรกับช่วง z — นับเซลล์เร็วกว่าสร้างรูปหลายเหลี่ยมมาก */
+    let c=0; for(let i=0;i<mask.length;i++) if(mask[i]) c++;
+    if(!c) return;
+    M.vol += c*G.px*G.px*(z1-z0);
+    if(z0<M.z0)M.z0=z0; if(z1>M.z1)M.z1=z1;
+    return;
+  }
+  if(S.exp.smooth===false){ addRects(M,maskToRects(mask,G.gw,G.gh),z0,z1,noMirrorX); return; }
+  addPrism(M,contoursOf(mask,G.gw,G.gh,noMirrorX,boxes),z0,z1);
+}
+/* ══════════════════════════════════════════════════════════════
    YP Lightbox Studio — geometry + STL + 3MF writers
    แกน:  x ขวา · y ขึ้น · z ขึ้นจากฐานพิมพ์  (z=0 = ผิวหน้าที่ติดฐาน)
    หน้ากล่องคว่ำลงฐาน ⇒ ต้องกลับแกน x เวลาแปลงจากกริดเป็นมิลลิเมตร
@@ -1328,10 +1903,9 @@ function buildParts(nt){
   for(let k=0;k<S.pal.length;k++){
     const p=S.pal[k];
     if(!p.cells) continue;
-    const rects=maskToRects(maskOf(k),gw,gh);
-    if(!rects.length) continue;
+    const mk=maskOf(k);
     const M=Mesh((p.name||('สี '+k))+' · '+nearestFilament(p.hex), p.hex, nt);
-    if(p.glow) addRects(M,rects,0,st.colorT); else addRects(M,rects,0,st.bgT);
+    addSolid(M,mk,0,p.glow?st.colorT:st.bgT);
     M.kind='color'; M.glow=!!p.glow;
     parts.push(M);
   }
@@ -1341,7 +1915,7 @@ function buildParts(nt){
   let anyGlow=false; for(let i=0;i<N;i++) if(gm[i]){anyGlow=true;break;}
   if(anyGlow){
     const M=Mesh('ชั้นกระจายแสง · ขาว/ใส','#F2F2E8',nt);
-    addRects(M,maskToRects(gm,gw,gh),st.colorT,st.colorT+st.diff);
+    addSolid(M,gm,st.colorT,st.colorT+st.diff);
     M.kind='diffuser'; M.glow=true;
     parts.push(M);
   }
@@ -1359,13 +1933,14 @@ function buildParts(nt){
   const d=Math.min(S.hw.dia, b.depth-2);
   /* ผนังกรอบหลัก — เว้นกล่องบริเวณหลุมสแนปไว้ก่อน แล้วค่อยเติมเป็นชั้นๆ ทีหลัง */
   const outSnap=(x,y)=>!(SP.length && inBoxes(x,y,SP,pocketR));
+  const boxesAt=(pts,r)=>pts.map(p=>[Math.floor(p[0]-r-2),Math.floor(p[1]-r-2),Math.ceil(p[0]+r+2),Math.ceil(p[1]+r+2)]);
   const wallM=SP.length? maskWhere((i,x,y)=>frameM[i]&&outSnap(x,y)) : frameM;
   if(S.hw.hole==='frame'){
     const notched=maskWhere((i,x,y)=> wallM[i] && !(y>=notchBandY && Math.abs(x-BI.cx)<=notchHalf));
-    addRects(FM,maskToRects(wallM,gw,gh), st.frameZ0, zTop-d);
-    addRects(FM,maskToRects(notched,gw,gh), zTop-d, zTop);
+    addSolid(FM,wallM, st.frameZ0, zTop-d);
+    addSolid(FM,notched, zTop-d, zTop);
   }else{
-    addRects(FM,maskToRects(wallM,gw,gh), st.frameZ0, zTop);
+    addSolid(FM,wallM, st.frameZ0, zTop);
   }
   /* หลุมรับหัวขอ — ผนังบางลง J.pocketD เฉพาะช่วง z ของหัวขอ
      ปากหลุมฝั่งล็อกปิดกลับด้วยลาด 45° จึงพิมพ์ได้โดยไม่ต้องบริดจ์ */
@@ -1386,7 +1961,7 @@ function buildParts(nt){
       const m=maskWhereNear(SP,pocketR+1,(i,x,y)=>
         frameM[i] && inSnap(x,y) && DI[i]<=lim
         && !(S.hw.hole==='frame' && zm>=zTop-d && y>=notchBandY && Math.abs(x-BI.cx)<=notchHalf));
-      addRects(FM,maskToRects(m,gw,gh), za, zb);
+      addSolid(FM,m, za, zb, false, boxesAt(SP,pocketR));
     }
   }
   const BP=screwPoints();
@@ -1399,13 +1974,14 @@ function buildParts(nt){
     const z0=zTop-bossLen;
     const bossM=maskWhere((i,x,y)=>P[i]&&nearBoss(x,y,bwc));
     /* ตัวเสา + รูนำ */
-    addRects(FM,maskToRects(maskWhere((i,x,y)=>bossM[i]&&!inCircle(x,y,prc)),gw,gh), z0, zTop);
+    addSolid(FM,maskWhere((i,x,y)=>bossM[i]&&!inCircle(x,y,prc)), z0, zTop, false, boxesAt(BP,bwc));
     /* ลาดรับ 45° จากผนังกรอบขึ้นมาหาเสา — ไม่งั้นเสาลอยกลางอากาศ พิมพ์ไม่ได้ */
-    const NT=8, taperH=Math.min(S.hw.bossW, z0-st.frameZ0);
+    const taperH=Math.min(S.hw.bossW, z0-st.frameZ0);
+    const NT=Math.max(2,Math.min(8,Math.round(taperH/0.9)));
     if(taperH>0.4) for(let j=0;j<NT;j++){
       const t = fw + ((j+1)/NT)*(S.hw.bossW/px);
       const zA = z0-taperH + j*(taperH/NT), zB = zA + taperH/NT;
-      addRects(FM,maskToRects(maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t),gw,gh), zA, zB);
+      addSolid(FM,maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t), zA, zB, false, boxesAt(BP,bwc));
     }
   }
   FM.kind='frame'; FM.bossCount=BP.length; FM.snapCount=SP.length;
@@ -1425,7 +2001,7 @@ function buildParts(nt){
   const PK=platePack();
   const BM=Mesh('แผ่นหลัง'+(J.lip?(SP.length?' + บ่า + ขาสแนป':' + บ่าล็อก'):''),
                 '#'+(b.backColor||b.frameColor).replace('#',''),nt);
-  addRects(BM,maskToRects(backM,gw,gh), 0, b.back, true);
+  addSolid(BM,backM, 0, b.back, true);
   if(J.lip){
     const i0=(b.frame+J.cl)/px, i1=(b.frame+J.cl+J.lipW)/px;
     const corridor=(x,y)=> S.hw.hole==='frame' && y>=BI.y1-(b.frame+J.cl+J.lipW+2)/px
@@ -1435,14 +2011,14 @@ function buildParts(nt){
     const lipM=maskWhere((i,x,y)=> P[i] && DI[i]>i0 && DI[i]<=i1
                             && !(BP.length&&nearBoss(x,y,bwc+J.cl/px)) && !corridor(x,y)
                             && !(SP.length&&inBoxes(x,y,SP,slotR)));
-    addRects(BM,maskToRects(lipM,gw,gh), b.back, b.back+J.lipH, true);
+    addSolid(BM,lipM, b.back, b.back+J.lipH, true);
 
     if(SP.length){
       /* ตัวขาสปริง — ผิวในเซาะบางลงเหลือ J.fingerT ให้ดีดได้โดยไม่เกินความเครียดที่ PLA รับไหว */
       const fi1=(b.frame+J.cl+J.fingerT)/px;
       const fingerM=maskWhereNear(SP,coreR+1,(i,x,y)=>
         P[i] && DI[i]>i0 && DI[i]<=fi1 && inCore(x,y) && !corridor(x,y));
-      addRects(BM,maskToRects(fingerM,gw,gh), b.back, b.back+J.lipH, true);
+      addSolid(BM,fingerM, b.back, b.back+J.lipH, true, boxesAt(SP,coreR));
 
       /* หัวขอที่ปลายขา — ยื่นออกด้านนอก J.q
          ฝั่ง z ต่ำ (หน้าล็อก) เป็นลาด 45° เพราะเป็นด้านที่เนื้อโผล่เพิ่มตอนพิมพ์
@@ -1452,17 +2028,19 @@ function buildParts(nt){
         const lo=(b.frame+J.cl-q)/px;
         const m=maskWhereNear(SP,coreR+1,(i,x,y)=>
           P[i] && DI[i]>lo && DI[i]<=i0 && inCore(x,y) && !corridor(x,y));
-        addRects(BM,maskToRects(m,gw,gh), za, zb, true);
+        addSolid(BM,m, za, zb, true, boxesAt(SP,coreR));
       };
-      const NB=6;
+      /* จำนวนชั้นของลาด — ละเอียดกว่าความสูงชั้นพิมพ์ก็ไม่ได้อะไร */
+      const NB=Math.max(2,Math.min(6,Math.round(J.q/0.22)));
+      const NL=Math.max(2,Math.min(6,Math.round(J.lead/0.22)));
       for(let j=0;j<NB;j++){                                   // ลาดล็อก 45°
         const za=J.bzR+(J.bz0-J.bzR)*j/NB, zb=J.bzR+(J.bz0-J.bzR)*(j+1)/NB;
         barbSlab(za,zb, J.q*(j+0.5)/NB);
       }
       barbSlab(J.bz0,J.bz1,J.q);                                // หน้าเรียบ = ส่วนที่นั่งในหลุม
-      for(let j=0;j<NB;j++){                                   // ลาดนำเข้า
-        const za=J.bz1+(J.bzT-J.bz1)*j/NB, zb=J.bz1+(J.bzT-J.bz1)*(j+1)/NB;
-        barbSlab(za,zb, J.q*(1-(j+0.5)/NB));
+      for(let j=0;j<NL;j++){                                   // ลาดนำเข้า
+        const za=J.bz1+(J.bzT-J.bz1)*j/NL, zb=J.bz1+(J.bzT-J.bz1)*(j+1)/NL;
+        barbSlab(za,zb, J.q*(1-(j+0.5)/NL));
       }
     }
   }
@@ -2621,6 +3199,7 @@ const BIND=[
  ['pMargin','price.margin','num',null,null,'q'],
  ['pFlush','price.flush','num',null,null,'q'],
  ['expRes','exp.res','num',null,null,''],
+ ['expSmooth','exp.smooth','bool',null,null,''],
  ['expFmt','exp.fmt','str',null,null,'q'],
  ['expLayerH','exp.layerH','num',null,null,'q'],
  ['showFrame','ui.showFrame','bool',null,null,'d'],
