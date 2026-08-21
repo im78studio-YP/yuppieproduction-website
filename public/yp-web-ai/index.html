@@ -31,6 +31,16 @@ header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px
 .sp{flex:1}
 .badge{font-size:11px;padding:5px 11px;border-radius:999px;background:rgba(224,168,60,.12);
   border:1px solid rgba(224,168,60,.35);color:var(--acc2)}
+.header-actions{gap:7px}.header-summary-menu{position:relative}
+.summary-trigger{display:flex;align-items:center;gap:6px;white-space:nowrap}.summary-trigger svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8}
+.summary-trigger-count{min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:grid;place-items:center;background:var(--bg4);color:var(--acc2);font:700 9px Inter,sans-serif}
+.header-total{min-width:112px;height:34px;display:flex;align-items:center;justify-content:center;gap:7px;padding:4px 10px;border:1px solid rgba(224,168,60,.34);border-radius:9px;background:rgba(224,168,60,.08)}
+.header-total span{font-size:9.5px;color:var(--tx3);white-space:nowrap}.header-total strong{font:700 15px Inter,sans-serif;color:var(--acc2);white-space:nowrap}
+.summary-popover{position:fixed;z-index:70;top:calc(var(--header-h) + 8px);right:16px;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - var(--header-h) - 24px);overflow:hidden;border:1px solid #363e49;border-radius:10px;background:rgba(13,16,21,.98);box-shadow:0 24px 60px rgba(0,0,0,.5);backdrop-filter:blur(16px)}
+.summary-popover[hidden]{display:none}.summary-popover-head{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid var(--line)}
+.summary-popover-head h2{font-size:14px;font-weight:600}.summary-close{margin-left:auto;width:32px;height:32px;border:1px solid var(--line);border-radius:50%;color:var(--tx2);font-size:18px}
+.summary-close:hover{border-color:var(--acc);color:var(--acc2)}.summary-popover-body{max-height:calc(100dvh - var(--header-h) - 84px);overflow-y:auto;padding:14px}
+.summary-block+.summary-block{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.summary-block h3{margin-bottom:8px;font-size:11.5px;color:var(--tx2);font-weight:600}
 .btn{padding:9px 17px;border-radius:10px;font-weight:600;font-size:13px;background:var(--bg3);
   border:1px solid var(--line);transition:.15s}
 .btn:hover{background:var(--bg4);border-color:#3a414c}
@@ -134,6 +144,9 @@ select:focus{border-color:var(--acc)}
 .tag{font-size:11px;padding:4px 10px;border-radius:999px;background:var(--bg3);border:1px solid var(--line);color:var(--tx2)}
 #view{flex:1;display:grid;place-items:center;padding:6px;min-height:0}
 #view svg{width:100%;height:100%;max-height:50vh}
+#view .plan-object{cursor:pointer;outline:none}
+#view .plan-object .plan-footprint{transition:stroke .15s,stroke-width .15s,filter .15s}
+#view .plan-object:hover .plan-footprint,#view .plan-object:focus .plan-footprint{stroke:#f3c86b;stroke-width:2.2;filter:brightness(1.08)}
 #view.three-active{display:block;padding:0;position:relative;min-height:420px}
 .three-shell{position:absolute;inset:0;min-height:420px;background:linear-gradient(180deg,#171a20,#0c0e11)}
 .three-host{position:absolute;inset:0;overflow:hidden}
@@ -171,7 +184,6 @@ select:focus{border-color:var(--acc)}
 .chip2{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--tx2);
   background:var(--bg3);border:1px solid var(--line);padding:5px 10px;border-radius:9px}
 
-.row2{min-height:0;display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding-right:2px}
 .cbody{padding:15px}
 .cbody h4{font-size:11.5px;color:var(--tx2);font-weight:500;margin-bottom:11px}
 .kv{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:12.5px;
@@ -184,11 +196,11 @@ select:focus{border-color:var(--acc)}
 .slot{border:1px dashed rgba(224,168,60,.4);background:rgba(224,168,60,.05);border-radius:9px;
   padding:9px 11px;font-size:11px;color:var(--acc2);margin-top:9px;line-height:1.5}
 .catalog-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.catalog-item{display:grid;grid-template-columns:31px 1fr;align-items:center;gap:8px;min-height:58px;padding:8px 9px;
+.catalog-item{display:grid;grid-template-columns:72px 1fr;align-items:center;gap:8px;min-height:72px;padding:8px 9px;
   border:1px solid var(--line);border-radius:10px;background:var(--bg2);text-align:left;cursor:pointer;transition:.15s}
 .catalog-item:hover{border-color:var(--acc);background:rgba(224,168,60,.07)}
 .catalog-item:active{transform:translateY(0)}
-.catalog-icon{position:relative;overflow:hidden;width:31px;height:31px;border-radius:8px;display:grid;place-items:center;background:var(--bg4);
+.catalog-icon{position:relative;overflow:hidden;width:72px;height:54px;border-radius:7px;display:grid;place-items:center;background:var(--bg4);
   color:var(--acc2);font:700 16px Inter,sans-serif}
 .catalog-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--bg4)}
 .catalog-copy b{display:block;font-size:11.5px;font-weight:600}.catalog-copy small{display:block;color:var(--tx3);font-size:9.5px;line-height:1.35}
@@ -210,7 +222,6 @@ select:focus{border-color:var(--acc)}
 .dock-tool.on{background:var(--acc);color:#1c1404;box-shadow:inset 3px 0 0 var(--acc2),0 7px 18px rgba(224,168,60,.12)}
 .dock-tool svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .dock-label{max-width:100%;font-size:9px;font-weight:500;line-height:1.15;text-align:center;white-space:normal}
-.dock-summary{margin-top:auto}
 .dock-tool .dock-count{position:absolute;right:2px;top:2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;
   display:grid;place-items:center;background:#ef8b62;color:#230c04;font:700 9px Inter,sans-serif}
 .dock-tool .dock-count:empty{display:none}
@@ -262,7 +273,6 @@ select:focus{border-color:var(--acc)}
 .fixed-spec{display:flex;align-items:center;justify-content:space-between;margin-top:9px;padding:9px 11px;border:1px solid var(--line);
   border-radius:9px;background:rgba(255,255,255,.025);font-size:11px;color:var(--tx3)}
 .fixed-spec b{font:600 12px Inter,sans-serif;color:var(--tx2)}
-.summary-page .row2{display:flex;flex-direction:column;gap:10px;overflow:visible;padding:16px 18px 22px}
 .wrap.dock-collapsed{grid-template-columns:minmax(0,1fr) 72px 0}
 .wrap.dock-collapsed .panel{visibility:hidden;opacity:0;pointer-events:none}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
@@ -272,10 +282,7 @@ select:focus{border-color:var(--acc)}
 .selected-card h4{margin:5px 0 0;color:var(--tx);font-size:14px;font-weight:600}
 .selected-card .object-selected{margin-top:10px;min-height:44px;display:flex;align-items:center}
 .selected-tip{margin-top:7px;color:var(--tx3);font-size:10.5px;line-height:1.5}
-.summary-card{flex:none;max-height:272px;overflow:auto}
-.quote-card{flex:none;border-color:rgba(224,168,60,.22);box-shadow:0 12px 32px rgba(0,0,0,.2)}
-.quote-card #plines{max-height:132px;overflow:auto;padding-right:3px}
-.quote-card .pbig{margin-top:-2px;font-size:29px}
+.catalog-page>.selected-card{margin:0 18px 22px}
 
 .object-actions.canvas-object-toolbar{display:none;position:absolute;z-index:7;left:50%;bottom:68px;transform:translateX(-50%);
   width:max-content;max-width:calc(100% - 24px);align-items:center;grid-template-columns:none;gap:4px;margin:0;padding:6px;
@@ -305,18 +312,19 @@ select:focus{border-color:var(--acc)}
 }
 @media(max-width:820px){
   :root{--header-h:54px}
-  header{padding:8px 10px}.logo small,.badge,.header-status{display:none}.header-actions .btn:not(.pri){display:none}
+  header{gap:8px;padding:8px 10px}.logo small,.badge,.header-status,.header-total span{display:none}.header-actions{gap:5px}.header-actions .summary-trigger{display:flex}
+  .header-total{min-width:78px;padding:4px 8px}.summary-popover{right:10px;width:min(430px,calc(100vw - 20px))}
   .wrap{grid-template-columns:minmax(0,1fr) 60px;min-height:0}.stage{padding:8px}.dock-rail{grid-column:2;padding-top:8px}
   .panel{right:60px;width:calc(100vw - 60px)}
   .vtop{overflow-x:auto}.tag{display:none}.brandbar{flex-wrap:wrap;overflow:visible}.brandbar input{min-width:180px}
   .object-actions.canvas-object-toolbar{position:static;left:auto;bottom:auto;transform:none;align-self:center;margin:-52px 8px 8px;overflow-x:auto;max-width:calc(100% - 16px)}
-  .summary-card{max-height:320px}
 }
 @media(max-width:480px){
-  .header-actions .btn{padding:7px 10px}.logo{font-size:12px}.logo .m{width:28px;height:28px}
+  .header-actions .btn{padding:7px 9px}.logo>div:last-child{display:none}.logo .m{width:28px;height:28px}.summary-trigger-label{display:none}.summary-trigger{min-width:38px;justify-content:center}.header-total{min-width:70px}.header-total strong{font-size:13px}
   .tabs{min-width:max-content}.dock-tool{width:52px;min-height:54px}.dock-rail{gap:4px}
   .dock-label{font-size:8px}.panel-intro{padding-left:15px}.tool-page-body,.catalog-section{padding-left:15px;padding-right:15px}
   .canvas-object-toolbar .tool-mode{display:none}.canvas-object-toolbar .btn{padding:7px 8px}
+  .catalog-grid{grid-template-columns:1fr}
 }
 @media(max-width:360px){
   .object-actions.canvas-object-toolbar{max-width:none;overflow:visible}
@@ -351,7 +359,22 @@ select:focus{border-color:var(--acc)}
   <span class="badge header-status">● พร้อมออกแบบ · คำนวณแบบและประเมินราคา</span>
   <div class="sp"></div>
   <div class="header-actions row">
-    <button class="btn pri sm" type="button" onclick="openM('mQuote')">ขอใบเสนอราคา</button>
+    <div class="header-summary-menu">
+      <button class="btn sm summary-trigger" id="summaryToggle" type="button" aria-expanded="false" aria-controls="summaryPopover">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
+        <span class="summary-trigger-label">สรุปรายการ</span><span class="summary-trigger-count" id="summaryCount">0</span>
+      </button>
+      <aside class="summary-popover" id="summaryPopover" aria-label="สรุปรายการบูธ" hidden>
+        <div class="summary-popover-head"><h2>สรุปรายการบูธ</h2><button class="summary-close" id="summaryClose" type="button" aria-label="ปิดสรุปรายการ">×</button></div>
+        <div class="summary-popover-body">
+          <section class="summary-block"><h3>สรุปแบบบูธ</h3><div id="spec"></div></section>
+          <section class="summary-block"><h3>รายการสำหรับประเมินราคา</h3><div id="plines"></div></section>
+          <div class="note">* แสดงรายการโดยไม่แยกราคา ยอดรวมเป็นราคาประมาณการและจะยืนยันอีกครั้งในใบเสนอราคา</div>
+        </div>
+      </aside>
+    </div>
+    <div class="header-total" aria-label="ยอดรวมโดยประมาณ"><span>ยอดประเมิน</span><strong id="price">—</strong></div>
+    <button class="btn pri sm" type="button" onclick="closeHeaderSummary(false);openM('mQuote')">ขอใบเสนอราคา</button>
   </div>
 </header>
 
@@ -584,13 +607,6 @@ select:focus{border-color:var(--acc)}
     <div class="tool-page-body" id="dockLightingBody"></div>
   </section>
 
-  <section class="dock-page summary-page" data-dock-page="summary" aria-hidden="true" id="dockSummaryPage">
-    <div class="panel-intro">
-      <div class="panel-eyebrow">BOOTH SUMMARY</div>
-      <h2>สรุปแบบและประเมินราคา</h2>
-      <p>ตรวจวัตถุ รายละเอียดบูธ และยอดรวมทั้งหมดก่อนส่งให้ทีมประเมินราคา</p>
-    </div>
-  </section>
 </div>
 
 <div class="stage">
@@ -636,16 +652,6 @@ select:focus{border-color:var(--acc)}
       <div class="object-selected" id="objectSelected" aria-live="polite">ยังไม่ได้เลือกองค์ประกอบ</div>
       <div class="selected-tip">คลิกวัตถุในภาพ 3D เพื่อเปิดเครื่องมือจัดวาง</div>
     </div>
-    <div class="card cbody summary-card"><h4>สรุปแบบบูธ</h4><div id="spec"></div>
-    </div>
-    <div class="card cbody quote-card"><h4>รายการสำหรับประเมินราคา</h4>
-      <div class="pbig" id="price">—</div>
-      <div class="psub">ยอดรวมโดยประมาณ · แสดงรายการด้านล่างโดยไม่แยกราคา</div>
-      <div style="margin-top:11px" id="plines"></div>
-      <button class="btn pri lg" style="margin-top:13px" onclick="openM('mQuote')">ขอใบเสนอราคา</button>
-      <button class="btn lg" style="margin-top:7px" onclick="openM('mLine')">ดูภาพเรนเดอร์เต็ม</button>
-      <div class="note">* ยอดรวมเป็นราคาประมาณการ ทีมงานจะตรวจแบบและยืนยันในใบเสนอราคา</div>
-    </div>
   </div>
 </div>
 
@@ -673,9 +679,6 @@ select:focus{border-color:var(--acc)}
   </button>
   <button class="dock-tool" type="button" data-dock-page="catalog" aria-pressed="false" aria-label="เฟอร์นิเจอร์และอุปกรณ์" title="เฟอร์นิเจอร์และอุปกรณ์">
     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg><span class="dock-count" id="dockCount"></span><span class="dock-label">จัดวาง</span>
-  </button>
-  <button class="dock-tool dock-summary" type="button" data-dock-page="summary" aria-pressed="false" aria-label="สรุปแบบและประเมินราคา" title="สรุปแบบและประเมินราคา">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg><span class="dock-label">สรุป</span>
   </button>
 </nav>
 </div>
@@ -760,7 +763,8 @@ const FURNITURE_CATEGORIES=[
   {k:'decor',n:'ตกแต่ง'}];
 const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:null,modelScale:1,modelRotationY:0,initialRotation:0,...item});
 const OBJECT_CATALOG=[
-  furnitureItem({catalogId:'counter-standard',category:'reception',type:'counter',name:'เคาน์เตอร์',icon:'▰',size:{w:1.5,d:.6,h:1},unitPrice:28000,color:'#b88142'}),
+  furnitureItem({catalogId:'counter-standard',category:'reception',type:'counter',name:'เคาน์เตอร์',icon:'▰',size:{w:1.2,d:.6,h:1},unitPrice:28000,color:'#b88142',
+    modelUrl:'assets/furniture/counter-standard.glb',thumbUrl:'assets/furniture/counter-standard.webp'}),
   furnitureItem({catalogId:'shelf-standard',category:'display',type:'shelf',name:'ชั้นโชว์',icon:'▥',size:{w:1,d:.45,h:2},unitPrice:18000,color:'#b99668'}),
   furnitureItem({catalogId:'display-standard',category:'display',type:'display',name:'แท่นโชว์สินค้า',icon:'▤',size:{w:1,d:.6,h:1.4},unitPrice:16000,color:'#c8cbd0'}),
   furnitureItem({catalogId:'screen-43',category:'media',type:'screen',name:'จอแสดงผล',icon:'▣',size:{w:.9,d:.3,h:1.7},unitPrice:22000,color:'#30343b'}),
@@ -991,6 +995,7 @@ function addCatalogObject(catalogId){
 function selectObject(id){
   objectEditor.selectedId=objectById(id)?id:null;
   syncObjectControls();if(threeRenderer)threeRenderer.setSelected(objectEditor.selectedId);
+  if(S.view==='plan')render();
 }
 function rotateSelectedObject(){
   const obj=objectById(objectEditor.selectedId);if(!obj)return;
@@ -1956,7 +1961,9 @@ function planSVG(){
   const ox=(VW-W*sc)/2,oy=(VH-D*sc)/2;
   const P=(x,y)=>[ox+x*sc,oy+y*sc];
   const a=palette(),t=.1;
-  let g=`<rect width="${VW}" height="${VH}" fill="#0a0b0e"/>`;
+  let g=`<defs><marker id="plan-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#f3c86b"/></marker></defs>
+    <rect width="${VW}" height="${VH}" fill="#0a0b0e"/>`;
   g+=`<rect x="${ox}" y="${oy}" width="${(W*sc).toFixed(1)}" height="${(D*sc).toFixed(1)}"
        fill="${floorColor()}" opacity=".35" stroke="#333a44" stroke-width="1"/>`;
   for(let i=1;i<W;i++){const p=P(i,0),q=P(i,D);
@@ -1990,6 +1997,33 @@ function planSVG(){
       if(S.stDoor==='left') g+=dl(G.x,ay,G.x+dd,ay);
       if(S.stDoor==='right')g+=dl(G.x+G.w,ay,G.x+G.w-dd,ay);
     }}
+  const objectNode=obj=>{
+    const item=objectCatalogDef(obj.catalogId),name=item?.name||'องค์ประกอบ',shape=placementShape(obj.size,obj.position.x,obj.position.z,obj.rotationY||0);
+    const ordered=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>P(
+      shape.x+shape.axes[0].x*shape.half[0]*a+shape.axes[1].x*shape.half[1]*b,
+      shape.z+shape.axes[0].z*shape.half[0]*a+shape.axes[1].z*shape.half[1]*b));
+    const points=ordered.map(point=>point.map(value=>value.toFixed(1)).join(',')).join(' '),center=P(shape.x,shape.z);
+    const front=P(shape.x+shape.axes[1].x*shape.half[1]*.78,shape.z+shape.axes[1].z*shape.half[1]*.78);
+    const bounds=footprintSize(obj.size,obj.rotationY||0),selected=obj.id===objectEditor.selectedId,fill=item?.color||'#626b78';
+    const label=bounds.w*sc>=48&&bounds.d*sc>=25?name:(item?.icon||'▪');
+    const aria=name+' · X '+obj.position.x.toFixed(2)+' เมตร · Z '+obj.position.z.toFixed(2)+' เมตร · หมุน '+(obj.rotationY||0)+' องศา';
+    let node=`<g class="plan-object${selected?' selected':''}" data-object-id="${esc(obj.id)}" role="button" tabindex="0"
+      aria-label="${esc(aria)}" aria-pressed="${selected}"><title>${esc(aria)}</title>
+      <polygon class="plan-footprint" points="${points}" fill="${fill}" fill-opacity=".88"
+        stroke="${selected?'#f3c86b':'#d8dde5'}" stroke-width="${selected?'2.5':'1.15'}"/>`;
+    node+=`<line x1="${center[0].toFixed(1)}" y1="${center[1].toFixed(1)}" x2="${front[0].toFixed(1)}" y2="${front[1].toFixed(1)}"
+      stroke="#f3c86b" stroke-width="1.4" marker-end="url(#plan-arrow)"/>`;
+    node+=`<text x="${center[0].toFixed(1)}" y="${(center[1]+3.5).toFixed(1)}" fill="${inkOn(fill)}" font-size="9"
+      font-weight="600" text-anchor="middle" paint-order="stroke" stroke="${fill}" stroke-width="2.5"
+      font-family="'Noto Sans Thai',sans-serif">${esc(label)}</text>`;
+    if(selected)ordered.forEach(point=>{node+=`<circle cx="${point[0].toFixed(1)}" cy="${point[1].toFixed(1)}" r="2.6" fill="#f3c86b" stroke="#0a0b0e" stroke-width="1"/>`;});
+    return node+'</g>';
+  };
+  S.objects.forEach(obj=>{g+=objectNode(obj);});
+  const selectedObject=objectById(objectEditor.selectedId),selectedItem=selectedObject&&objectCatalogDef(selectedObject.catalogId);
+  const legend=S.objects.length?('เฟอร์นิเจอร์ '+S.objects.length+' ชิ้น · ลูกศร = ด้านหน้า'+(selectedItem?' · เลือก '+selectedItem.name:'')):'ยังไม่มีเฟอร์นิเจอร์ในผัง';
+  g+=`<rect x="10" y="10" width="250" height="23" rx="6" fill="#11151b" stroke="#303641"/>
+    <text x="20" y="25.5" fill="#cbd1da" font-size="9.5" font-family="'Noto Sans Thai',sans-serif">${esc(legend)}</text>`;
   const open=(x1,y1,x2,y2)=>{const p=P(x1,y1),q=P(x2,y2);
     return `<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#e0a83c" stroke-width="2.5"
       stroke-dasharray="6 5" opacity=".85"/>`;};
@@ -2004,6 +2038,19 @@ function planSVG(){
   g+=`<text x="${(rr[0]+32).toFixed(1)}" y="${(rr[1]+4).toFixed(1)}" font-size="11" fill="#8a919c"
        text-anchor="middle" font-family="Inter,sans-serif">ลึก ${D} m</text>`;
   return `<svg viewBox="0 0 ${VW} ${VH}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">${g}</svg>`;
+}
+
+function bindPlanObjectInteractions(container){
+  container.querySelectorAll('.plan-object').forEach(node=>{
+    const activate=restoreFocus=>{
+      const id=node.dataset.objectId;selectObject(id);
+      if(restoreFocus)requestAnimationFrame(()=>[...container.querySelectorAll('.plan-object')].find(item=>item.dataset.objectId===id)?.focus());
+    };
+    node.addEventListener('click',()=>activate(false));
+    node.addEventListener('keydown',event=>{
+      if(event.key==='Enter'||event.key===' '){event.preventDefault();activate(true);}
+    });
+  });
 }
 
 /* ================= 3D isometric ================= */
@@ -2265,7 +2312,7 @@ function render(){
   const v=document.getElementById('view');
   if(S.view==='three'){renderThreeView(v);return;}
   if(threeRenderer)threeRenderer.unmount(v);else v.classList.remove('three-active');
-  if(S.view==='plan')v.innerHTML=planSVG();
+  if(S.view==='plan'){v.innerHTML=planSVG();bindPlanObjectInteractions(v);}
   else{
     v.innerHTML=S.photo
       ?`<div class="photoslot" style="border-style:solid;border-color:var(--line)">
@@ -2442,16 +2489,17 @@ function sync(){
   document.getElementById('spec').innerHTML=rows.map(r=>
     `<div class="kv"><b>${r[0]}</b><span>${esc(r[1])}</span></div>`).join('');
 
+  const estimateLines=priceLines();
   document.getElementById('price').textContent='฿'+fmt(priceTotal());
-  document.getElementById('plines').innerHTML=priceLines().map(r=>
+  document.getElementById('plines').innerHTML=estimateLines.map(r=>
     `<div class="kv"><b style="color:var(--tx2);font-weight:400">${r[0]}</b></div>`).join('');
+  document.getElementById('summaryCount').textContent=String(estimateLines.length);
   render();
 }
 
 /* ================= right tool dock ================= */
 const workspace=document.getElementById('workspace');
 const dockPanel=document.getElementById('dockPanel');
-const dockSummaryPage=document.getElementById('dockSummaryPage');
 const moveToolSection=(sectionId,bodyId)=>{
   const section=document.getElementById(sectionId),body=document.getElementById(bodyId);
   if(section&&body)body.appendChild(section);
@@ -2466,8 +2514,9 @@ moveToolSection('settingsBrand','dockSignageBody');
 moveToolSection('settingsLights','dockLightingBody');
 const brandBar=document.querySelector('.brandbar'),signageSection=document.getElementById('settingsBrand');
 if(brandBar&&signageSection)signageSection.querySelector('.sech').after(brandBar);
-const summaryRow=document.querySelector('.row2');
-if(dockSummaryPage&&summaryRow)dockSummaryPage.appendChild(summaryRow);
+const summaryRow=document.querySelector('.row2'),selectedCard=summaryRow&&summaryRow.querySelector('.selected-card'),dockCatalogPage=document.getElementById('dockCatalogPage');
+if(selectedCard&&dockCatalogPage)dockCatalogPage.appendChild(selectedCard);
+if(summaryRow)summaryRow.remove();
 document.querySelectorAll('.dock-page').forEach(p=>p.dataset.toolPage=p.dataset.dockPage);
 document.querySelectorAll('.dock-tool').forEach(b=>{
   b.dataset.tool=b.dataset.dockPage;
@@ -2487,6 +2536,23 @@ function showDockPage(page,source){
 }
 document.querySelectorAll('.dock-tool').forEach(b=>b.onclick=()=>showDockPage(b.dataset.dockPage,b));
 document.getElementById('dockClose').onclick=()=>{workspace.classList.add('dock-collapsed');dockPanel.setAttribute('aria-hidden','true');};
+
+const summaryToggle=document.getElementById('summaryToggle'),summaryPopover=document.getElementById('summaryPopover'),summaryClose=document.getElementById('summaryClose');
+function closeHeaderSummary(returnFocus=true){
+  if(summaryPopover.hidden)return;
+  summaryPopover.hidden=true;summaryToggle.setAttribute('aria-expanded','false');
+  if(returnFocus)summaryToggle.focus();
+}
+function toggleHeaderSummary(){
+  const open=summaryPopover.hidden;summaryPopover.hidden=!open;summaryToggle.setAttribute('aria-expanded',String(open));
+  if(open)summaryClose.focus();
+}
+summaryToggle.onclick=toggleHeaderSummary;
+summaryClose.onclick=()=>closeHeaderSummary(true);
+document.addEventListener('pointerdown',event=>{
+  if(!summaryPopover.hidden&&!summaryPopover.contains(event.target)&&!summaryToggle.contains(event.target))closeHeaderSummary(false);
+});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!summaryPopover.hidden)closeHeaderSummary(true);});
 
 /* ================= inputs ================= */
 document.getElementById('brand').oninput=e=>{S.brand=e.target.value;render();};
