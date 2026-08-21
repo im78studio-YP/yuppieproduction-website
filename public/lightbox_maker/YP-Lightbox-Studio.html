@@ -1143,11 +1143,17 @@ function sdfOf(mask,gw,gh,box){
         sd[r+x]=(tmp[rm2+x]+2*tmp[rm1+x]+3*tmp[r+x]+2*tmp[rp1+x]+tmp[rp2+x])/9;
     }
   }
-  /* ห้ามการเกลี่ยเปลี่ยน "ใน/นอก" ของเซลล์ใดเลย ไม่งั้นลายเส้นบางๆ จะถูกกลืนหายไปทั้งเส้น
-     (เคยเจอ: ชั้นสีที่บางกว่า 4 ช่อง หายเกลี้ยงทั้งชั้น) */
+  /* จำกัดว่าการเกลี่ยขยับค่าได้ไม่เกิน ±LIM ช่อง
+     - ขอบตรงหรือขอบโค้งปกติ: การเกลี่ยขยับค่าน้อยมากอยู่แล้ว → ได้ผลเต็มที่ ขอบเนียนเหมือนเดิม
+     - ลายเส้นบางๆ: การเกลี่ยพยายามดึงค่ากลับข้าม 0 (เช่น −2 → +0.3) ซึ่งจะกลืนเส้นหายทั้งเส้น
+       การหนีบไว้ทำให้เส้นคงความกว้างไว้ได้ ไม่ใช่แค่ "รอดแบบบางเป็นเส้นผม"
+     (เคยเจอสองรอบ: หนีบแค่เครื่องหมาย → ชั้นสีเหลือกว้างเกือบศูนย์ earcut คายสามเหลี่ยมแบนเพียบ) */
+  const LIM=0.6;
   for(let i=0;i<sd.length;i++){
-    const r=raw[i], b=sd[i];
-    if((r<0)!==(b<0) || b===0) sd[i] = r<0? -0.05 : 0.05;
+    const r=raw[i], d=sd[i]-r;
+    let v = r + (d>LIM? LIM : d<-LIM? -LIM : d);
+    if((r<0)!==(v<0) || v===0) v = r<0? -0.15 : 0.15;
+    sd[i]=v;
   }
   return {sd,W,H,x0,y0};
 }
@@ -1512,7 +1518,12 @@ function contoursOf(mask,gw,gh,noMirrorX,boxes){
     });
     /* การแปลงพิกัดอาจกลับทิศวน (ฝาหลังกลับแกน y อย่างเดียว) — บังคับให้ถูกเสมอ
        วงนอกทวนเข็ม (พื้นที่บวก) · วงรูตามเข็ม เพื่อให้ normal ของผนังชี้ออกถูกด้าน */
+    /* ตัวกันเครื่องหมายพลิกทำให้เศษเล็กๆ กลายเป็น "เส้นผม" กว้างเกือบศูนย์
+       earcut จะคายสามเหลี่ยมแบนออกมาเพียบ แล้ว slicer จะขึ้น repaired
+       คัดทิ้งด้วยความกว้างเฉลี่ย = 2·พื้นที่/เส้นรอบรูป (ต่ำกว่าหัวฉีดมากๆ = พิมพ์ไม่ออกอยู่แล้ว) */
     const am=loopArea(P);
+    let per=0; for(let i=0,n=P.length;i<n;i++){ const a=P[i],b=P[(i+1)%n]; per+=Math.hypot(b[0]-a[0],b[1]-a[1]); }
+    if(Math.abs(am)<0.02 || 2*Math.abs(am)/Math.max(1e-9,per) < 0.03) continue;
     if((am>0)!==isOuter) P.reverse();
     (isOuter? outs : holes).push(P);
   }
@@ -1545,6 +1556,7 @@ function contoursOf(mask,gw,gh,noMirrorX,boxes){
    จึงต้องสร้างผนังจาก "ขอบนอกของผลลัพธ์ earcut" แทน ปิดสนิทโดยโครงสร้างเสมอ */
 function addPrism(M,groups,z0,z1){
   if(z1<=z0) return;
+  const seenPt=new Map();      // ใช้ร่วมกันทุกกลุ่ม จุดบีบเกิดข้ามกลุ่มได้ด้วย
   for(const g of groups){
     let area=Math.abs(loopArea(g.out));
     for(const h of g.holes) area-=Math.abs(loopArea(h));
@@ -1558,8 +1570,30 @@ function addPrism(M,groups,z0,z1){
 
     const pts=g.out.slice(), holeStarts=[];
     for(const h of g.holes){ holeStarts.push(pts.length); for(const p of h) pts.push(p); }
-    const idx=earcut(pts,holeStarts);
+    /* จุดบีบ: เส้นขอบวิ่งผ่านพิกัดเดิมซ้ำ (รูปทรงแตะตัวเองที่จุดเดียว)
+       ตรงนั้นผนังจะมาชนกัน 4 แผ่นบนเส้นตั้งเส้นเดียว slicer นับว่าไม่ manifold
+       ขยับจุดที่ซ้ำออกนิดเดียว (0.0002 มม.) ก็แยกออกจากกันได้ — เล็กกว่าความละเอียดเครื่องพิมพ์หลายพันเท่า
+       ต้องขยับใน pts ก่อน earcut ผนังกับฝาจึงยังใช้พิกัดเดียวกันเสมอ */
+    for(let i=0;i<pts.length;i++){
+      const k=Math.round(pts[i][0]*8192)+','+Math.round(pts[i][1]*8192);
+      const n=seenPt.get(k)||0;
+      if(n) pts[i]=[pts[i][0]+n*2e-4, pts[i][1]+n*1.3e-4];
+      seenPt.set(k,n+1);
+    }
+    let idx=earcut(pts,holeStarts);
     if(!idx.length) continue;
+    /* ตัดสามเหลี่ยมแบนทิ้ง "ก่อน" หาขอบนอก — ผนังกับฝาจึงยังอิงชุดเดียวกัน เมชไม่แหว่ง
+       (สามเหลี่ยมแบนคือสิ่งที่ slicer เก็บไปซ่อมแล้วขึ้นข้อความ repaired) */
+    if(idx.length){
+      const kp=[];
+      for(let i=0;i<idx.length;i+=3){
+        const A=pts[idx[i]],B=pts[idx[i+1]],C=pts[idx[i+2]];
+        const ar=Math.abs((B[0]-A[0])*(C[1]-A[1])-(C[0]-A[0])*(B[1]-A[1]));
+        if(ar>=4e-5) kp.push(idx[i],idx[i+1],idx[i+2]);
+      }
+      idx=kp;
+      if(!idx.length) continue;
+    }
 
     /* ฝาบน: earcut คืนสามเหลี่ยมวนทวนเข็ม → normal +z ตามลำดับเดิม
        ฝาล่าง: สลับสองจุดหลัง → normal −z และขอบกลับทิศพอดี */
@@ -1568,22 +1602,26 @@ function addPrism(M,groups,z0,z1){
       tri(M,[A[0],A[1],z1],[B[0],B[1],z1],[C[0],C[1],z1], 0,0, 1);
       tri(M,[A[0],A[1],z0],[C[0],C[1],z0],[B[0],B[1],z0], 0,0,-1);
     }
-    /* ขอบที่ปรากฏทิศเดียว = ขอบนอกของฝา → เอามาทำผนัง */
-    const dir=new Set();
+    /* ขอบที่ปรากฏทิศเดียว = ขอบนอกของฝา → เอามาทำผนัง
+       ต้องนับ "จำนวนครั้ง" ไม่ใช่แค่มี/ไม่มี เพราะ earcut ตอนตกไปใช้ทางสำรอง
+       (cure / split) อาจคายสามเหลี่ยมที่ใช้ขอบเดิมซ้ำได้ ถ้าใช้ Set จะนับตกแล้วเมชไม่ปิด */
+    const cnt=new Map();
     for(let i=0;i<idx.length;i+=3){
       const t=[idx[i],idx[i+1],idx[i+2]];
-      for(let k=0;k<3;k++) dir.add(t[k]+'_'+t[(k+1)%3]);
+      for(let k=0;k<3;k++){ const key=t[k]+'_'+t[(k+1)%3]; cnt.set(key,(cnt.get(key)||0)+1); }
     }
-    for(const key of dir){
-      const s=key.indexOf('_');
-      const ai=+key.slice(0,s), bi=+key.slice(s+1);
-      if(dir.has(bi+'_'+ai)) continue;
+    for(const [key,n] of cnt){
+      const s2=key.indexOf('_');
+      const ai=+key.slice(0,s2), bi=+key.slice(s2+1);
+      const open=n-(cnt.get(bi+'_'+ai)||0);
+      if(open<=0) continue;
       const p=pts[ai], q=pts[bi];
       const dx=q[0]-p[0], dy=q[1]-p[1];
       const L=Math.hypot(dx,dy); if(L<1e-12) continue;
       /* ลำดับนี้ให้ขอบ a→b ที่ z0 และ b→a ที่ z1 ซึ่งจับคู่กับฝาพอดี
          normal ที่ส่งไปตรงกับลำดับนี้อยู่แล้ว quad จึงไม่สลับจุดให้ */
-      quad(M,[p[0],p[1],z0],[q[0],q[1],z0],[q[0],q[1],z1],[p[0],p[1],z1], dy/L,-dx/L,0);
+      for(let k=0;k<open;k++)
+        quad(M,[p[0],p[1],z0],[q[0],q[1],z0],[q[0],q[1],z1],[p[0],p[1],z1], dy/L,-dx/L,0);
     }
   }
 }
@@ -1687,6 +1725,10 @@ const inBoxes=(x,y,pts,r)=>{ for(const p of pts) if(Math.abs(x-p[0])<=r&&Math.ab
    BUILD ALL PARTS  — ทุกอย่างอิงจาก G.panel (รูปทรงจริง) ไม่ใช่สี่เหลี่ยม
    ══════════════════════════════════════════════════════════════ */
 let PB={mx0:0,my0:0,w:0,h:0};
+/* ชิ้นที่วางซ้อนกันตาม z ถ้าปลายชนกันพอดีที่ระนาบเดียวกัน ขอบเส้นนั้นจะถูกใช้ 4 หน้า
+   slicer มองว่าไม่ manifold แล้วขึ้นข้อความ "repaired" — ให้เหลื่อมกันนิดเดียวแทน
+   0.01 มม. เล็กกว่าความละเอียดเครื่องพิมพ์มาก ไม่มีผลกับงานจริง */
+const ZEPS=0.01;
 
 function geomStack(){
   const b=S.box;
@@ -1938,14 +1980,14 @@ function buildParts(nt){
   if(S.hw.hole==='frame'){
     const notched=maskWhere((i,x,y)=> wallM[i] && !(y>=notchBandY && Math.abs(x-BI.cx)<=notchHalf));
     addSolid(FM,wallM, st.frameZ0, zTop-d);
-    addSolid(FM,notched, zTop-d, zTop);
+    addSolid(FM,notched, zTop-d-ZEPS, zTop);
   }else{
     addSolid(FM,wallM, st.frameZ0, zTop);
   }
   /* หลุมรับหัวขอ — ผนังบางลง J.pocketD เฉพาะช่วง z ของหัวขอ
      ปากหลุมฝั่งล็อกปิดกลับด้วยลาด 45° จึงพิมพ์ได้โดยไม่ต้องบริดจ์ */
   if(SP.length){
-    const inSnap=(x,y)=>inBoxes(x,y,SP,pocketR);
+    const inSnap=(x,y)=>inBoxes(x,y,SP,pocketR+1);
     const NP=6, ramp=J.fzRamp-J.fz1;
     const zs=[st.frameZ0, J.fz0, J.fz1];
     for(let j=1;j<=NP;j++) zs.push(J.fz1+ramp*j/NP);
@@ -1961,7 +2003,7 @@ function buildParts(nt){
       const m=maskWhereNear(SP,pocketR+1,(i,x,y)=>
         frameM[i] && inSnap(x,y) && DI[i]<=lim
         && !(S.hw.hole==='frame' && zm>=zTop-d && y>=notchBandY && Math.abs(x-BI.cx)<=notchHalf));
-      addSolid(FM,m, za, zb, false, boxesAt(SP,pocketR));
+      addSolid(FM,m, s? za-ZEPS : za, zb, false, boxesAt(SP,pocketR));
     }
   }
   const BP=screwPoints();
@@ -1974,14 +2016,14 @@ function buildParts(nt){
     const z0=zTop-bossLen;
     const bossM=maskWhere((i,x,y)=>P[i]&&nearBoss(x,y,bwc));
     /* ตัวเสา + รูนำ */
-    addSolid(FM,maskWhere((i,x,y)=>bossM[i]&&!inCircle(x,y,prc)), z0, zTop, false, boxesAt(BP,bwc));
+    addSolid(FM,maskWhere((i,x,y)=>bossM[i]&&!inCircle(x,y,prc)), z0-ZEPS, zTop, false, boxesAt(BP,bwc));
     /* ลาดรับ 45° จากผนังกรอบขึ้นมาหาเสา — ไม่งั้นเสาลอยกลางอากาศ พิมพ์ไม่ได้ */
     const taperH=Math.min(S.hw.bossW, z0-st.frameZ0);
     const NT=Math.max(2,Math.min(8,Math.round(taperH/0.9)));
     if(taperH>0.4) for(let j=0;j<NT;j++){
       const t = fw + ((j+1)/NT)*(S.hw.bossW/px);
       const zA = z0-taperH + j*(taperH/NT), zB = zA + taperH/NT;
-      addSolid(FM,maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t), zA, zB, false, boxesAt(BP,bwc));
+      addSolid(FM,maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t), j? zA-ZEPS : zA, zB, false, boxesAt(BP,bwc));
     }
   }
   FM.kind='frame'; FM.bossCount=BP.length; FM.snapCount=SP.length;
@@ -2011,23 +2053,26 @@ function buildParts(nt){
     const lipM=maskWhere((i,x,y)=> P[i] && DI[i]>i0 && DI[i]<=i1
                             && !(BP.length&&nearBoss(x,y,bwc+J.cl/px)) && !corridor(x,y)
                             && !(SP.length&&inBoxes(x,y,SP,slotR)));
-    addSolid(BM,lipM, b.back, b.back+J.lipH, true);
+    addSolid(BM,lipM, b.back-ZEPS, b.back+J.lipH, true);
 
     if(SP.length){
       /* ตัวขาสปริง — ผิวในเซาะบางลงเหลือ J.fingerT ให้ดีดได้โดยไม่เกินความเครียดที่ PLA รับไหว */
       const fi1=(b.frame+J.cl+J.fingerT)/px;
       const fingerM=maskWhereNear(SP,coreR+1,(i,x,y)=>
         P[i] && DI[i]>i0 && DI[i]<=fi1 && inCore(x,y) && !corridor(x,y));
-      addSolid(BM,fingerM, b.back, b.back+J.lipH, true, boxesAt(SP,coreR));
+      addSolid(BM,fingerM, b.back-ZEPS, b.back+J.lipH, true, boxesAt(SP,coreR));
 
       /* หัวขอที่ปลายขา — ยื่นออกด้านนอก J.q
          ฝั่ง z ต่ำ (หน้าล็อก) เป็นลาด 45° เพราะเป็นด้านที่เนื้อโผล่เพิ่มตอนพิมพ์
          ฝั่ง z สูง (ปลายบ่า) เป็นลาดนำเข้าที่ชันน้อยกว่า กดเข้าง่าย */
-      const barbSlab=(za,zb,q)=>{
+      let barbFirst=true;
+      const barbSlab=(za0,zb,q)=>{
+        const za = barbFirst? za0 : za0-ZEPS;
         if(zb-za<0.02||q<=0.01) return;
+        barbFirst=false;
         const lo=(b.frame+J.cl-q)/px;
         const m=maskWhereNear(SP,coreR+1,(i,x,y)=>
-          P[i] && DI[i]>lo && DI[i]<=i0 && inCore(x,y) && !corridor(x,y));
+          P[i] && DI[i]>lo && DI[i]<=i0+1 && inCore(x,y) && !corridor(x,y));
         addSolid(BM,m, za, zb, true, boxesAt(SP,coreR));
       };
       /* จำนวนชั้นของลาด — ละเอียดกว่าความสูงชั้นพิมพ์ก็ไม่ได้อะไร */
