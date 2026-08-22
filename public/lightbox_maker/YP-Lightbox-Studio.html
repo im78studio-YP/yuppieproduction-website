@@ -2804,7 +2804,7 @@ function draw(){
   $('#glhint').style.display = is3d?'':'none';
   if(is3d){
     let has=0; if(G&&!G.empty&&G.panel) for(let i=0;i<G.panel.length;i++) if(G.panel[i]){has=1;break;}
-    if(!has){ glFail('ยังไม่มีงานให้แสดง — พิมพ์ข้อความหรืออัปโหลดโลโก้ก่อน'); return; }
+  if(!has){ glFail('ยังไม่มีไฟล์ให้แสดง — พิมพ์ข้อความหรืออัปโหลดโลโก้ก่อน'); return; }
     $('#glFail').style.display='none';
     try{ if(!glRender()) glFail('เบราว์เซอร์นี้เปิด WebGL ไม่ได้ — ใช้แท็บ “แยกชั้น” แทน'); }
     catch(e){ console.error(e); glFail('แสดงผล 3 มิติไม่สำเร็จ: '+e.message+' — ลองกดแท็บอื่นแล้วกลับมาใหม่'); }
@@ -2829,7 +2829,7 @@ function draw(){
     c.fillStyle=view==='lit'?'#e7e9ec':'#3a3f47';
     c.textAlign='center'; c.font='600 16px sans-serif';
     const d=S.src.diag, img=S.src.mode==='image'&&S.src.imgData;
-    let t1='ยังไม่มีงาน', t2='พิมพ์ข้อความ หรืออัปโหลดโลโก้ทางแผงซ้าย';
+  let t1='ยังไม่มีไฟล์', t2='พิมพ์ข้อความ หรืออัปโหลดโลโก้ทางแผงซ้าย';
     if(img&&d&&d.tainted){ t1='อ่านพิกเซลของรูปนี้ไม่ได้'; t2='ลองเซฟเป็น PNG แล้วอัปโหลดใหม่'; }
     else if(img&&d&&d.raw===0){ t1='ไฟล์เปิดได้ แต่วาดออกมาว่างเปล่า'; t2='ดูสาเหตุที่หัวข้อ 7 · ตรวจก่อนพิมพ์ ทางแผงขวา'; }
     else if(img&&d&&d.bgAte){ t1='ลบพื้นหลังตัดทั้งภาพออกหมด'; t2='ลดค่า “ความคลาดสี” หรือปิดตัวเลือกลบพื้นหลัง'; }
