@@ -109,6 +109,7 @@ input[type=range]{width:100%;accent-color:var(--acc);background:none;border:0;pa
 .sw{width:26px;height:26px;border-radius:6px;border:1px solid #0006;flex:0 0 auto;cursor:pointer;position:relative;overflow:hidden;display:inline-block;vertical-align:middle}
 .sw input[type=color]{position:absolute;inset:-6px;opacity:0;cursor:pointer;width:auto;padding:0;border:0}
 .hexin{width:74px;flex:0 0 74px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:-0.2px;text-transform:uppercase;padding:5px 4px;text-align:center}
+.ringw{width:46px;flex:0 0 46px;padding:5px 4px;text-align:right;font-size:11px}
 .hexin.bad{border-color:var(--err)}
 .minibtn{background:none;border:1px solid var(--line);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--tx2);flex:0 0 auto}
 .minibtn:hover{border-color:var(--acc2);color:var(--tx)}
@@ -428,7 +429,7 @@ Studio</textarea>
       <div class="row" style="margin-top:10px"><label>รูปแบบงาน</label>
         <select id="buildMode" class="grow">
           <option value="full">พิมพ์ทั้งใบ — หน้า + กรอบ + ฝาหลัง</option>
-          <option value="service">พิมพ์แยกฝาหน้าถอดเปลี่ยนได้ — หน้า + ตัวกล่อง + ฝาหลัง</option>
+          <option value="service">พิมพ์แยกฝาหน้าถอดเปลี่ยนได้ + กันแสงรั่ว — หน้า + ตัวกล่อง + ฝาหลัง</option>
           <option value="shell">พิมพ์เฉพาะตัวกล่อง — หน้าอะครีลิค · หลังพลาสวูด</option>
         </select></div>
       <p class="hint" id="modeHint" style="margin:6px 0 10px"></p>
@@ -606,8 +607,8 @@ function defaults(){ return {
   hw:{ hole:'frame', dia:7, hang:false,
        joint:'snap', lipH:10, lipW:2, lipCl:0.2, bossW:8, screwDepth:10,
        snapBarb:0.45, snapW:12 },
-  /* โหมดงาน — full = พิมพ์ทั้งใบ · shell = พิมพ์เฉพาะตัวกล่อง หน้าใช้อะครีลิค หลังใช้พลาสวูด */
-  build:{ mode:'full' },
+  /* โหมดงาน — service = ฝาหน้าถอดเปลี่ยนได้ มีแผ่นกันแสงรั่วเป็นลิ้นสวม (ค่าแนะนำ) */
+  build:{ mode:'service' },
   /* ร่อง+คิ้วรับแผ่นในโหมด shell (มิลลิเมตร) */
   sheet:{ acrT:3, acrLedge:2, plsT:5, plsLedge:2, cl:0.2 },
   price:{ qty:1, fil:750, mach:25, laborMin:25, laborRate:300, led:150, waste:8, margin:45, flush:120,
@@ -1961,7 +1962,10 @@ const ZEPS=0.01;
              ที่ zA2 กับ zB2 เนื้อ "หด" เข้า = ผิวอิสระ พิมพ์ได้ไม่ต้องซัพพอร์ต */
 const SHELL_FACE=1.2;                    // ความสูงตัวคิ้ว (หน้าตั้ง) — พอให้แข็งแรงโดยไม่กินความลึกกล่อง
 function isShell(){ return !!(S.build && S.build.mode==='shell'); }
-function isService(){ return !!(S.build && S.build.mode==='service'); }
+/* โปรเจกต์รุ่นก่อนที่เลือก layered ให้เปิดเป็น service อัตโนมัติ */
+function isLayered(){ return !!(S.build && (S.build.mode==='service'||S.build.mode==='layered')); }
+function isService(){ return !!(S.build && (S.build.mode==='service'||S.build.mode==='layered')); }
+function frontModuleLabel(){ return 'ฝาหน้าถอดเปลี่ยนได้ + กันแสงรั่ว'; }
 function shellSpec(){
   const b=S.box, sh=S.sheet||{};
   const cl   = Math.max(0, +sh.cl||0);
@@ -1989,7 +1993,13 @@ function geomStack(){
   }
   const colorT=b.colorT, diff=b.diff;
   const bgT = Math.max(b.bgT, colorT+0.2);
-  return {colorT,diff,bgT,frameZ0:bgT,total:bgT+b.depth+b.back};
+  /* หน้าแบบซ้อนชั้น: สีอยู่ชั้นหน้า แล้วมีแผ่นขาวนมเต็มพื้นที่รองรับอยู่ด้านหลัง
+     จึงไม่มีรอยต่อสีแบบปลายชนปลายที่แสงลอดได้ */
+  const faceBaseT=isLayered()?Math.max(bgT,colorT+diff):bgT;
+  /* โมดูลถอดเปลี่ยนได้: กรอบเริ่มต่อจากผิวหน้าสีทันทีเพื่อรองรับหน้าแปลน
+     แผ่นขาวนมอยู่เฉพาะช่องในของกรอบและยื่นเข้าโพรงเป็นลิ้น */
+  const frameZ0=isLayered()?colorT:bgT;
+  return {colorT,diff,bgT,faceBaseT,frameZ0,total:frameZ0+b.depth+b.back};
 }
 function bedSize(){ return Math.max(80, +S.exp.bed||256); }
 function bedHeight(){ return Math.max(80, +S.exp.bedH||bedSize()); }
@@ -2323,27 +2333,40 @@ function buildParts(nt){
   PB = panelBounds();
   if(PB.empty) return parts;
   const J=jointSpec(), fw=b.frame/px, zTop=st.frameZ0+b.depth;
-  /* โหมดซ่อม: ฝาหน้าร่น 0.2 มม. รอบด้าน เพื่อถอด-ใส่ผ่านร่องของตัวกล่องได้ */
-  const frontFit=isService()?maskWhere(i=>P[i]&&DI[i]>0.2/px):null;
+  /* ฝาหน้าโมดูล: ผิวหน้าร่น 0.2 มม. เพื่อไม่ฝืดกับกรอบ
+     แผ่นขาวนมด้านหลังร่นเข้าไปถึงขอบช่องในของกรอบ แล้วสอดลึก 1.2 มม.
+     จึงเป็นลิ้นนำศูนย์ ขณะที่ผิวหน้าที่ใหญ่กว่าเป็นบ่าหยุดและคิ้วบังแสง */
+  const frontClear=0.2, tongueDepth=Math.min(1.2,Math.max(0.6,b.depth-4));
+  const frontFit=isService()?maskWhere(i=>P[i]&&DI[i]>frontClear/px):null;
+  const tongueFit=isService()?maskWhere(i=>P[i]&&DI[i]>(b.frame+frontClear)/px):null;
   const trimFront=mk=>{ if(!frontFit) return mk; const out=mk.slice(); for(let i=0;i<out.length;i++) if(!frontFit[i]) out[i]=0; return out; };
 
-  /* --- 1. ชั้นสีทั้งหมด (พื้นใน · ลวดลาย · วงขอบ) --- */
+  const frontPrefix=isService()?frontModuleLabel()+' · ':'';
+  /* --- 1. ชั้นสีทั้งหมด (พื้นใน · ลวดลาย · วงขอบ) ---
+     โหมดหน้าซ้อนชั้นวางสีทุกสีเป็นผิวหน้าบาง ๆ เหนือแผ่นขาวนมต่อเนื่อง
+     ไม่มีการให้สีสองสีชนกันจนเป็นแนวทะลุถึงโพรงไฟ */
   for(let k=0;k<S.pal.length;k++){
     const p=S.pal[k];
     if(!p.cells) continue;
     const mk=trimFront(maskOf(k));
-    const M=Mesh((isService()?'ฝาหน้าถอดเปลี่ยนได้ · ':'')+(p.name||('สี '+k))+' · '+nearestFilament(p.hex), p.hex, nt);
-    addSolid(M,mk,0,p.glow?st.colorT:st.bgT);
+    const M=Mesh(frontPrefix+(p.name||('สี '+k))+' · '+nearestFilament(p.hex), p.hex, nt);
+    addSolid(M,mk,0,isLayered()?st.colorT:(p.glow?st.colorT:st.bgT));
     M.kind='color'; M.module=isService()?'front':''; M.glow=!!p.glow;
     parts.push(M);
   }
 
   /* --- 2. ชั้นกระจายแสง --- */
-  const gm=trimFront(maskGlow());
+  const gm=isLayered()?tongueFit:trimFront(maskGlow());
   let anyGlow=false; for(let i=0;i<N;i++) if(gm[i]){anyGlow=true;break;}
   if(anyGlow){
-    const M=Mesh((isService()?'ฝาหน้าถอดเปลี่ยนได้ · ':'')+'ชั้นกระจายแสง · ขาว/ใส','#F2F2E8',nt);
-    addSolid(M,gm,st.colorT,st.colorT+st.diff);
+    const M=Mesh(frontPrefix+(isLayered()?'แผ่นขาวนมต่อเนื่อง · ชั้นกันแสงรั่ว':'ชั้นกระจายแสง')+' · ขาว/ใส','#F2F2E8',nt);
+    if(isLayered()){
+      /* แผ่นขาวนมอยู่ในช่องในของกรอบ: หน้าแปลนจึงประกบกรอบทันที
+         แล้วส่วนเดียวกันต่อเป็นลิ้นสอดเข้าด้านในอีก 1.2 มม. */
+      const seatZ=st.colorT+st.faceBaseT;
+      addSolid(M,gm,st.colorT,seatZ);
+      addSolid(M,tongueFit,seatZ-ZEPS,seatZ+tongueDepth);
+    }else addSolid(M,gm,st.colorT,st.colorT+st.diff);
     M.kind='diffuser'; M.module=isService()?'front':''; M.glow=true;
     parts.push(M);
   }
@@ -2608,7 +2631,7 @@ function make3mf(parts,title){
       comps+=`<object id="${gid}" type="model" name="${xesc(title)} — ${label}"><components>${ids.map(o=>`<component objectid="${o}"/>`).join('')}</components></object>\n`;
       items+=`<item objectid="${gid}" transform="1 0 0 0 1 0 0 0 1 ${place.x} ${place.y} 0"/>`;
     };
-    makeGroup('front','ฝาหน้า (รวมชั้นกระจายแสง)',PK.items.panel);
+    makeGroup('front',frontModuleLabel()+' (รวมชั้นกระจายแสง)',PK.items.panel);
     makeGroup('box','ตัวกล่อง',PK.items.box);
     makeGroup('back','ฐาน/ฝาหลัง',PK.items.back);
   }else{
@@ -2723,7 +2746,7 @@ const safeName = s => (s||'lightbox').replace(/[\\/:*?"<>|]/g,'_').trim().slice(
 const fileToken = s => safeName(s).replace(/\s+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'') || 'งานใหม่';
 const productionBaseName = () => `YP_lightbox_${fileToken(S.name)}`;
 function partFileLabel(M){
-  if(M.module==='front') return M.kind==='diffuser'?'ฝาหน้าถอดเปลี่ยนได้_ชั้นกระจายแสง':'ฝาหน้าถอดเปลี่ยนได้_'+fileToken(M.name.replace('ฝาหน้าถอดเปลี่ยนได้ · ',''));
+  if(M.module==='front') return M.kind==='diffuser'?frontModuleLabel()+'_ชั้นกระจายแสง':frontModuleLabel()+'_'+fileToken(M.name.replace(/^ฝาหน้า[^·]* · /,''));
   if(M.module==='box') return 'ตัวกล่อง_ร่องรับฝาหน้า';
   if(M.kind==='shell') return 'ตัวกล่อง';
   if(M.kind==='frame') return 'ตัวกล่อง';
@@ -2862,14 +2885,14 @@ function drawLayers(c,cv,px){
       const cc=q.getContext('2d'), im=cc.createImageData(gw,gh), d=im.data;
       for(let i=0;i<G.owner.length;i++) if(test(i)){const o=i*4;d[o]=rgb[0];d[o+1]=rgb[1];d[o+2]=rgb[2];d[o+3]=255;}
       cc.putImageData(im,0,0); return q; };
-  const gmL=maskGlow();
+  const gmL=isLayered()?maskWhere(i=>G.panel[i]&&G.edtIn[i]>(S.box.frame+0.2)/G.px):maskGlow();
   const dif=maskImg(i=>gmL[i],[245,245,236]);
   const backImg=maskImg(i=>G.panel&&G.panel[i],[49,54,63]);
   const fwc=b.frame/G.px;
   const frameImg=maskImg(i=>G.panel&&G.panel[i]&&G.edtIn[i]<=fwc,[74,80,91]);
   stack.push({img:backImg,label:`แผ่นหลัง ${b.back} มม.`});
   stack.push({img:frameImg,label:`กรอบข้าง ลึก ${b.depth} มม. · หนา ${b.frame} มม.`});
-  stack.push({img:dif,label:`ชั้นกระจายแสง ${st.diff} มม.`});
+  stack.push({img:dif,label:isLayered()?`แผ่นขาวนมในช่องกรอบ + ลิ้นสวมลึก 1.2 มม. · กันแสงรั่ว`:`ชั้นกระจายแสง ${st.diff} มม.`});
   for(let k=S.pal.length-1;k>=1;k--) if(S.pal[k].cells)
     stack.push({img:layerImage(k),label:`${S.pal[k].name} · ${S.pal[k].hex.toUpperCase()} · ${nearestFilament(S.pal[k].hex)}`});
   if(S.pal[0].cells) stack.push({img:layerImage(0),label:`${S.pal[0].name} ${st.bgT.toFixed(1)} มม. · ${nearestFilament(S.pal[0].hex)}`});
@@ -2951,11 +2974,13 @@ function palRow(){
   d.innerHTML=`<span class="sw"><input type="color"></span>
     <span class="nm"><b></b><i></i></span>
     <input type="text" class="hexin" spellcheck="false">
+    <input type="number" class="ringw" min="0" max="30" step="0.5" style="display:none" title="ความกว้างขอบ (มม.)">
     <button class="glowbtn"></button>`;
   d.C=d.querySelector('input[type=color]');
   d.X=d.querySelector('.hexin');
   d.SW=d.querySelector('.sw');
   d.B=d.querySelector('.nm b'); d.I=d.querySelector('.nm i');
+  d.W=d.querySelector('.ringw');
   d.G=d.querySelector('.glowbtn');
   const put=hex=>{ if(d.onHex) d.onHex(hex); };
   d.C.addEventListener('input',e=>put(e.target.value));
@@ -2967,13 +2992,18 @@ function palRow(){
   d.X.addEventListener('blur',()=>{ d.X.classList.remove('bad'); if(d.lastHex) d.X.value=d.lastHex.toUpperCase(); });
   d.X.addEventListener('keydown',e=>{ if(e.key==='Enter'){ commit(); d.X.blur(); } });
   d.G.addEventListener('click',()=>{ if(d.onGlow) d.onGlow(); });
-  d.set=(hex,title,sub,glow)=>{
+  const widthCommit=()=>{ if(d.onWidth&&d.W.value!=='') d.onWidth(+d.W.value); };
+  d.W.addEventListener('change',widthCommit);
+  d.W.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); widthCommit(); d.W.blur(); } });
+  d.set=(hex,title,sub,glow,width)=>{
     d.lastHex=hex;
     d.SW.style.background=hex;
     setIfIdle(d.C,hex);
     setIfIdle(d.X,hex.toUpperCase());
-    d.B.innerHTML=title; d.I.textContent=sub;
+    d.B.textContent=title; d.I.textContent=sub;
     d.G.textContent=glow?'สว่าง':'ทึบ'; d.G.classList.toggle('on',!!glow);
+    d.W.style.display=width==null?'none':'';
+    if(width!=null&&document.activeElement!==d.W) d.W.value=width;
   };
   return d;
 }
@@ -2989,9 +3019,12 @@ function renderPalette(){
     d.onHex=hex=>{ if(ring){ ring.hex=hex; syncRingUI(); } else { p.hex=hex; p.locked=true; }
                    d.SW.style.background=hex; d.lastHex=hex; schedule(false); };
     d.onGlow=()=>{ if(ring){ ring.glow=!ring.glow; syncRingUI(); } else p.glow=!p.glow; schedule(false); };
-    d.set(p.hex, (p.name||('สี '+i))+(ring?` <span class="badge">${ring.w} มม.</span>`:''),
+    d.onWidth=v=>{ if(!ring||!isFinite(v)) return; ring.w=clamp(v,0,30);
+      const rid='ring'+p.ringIndex+'w'; const slider=$('#'+rid); if(slider) slider.value=ring.w;
+      setLabel(rid+'V',ring.w,x=>x+' มม.'); syncRingUI(); schedule(false); };
+    d.set(p.hex, p.name||('สี '+i),
           `${nearestFilament(p.hex)} · ${p.hex.toUpperCase()} · ${pct.toFixed(1)}%`,
-          ring? ring.glow : p.glow);
+          ring? ring.glow : p.glow, ring?ring.w:null);
   });
 }
 /* คืนค่าสีทุกชั้นกลับเป็นค่าตั้งต้น */
@@ -3346,7 +3379,7 @@ async function doExport(){
     if(fmt==='3mf'||fmt==='both'||fmt==='all'){
       busy(true,'กำลังเขียนไฟล์ 3MF…'); await new Promise(r=>setTimeout(r,20));
       const blob=await make3mf(pr,S.name);
-      download(blob,`${name}_${isShell()?'ตัวกล่อง':isService()?'ชุดฝาหน้าถอดเปลี่ยนได้':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
+      download(blob,`${name}_${isShell()?'ตัวกล่อง':isLayered()?'ชุดฝาหน้าซ้อนชั้นกันแสงรั่ว':isService()?'ชุดฝาหน้าถอดเปลี่ยนได้':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
     }
     if(fmt==='stl'||fmt==='both'||fmt==='all'){
       busy(true,'กำลังเขียนไฟล์ STL…'); await new Promise(r=>setTimeout(r,20));
@@ -3419,9 +3452,10 @@ function cutReadme(G0,holes){
 
 function readme(parts){
   const st=geomStack();
-  if(isService()) return ['YP Lightbox Studio — '+S.name+'  (โหมดฝาหน้าถอดเปลี่ยนได้)',''
-   ,'ชุดพิมพ์ประกอบด้วย 3 กลุ่ม: ฝาหน้าถอดเปลี่ยนได้ · ตัวกล่อง · ฝาหลัง'
+  if(isService()) return ['YP Lightbox Studio — '+S.name+'  (โหมด'+frontModuleLabel()+')',''
+   ,'ชุดพิมพ์ประกอบด้วย 3 กลุ่ม: '+frontModuleLabel()+' · ตัวกล่อง · ฝาหลัง'
    ,'ฝาหน้าร่นจากขอบนอก 0.2 มม. รอบด้าน เพื่อสวมในกรอบได้โดยไม่ฝืด'
+   ,...(isLayered()?['แผ่นขาวนมอยู่ในช่องกรอบ และมีลิ้นสวมเข้าตัวกล่องลึก 1.2 มม. เพื่อตัดทางแสงที่รอยต่อสี']:[])
    ,'กรอบข้างสีทึบทำหน้าที่เป็นคิ้วบังแสงรอบรอยต่อ'
    ,''
    ,'การซ่อม: เปิดฝาหลังตามวิธีประกบที่เลือก นำโมดูลฝาหน้าเดิมออก แล้วสวมฝาหน้าใหม่จากด้านหน้า'
@@ -4050,6 +4084,7 @@ function updateBadges(){
 /* ---------- push state → controls ---------- */
 function pushToUI(){
   /* โปรเจกต์ที่บันทึกก่อนเพิ่มระบบนี้ยังไม่มีสองค่านี้ */
+  if(S.build&&S.build.mode==='layered') S.build.mode='service';
   if(!['off','standard','strict'].includes(S.art.seal)) S.art.seal='off';
   if(!isFinite(+S.art.choke)) S.art.choke=0.6;
   for(const [id,path,kind,lab,fmt] of BIND){
@@ -4085,8 +4120,9 @@ function syncPreviewAction(){
 
 /* ---------- สลับหน้าตาระหว่างโหมดพิมพ์ทั้งใบ กับ พิมพ์เฉพาะตัวกล่อง ---------- */
 function syncModeUI(){
-  const sh=isShell();
+  const sh=isShell(), st=geomStack();
   const service=isService();
+  const layered=isLayered();
   const show=(id,on)=>{ const e=$('#'+id); if(e) e.style.display = on?'':'none'; };
   show('fullThick',!sh); show('fullBack',!sh); show('shellThick',sh);
   show('artColor',!sh);  show('backColorRow',!sh);
@@ -4099,6 +4135,9 @@ function syncModeUI(){
     ? '<b>พิมพ์เฉพาะตัวกล่อง</b> — ผนังมีร่องและคิ้วรับแผ่นทั้งหัวและท้าย '+
       'หน้าใช้อะครีลิคตัดเลเซอร์ หลังใช้พลาสวูด ประหยัดเวลาพิมพ์ได้มาก '+
       'ตอนส่งออกจะได้ไฟล์เส้นตัด <b>DXF และ SVG</b> ของทั้งสองแผ่นมาด้วย'
+    : layered
+    ? '<b>ฝาหน้าถอดเปลี่ยนได้ + กันแสงรั่ว</b> — ผิวหน้าสีเป็นหน้าแปลน ส่วนแผ่นขาวนมร่นเข้าไปเป็นลิ้นสวมในตัวกล่อง '+
+      'จึงไม่มีรอยต่อสีที่เปิดถึงโพรงไฟ · ส่งออกเป็นฝาหน้า ตัวกล่อง และฝาหลังแยกกัน'
     : service
     ? '<b>ฝาหน้าถอดเปลี่ยนได้</b> — ส่งออกโมดูลฝาหน้า ตัวกล่อง และฝาหลังแยกกัน '+
       'ฝาหน้าร่นรอบด้าน 0.2 มม. เพื่อสวมเข้าร่องและเปลี่ยนเฉพาะหน้าได้เมื่อพิมพ์เสีย'
@@ -4109,6 +4148,9 @@ function syncModeUI(){
       'ร่องอะครีลิค + ความลึกกล่อง + ร่องพลาสวูด<br>'+
       'คิ้วบนเป็น<b>ลาด 45°</b> รับขอบอะครีลิคแบบสัมผัสเส้นรอบรูป แผ่นจึงเข้าศูนย์เองและพิมพ์ได้ไม่ต้องซัพพอร์ต · '+
       'คิ้วล่างเป็น<b>หน้าเรียบ</b> พลาสวูดวางแนบเต็มหน้า'
+    : layered
+    ? 'ผิวหน้าสีร่น <b>0.2 มม.</b> รอบด้านและประกบกรอบทันที ส่วนแผ่นขาวนมอยู่ในช่องกรอบ '+
+      'แล้วต่อเป็นลิ้นสอดเข้าตัวกล่องลึก <b>1.2 มม.</b> · ผิวหน้าทำหน้าที่เป็นบ่าหยุดและคิ้วบังแสง'
     : service
     ? 'ฝาหน้าจะร่นเข้าจากขอบนอก <b>0.2 มม.</b> รอบด้านเพื่อประกอบและถอดซ่อมได้ · '+
       'กรอบข้างทึบแสงทำหน้าที่เป็นคิ้วบังแสงรอบรอยต่อ'
