@@ -602,7 +602,7 @@ function defaults(){ return {
      หน้ากล่อง 1.2 มม. เท่ากันทั้งแผ่น (ส่วนสว่าง 0.4+0.8 · ส่วนทึบ 1.2) = 6 ชั้นที่ layer 0.2
      กรอบข้าง 2.4 · ฝาหลัง 3 · เผื่อสวม 0.2 · บ่าหนา 2 สูง 10 */
   box:{ W:256,H:256,depth:35,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:3,
-        frameColor:'#1a1a1a', backColor:'#1a1a1a', bandN:1, bandColors:['#1a1a1a'] },
+        frameColor:'#1a1a1a', backColor:'#1a1a1a', bandN:1, bandColors:['#1a1a1a'], bandRules:[] },
   hw:{ hole:'frame', dia:7, hang:false,
        joint:'snap', lipH:10, lipW:2, lipCl:0.2, bossW:8, screwDepth:10,
        snapBarb:0.45, snapW:12 },
@@ -2305,10 +2305,24 @@ function buildShell(nt){
 }
 
 function frameBandSpec(z0,z1){
-  const n=clamp(Math.round(+S.box.bandN||1),1,4), colors=(S.box.bandColors||[]).slice(0,n);
-  while(colors.length<n) colors.push(S.box.frameColor||'#1a1a1a');
-  const dz=(z1-z0)/n;
-  return colors.map((hex,i)=>({hex,z0:z0+dz*i,z1:i===n-1?z1:z0+dz*(i+1),i}));
+  const b=S.box, n=clamp(Math.round(+b.bandN||1),1,4), total=z1-z0;
+  const colors=b.bandColors||[], rules=b.bandRules||[];
+  const accents=[];
+  for(let i=1;i<n;i++){
+    const r=rules[i-1]||{}, width=clamp(+r.width||5,0.4,Math.max(0.4,total));
+    const pos=clamp(+r.pos||50,0,100)/100;
+    const a=clamp(pos*total-width/2,0,Math.max(0,total-width));
+    accents.push({a,b:a+width,hex:colors[i]||'#ee3c96',i});
+  }
+  const cuts=[0,total]; accents.forEach(a=>cuts.push(a.a,a.b));
+  cuts.sort((a,b)=>a-b);
+  const out=[];
+  for(let j=0;j<cuts.length-1;j++){
+    const a=cuts[j], e=cuts[j+1]; if(e-a<0.01) continue;
+    const mid=(a+e)/2, hit=[...accents].reverse().find(x=>mid>=x.a&&mid<=x.b);
+    out.push({hex:hit?hit.hex:(colors[0]||b.frameColor||'#1a1a1a'),z0:z0+a,z1:z0+e,i:hit?hit.i:0});
+  }
+  return out;
 }
 
 function buildParts(nt){
@@ -2940,6 +2954,7 @@ function resetPalette(){
   S.box.backColor=D.box.backColor;
   S.box.bandN=D.box.bandN;
   S.box.bandColors=[...D.box.bandColors];
+  S.box.bandRules=[];
   /* คืนสีงาน: ปลดล็อกเพื่อให้โหมดรูปภาพไปดึงสีจริงจากไฟล์ใหม่
      ส่วนโหมดข้อความใช้ชุดสีตั้งต้นตรงๆ */
   S.pal = S.pal.filter(p=>p.role!=='ring')
@@ -3888,6 +3903,9 @@ function attachNumBoxes(){
       v=clamp(v,lo,hi);
       el.value=v; sp(path,v);
       if(flag==='g'){ S.pal.forEach((p,i)=> p.glow=(S.art.glowMode==='bg')? i===0 : i>0 ); }
+      /* ค่าที่พิมพ์ในช่องตัวเลขต้องมีผลเท่ากับลากสไลด์ รวมถึง UI แบบไดนามิก */
+      if(id==='boxBandN') syncBoxBandUI();
+      if(id==='txtContent') syncLineStyleUI();
       schedule(flag==='s', flag==='q'?'q':flag==='d'?'d':null);
     };
     inp.addEventListener('input',commit);
@@ -4097,28 +4115,49 @@ function syncLineStyleUI(){
   host.innerHTML=lines.length? '<hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><div class="row"><label style="flex-basis:auto;color:var(--tx);font-weight:600">ตั้งค่ารายบรรทัด</label></div>' : '';
   lines.forEach((line,i)=>{
     const st=styles[i], row=document.createElement('div'); row.className='it';
-    row.innerHTML=`<span class="sw"><input type="color" value="${st.hex}"></span><span class="nm"><b>บรรทัด ${i+1}</b><i>${line}</i></span><input type="range" min="40" max="180" step="1" value="${st.scale}"><span class="unit">${st.scale}%</span>`;
-    const color=row.querySelector('input[type="color"]'), scale=row.querySelector('input[type="range"]'), out=row.querySelector('.unit');
-    color.addEventListener('input',()=>{ st.hex=color.value; S.src.brandDefault=false; schedule(true); });
-    scale.addEventListener('input',()=>{ st.scale=+scale.value; out.textContent=st.scale+'%'; S.src.brandDefault=false; schedule(true); });
+    row.innerHTML=`<span class="sw"><input type="color" value="${st.hex}"></span><span class="nm"><b>บรรทัด ${i+1}</b><i>${line}</i></span><input type="range" min="40" max="180" step="1" value="${st.scale}"><input class="num" type="number" min="40" max="180" step="1" value="${st.scale}"><span class="unit">%</span>`;
+    const color=row.querySelector('input[type="color"]'), scale=row.querySelector('input[type="range"]'), num=row.querySelector('input[type="number"]');
+    row.querySelector('.sw').style.background=st.hex;
+    color.addEventListener('input',()=>{ st.hex=color.value; row.querySelector('.sw').style.background=st.hex; S.src.brandDefault=false; schedule(true); });
+    const setScale=v=>{ st.scale=clamp(+v||100,40,180); scale.value=st.scale; num.value=st.scale; S.src.brandDefault=false; schedule(true); };
+    scale.addEventListener('input',()=>setScale(scale.value)); num.addEventListener('input',()=>{if(num.value!=='')setScale(num.value);}); num.addEventListener('change',()=>setScale(num.value));
     host.appendChild(row);
   });
 }
 function syncBoxBandUI(){
   const b=S.box, n=clamp(Math.round(+b.bandN||1),1,4), host=$('#boxBandList'), label=$('#boxBandNV');
-  b.bandN=n; if(!Array.isArray(b.bandColors)) b.bandColors=[];
+  b.bandN=n; if(!Array.isArray(b.bandColors)) b.bandColors=[]; if(!Array.isArray(b.bandRules)) b.bandRules=[];
   b.bandColors[0]=b.frameColor||b.bandColors[0]||'#1a1a1a';
   const seeds=['#1a1a1a','#ee3c96','#ffffff','#3ba0ff'];
   while(b.bandColors.length<n) b.bandColors.push(seeds[b.bandColors.length]||'#1a1a1a');
-  b.bandColors.length=n; if(label) label.textContent=n+' สี'; if(!host) return;
+  b.bandColors.length=n;
+  const nbox=NUMBOX.get('boxBandNV'); if(nbox) nbox.inp.value=n; else if(label) label.textContent=n+' สี';
+  if(!host) return;
+  while(b.bandRules.length<n-1){ const i=b.bandRules.length; b.bandRules.push({width:5,pos:50,auto:true}); }
+  b.bandRules.length=Math.max(0,n-1);
+  /* ค่าอัตโนมัติ: สีที่ 2 อยู่กลางกล่อง; ถ้าเพิ่มสีต่อไปให้กระจาย ไม่ซ้อนกัน */
+  const autoPos={1:[50],2:[35,65],3:[25,50,75]}[n-1]||[];
+  b.bandRules.forEach((r,i)=>{ if(r.auto!==false) r.pos=autoPos[i]??50; });
   host.innerHTML='';
   b.bandColors.forEach((hex,i)=>{
     const row=document.createElement('div'); row.className='it';
-    row.innerHTML=`<span class="sw"><input type="color" value="${hex}"></span><span class="nm"><b>แถบสี ${i+1}</b><i>${hex.toUpperCase()}</i></span><input type="text" class="hexin" value="${hex.toUpperCase()}" spellcheck="false">`;
+    const name=i===0?'สีฐานกรอบ':'แถบสี '+i;
+    row.innerHTML=`<span class="sw"><input type="color" value="${hex}"></span><span class="nm"><b>${name}</b><i>${hex.toUpperCase()}</i></span><input type="text" class="hexin" value="${hex.toUpperCase()}" spellcheck="false">`;
     const c=row.querySelector('input[type="color"]'), x=row.querySelector('.hexin'), info=row.querySelector('i');
-    const set=v=>{ const h=normHex(v); if(!h) return; b.bandColors[i]=h; if(i===0) b.frameColor=h; c.value=h; x.value=h.toUpperCase(); info.textContent=h.toUpperCase(); syncBoxColorUI(); schedule(false); };
-    c.addEventListener('input',e=>set(e.target.value)); x.addEventListener('change',e=>set(e.target.value));
+    row.querySelector('.sw').style.background=hex;
+    const set=v=>{ const h=normHex(v); if(!h) return; b.bandColors[i]=h; if(i===0) b.frameColor=h; c.value=h; x.value=h.toUpperCase(); info.textContent=h.toUpperCase(); row.querySelector('.sw').style.background=h; syncBoxColorUI(); schedule(false); };
+    c.addEventListener('input',e=>set(e.target.value));
+    x.addEventListener('input',e=>{ const h=normHex(e.target.value); x.classList.toggle('bad',!h&&e.target.value.trim()!==''); if(h) set(h); });
+    x.addEventListener('change',e=>set(e.target.value));
+    x.addEventListener('keydown',e=>{ if(e.key==='Enter'){ set(x.value); x.blur(); } });
     host.appendChild(row);
+    if(i===0) return;
+    const r=b.bandRules[i-1], ctl=document.createElement('div'); ctl.className='row';
+    ctl.innerHTML=`<label>กว้างแถบ</label><input type="range" min="0.4" max="${Math.max(1,b.depth-1)}" step="0.1" value="${r.width}"><input class="num" type="number" min="0.4" max="${Math.max(1,b.depth-1)}" step="0.1" value="${r.width}"><span class="unit">มม.</span>`;
+    const pr=document.createElement('div'); pr.className='row';
+    pr.innerHTML=`<label>ตำแหน่งแถบ</label><input type="range" min="0" max="100" step="1" value="${r.pos}"><input class="num" type="number" min="0" max="100" step="1" value="${r.pos}"><span class="unit">%</span>`;
+    const bindPair=(node,key)=>{ const [slide,num]=node.querySelectorAll('input'); const put=v=>{ v=clamp(+v||0,+slide.min,+slide.max); r[key]=v; r.auto=false; slide.value=v; num.value=v; schedule(false); }; slide.addEventListener('input',e=>put(e.target.value)); num.addEventListener('input',e=>{if(e.target.value!=='')put(e.target.value);}); num.addEventListener('change',e=>put(e.target.value)); };
+    bindPair(ctl,'width'); bindPair(pr,'pos'); host.appendChild(ctl); host.appendChild(pr);
   });
 }
 /* ช่องขนาดชิ้นงาน — ไม่เขียนทับถ้าผู้ใช้กำลังพิมพ์อยู่ */
