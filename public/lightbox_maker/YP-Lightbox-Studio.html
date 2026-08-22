@@ -352,6 +352,14 @@ Studio</textarea>
           <option value="bg">พื้นสว่าง โลโก้ทึบ</option>
         </select>
       </div>
+      <div class="row"><label>ป้องกันช่องแสงจิ๋ว</label>
+        <select id="sealMode" class="grow">
+          <option value="off">ปิด</option>
+          <option value="standard">มาตรฐาน · อุดช่องไม่เกิน 1.0 มม.</option>
+          <option value="strict">เข้มงวด · อุดช่องไม่เกิน 1.5 มม.</option>
+        </select>
+      </div>
+      <div class="row"><label>ระยะซ้อนสี</label><input type="range" id="sealChoke" min="0" max="0.8" step="0.1" value="0.6"><span class="unit" id="sealChokeV">0.6 มม.</span></div>
       <div class="row" style="margin-bottom:4px"><label>ชั้นสีทั้งหมด</label>
         <span class="grow"></span>
         <button class="minibtn" id="btnPalReset">คืนค่าสีตั้งต้น</button></div>
@@ -581,7 +589,7 @@ function defaults(){ return {
         track:0, lead:115, outline:0,
         imgData:null, imgName:'', removeBg:true, tol:26 },
   tr:{ scale:88, scaleY:88, uniform:true, dx:0, dy:0, rot:0 },
-  art:{ n:2, smooth:1, glowMode:'logo' },
+  art:{ n:2, smooth:1, glowMode:'logo', seal:'standard', choke:0.6 },
   shape:{ mode:'contour', fillHoles:true },
   rings:[ {w:4, hex:'#ffffff', glow:true},
           {w:3, hex:'#ee3c96', glow:false} ],
@@ -906,7 +914,7 @@ function applyShape(){
   const panel=new Uint8Array(N);
   if(S.shape.mode!=='contour'){
     panel.fill(1);
-    G.panel=panel; G.edtIn=edtToOutside(panel,gw,gh);
+    G.panel=panel; applyLightSeal(); G.edtIn=edtToOutside(panel,gw,gh);
     G.comp=components(panel,gw,gh);
     return;
   }
@@ -934,8 +942,63 @@ function applyShape(){
     owner[i] = ring>=0 ? (1+K+ring) : (edge.length? (1+K+edge.length-1) : 0);
   }
   G.panel=panel;
+  applyLightSeal();
   G.edtIn=edtToOutside(panel,gw,gh);           // ระยะจากในแผ่นถึงขอบนอก
   G.comp=components(panel,gw,gh);
+}
+
+/* ป้องกันจุดแสงขาวเล็ก ๆ ในพื้นที่สีทึบ (เช่นรอยที่พบในตัว i)
+   3MF เป็นชิ้นส่วนสีแยกกัน จึงใช้ "choke" ย้ายแนวขอบจากสีสว่างไปยัง
+   สีทึบ แทนการซ้อนเมชทับกัน ซึ่งจะทำให้ slicer สับสนได้ */
+function applyLightSeal(){
+  const mode=S.art.seal||'standard';
+  const {gw,gh,px,owner,panel}=G, N=gw*gh;
+  const isGlow=o=>o!==255 && !!(S.pal[o]&&S.pal[o].glow);
+  const opaqueAt=(src,x,y)=>{
+    let pick=-1, best=0, cnt=new Uint8Array(S.pal.length);
+    for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+      if(!dx&&!dy) continue;
+      const xx=x+dx, yy=y+dy;
+      if(xx<0||xx>=gw||yy<0||yy>=gh) continue;
+      const o=src[yy*gw+xx];
+      if(o!==255&&!isGlow(o)){ const n=++cnt[o]; if(n>best){best=n;pick=o;} }
+    }
+    return pick;
+  };
+  let choked=0, sealed=0;
+  /* ระยะซ้อนสี: ขยายสีทึบเข้าไปในสีสว่างตามค่าที่เลือก โดยไม่ให้เมชทับกัน */
+  const rounds=mode==='off'?0:Math.max(0,Math.round((isFinite(+S.art.choke)?+S.art.choke:0.6)/px));
+  for(let pass=0;pass<rounds;pass++){
+    const src=owner.slice(), next=src.slice(); let changed=0;
+    for(let y=1;y<gh-1;y++) for(let x=1;x<gw-1;x++){
+      const i=y*gw+x;
+      if(!panel[i]||!isGlow(src[i])) continue;
+      const o=opaqueAt(src,x,y);
+      if(o>=0){ next[i]=o; changed++; }
+    }
+    if(!changed) break;
+    owner.set(next); choked+=changed;
+  }
+  /* อุดเฉพาะเกาะแสงที่เล็กและถูกล้อมด้วยสีทึบ — ไม่แตะช่อง O/P/A ขนาดจริง */
+  const dia=mode==='strict'?1.5:mode==='standard'?1.0:0;
+  const radius=Math.max(1,Math.ceil(dia/(2*px)));
+  if(dia){
+    const src=owner.slice(), next=src.slice();
+    for(let y=radius;y<gh-radius;y++) for(let x=radius;x<gw-radius;x++){
+      const i=y*gw+x;
+      if(!panel[i]||!isGlow(src[i])) continue;
+      let pick=-1, best=0, clear=true, cnt=new Uint8Array(S.pal.length);
+      for(let dy=-radius;dy<=radius&&clear;dy++) for(let dx=-radius;dx<=radius;dx++){
+        if(Math.abs(dx)!==radius&&Math.abs(dy)!==radius) continue;
+        const o=src[(y+dy)*gw+x+dx];
+        if(o===255||isGlow(o)){ clear=false; break; }
+        const n=++cnt[o]; if(n>best){best=n;pick=o;}
+      }
+      if(clear&&pick>=0){ next[i]=pick; sealed++; }
+    }
+    owner.set(next);
+  }
+  G.lightSeal={mode,choked,sealed,dia};
 }
 /* ระยะจากในแผ่นถึงขอบนอกสุด — นับขอบภาพเป็น "นอกแผ่น" ด้วย
    ไม่งั้นโหมดสี่เหลี่ยมที่แผ่นเต็มกริดจะหาขอบไม่เจอเลย แล้วกรอบจะหายไปทั้งใบ */
@@ -2905,6 +2968,14 @@ function runChecks(){
   if(st.bgT>b.bgT+0.001) add('warn',`ปรับความหนาพื้นทึบขึ้นเป็น ${st.bgT.toFixed(1)} มม. อัตโนมัติ เพราะต้องหนากว่าชั้นสี`);
   if(b.bgT<1.0) add('warn','พื้นทึบบางกว่า 1.0 มม. แสงอาจทะลุพื้นหลัง เห็นเป็นฝ้า');
   if(st.diff<0.4) add('warn','ชั้นกระจายแสงบาง อาจเห็นเป็นจุดไฟ LED แทนที่จะเป็นแสงนวล');
+  if(art&&G.lightSeal){
+    if(G.lightSeal.mode==='off') add('warn','ปิดการป้องกันช่องแสงจิ๋วอยู่ — ช่องผิดปกติในตัวอักษรอาจเห็นแสงทะลุด้านหน้า');
+    else {
+      const level=G.lightSeal.mode==='strict'?'เข้มงวด (อุดช่อง ≤1.5 มม.)':'มาตรฐาน (อุดช่อง ≤1.0 มม.)';
+      add('ok',`ป้องกันช่องแสงจิ๋ว: ${level} · ระยะซ้อนสี ${(+S.art.choke).toFixed(1)} มม.`+
+        (G.lightSeal.choked||G.lightSeal.sealed ? ` · ปรับพื้นที่กันรั่ว ${G.lightSeal.choked+G.lightSeal.sealed} จุด` : ''));
+    }
+  }
   }
   /* ส่วนที่ให้แสงผ่านล้ำเข้าไปในแนวผนังกรอบ */
   if(art&&G.panel&&G.edtIn){
@@ -3699,6 +3770,8 @@ const BIND=[
  ['colN','art.n','num','colNV',v=>v,''],
  ['colSmooth','art.smooth','num','colSmoothV',v=>v,''],
  ['glowMode','art.glowMode','str',null,null,'g'],
+ ['sealMode','art.seal','str',null,null,''],
+ ['sealChoke','art.choke','num','sealChokeV',v=>v.toFixed(1)+' มม.',''],
  ['fillHoles','shape.fillHoles','bool',null,null,''],
  ['ring0w','rings.0.w','num','ring0wV',v=>v+' มม.',''],
  ['ring1w','rings.1.w','num','ring1wV',v=>v+' มม.',''],
@@ -3850,6 +3923,9 @@ function updateBadges(){
 
 /* ---------- push state → controls ---------- */
 function pushToUI(){
+  /* โปรเจกต์ที่บันทึกก่อนเพิ่มระบบนี้ยังไม่มีสองค่านี้ */
+  if(!S.art.seal) S.art.seal='standard';
+  if(!isFinite(+S.art.choke)) S.art.choke=0.6;
   for(const [id,path,kind,lab,fmt] of BIND){
     const el=document.getElementById(id); if(!el) continue;
     const v=gp(path);
