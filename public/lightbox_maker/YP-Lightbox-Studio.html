@@ -152,6 +152,47 @@ table.kv tr.sub td{color:var(--tx2)}
 .busy.on{display:flex}
 .spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---------- mobile workspace ---------- */
+#mobileNav{display:none}
+@media (max-width:720px){
+  body{font-size:14px}
+  header{height:52px;padding:0 8px;gap:7px}
+  .brand{font-size:12px;white-space:nowrap}
+  .docname{width:auto;min-width:0;flex:1;padding:5px 6px}
+  header>.seg,header>#btnNew,header>#btnSaveProj,header>#btnOpenProj{display:none}
+  header>#btnExport{padding:7px 9px;white-space:nowrap;font-size:12px}
+  main{position:relative;overflow:hidden}
+  #center{position:absolute;inset:0;padding-bottom:57px}
+  #left,#right{display:none;position:absolute;z-index:10;left:0;right:0;bottom:57px;width:auto;
+    max-height:62%;background:var(--panel);border:1px solid var(--line);border-bottom:0;
+    border-radius:16px 16px 0 0;box-shadow:0 -12px 30px #0008}
+  #app.mobile-panel-work #left,#app.mobile-panel-colors #left,
+  #app.mobile-panel-box #right,#app.mobile-panel-production #right{display:block}
+  #app.mobile-panel-work #left .sec:not([data-sec="src"]):not([data-sec="fit"]),
+  #app.mobile-panel-colors #left .sec:not([data-sec="color"]):not([data-sec="shape"]),
+  #app.mobile-panel-box #right .sec:not([data-sec="dim"]):not([data-sec="hw"]):not([data-sec="joint"]),
+  #app.mobile-panel-production #right .sec:not([data-sec="check"]):not([data-sec="price"]):not([data-sec="exp"]){display:none}
+  #left .sec:last-child,#right .sec:last-child{border-bottom:0}
+  .sec>h3{padding:13px 14px;font-size:14px}
+  .sec>.body{padding:3px 14px 16px}
+  .row{margin:11px 0;gap:10px}
+  .row label{flex-basis:108px}
+  input[type=text],input[type=number],select,textarea{min-height:36px;font-size:14px}
+  textarea{min-height:76px}
+  .viewbar{min-height:38px;padding:5px 8px;gap:5px;overflow:hidden}
+  #triBadge,.viewbar label[for],.viewbar label:last-of-type{display:none}
+  .stage{min-height:0}
+  .statusbar{font-size:11px;white-space:nowrap;overflow-x:auto;padding:5px 8px}
+  .glbar{max-width:calc(100% - 16px);overflow-x:auto}
+  #mobileNav{display:flex;position:absolute;z-index:20;bottom:0;left:0;right:0;height:57px;
+    background:var(--panel);border-top:1px solid var(--line);padding:4px 8px calc(4px + env(safe-area-inset-bottom));gap:4px}
+  .mobile-tab{flex:1;min-width:0;background:none;border:0;border-radius:9px;color:var(--tx2);padding:4px 2px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:10px;cursor:pointer}
+  .mobile-tab .ico{font-size:17px;line-height:18px}
+  .mobile-tab.on{background:var(--panel2);color:var(--acc)}
+  .toast{bottom:68px;max-width:calc(100vw - 28px);text-align:center}
+}
 </style>
 </head>
 <body>
@@ -499,6 +540,12 @@ PRODUCTION</textarea>
 
 </div>
 </main>
+<nav id="mobileNav" aria-label="เมนูออกแบบบนมือถือ">
+  <button class="mobile-tab" type="button" data-panel="work"><span class="ico">✎</span><span>งาน</span></button>
+  <button class="mobile-tab" type="button" data-panel="colors"><span class="ico">●</span><span>สี</span></button>
+  <button class="mobile-tab" type="button" data-panel="box"><span class="ico">▣</span><span>กล่อง</span></button>
+  <button class="mobile-tab" type="button" data-panel="production"><span class="ico">⇩</span><span>ผลิต</span></button>
+</nav>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -3904,6 +3951,17 @@ function setPartSize(axis,target){
   pushToUI(); recompute();
 }
 
+/* แท็บล่างบนมือถือ: เปิดเฉพาะชุดเมนูที่เกี่ยวข้อง โดยคงพรีวิวไว้ด้านหลังตลอด */
+function showMobilePanel(panel){
+  const app=$('#app'), key='mobile-panel-';
+  const current=['work','colors','box','production'].find(p=>app.classList.contains(key+p));
+  const next=current===panel ? null : panel;
+  ['work','colors','box','production'].forEach(p=>app.classList.toggle(key+p,p===next));
+  $$('#mobileNav .mobile-tab').forEach(b=>b.classList.toggle('on',b.dataset.panel===next));
+  if(!next) return;
+  const wanted={work:['src','fit'],colors:['color','shape'],box:['dim','hw','joint'],production:['check','price','exp']}[next];
+  wanted.forEach(k=>{ const sec=$(`.sec[data-sec="${k}"]`); if(sec) sec.classList.remove('closed'); });
+}
 
 function wire(){
   for(const [id,path,kind,lab,fmt,flag] of BIND){
@@ -3919,6 +3977,7 @@ function wire(){
     });
   }
   $('#docname').addEventListener('input',e=>S.name=e.target.value);
+  $$('#mobileNav .mobile-tab').forEach(b=>b.addEventListener('click',()=>showMobilePanel(b.dataset.panel)));
 
   /* sections collapse */
   $$('.sec>h3').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('closed')));
@@ -4095,7 +4154,10 @@ function wire(){
     i.click();
   });
 
-  window.addEventListener('resize',()=>{ clearTimeout(window._rz); window._rz=setTimeout(draw,120); });
+  window.addEventListener('resize',()=>{ clearTimeout(window._rz); window._rz=setTimeout(()=>{
+    if(window.innerWidth>720) showMobilePanel(null);
+    draw();
+  },120); });
   window.addEventListener('keydown',e=>{
     if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); $('#btnSaveProj').click(); }
     if((e.ctrlKey||e.metaKey)&&e.key==='e'){ e.preventDefault(); doExport(); }
