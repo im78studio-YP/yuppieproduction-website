@@ -4091,6 +4091,12 @@ function wire(){
   /* fonts */
   $('#txtFont').innerHTML=FONT_LIST.map(f=>`<option value="${f}"${f===S.src.font?' selected':''}>${f}</option>`).join('');
   $('#txtContent').addEventListener('input',()=>{ S.src.brandDefault=false; syncJobName(nameFromText(S.src.text)); });
+  /* โลโก้สองสีเป็นค่าเริ่มต้นเท่านั้น: เมื่อเริ่มปรับ typography ให้กลับมาใช้ text renderer ปกติ
+     เพื่อให้น้ำหนัก/จัดวาง/ระยะห่าง/ขอบทุกตัวมีผลกับชิ้นงานจริง */
+  ['txtFont','txtWeight','txtAlign','txtTrack','txtLead','txtOutline'].forEach(id=>{
+    const el=$('#'+id); if(!el) return;
+    ['input','change'].forEach(ev=>el.addEventListener(ev,()=>{ S.src.brandDefault=false; }));
+  });
   $('#btnFontFile').addEventListener('click',()=>$('#fontFile').click());
   $('#fontFile').addEventListener('change',async e=>{
     const f=e.target.files[0]; if(!f) return;
