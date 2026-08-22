@@ -435,9 +435,9 @@ Studio</textarea>
       <p class="hint" id="modeHint" style="margin:6px 0 10px"></p>
       <div class="row"><label>ความลึกกล่อง</label><input type="range" id="bDepth" min="12" max="80" step="1" value="35"><span class="unit" id="bDepthV">35 มม.</span></div>
       <div id="fullThick">
-      <div class="row"><label>ชั้นสีหน้า</label><input type="range" id="bColorT" min="0.2" max="1.2" step="0.1" value="0.4"><span class="unit" id="bColorTV">0.4 มม.</span></div>
-      <div class="row"><label>ชั้นกระจายแสง</label><input type="range" id="bDiff" min="0.2" max="2" step="0.1" value="0.8"><span class="unit" id="bDiffV">0.8 มม.</span></div>
-      <div class="row"><label>ความหนาพื้นทึบ</label><input type="range" id="bBgT" min="0.6" max="3" step="0.1" value="1.2"><span class="unit" id="bBgTV">1.2 มม.</span></div>
+      <div class="row"><label>ชั้นสีหน้า</label><input type="range" id="bColorT" min="1" max="2.4" step="0.1" value="1.6"><span class="unit" id="bColorTV">1.6 มม.</span></div>
+      <div class="row"><label>ชั้นกระจายแสง</label><input type="range" id="bDiff" min="0.4" max="1.2" step="0.1" value="0.8"><span class="unit" id="bDiffV">0.8 มม.</span></div>
+      <div class="row" id="fullBgT"><label>ความหนาพื้นทึบ</label><input type="range" id="bBgT" min="0.6" max="3" step="0.1" value="2.4"><span class="unit" id="bBgTV">2.4 มม.</span></div>
       </div>
       <div class="row"><label>กรอบข้าง</label><input type="range" id="bFrame" min="1.2" max="8" step="0.2" value="2.4"><span class="unit" id="bFrameV">2.4 มม.</span></div>
       <div id="fullBack">
@@ -599,10 +599,10 @@ function defaults(){ return {
           {w:3, hex:'#ee3c96', glow:false} ],
   pal:[ {hex:'#1a1a1a',name:'พื้นหลัง',glow:false},
         {hex:'#ff2d8f',name:'สี 1',glow:true} ],
-  /* ค่าเริ่มต้นตามสเปกกล่องไฟที่ทีมใช้จริง
-     หน้ากล่อง 1.2 มม. เท่ากันทั้งแผ่น (ส่วนสว่าง 0.4+0.8 · ส่วนทึบ 1.2) = 6 ชั้นที่ layer 0.2
+  /* ค่าเริ่มต้นสำหรับหัว 0.4 มม.: ชั้นสี 1.6 + กระจายแสง 0.8 = ผิวหน้ารวม 2.4 มม.
+     เหมาะทั้ง PLA และงาน PETG ใสที่ต้องการผิวเต็ม ไม่เป็นร่องตามเส้นพิมพ์
      กรอบข้าง 2.4 · ฝาหลัง 3 · เผื่อสวม 0.2 · บ่าหนา 2 สูง 10 */
-  box:{ W:256,H:256,depth:35,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:3,
+  box:{ W:256,H:256,depth:35,colorT:1.6,diff:0.8,bgT:2.4,frame:2.4,back:3,
         frameColor:'#1a1a1a', backColor:'#1a1a1a', bandN:1, bandColors:['#1a1a1a'], bandRules:[] },
   hw:{ hole:'frame', dia:7, hang:false,
        joint:'snap', lipH:10, lipW:2, lipCl:0.2, bossW:8, screwDepth:10,
@@ -943,7 +943,7 @@ function applyShape(){
   const panel=new Uint8Array(N);
   if(S.shape.mode!=='contour'){
     panel.fill(1);
-    G.panel=panel; applyLightSeal(); G.edtIn=edtToOutside(panel,gw,gh);
+    G.panel=panel; enforceMinColorDetail(); applyLightSeal(); G.edtIn=edtToOutside(panel,gw,gh);
     G.comp=components(panel,gw,gh);
     return;
   }
@@ -971,9 +971,31 @@ function applyShape(){
     owner[i] = ring>=0 ? (1+K+ring) : (edge.length? (1+K+edge.length-1) : 0);
   }
   G.panel=panel;
+  enforceMinColorDetail();
   applyLightSeal();
   G.edtIn=edtToOutside(panel,gw,gh);           // ระยะจากในแผ่นถึงขอบนอก
   G.comp=components(panel,gw,gh);
+}
+
+/* รายละเอียดสีที่แคบกว่าหัว 0.4 มม. มักถูก slicer ข้ามหรือพิมพ์ขาด
+   ขยายเฉพาะสีที่ทั้งก้อนยังไม่มีแกนกว้าง 0.8 มม. สีชั้นบนขยายทับได้เฉพาะ
+   สีชั้นล่างของลวดลาย (ไม่แตะวงขอบ) เพื่อให้เส้นสีจริงกว้างถึงเกณฑ์ */
+const MIN_COLOR_DETAIL=0.8;
+function enforceMinColorDetail(){
+  const {gw,gh,px,owner,K,panel}=G, need=(MIN_COLOR_DETAIL/2)/px;
+  const fixed=[];
+  for(let k=1;k<=K;k++){
+    const m=new Uint8Array(gw*gh); let any=0;
+    for(let i=0;i<m.length;i++) if(owner[i]===k){m[i]=1;any=1;}
+    if(!any || thinRatio(m,gw,gh)>=0.30) continue;
+    const inside=edtToOutside(m,gw,gh); let core=0;
+    for(let i=0;i<m.length;i++) if(m[i]&&inside[i]>core) core=inside[i];
+    if(core>=need) continue;
+    const grow=need-core, near=edt(m,gw,gh); let added=0;
+    for(let i=0;i<m.length;i++) if(panel[i]&&owner[i]>=0&&owner[i]<k&&near[i]<=grow){ owner[i]=k; added++; }
+    if(added) fixed.push({k,added});
+  }
+  G.minDetail={min:MIN_COLOR_DETAIL,fixed};
 }
 
 /* ป้องกันจุดแสงขาวเล็ก ๆ ในพื้นที่สีทึบ (เช่นรอยที่พบในตัว i)
@@ -1991,11 +2013,13 @@ function geomStack(){
     const H=shellSpec();
     return {colorT:0,diff:0,bgT:0,frameZ0:0,total:H.total,shell:H};
   }
-  const colorT=b.colorT, diff=b.diff;
+  const colorT=clamp(+b.colorT||1.6,1,2.4), diff=clamp(+b.diff||0.8,0.4,1.2);
   const bgT = Math.max(b.bgT, colorT+0.2);
   /* หน้าแบบซ้อนชั้น: สีอยู่ชั้นหน้า แล้วมีแผ่นขาวนมเต็มพื้นที่รองรับอยู่ด้านหลัง
      จึงไม่มีรอยต่อสีแบบปลายชนปลายที่แสงลอดได้ */
-  const faceBaseT=isLayered()?Math.max(bgT,colorT+diff):bgT;
+  /* หน้าแบบถอดเปลี่ยนได้: สีหน้ากับชั้นกระจายแสงมีความหนาเป็นอิสระ
+     จึงต้องไม่บวกชั้นสีซ้ำอีกครั้ง (สี 1.6 + diffuser 0.8 = 2.4 มม.) */
+  const faceBaseT=isLayered()?diff:bgT;
   /* โมดูลถอดเปลี่ยนได้: กรอบเริ่มต่อจากผิวหน้าสีทันทีเพื่อรองรับหน้าแปลน
      แผ่นขาวนมอยู่เฉพาะช่องในของกรอบและยื่นเข้าโพรงเป็นลิ้น */
   const frameZ0=isLayered()?colorT:bgT;
@@ -3147,10 +3171,15 @@ function runChecks(){
     else if(LAST&&LAST.bossCount) add('ok',`วางเสาสกรูอัตโนมัติ ${LAST.bossCount} จุด`);
   }
   /* thin features */
+  if(G.minDetail&&G.minDetail.fixed.length){
+    const names=G.minDetail.fixed.map(x=>`สี ${x.k}`).join(', ');
+    add('ok',`ปรับรายละเอียดขั้นต่ำ ${G.minDetail.min.toFixed(1)} มม. ให้ ${names} แล้ว เพื่อให้หัวฉีด 0.4 มม. พิมพ์ครบ`);
+  }
+  const repairedColor=new Set((G.minDetail&&G.minDetail.fixed||[]).map(x=>x.k));
   for(let k=1;k<S.pal.length&&!isShell();k++){
     if(!S.pal[k].cells) continue;
     const r=thinRatio(maskOf(k),G.gw,G.gh);
-    if(r<0.30) add('warn',`สี ${k} มีรายละเอียดบางมาก (ความตัน ${(r*100).toFixed(0)}%) หัวฉีด 0.4 มม. อาจพิมพ์ไม่ครบ`);
+    if(r<0.30&&!repairedColor.has(k)) add('warn',`สี ${k} มีรายละเอียดบางมาก (ความตัน ${(r*100).toFixed(0)}%) หัวฉีด 0.4 มม. อาจพิมพ์ไม่ครบ`);
   }
   /* --- รอยต่อฝาหน้า–ฝาหลัง --- */
   const J=jointSpec();
@@ -3335,19 +3364,19 @@ ${E.sheet? `<tr><td>แผ่นอะครีลิค</td><td>${nf(E.sheet.cA
 
 /* ══════════ TEMPLATES ══════════ */
 const TEMPLATES=[
- {n:'ป้ายโลโก้แนวนอน', p:{box:{W:200,H:90,depth:32,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:3,frameColor:'#1a1a1a'},
+ {n:'ป้ายโลโก้แนวนอน', p:{box:{W:200,H:90,depth:32,colorT:1.6,diff:0.8,bgT:2.4,frame:2.4,back:3,frameColor:'#1a1a1a'},
     src:{mode:'text',text:'YUPPIE\nPRODUCTION',font:'Arial Black',weight:700,align:'center',track:0,lead:112,outline:0},
     tr:{scale:88,dx:0,dy:0,rot:0}, pal:[{hex:'#1a1a1a',glow:false},{hex:'#ff2d8f',glow:true}]}},
- {n:'ป้ายชื่อร้านมีขอบ', p:{box:{W:220,H:110,depth:35,colorT:0.6,diff:0.8,bgT:1.4,frame:3,back:3,frameColor:'#101010'},
+ {n:'ป้ายชื่อร้านมีขอบ', p:{box:{W:220,H:110,depth:35,colorT:1.6,diff:0.8,bgT:2.4,frame:3,back:3,frameColor:'#101010'},
     src:{mode:'text',text:'OPEN',font:'Impact',weight:700,align:'center',track:6,lead:110,outline:2.5},
     tr:{scale:80,dx:0,dy:0,rot:0}, pal:[{hex:'#101010',glow:false},{hex:'#ffd400',glow:true},{hex:'#ff2d8f',glow:true}]}},
- {n:'ป้ายตั้งโต๊ะเล็ก', p:{box:{W:120,H:120,depth:24,colorT:0.4,diff:0.8,bgT:1.0,frame:2,back:2.4,frameColor:'#2b2b2b'},
+ {n:'ป้ายตั้งโต๊ะเล็ก', p:{box:{W:120,H:120,depth:24,colorT:1.6,diff:0.8,bgT:2.4,frame:2,back:2.4,frameColor:'#2b2b2b'},
     src:{mode:'text',text:'78\nSTUDIO',font:'Arial Black',weight:900,align:'center',track:2,lead:105,outline:0},
     tr:{scale:76,dx:0,dy:0,rot:0}, pal:[{hex:'#2b2b2b',glow:false},{hex:'#3ba0ff',glow:true}]}},
- {n:'ป้ายบูธใหญ่ 250 มม.', p:{box:{W:250,H:140,depth:45,colorT:0.6,diff:0.8,bgT:1.6,frame:3.5,back:3.4,frameColor:'#000000'},
+ {n:'ป้ายบูธใหญ่ 250 มม.', p:{box:{W:250,H:140,depth:45,colorT:1.6,diff:0.8,bgT:2.4,frame:3.5,back:3.4,frameColor:'#000000'},
     src:{mode:'text',text:'BOOTH\nDESIGN',font:'Arial Black',weight:700,align:'center',track:1,lead:112,outline:0},
     tr:{scale:86,dx:0,dy:0,rot:0}, pal:[{hex:'#000000',glow:false},{hex:'#ffffff',glow:true}]}},
- {n:'ป้ายพื้นสว่าง ตัวทึบ', p:{box:{W:200,H:110,depth:32,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:3,frameColor:'#1a1a1a'},
+ {n:'ป้ายพื้นสว่าง ตัวทึบ', p:{box:{W:200,H:110,depth:32,colorT:1.6,diff:0.8,bgT:2.4,frame:2.4,back:3,frameColor:'#1a1a1a'},
     src:{mode:'text',text:'WELCOME',font:'Arial Black',weight:700,align:'center',track:3,lead:110,outline:0},
     tr:{scale:78,dx:0,dy:0,rot:0}, art:{glowMode:'bg'},
     pal:[{hex:'#ffffff',glow:true},{hex:'#1a1a1a',glow:false}]}}
@@ -4100,6 +4129,9 @@ function pushToUI(){
   if(S.build&&S.build.mode==='layered') S.build.mode='service';
   if(!['off','standard','strict'].includes(S.art.seal)) S.art.seal='off';
   if(!isFinite(+S.art.choke)) S.art.choke=0.6;
+  /* อัปเกรดโปรเจ็กต์เก่าที่ชั้นหน้าบางเกินสำหรับหัว 0.4 มม. */
+  if(!isFinite(+S.box.colorT)||+S.box.colorT<1||+S.box.colorT>2.4) S.box.colorT=1.6;
+  if(!isFinite(+S.box.diff)||+S.box.diff<0.4||+S.box.diff>1.2) S.box.diff=0.8;
   for(const [id,path,kind,lab,fmt] of BIND){
     const el=document.getElementById(id); if(!el) continue;
     const v=gp(path);
@@ -4138,6 +4170,7 @@ function syncModeUI(){
   const layered=isLayered();
   const show=(id,on)=>{ const e=$('#'+id); if(e) e.style.display = on?'':'none'; };
   show('fullThick',!sh); show('fullBack',!sh); show('shellThick',sh);
+  show('fullBgT',!sh&&!layered);
   show('artColor',!sh);  show('backColorRow',!sh);
   show('jointBody',!sh); show('shellJointNote',sh); show('shellPrice',sh);
   const t=$('#jointTitle'); if(t) t.textContent = sh? '6 · การยึดแผ่นอะครีลิค/พลาสวูด' : '6 · การประกบฝาหลัง';
