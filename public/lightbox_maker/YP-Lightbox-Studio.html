@@ -600,7 +600,7 @@ function defaults(){ return {
         track:0, lead:115, outline:0, lineStyles:[],
         imgData:null, imgName:'', removeBg:true, tol:26 },
   tr:{ scale:88, scaleY:88, uniform:true, dx:0, dy:0, rot:0 },
-  art:{ n:2, smooth:1, glowMode:'logo', seal:'standard', choke:0.6 },
+  art:{ n:2, smooth:1, glowMode:'logo', seal:'off', choke:0.6 },
   shape:{ mode:'contour', fillHoles:true },
   rings:[ {w:4, hex:'#ffffff', glow:true},
           {w:3, hex:'#ee3c96', glow:false} ],
@@ -984,8 +984,9 @@ function applyShape(){
 }
 
 /* ป้องกันจุดแสงขาวเล็ก ๆ ในพื้นที่สีทึบ (เช่นรอยที่พบในตัว i)
-   3MF เป็นชิ้นส่วนสีแยกกัน จึงใช้ "choke" ย้ายแนวขอบจากสีสว่างไปยัง
-   สีทึบ แทนการซ้อนเมชทับกัน ซึ่งจะทำให้ slicer สับสนได้ */
+   ห้ามขยับขอบสีสว่างบนผิวหน้า: วิธีเดิมทำให้สีพื้นทึบ (มักเป็นดำ)
+   กินเข้าไปในลวดลาย จึงเห็นเป็นเส้นดำในชิ้นงานจริง. การกันแสงที่รอยต่อ
+   ต้องใช้ชั้นบังแสงด้านหลังของฝาหน้า ไม่ใช่แก้ ownership ของสีหน้า */
 function applyLightSeal(){
   const mode=S.art.seal||'standard';
   const {gw,gh,px,owner,panel}=G, N=gw*gh;
@@ -1002,19 +1003,6 @@ function applyLightSeal(){
     return pick;
   };
   let choked=0, sealed=0;
-  /* ระยะซ้อนสี: ขยายสีทึบเข้าไปในสีสว่างตามค่าที่เลือก โดยไม่ให้เมชทับกัน */
-  const rounds=mode==='off'?0:Math.max(0,Math.round((isFinite(+S.art.choke)?+S.art.choke:0.6)/px));
-  for(let pass=0;pass<rounds;pass++){
-    const src=owner.slice(), next=src.slice(); let changed=0;
-    for(let y=1;y<gh-1;y++) for(let x=1;x<gw-1;x++){
-      const i=y*gw+x;
-      if(!panel[i]||!isGlow(src[i])) continue;
-      const o=opaqueAt(src,x,y);
-      if(o>=0){ next[i]=o; changed++; }
-    }
-    if(!changed) break;
-    owner.set(next); choked+=changed;
-  }
   /* อุดเฉพาะเกาะแสงที่เล็กและถูกล้อมด้วยสีทึบ — ไม่แตะช่อง O/P/A ขนาดจริง */
   const dia=mode==='strict'?1.5:mode==='standard'?1.0:0;
   const radius=Math.max(1,Math.ceil(dia/(2*px)));
@@ -3097,8 +3085,8 @@ function runChecks(){
     if(G.lightSeal.mode==='off') add('warn','ปิดการป้องกันช่องแสงจิ๋วอยู่ — ช่องผิดปกติในตัวอักษรอาจเห็นแสงทะลุด้านหน้า');
     else {
       const level=G.lightSeal.mode==='strict'?'เข้มงวด (อุดช่อง ≤1.5 มม.)':'มาตรฐาน (อุดช่อง ≤1.0 มม.)';
-      add('ok',`ป้องกันช่องแสงจิ๋ว: ${level} · ระยะซ้อนสี ${(+S.art.choke).toFixed(1)} มม.`+
-        (G.lightSeal.choked||G.lightSeal.sealed ? ` · ปรับพื้นที่กันรั่ว ${G.lightSeal.choked+G.lightSeal.sealed} จุด` : ''));
+      add('ok',`ป้องกันช่องแสงจิ๋ว: ${level} · รักษาสีบนผิวหน้า`+
+        (G.lightSeal.sealed ? ` · อุดจุดสว่างจิ๋ว ${G.lightSeal.sealed} จุด` : ''));
     }
   }
   }
@@ -4080,7 +4068,7 @@ function updateBadges(){
 /* ---------- push state → controls ---------- */
 function pushToUI(){
   /* โปรเจกต์ที่บันทึกก่อนเพิ่มระบบนี้ยังไม่มีสองค่านี้ */
-  if(!S.art.seal) S.art.seal='standard';
+  if(!['off','standard','strict'].includes(S.art.seal)) S.art.seal='off';
   if(!isFinite(+S.art.choke)) S.art.choke=0.6;
   for(const [id,path,kind,lab,fmt] of BIND){
     const el=document.getElementById(id); if(!el) continue;
