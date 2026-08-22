@@ -225,7 +225,7 @@ table.kv tr.sub td{color:var(--tx2)}
 <div class="col" id="left">
 
   <div class="sec" data-sec="src">
-    <h3>1 · ต้นทางงาน</h3>
+    <h3>1 · เลือกรูปแบบ</h3>
     <div class="body">
       <div class="tabs" id="srcTabs">
         <button data-t="text" class="on">ข้อความ</button>
@@ -234,8 +234,8 @@ table.kv tr.sub td{color:var(--tx2)}
       </div>
 
       <div data-pane="text">
-        <textarea id="txtContent">YUPPIE
-PRODUCTION</textarea>
+        <textarea id="txtContent">YP Lightbox
+Studio</textarea>
         <div class="row"><label>ฟอนต์</label><select id="txtFont" class="grow"></select></div>
         <div class="row"><label>อัปโหลดฟอนต์</label>
           <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" style="display:none">
@@ -284,19 +284,42 @@ PRODUCTION</textarea>
       <div class="row"><label>ล็อกสัดส่วน</label><input type="checkbox" id="uniformScale" checked>
         <span class="unit">Uniform Scale</span></div>
       <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
-      <div class="row"><label>พื้นที่ทำงาน</label><input type="number" id="bW" class="num" value="200" step="1">
-        <span class="unit">×</span><input type="number" id="bH" class="num" value="120" step="1"><span class="unit">มม.</span></div>
-      <div class="chips" id="sizePresets"></div>
       <div class="row" style="margin-top:13px"><label>เครื่องพิมพ์</label>
         <select id="expBed" class="grow">
-          <option value="180">A1 mini · ฐาน 180 × 180 มม.</option>
-          <option value="220">Ender / Prusa · ฐาน 220 × 220 มม.</option>
-          <option value="256" selected>X1C · P1S · A1 · ฐาน 256 × 256 มม.</option>
-          <option value="300">เครื่องฐาน 300 × 300 มม.</option>
-          <option value="350">เครื่องฐาน 350 × 350 มม.</option>
-          <option value="420">Kobra 3 Max · ฐาน 420 × 420 มม.</option>
-          <option value="500">เครื่องฐาน 500 × 500 มม.</option>
+          <optgroup label="เครื่องทั่วไป">
+            <option value="bambu-a1-mini">Bambu Lab A1 mini · 180 × 180 มม.</option>
+            <option value="ender3-v3-se">Creality Ender-3 V3 SE · 220 × 220 มม.</option>
+            <option value="ender3-v3-ke">Creality Ender-3 V3 KE · 220 × 220 มม.</option>
+            <option value="creality-k1c">Creality K1C · 220 × 220 มม.</option>
+            <option value="elegoo-neptune4pro">Elegoo Neptune 4 Pro · 225 × 225 มม.</option>
+            <option value="anycubic-kobra2pro">Anycubic Kobra 2 Pro · 220 × 220 มม.</option>
+            <option value="anycubic-kobra3">Anycubic Kobra 3 · 250 × 250 มม.</option>
+            <option value="bambu-a1" selected>Bambu Lab A1 · 256 × 256 มม.</option>
+            <option value="bambu-p1s">Bambu Lab P1S · 256 × 256 มม.</option>
+            <option value="bambu-x1c">Bambu Lab X1 Carbon · 256 × 256 มม.</option>
+          </optgroup>
+          <optgroup label="เครื่องขนาดใหญ่">
+            <option value="creality-k1max">Creality K1 Max · 300 × 300 มม.</option>
+            <option value="creality-k2plus">Creality K2 Plus · 350 × 350 มม.</option>
+            <option value="creality-ender5max">Creality Ender-5 Max · 400 × 400 มม.</option>
+            <option value="anycubic-kobra2max">Anycubic Kobra 2 Max · 420 × 420 มม.</option>
+            <option value="anycubic-kobra3max">Anycubic Kobra 3 Max · 420 × 420 มม.</option>
+            <option value="elegoo-neptune4max">Elegoo Neptune 4 Max · 420 × 420 มม.</option>
+            <option value="creality-crm4">Creality CR-M4 · 450 × 450 มม.</option>
+          </optgroup>
+          <optgroup label="งานป้าย / นานาชาติ">
+            <option value="flashforge-ad1">Flashforge AD1 · 600 × 600 มม.</option>
+            <option value="sgs-ultra-800">SG-S 3D Ultra · 800 × 800 มม.</option>
+            <option value="creality-k8">Creality K8 · 800 × 800 มม.</option>
+            <option value="piocreat-k8">Piocreat K8 · 800 × 800 มม.</option>
+            <option value="elegoo-orangestorm-giga">Elegoo OrangeStorm Giga · 800 × 800 มม.</option>
+            <option value="tronxy-veho-1000">Tronxy VEHO 1000 · 1,000 × 1,000 มม.</option>
+            <option value="mingda-adf4">Mingda 3D AD-F4 · 1,200 × 800 มม.</option>
+            <option value="sgs-ultra-1200">SG-S 3D Ultra · 1,200 × 1,200 มม.</option>
+          </optgroup>
         </select></div>
+      <div class="row"><label>พื้นที่ทำงาน</label><input type="number" id="bW" class="num" value="256" readonly>
+        <span class="unit">×</span><input type="number" id="bH" class="num" value="256" readonly><span class="unit">มม.</span></div>
       <div class="printer-fit" id="printerFit">—</div>
     </div>
   </div>
@@ -561,9 +584,9 @@ const nf = (v,d=0) => v.toLocaleString('th-TH',{minimumFractionDigits:d,maximumF
 
 /* ---------- default state ---------- */
 function defaults(){ return {
-  name:'YUPPIE PRODUCTION',
+  name:'YP Lightbox Studio',
   src:{ mode:'text',
-        text:'YUPPIE\nPRODUCTION', font:'Arial Black', weight:700, align:'center',
+        text:'YP Lightbox\nStudio', font:'Arial Black', weight:700, align:'center', brandDefault:true,
         track:0, lead:115, outline:0,
         imgData:null, imgName:'', removeBg:true, tol:26 },
   tr:{ scale:88, scaleY:88, uniform:true, dx:0, dy:0, rot:0 },
@@ -576,7 +599,7 @@ function defaults(){ return {
   /* ค่าเริ่มต้นตามสเปกกล่องไฟที่ทีมใช้จริง
      หน้ากล่อง 1.2 มม. เท่ากันทั้งแผ่น (ส่วนสว่าง 0.4+0.8 · ส่วนทึบ 1.2) = 6 ชั้นที่ layer 0.2
      กรอบข้าง 2.4 · ฝาหลัง 3 · เผื่อสวม 0.2 · บ่าหนา 2 สูง 10 */
-  box:{ W:200,H:120,depth:35,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:3,
+  box:{ W:256,H:256,depth:35,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:3,
         frameColor:'#1a1a1a', backColor:'#1a1a1a' },
   hw:{ hole:'frame', dia:7, hang:false,
        joint:'snap', lipH:10, lipW:2, lipCl:0.2, bossW:8, screwDepth:10,
@@ -587,10 +610,25 @@ function defaults(){ return {
   sheet:{ acrT:3, acrLedge:2, plsT:5, plsLedge:2, cl:0.2 },
   price:{ qty:1, fil:750, mach:25, laborMin:25, laborRate:300, led:150, waste:8, margin:45, flush:120,
           acr:2200, pls:850, cut:35 },
-  exp:{ res:0.15, fmt:'3mf', layerH:0.2, bed:256, smooth:true },
+  exp:{ res:0.15, fmt:'3mf', layerH:0.2, printer:'bambu-a1', bed:256, bedH:256, smooth:true },
   ui:{ showFrame:true, showGrid:false, view:'design' }
 };}
 let S = defaults();
+
+const PRINTERS={
+  'bambu-a1-mini':[180,180],'ender3-v3-se':[220,220],'ender3-v3-ke':[220,220],'creality-k1c':[220,220],
+  'elegoo-neptune4pro':[225,225],'anycubic-kobra2pro':[220,220],'anycubic-kobra3':[250,250],
+  'bambu-a1':[256,256],'bambu-p1s':[256,256],'bambu-x1c':[256,256],
+  'creality-k1max':[300,300],'creality-k2plus':[350,350],'creality-ender5max':[400,400],
+  'anycubic-kobra2max':[420,420],'anycubic-kobra3max':[420,420],'elegoo-neptune4max':[420,420],'creality-crm4':[450,450],
+  'flashforge-ad1':[600,600],'sgs-ultra-800':[800,800],'creality-k8':[800,800],'piocreat-k8':[800,800],
+  'elegoo-orangestorm-giga':[800,800],'tronxy-veho-1000':[1000,1000],'mingda-adf4':[1200,800],'sgs-ultra-1200':[1200,1200]
+};
+function applyPrinter(key){
+  const d=PRINTERS[key]||PRINTERS['bambu-a1'];
+  S.exp.printer=key; S.exp.bed=d[0]; S.exp.bedH=d[1];
+  S.box.W=d[0]; S.box.H=d[1];
+}
 
 /* ---------- filament colour library (Bambu PLA Basic-ish) ---------- */
 const FILAMENTS = [
@@ -630,6 +668,7 @@ function makeSourceCanvas(){
 }
 
 function sourceFromText(){
+  if(S.src.brandDefault && S.src.text==='YP Lightbox\nStudio') return sourceFromBrandText();
   const lines = (S.src.text||'').split('\n').filter(l=>l.length);
   if(!lines.length) return null;
   const fs = SRC_H/Math.max(1,lines.length) * 0.72;
@@ -666,6 +705,23 @@ function sourceFromText(){
   const outer = draw(true);           // fill + outline
   const inner = draw(false);          // fill only
   return { cv: outer, inner: (ow>0?inner:null), kind:'text' };
+}
+
+/* โลโก้ข้อความตั้งต้น: สองสี และ Studio กว้างเท่าบรรทัด YP Lightbox */
+function sourceFromBrandText(){
+  const fs=260, pad=90, meas=document.createElement('canvas').getContext('2d');
+  const topFont=`${S.src.weight} ${fs}px "${S.src.font}", sans-serif`;
+  meas.font=topFont;
+  const ypW=meas.measureText('YP').width, lbW=meas.measureText('Lightbox').width, topW=ypW+lbW;
+  const studioBase=meas.measureText('Studio').width, studioFs=fs*(topW/studioBase);
+  const W=Math.ceil(topW+pad*2), H=Math.ceil(fs+studioFs+pad*2+40), cv=document.createElement('canvas');
+  cv.width=W; cv.height=H; const c=cv.getContext('2d'); c.textBaseline='middle';
+  const x=(W-topW)/2;
+  c.font=topFont; c.fillStyle='#fff'; c.fillText('YP',x,pad+fs*.5);
+  c.fillStyle='#ff2d8f'; c.fillText('Lightbox',x+ypW,pad+fs*.5);
+  c.font=`${S.src.weight} ${studioFs}px "${S.src.font}", sans-serif`; c.fillStyle='#fff';
+  c.fillText('Studio',(W-topW)/2,pad+fs+40+studioFs*.5);
+  return {cv,inner:null,kind:'text'};
 }
 
 function countOpaque(ctx,w,h){
@@ -1865,6 +1921,7 @@ function geomStack(){
   return {colorT,diff,bgT,frameZ0:bgT,total:bgT+b.depth+b.back};
 }
 function bedSize(){ return Math.max(80, +S.exp.bed||256); }
+function bedHeight(){ return Math.max(80, +S.exp.bedH||bedSize()); }
 const PGAP=8;
 
 /* ขอบล่างของรูปทรง — หาช่วงผนังล่างที่ต่อเนื่องยาวพอจะบากสายไฟได้
@@ -2331,13 +2388,13 @@ function buildParts(nt){
 
 /* จัดวางชิ้นงานบนฐานพิมพ์ — ใช้ทั้งภาพผังและ transform ใน 3MF */
 function platePack(){
-  const BED=bedSize();
+  const BED=bedSize(), BEDH=bedHeight();
   const w=PB.w||S.box.W, h=PB.h||S.box.H;
   const items={panel:{x:0,y:0,w,h}};
   if(!isShell()) items.back={x:0,y:h+PGAP,w,h};
   const all=Object.values(items);
   const maxX=Math.max(...all.map(i=>i.x+i.w)), maxY=Math.max(...all.map(i=>i.y+i.h));
-  return {items,maxX,maxY,bed:BED,fits:maxX<=BED&&maxY<=BED};
+  return {items,maxX,maxY,bed:BED,bedH:BEDH,fits:maxX<=BED&&maxY<=BEDH};
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -2593,7 +2650,7 @@ function draw(){
   const stage=$('#stage'), maxW=stage.clientWidth-32, maxH=stage.clientHeight-32;
   const view=S.ui.view;
   let aw=b.W, ah=b.H;
-  if(view==='plate'){ aw=270; ah=270; }
+  if(view==='plate'){ aw=Math.max(bedSize(),bedHeight())*1.06; ah=Math.max(bedSize(),bedHeight())*1.06; }
   if(view==='layers'){ aw=b.W*1.35; ah=b.H*1.35; }
   const k=Math.min(maxW/aw, maxH/ah, 8);
   cv.width=Math.max(200,Math.round(aw*k)); cv.height=Math.max(160,Math.round(ah*k));
@@ -2702,17 +2759,17 @@ function drawLayers(c,cv,px){
 }
 
 function drawPlate(c,cv,px){
-  const b=S.box, st=geomStack(), BED=bedSize(), PK=platePack();
-  const m=(BED*1.055-BED)/2*px;
-  c.fillStyle='#e7e9ec'; c.fillRect(m,m,BED*px,BED*px);
+  const b=S.box, st=geomStack(), BED=bedSize(), BEDH=bedHeight(), PK=platePack();
+  const m=(Math.max(BED,BEDH)*1.055-Math.max(BED,BEDH))/2*px;
+  c.fillStyle='#e7e9ec'; c.fillRect(m,m,BED*px,BEDH*px);
   c.strokeStyle='#0000000f';
-  for(let i=16;i<BED;i+=16){ c.beginPath();c.moveTo(m+i*px,m);c.lineTo(m+i*px,m+BED*px);c.stroke();
-    c.beginPath();c.moveTo(m,m+i*px);c.lineTo(m+BED*px,m+i*px);c.stroke(); }
-  c.strokeStyle='#9aa0a8'; c.lineWidth=1.5; c.strokeRect(m,m,BED*px,BED*px);
+  for(let i=16;i<BED;i+=16){ c.beginPath();c.moveTo(m+i*px,m);c.lineTo(m+i*px,m+BEDH*px);c.stroke(); }
+  for(let i=16;i<BEDH;i+=16){ c.beginPath();c.moveTo(m,m+i*px);c.lineTo(m+BED*px,m+i*px);c.stroke(); }
+  c.strokeStyle='#9aa0a8'; c.lineWidth=1.5; c.strokeRect(m,m,BED*px,BEDH*px);
   c.font='12px sans-serif'; c.textAlign='left'; c.lineWidth=1.5;
   const box=(it,fill,line,lab)=>{
     if(!it) return;
-    const ok = it.x+it.w<=BED && it.y+it.h<=BED;
+    const ok = it.x+it.w<=BED && it.y+it.h<=BEDH;
     c.fillStyle=ok?fill:'#f04a5a3a'; c.strokeStyle=ok?line:'#f04a5a';
     c.fillRect(m+it.x*px,m+it.y*px,it.w*px,it.h*px);
     c.strokeRect(m+it.x*px,m+it.y*px,it.w*px,it.h*px);
@@ -2724,9 +2781,9 @@ function drawPlate(c,cv,px){
   box(PK.items.back ,'#3ba0ff26','#3ba0ff',`แผ่นหลัง หนา ${b.back} มม.`);
   c.font='12px sans-serif'; c.textAlign='right';
   c.fillStyle=PK.fits?'#5b626d':'#c62b39';
-  c.fillText(PK.fits?`ใช้พื้นที่ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} จาก ${BED} × ${BED} มม.`
-                    :`เกินฐาน ${BED} มม. — ต้องการ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} มม. (แยกพิมพ์คนละรอบได้)`,
-           m+BED*px-6, m+BED*px-8);
+  c.fillText(PK.fits?`ใช้พื้นที่ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} จาก ${BED} × ${BEDH} มม.`
+                    :`เกินฐาน ${BED} × ${BEDH} มม. — ต้องการ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} มม.`,
+           m+BED*px-6, m+BEDH*px-8);
 }
 
 /* ══════════ PALETTE UI ══════════
@@ -2818,14 +2875,14 @@ function runChecks(){
   if(S.src.mode==='image'&&S.src.svgNotes) for(const n of S.src.svgNotes) add(n.t,n.m);
   if(S.src.mode==='image'&&S.src.diag&&S.src.diag.bgAte&&art)
     add('warn','ลบพื้นหลังตัดภาพหมด ระบบจึงข้ามขั้นนั้นให้ — ปรับ “ความคลาดสี” แล้วลองใหม่ได้');
-  const PK=platePack(), BED=bedSize();
+  const PK=platePack(), BED=bedSize(), BEDH=bedHeight();
   if(art){
     const nComp=G.comp?G.comp.n:1;
     add('ok',`ขนาดชิ้นงานจริง ${PB.w.toFixed(0)} × ${PB.h.toFixed(0)} × ${st.total.toFixed(1)} มม.`+
              (nComp>1?` · แยกเป็น ${nComp} ชิ้นที่ไม่ติดกัน พิมพ์ทีละชิ้นแล้วประกอบได้`:''));
-    if(PB.w>BED||PB.h>BED){
-      const nx=Math.ceil(PB.w/BED), ny=Math.ceil(PB.h/BED);
-      add('warn',`แผ่นหน้ากว้าง ${PB.w.toFixed(0)} × สูง ${PB.h.toFixed(0)} มม. ใหญ่กว่าฐาน ${BED} มม. — `+
+    if(PB.w>BED||PB.h>BEDH){
+      const nx=Math.ceil(PB.w/BED), ny=Math.ceil(PB.h/BEDH);
+      add('warn',`แผ่นหน้ากว้าง ${PB.w.toFixed(0)} × สูง ${PB.h.toFixed(0)} มม. ใหญ่กว่าฐาน ${BED} × ${BEDH} มม. — `+
         (G.comp&&G.comp.n>1? `แต่งานแยกเป็น ${G.comp.n} ชิ้นอยู่แล้ว พิมพ์ทีละชิ้นได้`
                            : `ต้องหั่นเป็นอย่างน้อย ${nx}×${ny} ท่อนแล้วต่อกัน หรือย่อขนาดลง`));
     }else if(!PK.fits)
@@ -3654,7 +3711,6 @@ const BIND=[
  ['fillHoles','shape.fillHoles','bool',null,null,''],
  ['ring0w','rings.0.w','num','ring0wV',v=>v+' มม.',''],
  ['ring1w','rings.1.w','num','ring1wV',v=>v+' มม.',''],
- ['expBed','exp.bed','num',null,null,''],
  ['bW','box.W','num',null,null,''],
  ['bH','box.H','num',null,null,''],
  ['bDepth','box.depth','num','bDepthV',v=>v+' มม.',''],
@@ -3810,6 +3866,7 @@ function pushToUI(){
     if(lab&&fmt) setLabel(lab,v,fmt);
   }
   $('#docname').value=S.name;
+  $('#expBed').value=S.exp.printer||'bambu-a1';
   $$('#srcTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.src.mode));
   $$('#left [data-pane]').forEach(p=>p.style.display = p.dataset.pane===S.src.mode?'':'none');
   $$('#viewseg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.ui.view));
@@ -3938,13 +3995,13 @@ function syncSizeUI(){
 /* แสดงความสัมพันธ์ระหว่างขนาดจริงและฐานของเครื่องที่เลือกไว้ตั้งแต่เมนู 2 */
 function syncPrinterFit(){
   const out=$('#printerFit'); if(!out) return;
-  const bed=bedSize();
-  if(!PB||PB.empty){ out.className='printer-fit'; out.textContent=`ฐานพิมพ์ที่เลือก ${bed} × ${bed} มม.`; return; }
-  const w=PB.w, h=PB.h, fits=w<=bed&&h<=bed;
+  const bed=bedSize(), bedH=bedHeight();
+  if(!PB||PB.empty){ out.className='printer-fit'; out.textContent=`พื้นที่ทำงานจากเครื่อง ${bed} × ${bedH} มม.`; return; }
+  const w=PB.w, h=PB.h, fits=w<=bed&&h<=bedH;
   out.className='printer-fit '+(fits?'ok':'warn');
   out.innerHTML=fits
-    ? `✓ ชิ้นงาน ${w.toFixed(0)} × ${h.toFixed(0)} มม. พิมพ์บนฐาน ${bed} × ${bed} มม. ได้`
-    : `! ชิ้นงาน ${w.toFixed(0)} × ${h.toFixed(0)} มม. เกินฐาน ${bed} × ${bed} มม. — เลือกเครื่องใหญ่ขึ้น หรือแยกพิมพ์`;
+    ? `✓ ชิ้นงาน ${w.toFixed(0)} × ${h.toFixed(0)} มม. พิมพ์บนฐาน ${bed} × ${bedH} มม. ได้`
+    : `! ชิ้นงาน ${w.toFixed(0)} × ${h.toFixed(0)} มม. เกินฐาน ${bed} × ${bedH} มม. — เลือกเครื่องใหญ่ขึ้น หรือแยกพิมพ์`;
 }
 /* ตั้งขนาดชิ้นงานเป็นมิลลิเมตร
    ขนาดจริงขึ้นกับทั้งสเกลและพื้นที่ทำงาน (baseFit เป็น min ของสองแกน)
@@ -4004,6 +4061,7 @@ function wire(){
     });
   }
   $('#docname').addEventListener('input',e=>S.name=e.target.value);
+  $('#expBed').addEventListener('change',e=>{ applyPrinter(e.target.value); pushToUI(); schedule(false); });
   $$('#mobileNav .mobile-tab').forEach(b=>b.addEventListener('click',()=>showMobilePanel(b.dataset.panel)));
 
   /* sections collapse */
@@ -4020,13 +4078,6 @@ function wire(){
   $$('#glbar button[data-m]').forEach(b=>b.addEventListener('click',()=>glSetMode(b.dataset.m)));
   $('#glbar button[data-a="reset"]').addEventListener('click',glReset);
 
-  /* size presets */
-  const PRE=[[120,120],[150,80],[200,90],[200,120],[220,110],[250,140],[250,250],[420,420]];
-  $('#sizePresets').innerHTML=PRE.map(p=>`<span class="chip" data-w="${p[0]}" data-h="${p[1]}">${p[0]}×${p[1]}</span>`).join('');
-  $$('#sizePresets .chip').forEach(c=>c.addEventListener('click',()=>{
-    S.box.W=+c.dataset.w; S.box.H=+c.dataset.h; pushToUI(); schedule(false);
-  }));
-
   /* templates */
   $('#tplList').innerHTML=TEMPLATES.map((t,i)=>`<span class="chip" data-i="${i}">${t.n}</span>`).join('');
   $$('#tplList .chip').forEach(c=>c.addEventListener('click',()=>applyTemplate(TEMPLATES[+c.dataset.i])));
@@ -4039,7 +4090,7 @@ function wire(){
 
   /* fonts */
   $('#txtFont').innerHTML=FONT_LIST.map(f=>`<option value="${f}"${f===S.src.font?' selected':''}>${f}</option>`).join('');
-  $('#txtContent').addEventListener('input',()=>syncJobName(nameFromText(S.src.text)));
+  $('#txtContent').addEventListener('input',()=>{ S.src.brandDefault=false; syncJobName(nameFromText(S.src.text)); });
   $('#btnFontFile').addEventListener('click',()=>$('#fontFile').click());
   $('#fontFile').addEventListener('change',async e=>{
     const f=e.target.files[0]; if(!f) return;
