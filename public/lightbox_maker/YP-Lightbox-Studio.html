@@ -2381,8 +2381,20 @@ function buildParts(nt){
      coreR = ตัวขา · slotR = ขอบนอกของร่องเซาะ · pocketR = ปากหลุมบนกรอบ (กว้างกว่าขานิดหน่อย ไม่ให้ฝืด) */
   const coreR=(J.fingerW/2)/px, slotR=(J.fingerW/2+J.slotW)/px, pocketR=(J.fingerW/2+1.0)/px;
   const bandSpec=frameBandSpec(st.frameZ0,zTop);
-  const FMs=bandSpec.map(B=>Mesh((isService()?'ตัวกล่อง · ร่องรับฝาหน้า · ':'กรอบข้าง')+(bandSpec.length>1?'แถบสี '+(B.i+1):'')+(J.screw?' + เสาสกรู':'')+(SP.length?' + หลุมสแนป':''), '#'+B.hex.replace('#',''),nt));
-  const addFrame=(mask,za,zb,noMirrorX,boxes)=>bandSpec.forEach((B,i)=>addSolid(FMs[i],mask,Math.max(za,B.z0),Math.min(zb,B.z1),noMirrorX,boxes));
+  const bandRule=B=>B.i>0 ? (b.bandRules[B.i-1]||{}) : null;
+  const FMs=bandSpec.map(B=>{
+    const M=Mesh((isService()?'ตัวกล่อง · ร่องรับฝาหน้า · ':'กรอบข้าง')+(bandSpec.length>1?'แถบสี '+(B.i+1):'')+(J.screw?' + เสาสกรู':'')+(SP.length?' + หลุมสแนป':''), '#'+B.hex.replace('#',''),nt);
+    M.glow=!!(bandRule(B)&&bandRule(B).sideGlow);
+    return M;
+  });
+  /* แถบที่เปิดไฟข้างใช้ผนังบางเพื่อให้แสงลอด แต่จุดสแนป/เสารับแรงคงความหนาเดิม */
+  const wallForBand=(mask,B,keepFull)=>{
+    const r=bandRule(B); if(keepFull||!r||!r.sideGlow) return mask;
+    const thin=clamp(+r.sideT||1.2,0.8,b.frame)/px;
+    return maskWhere(i=>mask[i]&&DI[i]<=thin);
+  };
+  const addFrame=(mask,za,zb,noMirrorX,boxes,keepFull=false)=>bandSpec.forEach((B,i)=>
+    addSolid(FMs[i],wallForBand(mask,B,keepFull),Math.max(za,B.z0),Math.min(zb,B.z1),noMirrorX,boxes));
   const d=Math.min(S.hw.dia, b.depth-2);
   /* ผนังกรอบหลัก — เว้นกล่องบริเวณหลุมสแนปไว้ก่อน แล้วค่อยเติมเป็นชั้นๆ ทีหลัง */
   const outSnap=(x,y)=>!(SP.length && inBoxes(x,y,SP,pocketR));
@@ -2414,7 +2426,7 @@ function buildParts(nt){
       const m=maskWhereNear(SP,pocketR+1,(i,x,y)=>
         frameM[i] && inSnap(x,y) && DI[i]<=lim
         && !(S.hw.hole==='frame' && zm>=zTop-d && y>=notchBandY && Math.abs(x-BI.cx)<=notchHalf));
-      addFrame(m, s? za-ZEPS : za, zb, false, boxesAt(SP,pocketR));
+      addFrame(m, s? za-ZEPS : za, zb, false, boxesAt(SP,pocketR), true);
     }
   }
   const BP=screwPoints();
@@ -2427,14 +2439,14 @@ function buildParts(nt){
     const z0=zTop-bossLen;
     const bossM=maskWhere((i,x,y)=>P[i]&&nearBoss(x,y,bwc));
     /* ตัวเสา + รูนำ */
-    addFrame(maskWhere((i,x,y)=>bossM[i]&&!inCircle(x,y,prc)), z0-ZEPS, zTop, false, boxesAt(BP,bwc));
+    addFrame(maskWhere((i,x,y)=>bossM[i]&&!inCircle(x,y,prc)), z0-ZEPS, zTop, false, boxesAt(BP,bwc), true);
     /* ลาดรับ 45° จากผนังกรอบขึ้นมาหาเสา — ไม่งั้นเสาลอยกลางอากาศ พิมพ์ไม่ได้ */
     const taperH=Math.min(S.hw.bossW, z0-st.frameZ0);
     const NT=Math.max(2,Math.min(8,Math.round(taperH/0.9)));
     if(taperH>0.4) for(let j=0;j<NT;j++){
       const t = fw + ((j+1)/NT)*(S.hw.bossW/px);
       const zA = z0-taperH + j*(taperH/NT), zB = zA + taperH/NT;
-      addFrame(maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t), j? zA-ZEPS : zA, zB, false, boxesAt(BP,bwc));
+      addFrame(maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t), j? zA-ZEPS : zA, zB, false, boxesAt(BP,bwc), true);
     }
   }
   FMs.forEach(FM=>{ FM.kind='frame'; FM.module=isService()?'box':''; FM.bossCount=BP.length; FM.snapCount=SP.length; parts.push(FM); });
@@ -3782,7 +3794,7 @@ function glRender(){
   gl.enableVertexAttribArray(L.aPos); gl.enableVertexAttribArray(L.aNrm);
 
   /* สีเฉลี่ยของชั้นที่เรืองแสง — ใช้เป็นสีของแสงที่ตกลงบนพื้นและสะท้อนกลับขึ้นกรอบ */
-  const emitOf=M=>M.glow && (M.kind==='color'||M.kind==='diffuser'||M.kind==='acrylic');
+  const emitOf=M=>M.glow && (M.kind==='color'||M.kind==='diffuser'||M.kind==='acrylic'||M.kind==='frame');
   let lr=0,lg=0,lb=0,ln=0;
   for(const B of V3.buf) if(emitOf(B.M)){
     const c=hex2rgb(B.M.hex); lr+=c[0]; lg+=c[1]; lb+=c[2]; ln++;
@@ -4253,8 +4265,9 @@ function syncBoxBandUI(){
   b.bandColors.length=n;
   const nbox=NUMBOX.get('boxBandNV'); if(nbox) nbox.inp.value=n; else if(label) label.textContent=n+' สี';
   if(!host) return;
-  while(b.bandRules.length<n-1){ const i=b.bandRules.length; b.bandRules.push({width:5,pos:50,auto:true}); }
+  while(b.bandRules.length<n-1){ const i=b.bandRules.length; b.bandRules.push({width:5,pos:50,auto:true,sideGlow:false,sideT:1.2}); }
   b.bandRules.length=Math.max(0,n-1);
+  b.bandRules.forEach(r=>{ if(typeof r.sideGlow!=='boolean') r.sideGlow=false; if(!isFinite(+r.sideT)) r.sideT=1.2; });
   const autoPos={1:[50],2:[35,65],3:[25,50,75]}[n-1]||[];
   b.bandRules.forEach((r,i)=>{ if(r.auto!==false) r.pos=autoPos[i]??50; });
   const primary=$('#frameColorRow'); if(primary) primary.style.display='';
@@ -4276,8 +4289,15 @@ function syncBoxBandUI(){
     ctl.innerHTML=`<label>กว้างแถบ</label><input type="range" min="0.4" max="${Math.max(1,b.depth-1)}" step="0.1" value="${r.width}"><input class="num" type="number" min="0.4" max="${Math.max(1,b.depth-1)}" step="0.1" value="${r.width}"><span class="unit">มม.</span>`;
     const pr=document.createElement('div'); pr.className='row';
     pr.innerHTML=`<label>ตำแหน่งแถบ</label><input type="range" min="0" max="100" step="1" value="${r.pos}"><input class="num" type="number" min="0" max="100" step="1" value="${r.pos}"><span class="unit">%</span>`;
+    const side=document.createElement('div'); side.className='row';
+    side.innerHTML=`<label>แสงออกด้านข้าง</label><input type="checkbox" ${r.sideGlow?'checked':''}><span class="unit">ผนังบางเพื่อให้แสงลอด</span>`;
+    const thin=document.createElement('div'); thin.className='row';
+    thin.innerHTML=`<label>ความหนาแถบสว่าง</label><input type="range" min="0.8" max="${b.frame}" step="0.1" value="${clamp(+r.sideT||1.2,0.8,b.frame)}"><input class="num" type="number" min="0.8" max="${b.frame}" step="0.1" value="${clamp(+r.sideT||1.2,0.8,b.frame)}"><span class="unit">มม.</span>`;
+    thin.style.display=r.sideGlow?'':'none';
     const bindPair=(node,key)=>{ const [slide,num]=node.querySelectorAll('input'); const put=v=>{ v=clamp(+v||0,+slide.min,+slide.max); r[key]=v; r.auto=false; slide.value=v; num.value=v; schedule(false); }; slide.addEventListener('input',e=>put(e.target.value)); num.addEventListener('change',e=>put(e.target.value)); num.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();put(num.value);num.blur();}}); };
-    bindPair(ctl,'width'); bindPair(pr,'pos'); host.appendChild(ctl); host.appendChild(pr);
+    bindPair(ctl,'width'); bindPair(pr,'pos'); bindPair(thin,'sideT');
+    side.querySelector('input').addEventListener('change',e=>{ r.sideGlow=e.target.checked; thin.style.display=r.sideGlow?'':'none'; schedule(false); });
+    host.appendChild(ctl); host.appendChild(pr); host.appendChild(side); host.appendChild(thin);
   });
 }
 /* ช่องขนาดชิ้นงาน — ไม่เขียนทับถ้าผู้ใช้กำลังพิมพ์อยู่ */
