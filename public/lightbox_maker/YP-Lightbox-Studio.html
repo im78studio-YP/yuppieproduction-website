@@ -370,9 +370,9 @@ Studio</textarea>
         <span class="grow"></span></div>
       <p class="hint" style="margin:0 0 8px" id="boxColorHint">สีของกรอบข้างและฝาหลัง — ไม่จำเป็นต้องเป็นสีดำ</p>
       <div class="pal">
-        <div class="it">
+        <div class="it" id="frameColorRow">
           <span class="sw" id="frameSw"><input type="color" id="frameColor" value="#1a1a1a"></span>
-          <span class="nm"><b>กรอบข้างกล่อง</b><i id="frameColorV">#1A1A1A</i></span>
+          <span class="nm"><b>สีหลักกรอบ</b><i id="frameColorV">#1A1A1A</i></span>
           <input type="text" class="hexin" id="frameHex" value="#1A1A1A" spellcheck="false">
         </div>
         <div class="it" id="backColorRow">
@@ -630,7 +630,7 @@ const PRINTERS={
 function applyPrinter(key){
   const d=PRINTERS[key]||PRINTERS['bambu-a1'];
   S.exp.printer=key; S.exp.bed=d[0]; S.exp.bedH=d[1];
-  S.box.W=d[0]; S.box.H=d[1];
+  /* ฐานพิมพ์เป็นเพียงขอบเขตการจัดวาง ห้ามเปลี่ยนแคนวาส/สเกลงาน */
 }
 
 /* ---------- filament colour library (Bambu PLA Basic-ish) ---------- */
@@ -2306,6 +2306,7 @@ function buildShell(nt){
 function frameBandSpec(z0,z1){
   const b=S.box, n=clamp(Math.round(+b.bandN||1),1,4), total=z1-z0;
   const colors=b.bandColors||[], rules=b.bandRules||[];
+  /* สีหลักเป็นเนื้อกรอบทั้งหมด แล้วแถบสีที่กำหนดจะวางทับตามตำแหน่งจริง */
   const accents=[];
   for(let i=1;i<n;i++){
     const r=rules[i-1]||{}, width=clamp(+r.width||5,0.4,Math.max(0.4,total));
@@ -3932,8 +3933,8 @@ const BIND=[
  ['fillHoles','shape.fillHoles','bool',null,null,''],
  ['ring0w','rings.0.w','num','ring0wV',v=>v+' มม.',''],
  ['ring1w','rings.1.w','num','ring1wV',v=>v+' มม.',''],
- ['bW','box.W','num',null,null,''],
- ['bH','box.H','num',null,null,''],
+ ['bW','exp.bed','num',null,null,''],
+ ['bH','exp.bedH','num',null,null,''],
  ['bDepth','box.depth','num','bDepthV',v=>v+' มม.',''],
  ['bColorT','box.colorT','num','bColorTV',v=>v+' มม.',''],
  ['bDiff','box.diff','num','bDiffV',v=>v+' มม.',''],
@@ -4248,29 +4249,29 @@ function syncBoxBandUI(){
   b.bandN=n; if(!Array.isArray(b.bandColors)) b.bandColors=[]; if(!Array.isArray(b.bandRules)) b.bandRules=[];
   b.bandColors[0]=b.frameColor||b.bandColors[0]||'#1a1a1a';
   const seeds=['#1a1a1a','#ee3c96','#ffffff','#3ba0ff'];
-  while(b.bandColors.length<n) b.bandColors.push(seeds[b.bandColors.length]||'#1a1a1a');
+  while(b.bandColors.length<n) b.bandColors.push(seeds[b.bandColors.length]||'#ee3c96');
   b.bandColors.length=n;
   const nbox=NUMBOX.get('boxBandNV'); if(nbox) nbox.inp.value=n; else if(label) label.textContent=n+' สี';
   if(!host) return;
   while(b.bandRules.length<n-1){ const i=b.bandRules.length; b.bandRules.push({width:5,pos:50,auto:true}); }
   b.bandRules.length=Math.max(0,n-1);
-  /* ค่าอัตโนมัติ: สีที่ 2 อยู่กลางกล่อง; ถ้าเพิ่มสีต่อไปให้กระจาย ไม่ซ้อนกัน */
   const autoPos={1:[50],2:[35,65],3:[25,50,75]}[n-1]||[];
   b.bandRules.forEach((r,i)=>{ if(r.auto!==false) r.pos=autoPos[i]??50; });
+  const primary=$('#frameColorRow'); if(primary) primary.style.display='';
   host.innerHTML='';
   b.bandColors.forEach((hex,i)=>{
+    if(i===0) return;
     const row=document.createElement('div'); row.className='it';
-    const name=i===0?'สีฐานกรอบ':'แถบสี '+i;
+    const name='แถบสี '+i;
     row.innerHTML=`<span class="sw"><input type="color" value="${hex}"></span><span class="nm"><b>${name}</b><i>${hex.toUpperCase()}</i></span><input type="text" class="hexin" value="${hex.toUpperCase()}" spellcheck="false">`;
     const c=row.querySelector('input[type="color"]'), x=row.querySelector('.hexin'), info=row.querySelector('i');
     row.querySelector('.sw').style.background=hex;
-    const set=v=>{ const h=normHex(v); if(!h) return; b.bandColors[i]=h; if(i===0) b.frameColor=h; c.value=h; x.value=h.toUpperCase(); info.textContent=h.toUpperCase(); row.querySelector('.sw').style.background=h; syncBoxColorUI(); schedule(false); };
+    const set=v=>{ const h=normHex(v); if(!h) return; b.bandColors[i]=h; c.value=h; x.value=h.toUpperCase(); info.textContent=h.toUpperCase(); row.querySelector('.sw').style.background=h; schedule(false); };
     c.addEventListener('input',e=>set(e.target.value));
     x.addEventListener('input',e=>{ const h=normHex(e.target.value); x.classList.toggle('bad',!h&&e.target.value.trim()!==''); if(h) set(h); });
     x.addEventListener('change',e=>set(e.target.value));
     x.addEventListener('keydown',e=>{ if(e.key==='Enter'){ set(x.value); x.blur(); } });
     host.appendChild(row);
-    if(i===0) return;
     const r=b.bandRules[i-1], ctl=document.createElement('div'); ctl.className='row';
     ctl.innerHTML=`<label>กว้างแถบ</label><input type="range" min="0.4" max="${Math.max(1,b.depth-1)}" step="0.1" value="${r.width}"><input class="num" type="number" min="0.4" max="${Math.max(1,b.depth-1)}" step="0.1" value="${r.width}"><span class="unit">มม.</span>`;
     const pr=document.createElement('div'); pr.className='row';
