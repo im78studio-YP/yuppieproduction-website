@@ -560,7 +560,9 @@ Studio</textarea>
         <select id="expFmt" class="grow">
           <option value="3mf" selected>3MF รวมทุกชิ้น (แนะนำ)</option>
           <option value="stl">STL แยกชิ้น (.zip)</option>
+          <option value="obj">OBJ + MTL สีงาน (สำหรับพรีวิว)</option>
           <option value="both">ทั้ง 3MF และ STL</option>
+          <option value="all">3MF + STL + OBJ</option>
         </select></div>
       <div class="row"><label>ความสูงชั้น</label><input type="number" id="expLayerH" class="num" value="0.2" step="0.02"><span class="unit">มม.</span></div>
       <p class="hint">3MF จะรวมทุกชิ้นไว้ในไฟล์เดียว แต่ละชิ้นแยกวัตถุพร้อมชื่อสี — เปิดใน Bambu Studio แล้วกำหนดเส้นให้แต่ละชิ้นได้เลย</p>
@@ -2502,7 +2504,11 @@ function platePack(){
   const BED=bedSize(), BEDH=bedHeight();
   const w=PB.w||S.box.W, h=PB.h||S.box.H;
   const items={panel:{x:0,y:0,w,h}};
-  if(!isShell()) items.back={x:0,y:h+PGAP,w,h};
+  if(isService()){
+    /* เรียง 3 ชิ้นแนวตั้งตามลำดับประกอบ: หน้า → กล่อง → ฐาน */
+    items.box={x:0,y:h+PGAP,w,h};
+    items.back={x:0,y:(h+PGAP)*2,w,h};
+  }else if(!isShell()) items.back={x:0,y:h+PGAP,w,h};
   const all=Object.values(items);
   const maxX=Math.max(...all.map(i=>i.x+i.w)), maxY=Math.max(...all.map(i=>i.y+i.h));
   return {items,maxX,maxY,bed:BED,bedH:BEDH,fits:maxX<=BED&&maxY<=BEDH};
@@ -2600,7 +2606,7 @@ function make3mf(parts,title){
   mats+=' </basematerials>\n';
 
   let objs='', comps='', id=2;
-  const panelIds=[], standalone=[];
+  const panelIds=[], standalone=[], records=[];
   parts.forEach((p,i)=>{
     const {V,T}=indexMesh(p);
     if(!T.length) return;
@@ -2608,15 +2614,28 @@ function make3mf(parts,title){
     let t=''; for(let k=0;k<T.length;k+=3) t+=`<triangle v1="${T[k]}" v2="${T[k+1]}" v3="${T[k+2]}"/>`;
     objs+=`<object id="${id}" type="model" pid="1" pindex="${i}" name="${xesc(p.name)}"><mesh><vertices>${v}</vertices><triangles>${t}</triangles></mesh></object>\n`;
     if(p.place) standalone.push({id,place:p.place}); else panelIds.push(id);
+    records.push({id,p});
     id++;
   });
-
-  const asmId=id++;
-  comps=`<object id="${asmId}" type="model" name="${xesc(title)} — แผ่นหน้า+กรอบ"><components>`+
-        panelIds.map(o=>`<component objectid="${o}"/>`).join('')+`</components></object>\n`;
-
-  let items=`<item objectid="${asmId}" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>`;
-  standalone.forEach(s=>{ items+=`<item objectid="${s.id}" transform="1 0 0 0 1 0 0 0 1 ${s.place.x} ${s.place.y} 0"/>`; });
+  let items='';
+  if(isService()){
+    const PK=platePack();
+    const makeGroup=(key,label,place)=>{
+      const ids=records.filter(r=>r.p.module===key).map(r=>r.id); if(!ids.length) return;
+      const gid=id++;
+      comps+=`<object id="${gid}" type="model" name="${xesc(title)} — ${label}"><components>${ids.map(o=>`<component objectid="${o}"/>`).join('')}</components></object>\n`;
+      items+=`<item objectid="${gid}" transform="1 0 0 0 1 0 0 0 1 ${place.x} ${place.y} 0"/>`;
+    };
+    makeGroup('front','ฝาหน้า (รวมชั้นกระจายแสง)',PK.items.panel);
+    makeGroup('box','ตัวกล่อง',PK.items.box);
+    makeGroup('back','ฐาน/ฝาหลัง',PK.items.back);
+  }else{
+    const asmId=id++;
+    comps=`<object id="${asmId}" type="model" name="${xesc(title)} — แผ่นหน้า+กรอบ"><components>`+
+          panelIds.map(o=>`<component objectid="${o}"/>`).join('')+`</components></object>\n`;
+    items=`<item objectid="${asmId}" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>`;
+    standalone.forEach(s=>{ items+=`<item objectid="${s.id}" transform="1 0 0 0 1 0 0 0 1 ${s.place.x} ${s.place.y} 0"/>`; });
+  }
 
   const model=`<?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
@@ -2637,6 +2656,31 @@ ${mats}${objs}${comps} </resources>
     {name:'_rels/.rels',data:enc(rels)},
     {name:'3D/3dmodel.model',data:enc(model)}
   ]);
+}
+
+/* OBJ ไม่เก็บสีในตัวไฟล์ จึงส่ง MTL คู่กันใน ZIP — ใช้ดูงานในโปรแกรม 3D ได้
+   ไม่ใช่ไฟล์หลักสำหรับ slicer หลายสี; งานพิมพ์ยังใช้ 3MF */
+function objMtl(parts,base){
+  const PK=isService()?platePack():null;
+  const placeOf=p=>{
+    if(!PK) return p.place||{x:0,y:0};
+    if(p.module==='front') return PK.items.panel;
+    if(p.module==='box') return PK.items.box;
+    if(p.module==='back') return PK.items.back;
+    return p.place||{x:0,y:0};
+  };
+  let obj=`# YP Lightbox Studio\n# สีอ้างอิงจากไฟล์ ${base}.mtl\nmtllib ${base}.mtl\n`, mtl='# YP Lightbox Studio materials\n';
+  let vi=1;
+  parts.forEach((p,i)=>{
+    const mat='mat_'+i, rgb=hex2rgb(p.hex).map(v=>(v/255).toFixed(4)), at=placeOf(p);
+    mtl+=`newmtl ${mat}\nKd ${rgb.join(' ')}\nKa ${rgb.join(' ')}\nd 1.0\n\n`;
+    obj+=`o ${fileToken(p.name)}\nusemtl ${mat}\n`;
+    for(let t=0;t<p.n;t+=12){
+      for(let k=0;k<3;k++) obj+=`v ${(p.a[t+3+k*3]+at.x).toFixed(4)} ${(p.a[t+4+k*3]+at.y).toFixed(4)} ${p.a[t+5+k*3].toFixed(4)}\n`;
+      obj+=`f ${vi} ${vi+1} ${vi+2}\n`; vi+=3;
+    }
+  });
+  return {obj,mtl};
 }
 const enc = s => new TextEncoder().encode(s);
 
@@ -2707,6 +2751,13 @@ function partFileLabel(M){
   if(M.kind==='acrylic') return 'แผ่นหน้าอะครีลิค';
   if(M.kind==='plaswood') return 'ฝาหลังพลาสวูด';
   return fileToken(M.name||'ชิ้นส่วน');
+}
+function mergeForSTL(name,parts,hex){
+  const live=parts.filter(p=>p&&p.n); const M=Mesh(name,hex||'#808080',false);
+  const n=live.reduce((a,p)=>a+p.n,0);
+  M.a=new Float32Array(Math.max(12,n)); M.n=0;
+  live.forEach(p=>{ M.a.set(p.a.subarray(0,p.n),M.n); M.n+=p.n; });
+  return M;
 }
 /* ══════════════════════════════════════════════════════════════
    YP Lightbox Studio — preview, checks, pricing, UI
@@ -2890,8 +2941,11 @@ function drawPlate(c,cv,px){
   };
   box(PK.items.panel,'#ff2d8f26','#ff2d8f', isShell()
       ? `ตัวกล่อง ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} · สูง ${st.total.toFixed(1)} มม.`
+      : isService()
+      ? `ฝาหน้า ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} มม.`
       : `แผ่นหน้า+กรอบ ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} · สูง ${(st.frameZ0+b.depth).toFixed(1)} มม.`);
-  box(PK.items.back ,'#3ba0ff26','#3ba0ff',`แผ่นหลัง หนา ${b.back} มม.`);
+  if(isService()) box(PK.items.box,'#1a1a1a26','#1a1a1a',`ตัวกล่อง ${PK.items.box.w.toFixed(0)}×${PK.items.box.h.toFixed(0)} มม.`);
+  box(PK.items.back ,'#3ba0ff26','#3ba0ff',isService()?`ฐาน/ฝาหลัง หนา ${b.back} มม.`:`แผ่นหลัง หนา ${b.back} มม.`);
   c.font='12px sans-serif'; c.textAlign='right';
   c.fillStyle=PK.fits?'#5b626d':'#c62b39';
   c.fillText(PK.fits?`ใช้พื้นที่ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} จาก ${BED} × ${BEDH} มม.`
@@ -3313,16 +3367,28 @@ async function doExport(){
     const pr=parts.filter(p=>!p.display);          // แผ่นอะครีลิค/พลาสวูดมีไว้ดูเฉยๆ ไม่ส่งไปพิมพ์
     const name=productionBaseName();
     const fmt=S.exp.fmt;
-    if(fmt==='3mf'||fmt==='both'){
+    if(fmt==='3mf'||fmt==='both'||fmt==='all'){
       busy(true,'กำลังเขียนไฟล์ 3MF…'); await new Promise(r=>setTimeout(r,20));
       const blob=await make3mf(pr,S.name);
       download(blob,`${name}_${isShell()?'ตัวกล่อง':isService()?'ชุดฝาหน้าถอดเปลี่ยนได้':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
     }
-    if(fmt==='stl'||fmt==='both'){
+    if(fmt==='stl'||fmt==='both'||fmt==='all'){
       busy(true,'กำลังเขียนไฟล์ STL…'); await new Promise(r=>setTimeout(r,20));
-      const files=pr.map(p=>({name:`${name}_${partFileLabel(p)}.stl`,data:stlOf(p)}));
+      const files=isService()? [
+        {name:`${name}_ฝาหน้า_รวมชั้นกระจายแสง.stl`,data:stlOf(mergeForSTL('ฝาหน้า (รวมชั้นกระจายแสง)',pr.filter(p=>p.module==='front'),'#F2F2E8'))},
+        {name:`${name}_ตัวกล่อง.stl`,data:stlOf(mergeForSTL('ตัวกล่อง',pr.filter(p=>p.module==='box'),S.box.frameColor))},
+        {name:`${name}_ฐาน_ฝาหลัง.stl`,data:stlOf(mergeForSTL('ฐาน/ฝาหลัง',pr.filter(p=>p.module==='back'),S.box.backColor))}
+      ] : pr.map(p=>({name:`${name}_${partFileLabel(p)}.stl`,data:stlOf(p)}));
       files.push({name:`${name}_คำแนะนำการพิมพ์.txt`,data:enc(readme(parts))});
       download(await zipFiles(files), `${name}_ชิ้นส่วนพิมพ์_STL.zip`);
+    }
+    if(fmt==='obj'||fmt==='all'){
+      busy(true,'กำลังเขียนไฟล์ OBJ + MTL…'); await new Promise(r=>setTimeout(r,20));
+      const O=objMtl(pr,name);
+      download(await zipFiles([
+        {name:`${name}.obj`,data:enc(O.obj)},
+        {name:`${name}.mtl`,data:enc(O.mtl)}
+      ]), `${name}_พรีวิวสี_OBJ.zip`);
     }
     if(isShell()){
       busy(true,'กำลังเขียนไฟล์ตัดแผ่น…'); await new Promise(r=>setTimeout(r,20));
@@ -3627,7 +3693,14 @@ function partMatrix(M,mode){
   const st=geomStack(), W=PB.w||S.box.W, H=PB.h||S.box.H, BED=bedSize();
   const ex = mode==='exp';
   if(mode==='plate'){
-    const px=(M.place?M.place.x:0), py=(M.place?M.place.y:0);
+    let place=M.place||{x:0,y:0};
+    if(isService()){
+      const PK=platePack();
+      if(M.module==='front') place=PK.items.panel;
+      else if(M.module==='box') place=PK.items.box;
+      else if(M.module==='back') place=PK.items.back;
+    }
+    const px=place.x, py=place.y;
     return mkM(1,0,0, 0,0,1, 0,-1,0, px-BED/2, 0, BED/2-py);
   }
   if(M.kind==='back'){
