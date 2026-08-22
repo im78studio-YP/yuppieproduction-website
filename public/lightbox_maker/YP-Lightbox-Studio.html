@@ -254,6 +254,22 @@ Studio</textarea>
         <div class="row"><label>ระยะห่างบรรทัด</label><input type="range" id="txtLead" min="80" max="200" step="5" value="115"><span class="unit" id="txtLeadV">115%</span></div>
         <div class="row"><label>ขอบรอบตัว</label><input type="range" id="txtOutline" min="0" max="6" step="0.5" value="0"><span class="unit" id="txtOutlineV">0 มม.</span></div>
         <p class="hint">ขอบรอบตัวอักษรจะกลายเป็นสีที่ 2 อัตโนมัติ — ใช้ทำตัวอักษรมีเส้นขอบเรืองแสงแบบป้ายร้าน</p>
+        <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+        <div class="row"><label style="flex-basis:auto;color:var(--tx);font-weight:600">ขอบและรูปทรงป้าย</label></div>
+        <div class="row"><label>เติมช่องในตัว</label><input type="checkbox" id="fillHoles" checked>
+          <span class="unit">ปิดช่องในตัว O, P, A ไม่ให้ทะลุ</span></div>
+        <div class="row"><label>ขอบรูปทรงชั้นใน</label><input type="range" id="ring0w" min="0" max="30" step="0.5" value="4"><span class="unit" id="ring0wV">4 มม.</span></div>
+        <div class="pal" id="ring0row"><div class="it">
+          <span class="sw" id="ring0sw"><input type="color" id="ring0c" value="#ffffff"></span>
+          <span class="nm"><b id="ring0n">ขาว</b><i id="ring0h">#FFFFFF</i></span>
+          <input type="text" class="hexin" id="ring0x" value="#FFFFFF" spellcheck="false">
+          <button class="glowbtn" id="ring0g">สว่าง</button></div></div>
+        <div class="row"><label>ขอบรูปทรงชั้นนอก</label><input type="range" id="ring1w" min="0" max="30" step="0.5" value="3"><span class="unit" id="ring1wV">3 มม.</span></div>
+        <div class="pal" id="ring1row"><div class="it">
+          <span class="sw" id="ring1sw"><input type="color" id="ring1c" value="#ee3c96"></span>
+          <span class="nm"><b id="ring1n">ชมพูบานเย็น</b><i id="ring1h">#EE3C96</i></span>
+          <input type="text" class="hexin" id="ring1x" value="#EE3C96" spellcheck="false">
+          <button class="glowbtn" id="ring1g">ทึบ</button></div></div>
       </div>
 
       <div data-pane="image" style="display:none">
@@ -363,31 +379,6 @@ Studio</textarea>
       · ฝาหลังเลือกสีอะไรก็ได้ เพราะอยู่ด้านที่ไม่เห็น</p>
     </div>
   </div>
-
-
-  <div class="sec" data-sec="shape">
-    <h3>4 · รูปทรงและขอบ</h3>
-    <div class="body">
-      <div class="row"><label>เติมช่องในตัว</label><input type="checkbox" id="fillHoles" checked>
-        <span class="unit">ปิดช่องในตัว O, P, A ไม่ให้ทะลุ</span></div>
-      <div class="row"><label>ขอบชั้นใน</label><input type="range" id="ring0w" min="0" max="30" step="0.5" value="4"><span class="unit" id="ring0wV">4 มม.</span></div>
-      <div class="pal" id="ring0row"><div class="it">
-        <span class="sw" id="ring0sw"><input type="color" id="ring0c" value="#ffffff"></span>
-        <span class="nm"><b id="ring0n">ขาว</b><i id="ring0h">#FFFFFF</i></span>
-        <input type="text" class="hexin" id="ring0x" value="#FFFFFF" spellcheck="false">
-        <button class="glowbtn" id="ring0g">สว่าง</button></div></div>
-      <div class="row"><label>ขอบชั้นนอก</label><input type="range" id="ring1w" min="0" max="30" step="0.5" value="3"><span class="unit" id="ring1wV">3 มม.</span></div>
-      <div class="pal" id="ring1row"><div class="it">
-        <span class="sw" id="ring1sw"><input type="color" id="ring1c" value="#ee3c96"></span>
-        <span class="nm"><b id="ring1n">ชมพูบานเย็น</b><i id="ring1h">#EE3C96</i></span>
-        <input type="text" class="hexin" id="ring1x" value="#EE3C96" spellcheck="false">
-        <button class="glowbtn" id="ring1g">ทึบ</button></div></div>
-      <p class="hint">ขอบคือเส้นที่ขยายออกจากตัวลวดลาย รูปทรงของกล่องจะวิ่งตามขอบชั้นนอกสุด
-      แก้สีและกำหนดสว่าง/ทึบ ของแต่ละขอบได้ที่หัวข้อ 3 · สีและชั้น<br>
-      ตั้งเป็น 0 เพื่อไม่ใช้ขอบชั้นนั้น · ขอบรวมควรกว้างกว่าผนังกรอบอย่างน้อย 3 มม.</p>
-    </div>
-  </div>
-
 </div>
 
 <!-- ══════════ CENTER ══════════ -->
@@ -424,7 +415,7 @@ Studio</textarea>
 <div class="col" id="right">
 
   <div class="sec" data-sec="dim">
-    <h3>5 · โครงสร้างกล่องและความหนา</h3>
+    <h3>4 · โครงสร้างกล่องและความหนา</h3>
     <div class="body">
       <div class="row" style="margin-top:10px"><label>รูปแบบงาน</label>
         <select id="buildMode" class="grow">
@@ -457,7 +448,7 @@ Studio</textarea>
   </div>
 
   <div class="sec" data-sec="hw">
-    <h3>6 · รูสายไฟและรูแขวน</h3>
+    <h3>5 · รูสายไฟและรูแขวน</h3>
     <div class="body">
       <div class="row"><label>รูสายไฟ</label>
         <select id="holeType" class="grow">
@@ -472,7 +463,7 @@ Studio</textarea>
   </div>
 
   <div class="sec" data-sec="joint">
-    <h3 id="jointTitle">7 · การประกบฝาหลัง</h3>
+    <h3 id="jointTitle">6 · การประกบฝาหลัง</h3>
     <div class="body">
       <p class="hint" id="shellJointNote" style="display:none"></p>
       <div id="jointBody">
@@ -500,12 +491,12 @@ Studio</textarea>
   </div>
 
   <div class="sec" data-sec="check">
-    <h3>8 · ตรวจก่อนพิมพ์</h3>
+    <h3>7 · ตรวจก่อนพิมพ์</h3>
     <div class="body"><div id="checkList"></div></div>
   </div>
 
   <div class="sec" data-sec="price">
-    <h3>9 · ต้นทุนและราคา</h3>
+    <h3>8 · ต้นทุนและราคา</h3>
     <div class="body">
       <div class="row"><label>จำนวนที่ผลิต</label><input type="number" id="pQty" class="num" value="1" min="1" step="1"><span class="unit">ชิ้น</span></div>
       <div class="row"><label>เส้นพลาสติก</label><input type="number" id="pFil" class="num" value="750" step="10"><span class="unit">บาท/กก.</span></div>
@@ -530,7 +521,7 @@ Studio</textarea>
   </div>
 
   <div class="sec closed" data-sec="exp">
-    <h3>10 · ตัวเลือกไฟล์ส่งออก</h3>
+    <h3>9 · ตัวเลือกไฟล์ส่งออก</h3>
     <div class="body">
       <div class="row"><label>ความละเอียด</label>
         <select id="expRes" class="grow">
@@ -3897,7 +3888,7 @@ function syncModeUI(){
   show('fullThick',!sh); show('fullBack',!sh); show('shellThick',sh);
   show('artColor',!sh);  show('backColorRow',!sh);
   show('jointBody',!sh); show('shellJointNote',sh); show('shellPrice',sh);
-  const t=$('#jointTitle'); if(t) t.textContent = sh? '7 · การยึดแผ่นอะครีลิค/พลาสวูด' : '7 · การประกบฝาหลัง';
+  const t=$('#jointTitle'); if(t) t.textContent = sh? '6 · การยึดแผ่นอะครีลิค/พลาสวูด' : '6 · การประกบฝาหลัง';
   const bh=$('#boxColorHint'); if(bh) bh.textContent = sh? 'สีของตัวกล่องที่พิมพ์ — แนะนำสีทึบเพื่อไม่ให้แสงรอดออกข้างกล่อง'
                                                         : 'สีของกรอบข้างและฝาหลัง — ไม่จำเป็นต้องเป็นสีดำ';
   const mh=$('#modeHint');
