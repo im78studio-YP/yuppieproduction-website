@@ -126,6 +126,7 @@ input[type=range]{width:100%;accent-color:var(--acc);background:none;border:0;pa
 #gl{border-radius:6px;box-shadow:0 8px 40px #000a;cursor:grab;display:block}
 #gl:active{cursor:grabbing}
 #glFail{position:absolute;inset:0;align-items:center;justify-content:center;color:var(--tx2)}
+.empty-upload{position:absolute;z-index:3;left:50%;top:calc(50% + 38px);transform:translateX(-50%);min-width:126px}
 .glbar{
   position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;
   background:#0b0d10dd;border:1px solid var(--line);padding:4px;border-radius:10px;backdrop-filter:blur(6px)
@@ -411,6 +412,7 @@ Studio</textarea>
     <canvas id="view" width="900" height="600"></canvas>
     <canvas id="gl" style="display:none"></canvas>
     <div id="glFail" style="display:none">เบราว์เซอร์นี้เปิด WebGL ไม่ได้ — ใช้แท็บ “แยกชั้น” แทน</div>
+    <button class="btn empty-upload" id="btnEmptyUpload" style="display:none">อัปโหลดไฟล์</button>
     <div class="glbar" id="glbar" style="display:none">
       <button data-m="asm" class="on">ประกอบเสร็จ</button>
       <button data-m="lit">ติดไฟ</button>
@@ -2797,6 +2799,7 @@ function layerImage(k){
 
 function draw(){
   const cv=$('#view'), b=S.box;
+  const emptyUpload=$('#btnEmptyUpload'); if(emptyUpload) emptyUpload.style.display='none';
   const is3d = S.ui.view==='3d';
   cv.style.display = is3d?'none':'';
   $('#gl').style.display = is3d?'':'none';
@@ -2837,6 +2840,7 @@ function draw(){
     c.fillText(t1,cv.width/2,cv.height/2-8);
     c.font='13px sans-serif'; c.fillStyle=view==='lit'?'#9aa3b0':'#6b7280';
     c.fillText(t2,cv.width/2,cv.height/2+16);
+    if(emptyUpload) emptyUpload.style.display='block';
     return;
   }
 
@@ -4429,6 +4433,7 @@ function wire(){
     }
   };
   $('#imgDrop').addEventListener('click',()=>$('#imgFile').click());
+  $('#btnEmptyUpload').addEventListener('click',()=>$('#imgFile').click());
   $('#imgFile').addEventListener('change',e=>loadImg(e.target.files[0]));
   ['dragenter','dragover'].forEach(k=>$('#imgDrop').addEventListener(k,e=>{e.preventDefault();$('#imgDrop').classList.add('over');}));
   ['dragleave','drop'].forEach(k=>$('#imgDrop').addEventListener(k,e=>{e.preventDefault();$('#imgDrop').classList.remove('over');}));
