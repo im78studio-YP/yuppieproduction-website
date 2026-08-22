@@ -254,6 +254,7 @@ Studio</textarea>
         <div class="row"><label>ระยะห่างบรรทัด</label><input type="range" id="txtLead" min="80" max="200" step="5" value="115"><span class="unit" id="txtLeadV">115%</span></div>
         <div class="row"><label>ขอบรอบตัว</label><input type="range" id="txtOutline" min="0" max="6" step="0.5" value="0"><span class="unit" id="txtOutlineV">0 มม.</span></div>
         <p class="hint">ขอบรอบตัวอักษรจะกลายเป็นสีที่ 2 อัตโนมัติ — ใช้ทำตัวอักษรมีเส้นขอบเรืองแสงแบบป้ายร้าน</p>
+        <div id="lineStyleRows"></div>
         <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
         <div class="row"><label style="flex-basis:auto;color:var(--tx);font-weight:600">ขอบและรูปทรงป้าย</label></div>
         <div class="row"><label>เติมช่องในตัว</label><input type="checkbox" id="fillHoles" checked>
@@ -383,6 +384,8 @@ Studio</textarea>
           <input type="text" class="hexin" id="backHex" value="#1A1A1A" spellcheck="false">
         </div>
       </div>
+      <div class="row" style="margin-top:10px"><label>ชั้นสีกรอบกล่อง</label><input type="range" id="boxBandN" min="1" max="4" step="1" value="1"><span class="unit" id="boxBandNV">1 สี</span></div>
+      <div class="pal" id="boxBandList"></div>
       <p class="hint">กรอบข้างควรใช้เส้นทึบแสง ถ้าใช้สีอ่อนหรือสีใส แสงจะรอดออกข้างกล่อง
       · ฝาหลังเลือกสีอะไรก็ได้ เพราะอยู่ด้านที่ไม่เห็น</p>
     </div>
@@ -586,7 +589,7 @@ function defaults(){ return {
   name:'YP Lightbox Studio',
   src:{ mode:'text',
         text:'YP Lightbox\nStudio', font:'Arial Black', weight:700, align:'center', brandDefault:true,
-        track:0, lead:115, outline:0,
+        track:0, lead:115, outline:0, lineStyles:[],
         imgData:null, imgName:'', removeBg:true, tol:26 },
   tr:{ scale:88, scaleY:88, uniform:true, dx:0, dy:0, rot:0 },
   art:{ n:2, smooth:1, glowMode:'logo', seal:'standard', choke:0.6 },
@@ -599,7 +602,7 @@ function defaults(){ return {
      หน้ากล่อง 1.2 มม. เท่ากันทั้งแผ่น (ส่วนสว่าง 0.4+0.8 · ส่วนทึบ 1.2) = 6 ชั้นที่ layer 0.2
      กรอบข้าง 2.4 · ฝาหลัง 3 · เผื่อสวม 0.2 · บ่าหนา 2 สูง 10 */
   box:{ W:256,H:256,depth:35,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:3,
-        frameColor:'#1a1a1a', backColor:'#1a1a1a' },
+        frameColor:'#1a1a1a', backColor:'#1a1a1a', bandN:1, bandColors:['#1a1a1a'] },
   hw:{ hole:'frame', dia:7, hang:false,
        joint:'snap', lipH:10, lipW:2, lipCl:0.2, bossW:8, screwDepth:10,
        snapBarb:0.45, snapW:12 },
@@ -666,35 +669,44 @@ function makeSourceCanvas(){
   return S.src.mode==='image' ? sourceFromImage() : sourceFromText();
 }
 
+function textLineStyles(lines){
+  const a=Array.isArray(S.src.lineStyles)?S.src.lineStyles:(S.src.lineStyles=[]);
+  const fallback=(S.pal[1]&&S.pal[1].hex)||'#ff2d8f';
+  while(a.length<lines.length) a.push({scale:100,hex:fallback});
+  a.length=lines.length;
+  a.forEach(x=>{ if(!isFinite(+x.scale)) x.scale=100; if(!normHex(x.hex)) x.hex=fallback; });
+  return a;
+}
+
 function sourceFromText(){
   if(S.src.brandDefault && S.src.text==='YP Lightbox\nStudio') return sourceFromBrandText();
   const lines = (S.src.text||'').split('\n').filter(l=>l.length);
   if(!lines.length) return null;
+  const styles=textLineStyles(lines);
   const fs = SRC_H/Math.max(1,lines.length) * 0.72;
   const lead = fs * S.src.lead/100;
   const meas = document.createElement('canvas').getContext('2d');
-  const fontStr = `${S.src.weight} ${fs}px "${S.src.font}", "Leelawadee UI", sans-serif`;
-  meas.font = fontStr;
-  if('letterSpacing' in meas) meas.letterSpacing = (S.src.track*fs/100)+'px';
+  const fontAt=i=>`${S.src.weight} ${fs*styles[i].scale/100}px "${S.src.font}", "Leelawadee UI", sans-serif`;
   // ← ห้ามนับตัวอักษร: วัดด้วย canvas เท่านั้น (ภาษาไทยมีสระ/วรรณยุกต์ที่ไม่กินความกว้าง)
   let wmax = 0;
-  for(const l of lines) wmax = Math.max(wmax, meas.measureText(l).width);
+  for(let i=0;i<lines.length;i++){ meas.font=fontAt(i); if('letterSpacing' in meas) meas.letterSpacing=(S.src.track*fs*styles[i].scale/10000)+'px'; wmax=Math.max(wmax,meas.measureText(lines[i]).width); }
   const ow = S.src.outline * 6;                       // outline in source px
   const pad = Math.ceil(ow + fs*0.35);
   const W = Math.ceil(wmax) + pad*2;
-  const H = Math.ceil(lead*lines.length) + pad*2;
+  const maxScale=Math.max(...styles.map(s=>+s.scale||100))/100;
+  const H = Math.ceil(lead*lines.length + fs*Math.max(0,maxScale-1)) + pad*2;
 
-  const draw = (stroke)=>{
+  const draw = (stroke,only)=>{
     const cv = document.createElement('canvas'); cv.width=W; cv.height=H;
     const c = cv.getContext('2d');
-    c.font = fontStr;
-    if('letterSpacing' in c) c.letterSpacing = (S.src.track*fs/100)+'px';
     c.textBaseline = 'middle';
     c.textAlign = S.src.align;
     c.fillStyle = '#fff'; c.strokeStyle = '#fff';
     c.lineJoin = 'round'; c.lineCap='round';
     const x = S.src.align==='center' ? W/2 : S.src.align==='left' ? pad : W-pad;
     lines.forEach((l,i)=>{
+      if(only!=null&&only!==i) return;
+      c.font=fontAt(i); if('letterSpacing' in c) c.letterSpacing=(S.src.track*fs*styles[i].scale/10000)+'px';
       const y = pad + lead*(i+0.5);
       if(stroke && ow>0){ c.lineWidth = ow*2; c.strokeText(l,x,y); }
       c.fillText(l,x,y);
@@ -702,8 +714,8 @@ function sourceFromText(){
     return cv;
   };
   const outer = draw(true);           // fill + outline
-  const inner = draw(false);          // fill only
-  return { cv: outer, inner: (ow>0?inner:null), kind:'text' };
+  const layers=lines.map((_,i)=>draw(false,i));
+  return { cv: outer, inner:null, layers, hasOutline:ow>0, kind:'text' };
 }
 
 /* โลโก้ข้อความตั้งต้น: สองสี และ Studio กว้างเท่าบรรทัด YP Lightbox */
@@ -867,12 +879,28 @@ function buildGrid(){
   }
 
   if(src.kind==='text'){
-    /* palette: 0 bg · 1 fill · 2 outline */
-    ensurePalette(innerData?2:1);
-    for(let i=0,n=gw*gh;i<n;i++){
-      const a = outer[i*4+3];
-      if(a<110){ owner[i]=0; continue; }
-      owner[i] = (innerData && innerData[i*4+3]<110) ? 2 : 1;
+    /* ข้อความแยกบรรทัด: แต่ละบรรทัดมี owner/สีของตัวเอง · ขอบใช้สีสุดท้าย */
+    if(src.layers){
+      const nLine=src.layers.length, outlineK=nLine+(src.hasOutline?1:0);
+      ensurePalette(outlineK||1);
+      const styles=textLineStyles((S.src.text||'').split('\n').filter(l=>l.length));
+      for(let k=0;k<nLine;k++){ S.pal[k+1].hex=styles[k].hex; S.pal[k+1].name='ข้อความบรรทัด '+(k+1); }
+      if(src.hasOutline) S.pal[outlineK].name='ขอบรอบตัวอักษร';
+      for(let i=0,n=gw*gh;i<n;i++) owner[i]=outer[i*4+3]>=110 ? (src.hasOutline?outlineK:0) : 0;
+      for(let k=0;k<nLine;k++){
+        const lc=document.createElement('canvas'); lc.width=gw; lc.height=gh;
+        const ctx=lc.getContext('2d',{willReadFrequently:true}); drawSourceInto(ctx,gw,gh,src.layers[k]);
+        const data=ctx.getImageData(0,0,gw,gh).data;
+        for(let i=0,n=gw*gh;i<n;i++) if(data[i*4+3]>=110) owner[i]=k+1;
+      }
+    }else{
+      /* ข้อความรุ่นเก่า/โลโก้พิเศษ */
+      ensurePalette(innerData?2:1);
+      for(let i=0,n=gw*gh;i<n;i++){
+        const a = outer[i*4+3];
+        if(a<110){ owner[i]=0; continue; }
+        owner[i] = (innerData && innerData[i*4+3]<110) ? 2 : 1;
+      }
     }
   }else{
     /* image: k-means over visible pixels */
@@ -2204,7 +2232,8 @@ function sheetHoles(){
 function buildShell(nt){
   const b=S.box, px=G.px, P=G.panel, DI=G.edtIn, H=shellSpec();
   const parts=[];
-  const M=Mesh('ตัวกล่อง + คิ้วรับแผ่น','#'+b.frameColor.replace('#',''),nt);
+  const bandSpec=frameBandSpec(0,H.total);
+  const Ms=bandSpec.map(B=>Mesh('ตัวกล่อง + คิ้วรับแผ่น'+(bandSpec.length>1?' · แถบสี '+(B.i+1):''),'#'+B.hex.replace('#',''),nt));
 
   /* ช่องบากสายไฟบนผนัง — อยู่ในโพรงไฟ ชิดคิ้วล่าง หลังคาลาด 45° จึงไม่ต้องบริดจ์ */
   const BI = S.hw.hole==='frame' ? bottomInfo() : null;
@@ -2226,10 +2255,10 @@ function buildShell(nt){
     }
     const z0 = first? za : za-ZEPS;
     first=false;
-    if(M.noTri || S.exp.smooth===false){ addSolid(M,m,z0,zb); return; }
+    if(Ms[0].noTri || S.exp.smooth===false){ bandSpec.forEach((B,i)=>addSolid(Ms[i],m,Math.max(z0,B.z0),Math.min(zb,B.z1))); return; }
     let g=gcache.get(key);
     if(!g){ g=contoursOf(m,G.gw,G.gh,false); gcache.set(key,g); }
-    addPrism(M,g,z0,zb);
+    bandSpec.forEach((B,i)=>{ const za=Math.max(z0,B.z0), zc=Math.min(zb,B.z1); if(zc>za) addPrism(Ms[i],g,za,zc); });
   };
 
   const F=b.frame;
@@ -2258,8 +2287,7 @@ function buildShell(nt){
   slab(F+H.lB, H.zB1, H.zB2);                                  // ตัวคิ้วล่าง — หน้าบนรับพลาสวูด
   slab(F, H.zB2, H.total);                                     // ร่องล่าง
 
-  M.kind='shell'; M.bossCount=0; M.snapCount=0;
-  parts.push(M);
+  Ms.forEach(M=>{ M.kind='shell'; M.bossCount=0; M.snapCount=0; parts.push(M); });
 
   /* แผ่นอะครีลิค/พลาสวูด — แสดงผลอย่างเดียว ไม่ส่งออกเป็นไฟล์พิมพ์ ไม่คิดเป็นเส้นพลาสติก */
   if(!nt){
@@ -2274,6 +2302,13 @@ function buildShell(nt){
     }
   }
   return parts;
+}
+
+function frameBandSpec(z0,z1){
+  const n=clamp(Math.round(+S.box.bandN||1),1,4), colors=(S.box.bandColors||[]).slice(0,n);
+  while(colors.length<n) colors.push(S.box.frameColor||'#1a1a1a');
+  const dz=(z1-z0)/n;
+  return colors.map((hex,i)=>({hex,z0:z0+dz*i,z1:i===n-1?z1:z0+dz*(i+1),i}));
 }
 
 function buildParts(nt){
@@ -2315,8 +2350,9 @@ function buildParts(nt){
   /* รัศมีกล่อง (chebyshev) รอบจุดสแนป — วัดจากจุดที่อยู่กึ่งกลางแนวบ่าพอดี
      coreR = ตัวขา · slotR = ขอบนอกของร่องเซาะ · pocketR = ปากหลุมบนกรอบ (กว้างกว่าขานิดหน่อย ไม่ให้ฝืด) */
   const coreR=(J.fingerW/2)/px, slotR=(J.fingerW/2+J.slotW)/px, pocketR=(J.fingerW/2+1.0)/px;
-  const FM=Mesh('กรอบข้าง'+(J.screw?' + เสาสกรู':'')+(SP.length?' + หลุมสแนป':''),
-                '#'+b.frameColor.replace('#',''),nt);
+  const bandSpec=frameBandSpec(st.frameZ0,zTop);
+  const FMs=bandSpec.map(B=>Mesh('กรอบข้าง'+(bandSpec.length>1?' · แถบสี '+(B.i+1):'')+(J.screw?' + เสาสกรู':'')+(SP.length?' + หลุมสแนป':''), '#'+B.hex.replace('#',''),nt));
+  const addFrame=(mask,za,zb,noMirrorX,boxes)=>bandSpec.forEach((B,i)=>addSolid(FMs[i],mask,Math.max(za,B.z0),Math.min(zb,B.z1),noMirrorX,boxes));
   const d=Math.min(S.hw.dia, b.depth-2);
   /* ผนังกรอบหลัก — เว้นกล่องบริเวณหลุมสแนปไว้ก่อน แล้วค่อยเติมเป็นชั้นๆ ทีหลัง */
   const outSnap=(x,y)=>!(SP.length && inBoxes(x,y,SP,pocketR));
@@ -2324,10 +2360,10 @@ function buildParts(nt){
   const wallM=SP.length? maskWhere((i,x,y)=>frameM[i]&&outSnap(x,y)) : frameM;
   if(S.hw.hole==='frame'){
     const notched=maskWhere((i,x,y)=> wallM[i] && !(y>=notchBandY && Math.abs(x-BI.cx)<=notchHalf));
-    addSolid(FM,wallM, st.frameZ0, zTop-d);
-    addSolid(FM,notched, zTop-d-ZEPS, zTop);
+    addFrame(wallM, st.frameZ0, zTop-d);
+    addFrame(notched, zTop-d-ZEPS, zTop);
   }else{
-    addSolid(FM,wallM, st.frameZ0, zTop);
+    addFrame(wallM, st.frameZ0, zTop);
   }
   /* หลุมรับหัวขอ — ผนังบางลง J.pocketD เฉพาะช่วง z ของหัวขอ
      ปากหลุมฝั่งล็อกปิดกลับด้วยลาด 45° จึงพิมพ์ได้โดยไม่ต้องบริดจ์ */
@@ -2348,7 +2384,7 @@ function buildParts(nt){
       const m=maskWhereNear(SP,pocketR+1,(i,x,y)=>
         frameM[i] && inSnap(x,y) && DI[i]<=lim
         && !(S.hw.hole==='frame' && zm>=zTop-d && y>=notchBandY && Math.abs(x-BI.cx)<=notchHalf));
-      addSolid(FM,m, s? za-ZEPS : za, zb, false, boxesAt(SP,pocketR));
+      addFrame(m, s? za-ZEPS : za, zb, false, boxesAt(SP,pocketR));
     }
   }
   const BP=screwPoints();
@@ -2361,18 +2397,17 @@ function buildParts(nt){
     const z0=zTop-bossLen;
     const bossM=maskWhere((i,x,y)=>P[i]&&nearBoss(x,y,bwc));
     /* ตัวเสา + รูนำ */
-    addSolid(FM,maskWhere((i,x,y)=>bossM[i]&&!inCircle(x,y,prc)), z0-ZEPS, zTop, false, boxesAt(BP,bwc));
+    addFrame(maskWhere((i,x,y)=>bossM[i]&&!inCircle(x,y,prc)), z0-ZEPS, zTop, false, boxesAt(BP,bwc));
     /* ลาดรับ 45° จากผนังกรอบขึ้นมาหาเสา — ไม่งั้นเสาลอยกลางอากาศ พิมพ์ไม่ได้ */
     const taperH=Math.min(S.hw.bossW, z0-st.frameZ0);
     const NT=Math.max(2,Math.min(8,Math.round(taperH/0.9)));
     if(taperH>0.4) for(let j=0;j<NT;j++){
       const t = fw + ((j+1)/NT)*(S.hw.bossW/px);
       const zA = z0-taperH + j*(taperH/NT), zB = zA + taperH/NT;
-      addSolid(FM,maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t), j? zA-ZEPS : zA, zB, false, boxesAt(BP,bwc));
+      addFrame(maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t), j? zA-ZEPS : zA, zB, false, boxesAt(BP,bwc));
     }
   }
-  FM.kind='frame'; FM.bossCount=BP.length; FM.snapCount=SP.length;
-  parts.push(FM);
+  FMs.forEach(FM=>{ FM.kind='frame'; FM.bossCount=BP.length; FM.snapCount=SP.length; parts.push(FM); });
 
   /* --- 4. แผ่นหลัง (+ บ่าล็อก) --- */
   const HP=S.hw.hang? hangPoints() : [];
@@ -2903,6 +2938,8 @@ function resetPalette(){
   S.rings.forEach((r,i)=>{ if(D.rings[i]){ r.hex=D.rings[i].hex; r.glow=D.rings[i].glow; } });
   S.box.frameColor=D.box.frameColor;
   S.box.backColor=D.box.backColor;
+  S.box.bandN=D.box.bandN;
+  S.box.bandColors=[...D.box.bandColors];
   /* คืนสีงาน: ปลดล็อกเพื่อให้โหมดรูปภาพไปดึงสีจริงจากไฟล์ใหม่
      ส่วนโหมดข้อความใช้ชุดสีตั้งต้นตรงๆ */
   S.pal = S.pal.filter(p=>p.role!=='ring')
@@ -3770,6 +3807,7 @@ const BIND=[
  ['colN','art.n','num','colNV',v=>v,''],
  ['colSmooth','art.smooth','num','colSmoothV',v=>v,''],
  ['glowMode','art.glowMode','str',null,null,'g'],
+ ['boxBandN','box.bandN','num','boxBandNV',v=>v+' สี',''],
  ['sealMode','art.seal','str',null,null,''],
  ['sealChoke','art.choke','num','sealChokeV',v=>v.toFixed(1)+' มม.',''],
  ['fillHoles','shape.fillHoles','bool',null,null,''],
@@ -3939,7 +3977,7 @@ function pushToUI(){
   $$('#viewseg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.ui.view));
   $('#colN').disabled = S.src.mode!=='image';
   const cn=NUMBOX.get('colNV'); if(cn) cn.inp.disabled = S.src.mode!=='image';
-  syncRingUI(); syncBoxColorUI(); syncJointUI(); syncSizeUI(); syncModeUI();
+  syncRingUI(); syncBoxColorUI(); syncLineStyleUI(); syncBoxBandUI(); syncJointUI(); syncSizeUI(); syncModeUI();
   syncPreviewAction();
 }
 
@@ -4052,6 +4090,37 @@ function syncBoxColorUI(){
     v.textContent=nearestFilament(hex)+' · '+hex.toUpperCase();
   });
 }
+function syncLineStyleUI(){
+  const host=$('#lineStyleRows'); if(!host) return;
+  const lines=(S.src.text||'').split('\n').filter(l=>l.length);
+  const styles=textLineStyles(lines);
+  host.innerHTML=lines.length? '<hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><div class="row"><label style="flex-basis:auto;color:var(--tx);font-weight:600">ตั้งค่ารายบรรทัด</label></div>' : '';
+  lines.forEach((line,i)=>{
+    const st=styles[i], row=document.createElement('div'); row.className='it';
+    row.innerHTML=`<span class="sw"><input type="color" value="${st.hex}"></span><span class="nm"><b>บรรทัด ${i+1}</b><i>${line}</i></span><input type="range" min="40" max="180" step="1" value="${st.scale}"><span class="unit">${st.scale}%</span>`;
+    const color=row.querySelector('input[type="color"]'), scale=row.querySelector('input[type="range"]'), out=row.querySelector('.unit');
+    color.addEventListener('input',()=>{ st.hex=color.value; S.src.brandDefault=false; schedule(true); });
+    scale.addEventListener('input',()=>{ st.scale=+scale.value; out.textContent=st.scale+'%'; S.src.brandDefault=false; schedule(true); });
+    host.appendChild(row);
+  });
+}
+function syncBoxBandUI(){
+  const b=S.box, n=clamp(Math.round(+b.bandN||1),1,4), host=$('#boxBandList'), label=$('#boxBandNV');
+  b.bandN=n; if(!Array.isArray(b.bandColors)) b.bandColors=[];
+  b.bandColors[0]=b.frameColor||b.bandColors[0]||'#1a1a1a';
+  const seeds=['#1a1a1a','#ee3c96','#ffffff','#3ba0ff'];
+  while(b.bandColors.length<n) b.bandColors.push(seeds[b.bandColors.length]||'#1a1a1a');
+  b.bandColors.length=n; if(label) label.textContent=n+' สี'; if(!host) return;
+  host.innerHTML='';
+  b.bandColors.forEach((hex,i)=>{
+    const row=document.createElement('div'); row.className='it';
+    row.innerHTML=`<span class="sw"><input type="color" value="${hex}"></span><span class="nm"><b>แถบสี ${i+1}</b><i>${hex.toUpperCase()}</i></span><input type="text" class="hexin" value="${hex.toUpperCase()}" spellcheck="false">`;
+    const c=row.querySelector('input[type="color"]'), x=row.querySelector('.hexin'), info=row.querySelector('i');
+    const set=v=>{ const h=normHex(v); if(!h) return; b.bandColors[i]=h; if(i===0) b.frameColor=h; c.value=h; x.value=h.toUpperCase(); info.textContent=h.toUpperCase(); syncBoxColorUI(); schedule(false); };
+    c.addEventListener('input',e=>set(e.target.value)); x.addEventListener('change',e=>set(e.target.value));
+    host.appendChild(row);
+  });
+}
 /* ช่องขนาดชิ้นงาน — ไม่เขียนทับถ้าผู้ใช้กำลังพิมพ์อยู่ */
 function syncSizeUI(){
   if(!PB||PB.empty) return;
@@ -4124,6 +4193,8 @@ function wire(){
       sp(path,v);
       if(lab&&fmt) setLabel(lab,v,fmt);
       if(flag==='g'){ S.pal.forEach((p,i)=> p.glow = (S.art.glowMode==='bg')? i===0 : i>0 ); }
+      if(id==='boxBandN') syncBoxBandUI();
+      if(id==='txtContent') syncLineStyleUI();
       schedule(flag==='s', flag==='q'?'q':flag==='d'?'d':null);
     });
   }
@@ -4245,7 +4316,7 @@ function wire(){
   });
   /* สีกล่อง — กรอบข้างและฝาหลังแยกกัน */
   bindColor($('#frameColor'), $('#frameHex'),
-    ()=>S.box.frameColor, h=>{ S.box.frameColor=h; syncBoxColorUI(); });
+    ()=>S.box.frameColor, h=>{ S.box.frameColor=h; if(Array.isArray(S.box.bandColors)) S.box.bandColors[0]=h; syncBoxColorUI(); syncBoxBandUI(); });
   bindColor($('#backColor'), $('#backHex'),
     ()=>S.box.backColor, h=>{ S.box.backColor=h; syncBoxColorUI(); });
   $('#btnPalReset').addEventListener('click',resetPalette);
