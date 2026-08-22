@@ -210,14 +210,6 @@ table.kv tr.sub td{color:var(--tx2)}
   <div class="brand">YP <span>Lightbox</span> Studio</div>
   <input class="docname" id="docname" value="YUPPIE PRODUCTION">
   <div class="spacer"></div>
-  <div class="seg" id="viewseg">
-    <button data-v="design" class="on">แบบ</button>
-    <button data-v="lit">ติดไฟ</button>
-    <button data-v="layers">แยกชั้น</button>
-    <button data-v="plate">แผ่นพิมพ์</button>
-    <button data-v="3d">3 มิติ</button>
-  </div>
-  <div class="spacer"></div>
   <button class="btn gh" id="btnNew">ล้าง</button>
   <button class="btn gh" id="btnSaveProj">บันทึกโปรเจ็ค</button>
   <button class="btn gh" id="btnOpenProj">เปิดไฟล์</button>
@@ -253,13 +245,14 @@ Studio</textarea>
           </select>
         </div>
         <div class="row"><label>จัดวาง</label>
-          <select id="txtAlign" class="grow"><option value="center">กึ่งกลาง</option><option value="left">ชิดซ้าย</option><option value="right">ชิดขวา</option></select>
+          <select id="txtAlign" class="grow"><option value="center">กึ่งกลาง</option><option value="left" selected>ชิดซ้าย</option><option value="right">ชิดขวา</option></select>
         </div>
-        <div class="row"><label>ระยะห่างตัว</label><input type="range" id="txtTrack" min="-8" max="30" step="1" value="0"><span class="unit" id="txtTrackV">0</span></div>
-        <div class="row"><label>ระยะห่างบรรทัด</label><input type="range" id="txtLead" min="80" max="200" step="5" value="115"><span class="unit" id="txtLeadV">115%</span></div>
+        <div class="row"><label>ระยะห่างตัวอักษร</label><input type="range" id="txtTrack" min="-8" max="30" step="1" value="0"><span class="unit" id="txtTrackV">0</span></div>
+        <div class="row"><label>ระยะห่างบรรทัด</label><input type="range" id="txtLead" min="80" max="200" step="5" value="110"><span class="unit" id="txtLeadV">110%</span></div>
         <div class="row"><label>ขอบรอบตัว</label><input type="range" id="txtOutline" min="0" max="6" step="0.5" value="0"><span class="unit" id="txtOutlineV">0 มม.</span></div>
         <p class="hint">ขอบรอบตัวอักษรจะกลายเป็นสีที่ 2 อัตโนมัติ — ใช้ทำตัวอักษรมีเส้นขอบเรืองแสงแบบป้ายร้าน</p>
         <div id="lineStyleRows"></div>
+        <div id="shapeControls">
         <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
         <div class="row"><label style="flex-basis:auto;color:var(--tx);font-weight:600">ขอบและรูปทรงป้าย</label></div>
         <div class="row"><label>เติมช่องในตัว</label><input type="checkbox" id="fillHoles" checked>
@@ -276,6 +269,7 @@ Studio</textarea>
           <span class="nm"><b id="ring1n">ชมพูบานเย็น</b><i id="ring1h">#EE3C96</i></span>
           <input type="text" class="hexin" id="ring1x" value="#EE3C96" spellcheck="false">
           <button class="glowbtn" id="ring1g">ทึบ</button></div></div>
+        </div>
       </div>
 
       <div data-pane="image" style="display:none">
@@ -347,7 +341,7 @@ Studio</textarea>
   </div>
 
   <div class="sec" data-sec="color">
-    <h3>3 · สีและชั้น</h3>
+    <h3>3 · สีข้อความและขอบรูปทรง</h3>
     <div class="body">
       <div id="artColor">
       <div class="row"><label>จำนวนสีงาน</label><input type="range" id="colN" min="1" max="6" step="1" value="2"><span class="unit" id="colNV">2</span></div>
@@ -398,7 +392,7 @@ Studio</textarea>
     <div class="spacer"></div>
     <label style="color:var(--tx2)"><input type="checkbox" id="showFrame" checked> แสดงกรอบ</label>
     <label style="color:var(--tx2)"><input type="checkbox" id="showGrid"> เส้นกริด</label>
-    <button class="btn gh" id="btnPng">บันทึกภาพพรีวิว</button>
+    <button class="btn gh" id="btnPng">มุมมอง 3 มิติ</button>
   </div>
   <div class="stage" id="stage">
     <span class="stagelabel" id="stageLabel">แบบ</span>
@@ -433,15 +427,15 @@ Studio</textarea>
           <option value="shell">พิมพ์เฉพาะตัวกล่อง — หน้าอะครีลิค · หลังพลาสวูด</option>
         </select></div>
       <p class="hint" id="modeHint" style="margin:6px 0 10px"></p>
-      <div class="row"><label>ความลึกกล่อง</label><input type="range" id="bDepth" min="12" max="80" step="1" value="35"><span class="unit" id="bDepthV">35 มม.</span></div>
+      <div class="row"><label>ความลึกกล่อง</label><input type="range" id="bDepth" min="12" max="80" step="1" value="40"><span class="unit" id="bDepthV">40 มม.</span></div>
       <div id="fullThick">
-      <div class="row"><label>ชั้นสีหน้า</label><input type="range" id="bColorT" min="1" max="2.4" step="0.1" value="1.6"><span class="unit" id="bColorTV">1.6 มม.</span></div>
-      <div class="row"><label>ชั้นกระจายแสง</label><input type="range" id="bDiff" min="0.4" max="1.2" step="0.1" value="0.8"><span class="unit" id="bDiffV">0.8 มม.</span></div>
+      <div class="row"><label>ชั้นสีหน้า</label><input type="range" id="bColorT" min="0.4" max="0.8" step="0.1" value="0.8"><span class="unit" id="bColorTV">0.8 มม.</span></div>
+      <div class="row"><label>ชั้นกระจายแสง</label><input type="range" id="bDiff" min="0.8" max="1.2" step="0.1" value="0.8"><span class="unit" id="bDiffV">0.8 มม.</span></div>
       <div class="row" id="fullBgT"><label>ความหนาพื้นทึบ</label><input type="range" id="bBgT" min="0.6" max="3" step="0.1" value="2.4"><span class="unit" id="bBgTV">2.4 มม.</span></div>
       </div>
       <div class="row"><label>กรอบข้าง</label><input type="range" id="bFrame" min="1.2" max="8" step="0.2" value="2.4"><span class="unit" id="bFrameV">2.4 มม.</span></div>
       <div id="fullBack">
-      <div class="row"><label>แผ่นหลัง</label><input type="range" id="bBack" min="1" max="6" step="0.2" value="3"><span class="unit" id="bBackV">3 มม.</span></div>
+      <div class="row"><label>แผ่นหลัง</label><input type="range" id="bBack" min="1" max="6" step="0.2" value="2.8"><span class="unit" id="bBackV">2.8 มม.</span></div>
       </div>
 
       <div id="shellThick">
@@ -485,7 +479,7 @@ Studio</textarea>
           <option value="butt">ชนหน้าตัดเปล่า (กาวล้วน)</option>
         </select></div>
       <div class="row"><label>ความสูงบ่า</label><input type="range" id="lipH" min="1" max="18" step="0.5" value="10"><span class="unit" id="lipHV">10 มม.</span></div>
-      <div class="row"><label>ความหนาบ่า</label><input type="range" id="lipW" min="1.6" max="6" step="0.2" value="2"><span class="unit" id="lipWV">2 มม.</span></div>
+      <div class="row"><label>ความหนาบ่า</label><input type="range" id="lipW" min="1.6" max="6" step="0.2" value="1.6"><span class="unit" id="lipWV">1.6 มม.</span></div>
       <div class="row"><label>เผื่อระยะสวม</label><input type="range" id="lipCl" min="0.1" max="0.6" step="0.05" value="0.2"><span class="unit" id="lipClV">0.2 มม.</span></div>
 
       <div id="snapRows">
@@ -589,23 +583,27 @@ const nf = (v,d=0) => v.toLocaleString('th-TH',{minimumFractionDigits:d,maximumF
 function defaults(){ return {
   name:'YP Lightbox Studio',
   src:{ mode:'text',
-        text:'YP Lightbox\nStudio', font:'Arial Black', weight:700, align:'center', brandDefault:true,
-        track:0, lead:115, outline:0, lineStyles:[],
+        text:'YP Lightbox\nStudio', font:'Arial Black', weight:700, align:'left', brandDefault:false,
+        track:0, lead:110, outline:0, lineStyles:[{scale:95,hex:'#ff2d8f'},{scale:180,hex:'#ff2d8f'}],
         imgData:null, imgName:'', removeBg:true, tol:26 },
   tr:{ scale:88, scaleY:88, uniform:true, dx:0, dy:0, rot:0 },
   art:{ n:2, smooth:1, glowMode:'logo', seal:'off', choke:0.6 },
-  shape:{ mode:'contour', fillHoles:true },
+  /* ข้อความปิดช่องในตัวอักษรเป็นค่าเริ่มต้น แต่รูปภาพเก็บค่าของตัวเอง
+     เพื่อไม่ให้สลับแท็บแล้วไปอุดช่องโปร่งของโลโก้โดยไม่ตั้งใจ */
+  shape:{ mode:'contour', fillHoles:true, fillHolesImage:false },
   rings:[ {w:4, hex:'#ffffff', glow:true},
           {w:3, hex:'#ee3c96', glow:false} ],
   pal:[ {hex:'#1a1a1a',name:'พื้นหลัง',glow:false},
         {hex:'#ff2d8f',name:'สี 1',glow:true} ],
-  /* ค่าเริ่มต้นสำหรับหัว 0.4 มม.: ชั้นสี 1.6 + กระจายแสง 0.8 = ผิวหน้ารวม 2.4 มม.
-     เหมาะทั้ง PLA และงาน PETG ใสที่ต้องการผิวเต็ม ไม่เป็นร่องตามเส้นพิมพ์
-     กรอบข้าง 2.4 · ฝาหลัง 3 · เผื่อสวม 0.2 · บ่าหนา 2 สูง 10 */
-  box:{ W:256,H:256,depth:35,colorT:1.6,diff:0.8,bgT:2.4,frame:2.4,back:3,
+  /* เก็บสีข้อความและสีลวดลายแยกกัน: สลับแท็บแล้วห้ามสีจากอีกงานเข้ามา active */
+  palByMode:{text:null,image:null},
+  /* ค่าเริ่มต้นสำหรับหัว 0.4 มม.: สีหน้า 0.4 (2 ชั้น) + กระจายแสง 0.8 (4 ชั้น)
+     ไม่มีความหนากลางเหลือให้ Slicer เติม infill; แผ่นบังแสงใต้รอยต่อจัดการแสงรั่วแยกต่างหาก
+     กรอบข้าง 2.4 · ฝาหลัง 2.8 · เผื่อสวม 0.2 · บ่าหนา 1.6 สูง 10 */
+  box:{ W:256,H:256,depth:40,colorT:0.8,diff:0.8,bgT:1.2,frame:2.4,back:2.8,
         frameColor:'#1a1a1a', backColor:'#1a1a1a', bandN:1, bandColors:['#1a1a1a'], bandRules:[] },
   hw:{ hole:'frame', dia:7, hang:false,
-       joint:'snap', lipH:10, lipW:2, lipCl:0.2, bossW:8, screwDepth:10,
+       joint:'snap', lipH:10, lipW:1.6, lipCl:0.2, bossW:8, screwDepth:10,
        snapBarb:0.45, snapW:12 },
   /* โหมดงาน — service = ฝาหน้าถอดเปลี่ยนได้ มีแผ่นกันแสงรั่วเป็นลิ้นสวม (ค่าแนะนำ) */
   build:{ mode:'service' },
@@ -617,6 +615,30 @@ function defaults(){ return {
   ui:{ showFrame:true, showGrid:false, view:'design' }
 };}
 let S = defaults();
+
+function clonePalette(pal){
+  return pal.filter(p=>p.role!=='ring').map(p=>({
+    hex:p.hex, name:p.name, glow:!!p.glow, ...(p.locked?{locked:true}:{})
+  }));
+}
+function saveModePalette(mode=S.src.mode){
+  if(mode!=='text'&&mode!=='image') return;
+  if(!S.palByMode) S.palByMode={text:null,image:null};
+  S.palByMode[mode]=clonePalette(S.pal);
+}
+function switchSourceMode(mode){
+  const previous=S.src.mode;
+  if((previous==='text'||previous==='image')&&previous!==mode) saveModePalette(previous);
+  S.src.mode=mode;
+  if(mode!=='text'&&mode!=='image') return;
+  if(!S.palByMode) S.palByMode={text:null,image:null};
+  const saved=S.palByMode[mode];
+  if(saved&&saved.length) S.pal=clonePalette(saved);
+  else if(mode==='image'){
+    /* เริ่มภาพใหม่ด้วยชุดอิสระ ไม่เอาสีข้อความมาเป็นสีลวดลาย */
+    S.pal=[{hex:'#1a1a1a',name:'พื้นด้านใน',glow:false},{hex:'#ff2d8f',name:'สีลวดลาย 1',glow:true}];
+  }
+}
 
 const PRINTERS={
   'bambu-a1-mini':[180,180],'ender3-v3-se':[220,220],'ender3-v3-ke':[220,220],'creality-k1c':[220,220],
@@ -912,6 +934,7 @@ function buildGrid(){
     if(vis.length){
       const cents = kmeans(outer,vis,K);
       cents.forEach((c,i)=>{ if(!S.pal[i+1].locked) S.pal[i+1].hex = rgb2hex(c[0],c[1],c[2]); });
+      for(let i=1;i<=K;i++) S.pal[i].name='สีลวดลาย '+i;
       for(const i of vis){
         const r=outer[i*4],g=outer[i*4+1],b=outer[i*4+2];
         let bi=0,bd=1e18;
@@ -934,6 +957,11 @@ function buildGrid(){
 /* จำนวนสีของตัวลวดลาย (ไม่นับพื้นในและวงขอบ) */
 function artCount(){ return S.pal.filter(p=>p.role!=='ring').length-1; }
 function activeRings(){ return (S.shape.mode==='contour') ? S.rings.filter(r=>+r.w>0) : []; }
+
+/* ค่าเติมช่องโปร่งเก็บแยกระหว่างข้อความและรูปภาพ */
+function fillHolesEnabled(){
+  return S.src.mode==='image' ? !!S.shape.fillHolesImage : !!S.shape.fillHoles;
+}
 
 /* ── แปลงแผ่นสี่เหลี่ยมเป็นรูปทรงตามลวดลาย + วงขอบ ──
    owner: 255 = ไม่มีเนื้อ · 0 = พื้นด้านใน · 1..K = ลวดลาย · K+1.. = วงขอบ */
@@ -961,7 +989,7 @@ function applyShape(){
   for(const r of R){ acc+=(+r.w)/px; edge.push(acc); }
   const total=acc;
   for(let i=0;i<N;i++) if(D[i]<=total+1e-9) panel[i]=1;
-  if(S.shape.fillHoles) fillHoles(panel,gw,gh);
+  if(fillHolesEnabled()) fillHoles(panel,gw,gh);
   for(let i=0;i<N;i++){
     if(!panel[i]){ owner[i]=255; continue; }
     if(owner[i]>0&&owner[i]<=K) continue;
@@ -980,9 +1008,12 @@ function applyShape(){
 /* รายละเอียดสีที่แคบกว่าหัว 0.4 มม. มักถูก slicer ข้ามหรือพิมพ์ขาด
    ขยายเฉพาะสีที่ทั้งก้อนยังไม่มีแกนกว้าง 0.8 มม. สีชั้นบนขยายทับได้เฉพาะ
    สีชั้นล่างของลวดลาย (ไม่แตะวงขอบ) เพื่อให้เส้นสีจริงกว้างถึงเกณฑ์ */
-const MIN_COLOR_DETAIL=0.8;
+/* ข้อความต้องเผื่อความกว้างเพื่อให้หัว 0.4 มม. พิมพ์ติดเต็ม
+   แต่รูปภาพควรรักษารายละเอียดสีไว้มากกว่า จึงใช้เกณฑ์แยกกัน */
+const MIN_COLOR_DETAIL_TEXT=1.2, MIN_COLOR_DETAIL_IMAGE=0.8;
 function enforceMinColorDetail(){
-  const {gw,gh,px,owner,K,panel}=G, need=(MIN_COLOR_DETAIL/2)/px;
+  const min = S.src.mode==='image' ? MIN_COLOR_DETAIL_IMAGE : MIN_COLOR_DETAIL_TEXT;
+  const {gw,gh,px,owner,K,panel}=G, need=(min/2)/px;
   const fixed=[];
   for(let k=1;k<=K;k++){
     const m=new Uint8Array(gw*gh); let any=0;
@@ -995,7 +1026,7 @@ function enforceMinColorDetail(){
     for(let i=0;i<m.length;i++) if(panel[i]&&owner[i]>=0&&owner[i]<k&&near[i]<=grow){ owner[i]=k; added++; }
     if(added) fixed.push({k,added});
   }
-  G.minDetail={min:MIN_COLOR_DETAIL,fixed};
+  G.minDetail={min,fixed};
 }
 
 /* ป้องกันจุดแสงขาวเล็ก ๆ ในพื้นที่สีทึบ (เช่นรอยที่พบในตัว i)
@@ -1038,6 +1069,25 @@ function applyLightSeal(){
     owner.set(next);
   }
   G.lightSeal={mode,choked,sealed,dia};
+}
+/* แผ่นบังแสงใต้แนวต่อสี: กว้างรวม 0.6 มม. (ซ้อนจากรอยต่อด้านละ 0.3 มม.)
+   วางหลัง diffuser จึงไม่เปลี่ยนสี/รูปร่างบนผิวหน้า แต่ตัดทางเดินแสงตรงรอยต่อ */
+const FRONT_LIGHT_BARRIER_T=0.8;
+function frontLightBarrierMask(support,overlap=0.3){
+  const {gw,gh,px,owner,panel}=G, out=new Uint8Array(gw*gh);
+  const radius=Math.max(1,Math.ceil(overlap/px));
+  for(let y=radius;y<gh-radius;y++) for(let x=radius;x<gw-radius;x++){
+    const i=y*gw+x, o=owner[i];
+    if(!support[i]||!panel[i]||o===255) continue;
+    let seam=false;
+    for(let dy=-radius;dy<=radius&&!seam;dy++) for(let dx=-radius;dx<=radius;dx++){
+      if(!dx&&!dy) continue;
+      const j=(y+dy)*gw+x+dx;
+      if(support[j]&&panel[j]&&owner[j]!==255&&owner[j]!==o){ seam=true; break; }
+    }
+    if(seam) out[i]=1;
+  }
+  return out;
 }
 /* ระยะจากในแผ่นถึงขอบนอกสุด — นับขอบภาพเป็น "นอกแผ่น" ด้วย
    ไม่งั้นโหมดสี่เหลี่ยมที่แผ่นเต็มกริดจะหาขอบไม่เจอเลย แล้วกรอบจะหายไปทั้งใบ */
@@ -1089,15 +1139,23 @@ function ensurePalette(k){
 }
 
 function kmeans(data,idx,K){
-  /* k-means++ light init */
+  /* deterministic farthest-point init: สีที่ดึงจากภาพเดิมต้องไม่สลับเองทุกครั้งที่ render */
   const N = idx.length;
   const cents = [];
   const pick = i=>[data[i*4],data[i*4+1],data[i*4+2]];
-  cents.push(pick(idx[(Math.random()*N)|0]));
+  let ar=0,ag=0,ab=0;
+  for(const i of idx){ ar+=data[i*4]; ag+=data[i*4+1]; ab+=data[i*4+2]; }
+  ar/=N; ag/=N; ab/=N;
+  let first=0, firstD=Infinity;
+  for(let t=0;t<N;t++){
+    const p=pick(idx[t]), d=(p[0]-ar)**2+(p[1]-ag)**2+(p[2]-ab)**2;
+    if(d<firstD){ firstD=d; first=t; }
+  }
+  cents.push(pick(idx[first]));
   while(cents.length<K){
     let best=null,bd=-1;
-    for(let t=0;t<Math.min(400,N);t++){
-      const i = idx[(Math.random()*N)|0], p = pick(i);
+    for(let t=0;t<N;t++){
+      const p = pick(idx[t]);
       let dm=1e18; for(const c of cents) dm=Math.min(dm,(p[0]-c[0])**2+(p[1]-c[1])**2+(p[2]-c[2])**2);
       if(dm>bd){bd=dm;best=p;}
     }
@@ -2013,7 +2071,7 @@ function geomStack(){
     const H=shellSpec();
     return {colorT:0,diff:0,bgT:0,frameZ0:0,total:H.total,shell:H};
   }
-  const colorT=clamp(+b.colorT||1.6,1,2.4), diff=clamp(+b.diff||0.8,0.4,1.2);
+  const colorT=clamp(+b.colorT||0.4,0.4,0.8), diff=clamp(+b.diff||0.8,0.8,1.2);
   const bgT = Math.max(b.bgT, colorT+0.2);
   /* หน้าแบบซ้อนชั้น: สีอยู่ชั้นหน้า แล้วมีแผ่นขาวนมเต็มพื้นที่รองรับอยู่ด้านหลัง
      จึงไม่มีรอยต่อสีแบบปลายชนปลายที่แสงลอดได้ */
@@ -2394,6 +2452,21 @@ function buildParts(nt){
     }else addSolid(M,gm,st.colorT,st.colorT+st.diff);
     M.kind='diffuser'; M.module=isService()?'front':''; M.glow=true;
     parts.push(M);
+  }
+
+  /* --- 2.1 แผ่นบังแสงใต้แนวต่อสี ---
+     ไม่เพิ่มความหนาชั้นสีหน้า: เป็นแถบดำหนา 0.8 มม. อยู่หลัง diffuser
+     ครอบรอยต่อสีด้านละ 0.3 มม. เพื่อตัดทางเดินแสงที่เห็นเป็นเส้น/จุดรั่ว */
+  if(isLayered()){
+    const barrier=frontLightBarrierMask(tongueFit);
+    let anyBarrier=false; for(let i=0;i<N;i++) if(barrier[i]){anyBarrier=true;break;}
+    if(anyBarrier){
+      const M=Mesh(frontPrefix+'แผ่นบังแสงรอยต่อ · '+nearestFilament(b.frameColor),b.frameColor,nt);
+      const z0=st.colorT+st.diff;
+      addSolid(M,barrier,z0,z0+FRONT_LIGHT_BARRIER_T);
+      M.kind='lightseal'; M.module='front'; M.glow=false;
+      parts.push(M);
+    }
   }
 
   /* --- 3. กรอบ = วงในของรูปทรง + บากสายไฟ + เสาสกรู --- */
@@ -2783,7 +2856,7 @@ const safeName = s => (s||'lightbox').replace(/[\\/:*?"<>|]/g,'_').trim().slice(
 const fileToken = s => safeName(s).replace(/\s+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'') || 'งานใหม่';
 const productionBaseName = () => `YP_lightbox_${fileToken(S.name)}`;
 function partFileLabel(M){
-  if(M.module==='front') return M.kind==='diffuser'?frontModuleLabel()+'_ชั้นกระจายแสง':frontModuleLabel()+'_'+fileToken(M.name.replace(/^ฝาหน้า[^·]* · /,''));
+  if(M.module==='front') return M.kind==='diffuser'?frontModuleLabel()+'_ชั้นกระจายแสงพร้อมลิ้นสอด':frontModuleLabel()+'_'+fileToken(M.name.replace(/^ฝาหน้า[^·]* · /,''));
   if(M.module==='box') return 'ตัวกล่อง_ร่องรับฝาหน้า';
   if(M.kind==='shell') return 'ตัวกล่อง';
   if(M.kind==='frame') return 'ตัวกล่อง';
@@ -3047,10 +3120,13 @@ function palRow(){
 
 function renderPalette(){
   const el=$('#palList');
-  while(el.children.length>S.pal.length) el.removeChild(el.lastChild);
-  while(el.children.length<S.pal.length) el.appendChild(palRow());
-  S.pal.forEach((p,i)=>{
-    const d=el.children[i];
+  /* วงขอบมีตัวควบคุมเฉพาะใน “ขอบและรูปทรงป้าย” แล้ว
+     จึงไม่แสดงซ้ำเป็น ขอบชั้น 1/2 ในรายการสีข้อความ */
+  const visible=S.pal.map((p,i)=>({p,i})).filter(x=>x.p.role!=='ring');
+  while(el.children.length>visible.length) el.removeChild(el.lastChild);
+  while(el.children.length<visible.length) el.appendChild(palRow());
+  visible.forEach(({p,i},rowIndex)=>{
+    const d=el.children[rowIndex];
     const pct=G&&!G.empty? (p.cells/(G.gw*G.gh)*100):0;
     const ring = p.role==='ring' ? S.rings[p.ringIndex] : null;
     d.onHex=hex=>{ if(ring){ ring.hex=hex; syncRingUI(); } else { p.hex=hex; p.locked=true; }
@@ -3061,7 +3137,7 @@ function renderPalette(){
       setLabel(rid+'V',ring.w,x=>x+' มม.'); syncRingUI(); schedule(false); };
     d.set(p.hex, p.name||('สี '+i),
           `${nearestFilament(p.hex)} · ${p.hex.toUpperCase()} · ${pct.toFixed(1)}%`,
-          ring? ring.glow : p.glow, ring?ring.w:null);
+          ring? ring.glow : p.glow, null);
   });
 }
 /* คืนค่าสีทุกชั้นกลับเป็นค่าตั้งต้น */
@@ -3079,6 +3155,7 @@ function resetPalette(){
                .map((p,i)=> D.pal[i] ? {...p, hex:D.pal[i].hex, locked:false}
                                      : {...p, locked:false});
   S.pal.forEach((p,i)=>{ p.glow = (S.art.glowMode==='bg')? i===0 : i>0; });
+  saveModePalette();
   pushToUI(); rebuildSource(); recompute();
   toast('คืนค่าสีตั้งต้นแล้ว');
 }
@@ -3139,10 +3216,10 @@ function runChecks(){
   const used=S.pal.filter(p=>p.cells>0).length;
   if(!isShell()){
   if(used>4) add('warn',`ใช้ ${used} สีในแผ่นเดียว เกิน 4 ช่อง AMS — ต้องต่อ AMS ตัวที่ 2 หรือเปลี่ยนเส้นกลางคัน`);
-  if(b.colorT<0.2) add('warn','ชั้นสีบางกว่า 0.2 มม. สีจะซีดและอาจพิมพ์ไม่ติด');
+  if(b.colorT<0.4) add('warn','ชั้นสีบางกว่า 0.4 มม. สีอาจพิมพ์ไม่เต็มสำหรับหัวฉีด 0.4 มม.');
   if(st.bgT>b.bgT+0.001) add('warn',`ปรับความหนาพื้นทึบขึ้นเป็น ${st.bgT.toFixed(1)} มม. อัตโนมัติ เพราะต้องหนากว่าชั้นสี`);
   if(b.bgT<1.0) add('warn','พื้นทึบบางกว่า 1.0 มม. แสงอาจทะลุพื้นหลัง เห็นเป็นฝ้า');
-  if(st.diff<0.4) add('warn','ชั้นกระจายแสงบาง อาจเห็นเป็นจุดไฟ LED แทนที่จะเป็นแสงนวล');
+  if(st.diff<0.8) add('warn','ชั้นกระจายแสงบางกว่า 0.8 มม. อาจเห็นเป็นจุดไฟ LED และพิมพ์ไม่เต็ม');
   }
   /* ส่วนที่ให้แสงผ่านล้ำเข้าไปในแนวผนังกรอบ */
   if(art&&G.panel&&G.edtIn){
@@ -3364,19 +3441,19 @@ ${E.sheet? `<tr><td>แผ่นอะครีลิค</td><td>${nf(E.sheet.cA
 
 /* ══════════ TEMPLATES ══════════ */
 const TEMPLATES=[
- {n:'ป้ายโลโก้แนวนอน', p:{box:{W:200,H:90,depth:32,colorT:1.6,diff:0.8,bgT:2.4,frame:2.4,back:3,frameColor:'#1a1a1a'},
+ {n:'ป้ายโลโก้แนวนอน', p:{box:{W:200,H:90,depth:32,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:3,frameColor:'#1a1a1a'},
     src:{mode:'text',text:'YUPPIE\nPRODUCTION',font:'Arial Black',weight:700,align:'center',track:0,lead:112,outline:0},
     tr:{scale:88,dx:0,dy:0,rot:0}, pal:[{hex:'#1a1a1a',glow:false},{hex:'#ff2d8f',glow:true}]}},
- {n:'ป้ายชื่อร้านมีขอบ', p:{box:{W:220,H:110,depth:35,colorT:1.6,diff:0.8,bgT:2.4,frame:3,back:3,frameColor:'#101010'},
+ {n:'ป้ายชื่อร้านมีขอบ', p:{box:{W:220,H:110,depth:35,colorT:0.4,diff:0.8,bgT:1.2,frame:3,back:3,frameColor:'#101010'},
     src:{mode:'text',text:'OPEN',font:'Impact',weight:700,align:'center',track:6,lead:110,outline:2.5},
     tr:{scale:80,dx:0,dy:0,rot:0}, pal:[{hex:'#101010',glow:false},{hex:'#ffd400',glow:true},{hex:'#ff2d8f',glow:true}]}},
- {n:'ป้ายตั้งโต๊ะเล็ก', p:{box:{W:120,H:120,depth:24,colorT:1.6,diff:0.8,bgT:2.4,frame:2,back:2.4,frameColor:'#2b2b2b'},
+ {n:'ป้ายตั้งโต๊ะเล็ก', p:{box:{W:120,H:120,depth:24,colorT:0.4,diff:0.8,bgT:1.2,frame:2,back:2.4,frameColor:'#2b2b2b'},
     src:{mode:'text',text:'78\nSTUDIO',font:'Arial Black',weight:900,align:'center',track:2,lead:105,outline:0},
     tr:{scale:76,dx:0,dy:0,rot:0}, pal:[{hex:'#2b2b2b',glow:false},{hex:'#3ba0ff',glow:true}]}},
- {n:'ป้ายบูธใหญ่ 250 มม.', p:{box:{W:250,H:140,depth:45,colorT:1.6,diff:0.8,bgT:2.4,frame:3.5,back:3.4,frameColor:'#000000'},
+ {n:'ป้ายบูธใหญ่ 250 มม.', p:{box:{W:250,H:140,depth:45,colorT:0.4,diff:0.8,bgT:1.2,frame:3.5,back:3.4,frameColor:'#000000'},
     src:{mode:'text',text:'BOOTH\nDESIGN',font:'Arial Black',weight:700,align:'center',track:1,lead:112,outline:0},
     tr:{scale:86,dx:0,dy:0,rot:0}, pal:[{hex:'#000000',glow:false},{hex:'#ffffff',glow:true}]}},
- {n:'ป้ายพื้นสว่าง ตัวทึบ', p:{box:{W:200,H:110,depth:32,colorT:1.6,diff:0.8,bgT:2.4,frame:2.4,back:3,frameColor:'#1a1a1a'},
+ {n:'ป้ายพื้นสว่าง ตัวทึบ', p:{box:{W:200,H:110,depth:32,colorT:0.4,diff:0.8,bgT:1.2,frame:2.4,back:3,frameColor:'#1a1a1a'},
     src:{mode:'text',text:'WELCOME',font:'Arial Black',weight:700,align:'center',track:3,lead:110,outline:0},
     tr:{scale:78,dx:0,dy:0,rot:0}, art:{glowMode:'bg'},
     pal:[{hex:'#ffffff',glow:true},{hex:'#1a1a1a',glow:false}]}}
@@ -3738,7 +3815,9 @@ function glBuild(){
 }
 
 /* ---------- per-part transform per mode ---------- */
-const EXPLODE={color:46,diffuser:28,frame:0,back:-38,shell:0,acrylic:46,plaswood:-46};
+/* โมดูลหน้า (สี + diffuser พร้อมลิ้นสอด + แผ่นบังแสง) เคลื่อนเป็นชุดเดียว
+   ในมุมมองแยกชิ้น จึงไม่เกิดภาพลิ้นขาวค้างอยู่ในตัวกล่องจนดูเป็นอะไหล่เพิ่ม */
+const EXPLODE={color:46,diffuser:46,lightseal:46,frame:0,back:-38,shell:0,acrylic:46,plaswood:-46};
 /* ชิ้นที่มีไว้ดูเฉยๆ (อะครีลิค/พลาสวูด) ไม่ต้องโผล่ในผังฐานพิมพ์ */
 const skipIn=(M,mode)=> mode==='plate' && M.display;
 function partMatrix(M,mode){
@@ -3822,8 +3901,10 @@ function glRender(){
   gl.useProgram(V3.prog);
   gl.enableVertexAttribArray(L.aPos); gl.enableVertexAttribArray(L.aNrm);
 
-  /* สีเฉลี่ยของชั้นที่เรืองแสง — ใช้เป็นสีของแสงที่ตกลงบนพื้นและสะท้อนกลับขึ้นกรอบ */
-  const emitOf=M=>M.glow && (M.kind==='color'||M.kind==='diffuser'||M.kind==='acrylic'||M.kind==='frame');
+  /* ผิวสีหน้าและแถบข้างที่ผู้ใช้เปิดไฟเท่านั้นที่เรืองในพรีวิว
+     diffuser เป็นชั้นรองด้านใน: ถ้าให้ emit/halo ด้วย จะฟุ้งขาวลอดรอบฝาหน้า
+     และทำให้รอยต่อระหว่างฝาหน้ากับกล่องดูเหมือนมีขอบสีขาว */
+  const emitOf=M=>M.glow && (M.kind==='color'||M.kind==='acrylic'||M.kind==='frame');
   let lr=0,lg=0,lb=0,ln=0;
   for(const B of V3.buf) if(emitOf(B.M)){
     const c=hex2rgb(B.M.hex); lr+=c[0]; lg+=c[1]; lb+=c[2]; ln++;
@@ -3971,7 +4052,7 @@ const BIND=[
  ['colSmooth','art.smooth','num','colSmoothV',v=>v,''],
  ['glowMode','art.glowMode','str',null,null,'g'],
  ['boxBandN','box.bandN','num','boxBandNV',v=>v+' สี',''],
- ['fillHoles','shape.fillHoles','bool',null,null,''],
+  ['fillHoles','shape.fillHoles','bool',null,null,''],
  ['ring0w','rings.0.w','num','ring0wV',v=>v+' มม.',''],
  ['ring1w','rings.1.w','num','ring1wV',v=>v+' มม.',''],
  ['bW','exp.bed','num',null,null,''],
@@ -4129,12 +4210,12 @@ function pushToUI(){
   if(S.build&&S.build.mode==='layered') S.build.mode='service';
   if(!['off','standard','strict'].includes(S.art.seal)) S.art.seal='off';
   if(!isFinite(+S.art.choke)) S.art.choke=0.6;
-  /* อัปเกรดโปรเจ็กต์เก่าที่ชั้นหน้าบางเกินสำหรับหัว 0.4 มม. */
-  if(!isFinite(+S.box.colorT)||+S.box.colorT<1||+S.box.colorT>2.4) S.box.colorT=1.6;
-  if(!isFinite(+S.box.diff)||+S.box.diff<0.4||+S.box.diff>1.2) S.box.diff=0.8;
+  /* โปรไฟล์หน้ากล่องไฟหัว 0.4 มม.: สีหน้า 0.4–0.8 และ diffuser 0.8–1.2 */
+  if(!isFinite(+S.box.colorT)||+S.box.colorT<0.4||+S.box.colorT>0.8) S.box.colorT=0.4;
+  if(!isFinite(+S.box.diff)||+S.box.diff<0.8||+S.box.diff>1.2) S.box.diff=0.8;
   for(const [id,path,kind,lab,fmt] of BIND){
     const el=document.getElementById(id); if(!el) continue;
-    const v=gp(path);
+    const v=id==='fillHoles' ? fillHolesEnabled() : gp(path);
     if(kind==='bool') el.checked=!!v; else el.value=v;
     if(lab&&fmt) setLabel(lab,v,fmt);
   }
@@ -4145,7 +4226,7 @@ function pushToUI(){
   $$('#viewseg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.ui.view));
   $('#colN').disabled = S.src.mode!=='image';
   const cn=NUMBOX.get('colNV'); if(cn) cn.inp.disabled = S.src.mode!=='image';
-  syncRingUI(); syncBoxColorUI(); syncLineStyleUI(); syncBoxBandUI(); syncJointUI(); syncSizeUI(); syncModeUI();
+  syncRingUI(); syncBoxColorUI(); syncLineStyleUI(); syncBoxBandUI(); syncJointUI(); syncSizeUI(); syncModeUI(); syncArtModeUI();
   syncPreviewAction();
 }
 
@@ -4155,12 +4236,23 @@ function setView(view){
   $('#stageLabel').textContent=VIEW_LABEL[view]||'แบบ';
   draw();
 }
-/* บนมือถือ ปุ่มนี้ใช้สลับมุมมอง 3 มิติ เพราะแถบเลือกมุมมองด้านบนถูกย่อซ่อน */
+/* ปุ่มเดียวสำหรับสลับมุมมองหลัก: 3 มิติ ↔ แบบ ใช้เหมือนกันทุกขนาดหน้าจอ */
 function syncPreviewAction(){
   const btn=$('#btnPng'); if(!btn) return;
-  btn.textContent=window.matchMedia('(max-width:720px)').matches
-    ? (S.ui.view==='3d' ? 'กลับมุมมองแบบ' : 'มุมมอง 3 มิติ')
-    : 'บันทึกภาพพรีวิว';
+  btn.textContent=S.ui.view==='3d' ? 'มุมมองแบบ' : 'มุมมอง 3 มิติ';
+}
+
+/* คำเรียกและค่าเติมช่องต้องบอกให้ตรงกับต้นทาง เพื่อไม่ให้ผู้ใช้คิดว่าโลโก้รูปภาพคือข้อความ */
+function syncArtModeUI(){
+  const image=S.src.mode==='image';
+  const title=document.querySelector('.sec[data-sec="color"]>h3');
+  if(title) title.textContent=image ? '3 · สีลวดลายและขอบรูปทรง' : '3 · สีข้อความและขอบรูปทรง';
+  const fill=$('#fillHoles'); if(!fill) return;
+  const row=fill.closest('.row');
+  const label=row&&row.querySelector('label'), unit=row&&row.querySelector('.unit');
+  if(label) label.textContent=image ? 'เติมช่องปิดในลวดลาย' : 'เติมช่องในตัว';
+  if(unit) unit.textContent=image ? 'ปิดช่องโปร่งภายในโลโก้' : 'ปิดช่องในตัว O, P, A ไม่ให้ทะลุ';
+  fill.checked=fillHolesEnabled();
 }
 
 /* ---------- สลับหน้าตาระหว่างโหมดพิมพ์ทั้งใบ กับ พิมพ์เฉพาะตัวกล่อง ---------- */
@@ -4402,7 +4494,10 @@ function wire(){
     el.addEventListener(ev,()=>{
       let v = kind==='bool'?el.checked : kind==='num'? (+el.value||0) : el.value;
       if(kind==='num'&&el.value==='') v=0;
-      sp(path,v);
+      if(id==='fillHoles'){
+        if(S.src.mode==='image') S.shape.fillHolesImage=!!v;
+        else S.shape.fillHoles=!!v;
+      }else sp(path,v);
       if(lab&&fmt) setLabel(lab,v,fmt);
       if(flag==='g'){ S.pal.forEach((p,i)=> p.glow = (S.art.glowMode==='bg')? i===0 : i>0 ); }
       if(id==='boxBandN') syncBoxBandUI();
@@ -4422,11 +4517,7 @@ function wire(){
 
   /* source tabs */
   $$('#srcTabs button').forEach(b=>b.addEventListener('click',()=>{
-    S.src.mode=b.dataset.t; pushToUI(); schedule(true);
-  }));
-  /* view tabs */
-  $$('#viewseg button').forEach(b=>b.addEventListener('click',()=>{
-    setView(b.dataset.v);
+    switchSourceMode(b.dataset.t); pushToUI(); schedule(true);
   }));
   $$('#glbar button[data-m]').forEach(b=>b.addEventListener('click',()=>glSetMode(b.dataset.m)));
   $('#glbar button[data-a="reset"]').addEventListener('click',glReset);
@@ -4464,10 +4555,13 @@ function wire(){
   const useImage=(src,file,label,notes)=>{
     const im=new Image();
     im.onload=()=>{
+      if(S.src.mode!=='image') switchSourceMode('image');
       S.src.imgData=im; S.src.imgSrc=src; S.src.imgName=file.name;
+      /* รูปใหม่ต้องวิเคราะห์สีจากพิกเซลจริง ไม่ใช้สีที่ผู้ใช้ล็อกจากงานก่อน */
+      S.pal.filter(p=>p.role!=='ring').forEach(p=>{ delete p.locked; });
       syncJobName(nameFromUpload(file.name));
       S.src.svgNotes=notes||null; S.src.diag=null;
-      S.src.mode='image'; if(S.art.n<2) S.art.n=2;
+      if(S.art.n<2) S.art.n=2;
       $('#imgDrop').innerHTML=`<b>${file.name}</b><br><span style="font-size:11px">${label} · คลิกเพื่อเปลี่ยน</span>`;
       pushToUI(); schedule(true);
     };
@@ -4546,12 +4640,7 @@ function wire(){
   /* buttons */
   $('#btnExport').addEventListener('click',doExport);
   $('#btnPng').addEventListener('click',()=>{
-    if(window.matchMedia('(max-width:720px)').matches){
-      setView(S.ui.view==='3d'?'design':'3d');
-      return;
-    }
-    if(S.ui.view==='3d'){ glRender(); $('#gl').toBlob(b=>download(b,safeName(S.name)+'_3มิติ.png')); }
-    else $('#view').toBlob(b=>download(b,safeName(S.name)+'_พรีวิว.png'));
+    setView(S.ui.view==='3d'?'design':'3d');
   });
   $('#btnQuote').addEventListener('click',()=>{
     if(!LAST||!LAST.E){ toast('ยังไม่มีข้อมูลราคา'); return; }
@@ -4564,6 +4653,7 @@ function wire(){
     pushToUI(); schedule(true);
   });
   $('#btnSaveProj').addEventListener('click',()=>{
+    saveModePalette();
     const o=JSON.parse(JSON.stringify({...S,src:{...S.src,imgData:null}}));
     download(new Blob([JSON.stringify(o,null,2)],{type:'application/json'}),safeName(S.name)+'.lightbox.json');
     toast('บันทึกโปรเจ็คแล้ว');
@@ -4580,10 +4670,12 @@ function wire(){
           S=Object.assign(base,o);
           for(const k of ['src','tr','art','box','hw','price','exp','ui','build','sheet']) S[k]=Object.assign(base[k],o[k]||{});
           S.pal=(o.pal||base.pal).map(p=>({...p}));
+          S.palByMode=Object.assign(base.palByMode,o.palByMode||{});
           S.shape=Object.assign(base.shape,o.shape||{});
           S.shape.mode='contour';                      // ไม่มีโหมดแผ่นสี่เหลี่ยมแล้ว
           if(!S.box.backColor) S.box.backColor=S.box.frameColor;
           S.src.imgData=null;
+          if(!S.palByMode[S.src.mode]) saveModePalette(S.src.mode);
           const go=()=>{ pushToUI(); rebuildSource(); schedule(false); toast('เปิดโปรเจ็คแล้ว'); };
           if(S.src.imgSrc){ const im=new Image(); im.onload=()=>{S.src.imgData=im;go();}; im.onerror=go; im.src=S.src.imgSrc; }
           else go();
@@ -4604,9 +4696,30 @@ function wire(){
   });
 }
 
+/* ---------- จัดลำดับเมนูสำหรับลูกค้า ----------
+   เมนู 1 = เลือกรูปแบบ + ขนาด/เครื่องพิมพ์, เมนู 3 = สีข้อความ + ขอบรูปทรง
+   ย้าย DOM ก่อน wire event จึงไม่เกิด ID ซ้ำและการควบคุมเดิมยังทำงานทุกจุด */
+function arrangeMenuFlow(){
+  const srcSec=document.querySelector('.sec[data-sec="src"]');
+  const srcBody=srcSec&&srcSec.querySelector(':scope > .body');
+  const fitSec=document.querySelector('.sec[data-sec="fit"]');
+  if(srcSec&&srcBody&&fitSec){
+    const fitBody=fitSec.querySelector(':scope > .body');
+    const group=document.createElement('div'); group.id='fitControls';
+    group.innerHTML='<hr style="border:0;border-top:1px solid var(--line);margin:16px 0 14px">'+
+      '<div class="row"><label style="flex-basis:auto;color:var(--tx);font-weight:600">ขนาดชิ้นงานและฐานพิมพ์</label></div>';
+    while(fitBody&&fitBody.firstChild) group.appendChild(fitBody.firstChild);
+    srcBody.appendChild(group);
+    fitSec.remove();
+    const title=srcSec.querySelector('h3'); if(title) title.textContent='1 · เลือกรูปแบบ ขนาดชิ้นงาน และฐานพิมพ์';
+  }
+  const shape=$('#shapeControls'), art=$('#artColor');
+  if(shape&&art&&shape.parentElement!==art.parentElement) art.after(shape);
+}
+
 /* ---------- boot ---------- */
 function boot(){
-  attachNumBoxes(); wire(); pushToUI(); rebuildSource(); recompute();
+  arrangeMenuFlow(); attachNumBoxes(); wire(); pushToUI(); rebuildSource(); recompute();
   $('#stageLabel').textContent='แบบ';
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
