@@ -60,7 +60,8 @@ main{flex:1;display:flex;min-height:0}
 .sec.closed>h3::after{transform:rotate(-90deg)}
 .sec.closed>.body{display:none}
 .sec>.body{padding:2px 14px 14px}
-.hint{color:var(--tx2);font-size:11.5px;line-height:1.5;margin:6px 0 0}
+/* คำอธิบายเชิงเทคนิคเก็บไว้ในโค้ด แต่ไม่แสดงในหน้าที่ลูกค้าใช้งาน */
+.hint{display:none!important}
 
 .row{display:flex;align-items:center;gap:8px;margin:9px 0}
 .row label{flex:0 0 98px;color:var(--tx2)}
@@ -158,7 +159,7 @@ table.kv tr.sub td{color:var(--tx2)}
 
 <header>
   <div class="brand">YP <span>Lightbox</span> Studio</div>
-  <input class="docname" id="docname" value="Lightbox — งานใหม่">
+  <input class="docname" id="docname" value="YUPPIE PRODUCTION">
   <div class="spacer"></div>
   <div class="seg" id="viewseg">
     <button data-v="design" class="on">แบบ</button>
@@ -489,6 +490,7 @@ PRODUCTION</textarea>
           <option value="300">300 มม.</option>
           <option value="350">350 มม.</option>
           <option value="500">500 มม.</option>
+          <option value="420">Kobra 3 Max · 420 มม.</option>
         </select></div>
       <p class="hint">ขนาดฐานพิมพ์ใช้เตือนอย่างเดียว ไม่ได้จำกัดขนาดงาน — งานที่ใหญ่กว่าฐานยังส่งออกได้ ไว้แยกพิมพ์ทีละชิ้นแล้วประกอบ</p>
       <p class="hint">3MF จะรวมทุกชิ้นไว้ในไฟล์เดียว แต่ละชิ้นแยกวัตถุพร้อมชื่อสี — เปิดใน Bambu Studio แล้วกำหนดเส้นให้แต่ละชิ้นได้เลย</p>
@@ -512,7 +514,7 @@ const nf = (v,d=0) => v.toLocaleString('th-TH',{minimumFractionDigits:d,maximumF
 
 /* ---------- default state ---------- */
 function defaults(){ return {
-  name:'Lightbox — งานใหม่',
+  name:'YUPPIE PRODUCTION',
   src:{ mode:'text',
         text:'YUPPIE\nPRODUCTION', font:'Arial Black', weight:700, align:'center',
         track:0, lead:115, outline:0,
@@ -551,6 +553,8 @@ const FILAMENTS = [
   ['เหลือง','#F4EE2A'],['ส้ม','#FF6A13'],['น้ำตาล','#7D6556'],['เบจ','#F7E6DE'],['ทอง','#E4BD68'],
   ['ใส/ธรรมชาติ','#F2F2E8']
 ];
+/* อะครีลิคขาวนม รหัส 433 — ใช้เพื่อแสดงผลพรีวิวในโหมด shell เท่านั้น */
+const ACRYLIC_433_PREVIEW = '#F4F1E6';
 function hex2rgb(h){ h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join('');
   return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
 function rgb2hex(r,g,b){ return '#'+[r,g,b].map(v=>clamp(Math.round(v),0,255).toString(16).padStart(2,'0')).join(''); }
@@ -2103,7 +2107,7 @@ function buildShell(nt){
   if(!nt){
     const SL=sheetLoops(true);
     if(SL.length){
-      const A=Mesh('แผ่นอะครีลิค (ตัดเลเซอร์)','#eaf6ff');
+      const A=Mesh('แผ่นอะครีลิค (ตัดเลเซอร์)',ACRYLIC_433_PREVIEW);
       addPrism(A,SL,0,H.acrT); A.kind='acrylic'; A.display=true; A.glow=true;
       parts.push(A);
       const Bp=Mesh('แผ่นพลาสวูด (ตัด CNC)','#f2efe6');
@@ -2475,6 +2479,18 @@ function download(blob,name){
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 }
 const safeName = s => (s||'lightbox').replace(/[\\/:*?"<>|]/g,'_').trim().slice(0,60);
+const fileToken = s => safeName(s).replace(/\s+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'') || 'งานใหม่';
+const productionBaseName = () => `YP_lightbox_${fileToken(S.name)}`;
+function partFileLabel(M){
+  if(M.kind==='shell') return 'ตัวกล่อง';
+  if(M.kind==='frame') return 'ตัวกล่อง';
+  if(M.kind==='back') return 'ฝาหลัง';
+  if(M.kind==='diffuser') return 'แผ่นกระจายแสง';
+  if(M.kind==='color') return 'แผ่นหน้า_'+fileToken(M.name);
+  if(M.kind==='acrylic') return 'แผ่นหน้าอะครีลิค';
+  if(M.kind==='plaswood') return 'ฝาหลังพลาสวูด';
+  return fileToken(M.name||'ชิ้นส่วน');
+}
 /* ══════════════════════════════════════════════════════════════
    YP Lightbox Studio — preview, checks, pricing, UI
    ══════════════════════════════════════════════════════════════ */
@@ -3040,6 +3056,19 @@ function applyTemplate(t){
   pushToUI(); rebuildSource(); schedule(false); toast('ใช้เทมเพลต: '+t.n);
 }
 
+/* ชื่องานใช้ต้นทางเดียวกับสิ่งที่ลูกค้าส่งมา เพื่อให้ชื่อไฟล์ผลิตตามงานโดยอัตโนมัติ */
+function nameFromText(text){
+  return String(text||'').replace(/\s+/g,' ').trim().slice(0,60) || 'งานใหม่';
+}
+function nameFromUpload(fileName){
+  return String(fileName||'').replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim().slice(0,60) || 'งานใหม่';
+}
+function syncJobName(name){
+  S.name=name;
+  const input=$('#docname');
+  if(input && document.activeElement!==input) input.value=name;
+}
+
 /* ══════════ EXPORT ══════════ */
 async function doExport(){
   busy(true,'กำลังสร้างเมช…');
@@ -3049,23 +3078,23 @@ async function doExport(){
     const parts=buildParts();
     PARTS=parts;
     const pr=parts.filter(p=>!p.display);          // แผ่นอะครีลิค/พลาสวูดมีไว้ดูเฉยๆ ไม่ส่งไปพิมพ์
-    const name=safeName(S.name);
+    const name=productionBaseName();
     const fmt=S.exp.fmt;
     if(fmt==='3mf'||fmt==='both'){
       busy(true,'กำลังเขียนไฟล์ 3MF…'); await new Promise(r=>setTimeout(r,20));
       const blob=await make3mf(pr,S.name);
-      download(blob,name+'.3mf');
+      download(blob,`${name}_${isShell()?'ตัวกล่อง':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
     }
     if(fmt==='stl'||fmt==='both'){
       busy(true,'กำลังเขียนไฟล์ STL…'); await new Promise(r=>setTimeout(r,20));
-      const files=pr.map((p,i)=>({name:`${String(i+1).padStart(2,'0')}_${safeName(p.name)}.stl`,data:stlOf(p)}));
-      files.push({name:'อ่านก่อนพิมพ์.txt',data:enc(readme(parts))});
-      download(await zipFiles(files), name+'_STL.zip');
+      const files=pr.map(p=>({name:`${name}_${partFileLabel(p)}.stl`,data:stlOf(p)}));
+      files.push({name:`${name}_คำแนะนำการพิมพ์.txt`,data:enc(readme(parts))});
+      download(await zipFiles(files), `${name}_ชิ้นส่วนพิมพ์_STL.zip`);
     }
     if(isShell()){
       busy(true,'กำลังเขียนไฟล์ตัดแผ่น…'); await new Promise(r=>setTimeout(r,20));
       const blob=await cutFilesZip();
-      if(blob) download(blob, name+'_ตัดแผ่น.zip');
+      if(blob) download(blob, `${name}_แผ่นตัด.zip`);
     }
     LAST={tris:pr.reduce((a,p)=>a+p.n/12,0)};
     updateBadges(); runChecks();
@@ -3077,14 +3106,14 @@ async function doExport(){
 async function cutFilesZip(){
   const G0=sheetLoops(false);
   if(!G0.length) return null;
-  const H=shellSpec(), holes=sheetHoles(), n=safeName(S.name);
+  const H=shellSpec(), holes=sheetHoles(), n=productionBaseName();
   const w=PB.w, h=PB.h;
   const files=[
-    {name:n+'_อะครีลิค_'+H.acrT+'mm.dxf', data:enc(dxfOf(G0,[],'ACRYLIC'))},
-    {name:n+'_อะครีลิค_'+H.acrT+'mm.svg', data:enc(svgCutOf(G0,[],w,h,S.name+' — อะครีลิค'))},
-    {name:n+'_พลาสวูด_'+H.plsT+'mm.dxf', data:enc(dxfOf(G0,holes,'PLASWOOD'))},
-    {name:n+'_พลาสวูด_'+H.plsT+'mm.svg', data:enc(svgCutOf(G0,holes,w,h,S.name+' — พลาสวูด'))},
-    {name:'อ่านก่อนตัดแผ่น.txt', data:enc(cutReadme(G0,holes))}
+    {name:n+'_แผ่นหน้าอะครีลิค_'+H.acrT+'mm.dxf', data:enc(dxfOf(G0,[],'ACRYLIC'))},
+    {name:n+'_แผ่นหน้าอะครีลิค_'+H.acrT+'mm.svg', data:enc(svgCutOf(G0,[],w,h,S.name+' — อะครีลิค'))},
+    {name:n+'_ฝาหลังพลาสวูด_'+H.plsT+'mm.dxf', data:enc(dxfOf(G0,holes,'PLASWOOD'))},
+    {name:n+'_ฝาหลังพลาสวูด_'+H.plsT+'mm.svg', data:enc(svgCutOf(G0,holes,w,h,S.name+' — พลาสวูด'))},
+    {name:n+'_คำแนะนำการตัดแผ่น.txt', data:enc(cutReadme(G0,holes))}
   ];
   return zipFiles(files);
 }
@@ -3909,7 +3938,7 @@ function wire(){
   $('#glbar button[data-a="reset"]').addEventListener('click',glReset);
 
   /* size presets */
-  const PRE=[[120,120],[150,80],[200,90],[200,120],[220,110],[250,140],[250,250]];
+  const PRE=[[120,120],[150,80],[200,90],[200,120],[220,110],[250,140],[250,250],[420,420]];
   $('#sizePresets').innerHTML=PRE.map(p=>`<span class="chip" data-w="${p[0]}" data-h="${p[1]}">${p[0]}×${p[1]}</span>`).join('');
   $$('#sizePresets .chip').forEach(c=>c.addEventListener('click',()=>{
     S.box.W=+c.dataset.w; S.box.H=+c.dataset.h; pushToUI(); schedule(false);
@@ -3927,6 +3956,7 @@ function wire(){
 
   /* fonts */
   $('#txtFont').innerHTML=FONT_LIST.map(f=>`<option value="${f}"${f===S.src.font?' selected':''}>${f}</option>`).join('');
+  $('#txtContent').addEventListener('input',()=>syncJobName(nameFromText(S.src.text)));
   $('#btnFontFile').addEventListener('click',()=>$('#fontFile').click());
   $('#fontFile').addEventListener('change',async e=>{
     const f=e.target.files[0]; if(!f) return;
@@ -3942,6 +3972,7 @@ function wire(){
     const im=new Image();
     im.onload=()=>{
       S.src.imgData=im; S.src.imgSrc=src; S.src.imgName=file.name;
+      syncJobName(nameFromUpload(file.name));
       S.src.svgNotes=notes||null; S.src.diag=null;
       S.src.mode='image'; if(S.art.n<2) S.art.n=2;
       $('#imgDrop').innerHTML=`<b>${file.name}</b><br><span style="font-size:11px">${label} · คลิกเพื่อเปลี่ยน</span>`;
