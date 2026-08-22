@@ -434,6 +434,7 @@ Studio</textarea>
       <div class="row" style="margin-top:10px"><label>รูปแบบงาน</label>
         <select id="buildMode" class="grow">
           <option value="full">พิมพ์ทั้งใบ — หน้า + กรอบ + ฝาหลัง</option>
+          <option value="service">พิมพ์แยกฝาหน้าถอดเปลี่ยนได้ — หน้า + ตัวกล่อง + ฝาหลัง</option>
           <option value="shell">พิมพ์เฉพาะตัวกล่อง — หน้าอะครีลิค · หลังพลาสวูด</option>
         </select></div>
       <p class="hint" id="modeHint" style="margin:6px 0 10px"></p>
@@ -1976,6 +1977,7 @@ const ZEPS=0.01;
              ที่ zA2 กับ zB2 เนื้อ "หด" เข้า = ผิวอิสระ พิมพ์ได้ไม่ต้องซัพพอร์ต */
 const SHELL_FACE=1.2;                    // ความสูงตัวคิ้ว (หน้าตั้ง) — พอให้แข็งแรงโดยไม่กินความลึกกล่อง
 function isShell(){ return !!(S.build && S.build.mode==='shell'); }
+function isService(){ return !!(S.build && S.build.mode==='service'); }
 function shellSpec(){
   const b=S.box, sh=S.sheet||{};
   const cl   = Math.max(0, +sh.cl||0);
@@ -2337,25 +2339,28 @@ function buildParts(nt){
   PB = panelBounds();
   if(PB.empty) return parts;
   const J=jointSpec(), fw=b.frame/px, zTop=st.frameZ0+b.depth;
+  /* โหมดซ่อม: ฝาหน้าร่น 0.2 มม. รอบด้าน เพื่อถอด-ใส่ผ่านร่องของตัวกล่องได้ */
+  const frontFit=isService()?maskWhere(i=>P[i]&&DI[i]>0.2/px):null;
+  const trimFront=mk=>{ if(!frontFit) return mk; const out=mk.slice(); for(let i=0;i<out.length;i++) if(!frontFit[i]) out[i]=0; return out; };
 
   /* --- 1. ชั้นสีทั้งหมด (พื้นใน · ลวดลาย · วงขอบ) --- */
   for(let k=0;k<S.pal.length;k++){
     const p=S.pal[k];
     if(!p.cells) continue;
-    const mk=maskOf(k);
-    const M=Mesh((p.name||('สี '+k))+' · '+nearestFilament(p.hex), p.hex, nt);
+    const mk=trimFront(maskOf(k));
+    const M=Mesh((isService()?'ฝาหน้าถอดเปลี่ยนได้ · ':'')+(p.name||('สี '+k))+' · '+nearestFilament(p.hex), p.hex, nt);
     addSolid(M,mk,0,p.glow?st.colorT:st.bgT);
-    M.kind='color'; M.glow=!!p.glow;
+    M.kind='color'; M.module=isService()?'front':''; M.glow=!!p.glow;
     parts.push(M);
   }
 
   /* --- 2. ชั้นกระจายแสง --- */
-  const gm=maskGlow();
+  const gm=trimFront(maskGlow());
   let anyGlow=false; for(let i=0;i<N;i++) if(gm[i]){anyGlow=true;break;}
   if(anyGlow){
-    const M=Mesh('ชั้นกระจายแสง · ขาว/ใส','#F2F2E8',nt);
+    const M=Mesh((isService()?'ฝาหน้าถอดเปลี่ยนได้ · ':'')+'ชั้นกระจายแสง · ขาว/ใส','#F2F2E8',nt);
     addSolid(M,gm,st.colorT,st.colorT+st.diff);
-    M.kind='diffuser'; M.glow=true;
+    M.kind='diffuser'; M.module=isService()?'front':''; M.glow=true;
     parts.push(M);
   }
 
@@ -2368,7 +2373,7 @@ function buildParts(nt){
      coreR = ตัวขา · slotR = ขอบนอกของร่องเซาะ · pocketR = ปากหลุมบนกรอบ (กว้างกว่าขานิดหน่อย ไม่ให้ฝืด) */
   const coreR=(J.fingerW/2)/px, slotR=(J.fingerW/2+J.slotW)/px, pocketR=(J.fingerW/2+1.0)/px;
   const bandSpec=frameBandSpec(st.frameZ0,zTop);
-  const FMs=bandSpec.map(B=>Mesh('กรอบข้าง'+(bandSpec.length>1?' · แถบสี '+(B.i+1):'')+(J.screw?' + เสาสกรู':'')+(SP.length?' + หลุมสแนป':''), '#'+B.hex.replace('#',''),nt));
+  const FMs=bandSpec.map(B=>Mesh((isService()?'ตัวกล่อง · ร่องรับฝาหน้า · ':'กรอบข้าง')+(bandSpec.length>1?'แถบสี '+(B.i+1):'')+(J.screw?' + เสาสกรู':'')+(SP.length?' + หลุมสแนป':''), '#'+B.hex.replace('#',''),nt));
   const addFrame=(mask,za,zb,noMirrorX,boxes)=>bandSpec.forEach((B,i)=>addSolid(FMs[i],mask,Math.max(za,B.z0),Math.min(zb,B.z1),noMirrorX,boxes));
   const d=Math.min(S.hw.dia, b.depth-2);
   /* ผนังกรอบหลัก — เว้นกล่องบริเวณหลุมสแนปไว้ก่อน แล้วค่อยเติมเป็นชั้นๆ ทีหลัง */
@@ -2424,7 +2429,7 @@ function buildParts(nt){
       addFrame(maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t), j? zA-ZEPS : zA, zB, false, boxesAt(BP,bwc));
     }
   }
-  FMs.forEach(FM=>{ FM.kind='frame'; FM.bossCount=BP.length; FM.snapCount=SP.length; parts.push(FM); });
+  FMs.forEach(FM=>{ FM.kind='frame'; FM.module=isService()?'box':''; FM.bossCount=BP.length; FM.snapCount=SP.length; parts.push(FM); });
 
   /* --- 4. แผ่นหลัง (+ บ่าล็อก) --- */
   const HP=S.hw.hang? hangPoints() : [];
@@ -2486,7 +2491,7 @@ function buildParts(nt){
       }
     }
   }
-  BM.place=PK.items.back; BM.kind='back'; BM.snapCount=SP.length;
+  BM.module=isService()?'back':''; BM.place=PK.items.back; BM.kind='back'; BM.snapCount=SP.length;
   parts.push(BM);
 
   return parts;
@@ -2692,6 +2697,8 @@ const safeName = s => (s||'lightbox').replace(/[\\/:*?"<>|]/g,'_').trim().slice(
 const fileToken = s => safeName(s).replace(/\s+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'') || 'งานใหม่';
 const productionBaseName = () => `YP_lightbox_${fileToken(S.name)}`;
 function partFileLabel(M){
+  if(M.module==='front') return M.kind==='diffuser'?'ฝาหน้าถอดเปลี่ยนได้_ชั้นกระจายแสง':'ฝาหน้าถอดเปลี่ยนได้_'+fileToken(M.name.replace('ฝาหน้าถอดเปลี่ยนได้ · ',''));
+  if(M.module==='box') return 'ตัวกล่อง_ร่องรับฝาหน้า';
   if(M.kind==='shell') return 'ตัวกล่อง';
   if(M.kind==='frame') return 'ตัวกล่อง';
   if(M.kind==='back') return 'ฝาหลัง';
@@ -3016,6 +3023,11 @@ function runChecks(){
     if(S.hw.hang) add('ok','รูแขวนเจาะบนแผ่นพลาสวูด อยู่ในไฟล์ DXF/SVG ที่ส่งออก');
     add('ok','ส่งออกแล้วจะได้ไฟล์เส้นตัด DXF และ SVG ของทั้งอะครีลิคและพลาสวูดในชุด _ตัดแผ่น.zip');
   }
+  if(isService()){
+    add('ok','โหมดฝาหน้าถอดเปลี่ยนได้: ฝาหน้าร่น 0.2 มม. รอบด้าน · ถอดฝาหลังแล้วเปลี่ยนเฉพาะโมดูลหน้าได้');
+    if(b.frame<2) add('warn','กรอบข้างบางกว่า 2 มม. คิ้วบังแสงของฝาหน้าถอดเปลี่ยนได้อาจไม่พอ — แนะนำ 2 มม. ขึ้นไป');
+    if(S.hw.joint==='butt') add('warn','ควรเลือกบ่าล็อกหรือสกรูสำหรับฝาหลัง เพื่อเปิดเปลี่ยนฝาหน้าได้โดยไม่ต้องแกะกาว');
+  }
   const used=S.pal.filter(p=>p.cells>0).length;
   if(!isShell()){
   if(used>4) add('warn',`ใช้ ${used} สีในแผ่นเดียว เกิน 4 ช่อง AMS — ต้องต่อ AMS ตัวที่ 2 หรือเปลี่ยนเส้นกลางคัน`);
@@ -3304,7 +3316,7 @@ async function doExport(){
     if(fmt==='3mf'||fmt==='both'){
       busy(true,'กำลังเขียนไฟล์ 3MF…'); await new Promise(r=>setTimeout(r,20));
       const blob=await make3mf(pr,S.name);
-      download(blob,`${name}_${isShell()?'ตัวกล่อง':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
+      download(blob,`${name}_${isShell()?'ตัวกล่อง':isService()?'ชุดฝาหน้าถอดเปลี่ยนได้':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
     }
     if(fmt==='stl'||fmt==='both'){
       busy(true,'กำลังเขียนไฟล์ STL…'); await new Promise(r=>setTimeout(r,20));
@@ -3365,6 +3377,14 @@ function cutReadme(G0,holes){
 
 function readme(parts){
   const st=geomStack();
+  if(isService()) return ['YP Lightbox Studio — '+S.name+'  (โหมดฝาหน้าถอดเปลี่ยนได้)',''
+   ,'ชุดพิมพ์ประกอบด้วย 3 กลุ่ม: ฝาหน้าถอดเปลี่ยนได้ · ตัวกล่อง · ฝาหลัง'
+   ,'ฝาหน้าร่นจากขอบนอก 0.2 มม. รอบด้าน เพื่อสวมในกรอบได้โดยไม่ฝืด'
+   ,'กรอบข้างสีทึบทำหน้าที่เป็นคิ้วบังแสงรอบรอยต่อ'
+   ,''
+   ,'การซ่อม: เปิดฝาหลังตามวิธีประกบที่เลือก นำโมดูลฝาหน้าเดิมออก แล้วสวมฝาหน้าใหม่จากด้านหน้า'
+   ,'ห้ามยึดฝาหน้าด้วยกาวถาวร หากต้องการใช้ฟังก์ชันเปลี่ยนเฉพาะฝาหน้า'
+   ,'แนะนำกรอบข้างอย่างน้อย 2 มม. และเผื่อสวม 0.2 มม.'].join('\n');
   if(isShell()){
     const H=shellSpec(), M=parts.find(p=>p.kind==='shell')||{};
     return ['YP Lightbox Studio — '+S.name+'  (โหมดพิมพ์เฉพาะตัวกล่อง)',''
@@ -4019,6 +4039,7 @@ function syncPreviewAction(){
 /* ---------- สลับหน้าตาระหว่างโหมดพิมพ์ทั้งใบ กับ พิมพ์เฉพาะตัวกล่อง ---------- */
 function syncModeUI(){
   const sh=isShell();
+  const service=isService();
   const show=(id,on)=>{ const e=$('#'+id); if(e) e.style.display = on?'':'none'; };
   show('fullThick',!sh); show('fullBack',!sh); show('shellThick',sh);
   show('artColor',!sh);  show('backColorRow',!sh);
@@ -4031,6 +4052,9 @@ function syncModeUI(){
     ? '<b>พิมพ์เฉพาะตัวกล่อง</b> — ผนังมีร่องและคิ้วรับแผ่นทั้งหัวและท้าย '+
       'หน้าใช้อะครีลิคตัดเลเซอร์ หลังใช้พลาสวูด ประหยัดเวลาพิมพ์ได้มาก '+
       'ตอนส่งออกจะได้ไฟล์เส้นตัด <b>DXF และ SVG</b> ของทั้งสองแผ่นมาด้วย'
+    : service
+    ? '<b>ฝาหน้าถอดเปลี่ยนได้</b> — ส่งออกโมดูลฝาหน้า ตัวกล่อง และฝาหลังแยกกัน '+
+      'ฝาหน้าร่นรอบด้าน 0.2 มม. เพื่อสวมเข้าร่องและเปลี่ยนเฉพาะหน้าได้เมื่อพิมพ์เสีย'
     : '<b>พิมพ์ทั้งใบ</b> — หน้าป้าย กรอบ และฝาหลัง พิมพ์เป็นชิ้นพลาสติกทั้งหมด';
   const th=$('#thickHint');
   if(th) th.innerHTML = sh
@@ -4038,6 +4062,9 @@ function syncModeUI(){
       'ร่องอะครีลิค + ความลึกกล่อง + ร่องพลาสวูด<br>'+
       'คิ้วบนเป็น<b>ลาด 45°</b> รับขอบอะครีลิคแบบสัมผัสเส้นรอบรูป แผ่นจึงเข้าศูนย์เองและพิมพ์ได้ไม่ต้องซัพพอร์ต · '+
       'คิ้วล่างเป็น<b>หน้าเรียบ</b> พลาสวูดวางแนบเต็มหน้า'
+    : service
+    ? 'ฝาหน้าจะร่นเข้าจากขอบนอก <b>0.2 มม.</b> รอบด้านเพื่อประกอบและถอดซ่อมได้ · '+
+      'กรอบข้างทึบแสงทำหน้าที่เป็นคิ้วบังแสงรอบรอยต่อ'
     : 'ค่าเริ่มต้นตามสเปกกล่องไฟของทีม: หน้ากล่อง <b>1.2</b> (0.4 + 0.8 ตรงส่วนสว่าง · 1.2 ตรงส่วนทึบ)'+
       ' · กรอบข้าง <b>2.4</b> · ฝาหลัง <b>3</b> มม.<br>เลือกสีกรอบและสีฝาหลังได้ที่หัวข้อ <b>3 · สีและชั้น</b>';
   const nt=$('#shellJointNote');
