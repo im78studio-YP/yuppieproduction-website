@@ -543,8 +543,8 @@ PRODUCTION</textarea>
 <nav id="mobileNav" aria-label="เมนูออกแบบบนมือถือ">
   <button class="mobile-tab" type="button" data-panel="work"><span class="ico">✎</span><span>งาน</span></button>
   <button class="mobile-tab" type="button" data-panel="colors"><span class="ico">●</span><span>สี</span></button>
-  <button class="mobile-tab" type="button" data-panel="box"><span class="ico">▣</span><span>กล่อง</span></button>
-  <button class="mobile-tab" type="button" data-panel="production"><span class="ico">⇩</span><span>ผลิต</span></button>
+  <button class="mobile-tab" type="button" data-panel="box"><span class="ico">▣</span><span>ตั้งค่า</span></button>
+  <button class="mobile-tab" type="button" data-panel="production"><span class="ico">⇩</span><span>สรุปไฟล์</span></button>
 </nav>
 </div>
 <div class="toast" id="toast"></div>
@@ -3816,6 +3816,21 @@ function pushToUI(){
   $('#colN').disabled = S.src.mode!=='image';
   const cn=NUMBOX.get('colNV'); if(cn) cn.inp.disabled = S.src.mode!=='image';
   syncRingUI(); syncBoxColorUI(); syncJointUI(); syncSizeUI(); syncModeUI();
+  syncPreviewAction();
+}
+
+const VIEW_LABEL={design:'แบบ',lit:'จำลองตอนติดไฟ',layers:'แยกชั้นการพิมพ์',plate:'ผังฐานพิมพ์','3d':'มุมมอง 3 มิติ'};
+function setView(view){
+  S.ui.view=view; pushToUI();
+  $('#stageLabel').textContent=VIEW_LABEL[view]||'แบบ';
+  draw();
+}
+/* บนมือถือ ปุ่มนี้ใช้สลับมุมมอง 3 มิติ เพราะแถบเลือกมุมมองด้านบนถูกย่อซ่อน */
+function syncPreviewAction(){
+  const btn=$('#btnPng'); if(!btn) return;
+  btn.textContent=window.matchMedia('(max-width:720px)').matches
+    ? (S.ui.view==='3d' ? 'กลับมุมมองแบบ' : 'มุมมอง 3 มิติ')
+    : 'บันทึกภาพพรีวิว';
 }
 
 /* ---------- สลับหน้าตาระหว่างโหมดพิมพ์ทั้งใบ กับ พิมพ์เฉพาะตัวกล่อง ---------- */
@@ -4000,10 +4015,7 @@ function wire(){
   }));
   /* view tabs */
   $$('#viewseg button').forEach(b=>b.addEventListener('click',()=>{
-    S.ui.view=b.dataset.v; pushToUI();
-    $('#stageLabel').textContent={design:'แบบ',lit:'จำลองตอนติดไฟ',layers:'แยกชั้นการพิมพ์',
-      plate:'ผังฐานพิมพ์','3d':'มุมมอง 3 มิติ'}[S.ui.view];
-    draw();
+    setView(b.dataset.v);
   }));
   $$('#glbar button[data-m]').forEach(b=>b.addEventListener('click',()=>glSetMode(b.dataset.m)));
   $('#glbar button[data-a="reset"]').addEventListener('click',glReset);
@@ -4123,6 +4135,10 @@ function wire(){
   /* buttons */
   $('#btnExport').addEventListener('click',doExport);
   $('#btnPng').addEventListener('click',()=>{
+    if(window.matchMedia('(max-width:720px)').matches){
+      setView(S.ui.view==='3d'?'design':'3d');
+      return;
+    }
     if(S.ui.view==='3d'){ glRender(); $('#gl').toBlob(b=>download(b,safeName(S.name)+'_3มิติ.png')); }
     else $('#view').toBlob(b=>download(b,safeName(S.name)+'_พรีวิว.png'));
   });
@@ -4168,6 +4184,7 @@ function wire(){
 
   window.addEventListener('resize',()=>{ clearTimeout(window._rz); window._rz=setTimeout(()=>{
     if(window.innerWidth>720) showMobilePanel(null);
+    syncPreviewAction();
     draw();
   },120); });
   window.addEventListener('keydown',e=>{
