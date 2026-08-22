@@ -62,6 +62,9 @@ main{flex:1;display:flex;min-height:0}
 .sec>.body{padding:2px 14px 14px}
 /* คำอธิบายเชิงเทคนิคเก็บไว้ในโค้ด แต่ไม่แสดงในหน้าที่ลูกค้าใช้งาน */
 .hint{display:none!important}
+.printer-fit{margin:9px 0 2px;padding:8px 9px;border:1px solid var(--line);border-radius:8px;font-size:12px;line-height:1.45;color:var(--tx2)}
+.printer-fit.ok{border-color:#31c48d66;color:#8fe3c2;background:#31c48d10}
+.printer-fit.warn{border-color:#f5a52466;color:#f7c76b;background:#f5a52410}
 
 .row{display:flex;align-items:center;gap:8px;margin:9px 0}
 .row label{flex:0 0 98px;color:var(--tx2)}
@@ -273,16 +276,28 @@ PRODUCTION</textarea>
   </div>
 
   <div class="sec" data-sec="fit">
-    <h3>2 · วางตำแหน่ง</h3>
+    <h3>2 · ขนาดชิ้นงานและฐานพิมพ์</h3>
     <div class="body">
       <div class="row"><label>ขนาดชิ้นงาน</label>
         <input type="number" id="sizeW" class="num" step="1"><span class="unit">×</span>
         <input type="number" id="sizeH" class="num" step="1"><span class="unit">มม.</span></div>
       <div class="row"><label>ล็อกสัดส่วน</label><input type="checkbox" id="uniformScale" checked>
         <span class="unit">Uniform Scale</span></div>
-      <p class="hint" style="margin:0">ติ๊กไว้ = ย่อ-ขยายทั้งสองด้านพร้อมกัน · เอาออก = ยืดหรือบีบทีละด้านได้</p>
-      <p class="hint" style="margin:2px 0 8px">พิมพ์ขนาดที่ต้องการลงไปได้เลย ระบบจะย่อ-ขยายลวดลายให้ชิ้นงานจริงได้ขนาดนั้น
-      (รวมความกว้างขอบแล้ว) · ถ้าใหญ่เกินพื้นที่ทำงาน ระบบจะขยายพื้นที่ให้เอง</p>
+      <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+      <div class="row"><label>พื้นที่ทำงาน</label><input type="number" id="bW" class="num" value="200" step="1">
+        <span class="unit">×</span><input type="number" id="bH" class="num" value="120" step="1"><span class="unit">มม.</span></div>
+      <div class="chips" id="sizePresets"></div>
+      <div class="row" style="margin-top:13px"><label>เครื่องพิมพ์</label>
+        <select id="expBed" class="grow">
+          <option value="180">A1 mini · ฐาน 180 × 180 มม.</option>
+          <option value="220">Ender / Prusa · ฐาน 220 × 220 มม.</option>
+          <option value="256" selected>X1C · P1S · A1 · ฐาน 256 × 256 มม.</option>
+          <option value="300">เครื่องฐาน 300 × 300 มม.</option>
+          <option value="350">เครื่องฐาน 350 × 350 มม.</option>
+          <option value="420">Kobra 3 Max · ฐาน 420 × 420 มม.</option>
+          <option value="500">เครื่องฐาน 500 × 500 มม.</option>
+        </select></div>
+      <div class="printer-fit" id="printerFit">—</div>
     </div>
   </div>
 
@@ -386,12 +401,8 @@ PRODUCTION</textarea>
 <div class="col" id="right">
 
   <div class="sec" data-sec="dim">
-    <h3>5 · พื้นที่ทำงานและความหนา</h3>
+    <h3>5 · โครงสร้างกล่องและความหนา</h3>
     <div class="body">
-      <div class="row"><label>พื้นที่ทำงาน</label><input type="number" id="bW" class="num" value="200" step="1">
-        <span class="unit">×</span><input type="number" id="bH" class="num" value="120" step="1"><span class="unit">มม.</span></div>
-      <div class="chips" id="sizePresets"></div>
-      <p class="hint" style="margin:8px 0 2px">พื้นที่ทำงานคือกรอบสำหรับจัดวางเท่านั้น — ขนาดชิ้นงานจริงที่ได้แสดงอยู่บนแถบด้านบนของภาพพรีวิว</p>
       <div class="row" style="margin-top:10px"><label>รูปแบบงาน</label>
         <select id="buildMode" class="grow">
           <option value="full">พิมพ์ทั้งใบ — หน้า + กรอบ + ฝาหลัง</option>
@@ -523,17 +534,6 @@ PRODUCTION</textarea>
           <option value="both">ทั้ง 3MF และ STL</option>
         </select></div>
       <div class="row"><label>ความสูงชั้น</label><input type="number" id="expLayerH" class="num" value="0.2" step="0.02"><span class="unit">มม.</span></div>
-      <div class="row"><label>ฐานพิมพ์</label>
-        <select id="expBed" class="grow">
-          <option value="180">A1 mini · 180 มม.</option>
-          <option value="220">Ender / Prusa · 220 มม.</option>
-          <option value="256" selected>X1C · P1S · A1 · 256 มม.</option>
-          <option value="300">300 มม.</option>
-          <option value="350">350 มม.</option>
-          <option value="500">500 มม.</option>
-          <option value="420">Kobra 3 Max · 420 มม.</option>
-        </select></div>
-      <p class="hint">ขนาดฐานพิมพ์ใช้เตือนอย่างเดียว ไม่ได้จำกัดขนาดงาน — งานที่ใหญ่กว่าฐานยังส่งออกได้ ไว้แยกพิมพ์ทีละชิ้นแล้วประกอบ</p>
       <p class="hint">3MF จะรวมทุกชิ้นไว้ในไฟล์เดียว แต่ละชิ้นแยกวัตถุพร้อมชื่อสี — เปิดใน Bambu Studio แล้วกำหนดเส้นให้แต่ละชิ้นได้เลย</p>
     </div>
   </div>
@@ -3767,6 +3767,7 @@ function recompute(){
     updateBadges();
     syncJointUI();
     syncSizeUI();
+    syncPrinterFit();
     syncModeUI();
   }catch(e){ console.error(e); toast('คำนวณผิดพลาด: '+e.message); }
 }
@@ -3918,6 +3919,17 @@ function syncSizeUI(){
   const w=$('#sizeW'), h=$('#sizeH');
   if(document.activeElement!==w) w.value=PB.w.toFixed(1).replace(/\.0$/,'');
   if(document.activeElement!==h) h.value=PB.h.toFixed(1).replace(/\.0$/,'');
+}
+/* แสดงความสัมพันธ์ระหว่างขนาดจริงและฐานของเครื่องที่เลือกไว้ตั้งแต่เมนู 2 */
+function syncPrinterFit(){
+  const out=$('#printerFit'); if(!out) return;
+  const bed=bedSize();
+  if(!PB||PB.empty){ out.className='printer-fit'; out.textContent=`ฐานพิมพ์ที่เลือก ${bed} × ${bed} มม.`; return; }
+  const w=PB.w, h=PB.h, fits=w<=bed&&h<=bed;
+  out.className='printer-fit '+(fits?'ok':'warn');
+  out.innerHTML=fits
+    ? `✓ ชิ้นงาน ${w.toFixed(0)} × ${h.toFixed(0)} มม. พิมพ์บนฐาน ${bed} × ${bed} มม. ได้`
+    : `! ชิ้นงาน ${w.toFixed(0)} × ${h.toFixed(0)} มม. เกินฐาน ${bed} × ${bed} มม. — เลือกเครื่องใหญ่ขึ้น หรือแยกพิมพ์`;
 }
 /* ตั้งขนาดชิ้นงานเป็นมิลลิเมตร
    ขนาดจริงขึ้นกับทั้งสเกลและพื้นที่ทำงาน (baseFit เป็น min ของสองแกน)
