@@ -18,6 +18,9 @@ body{
   font-size:13px; overflow:hidden;
 }
 button,input,select,textarea{font-family:inherit;font-size:13px;color:var(--tx)}
+/* ช่องตัวเลขใช้พิมพ์ค่าแล้วกด Enter — ไม่แสดงปุ่มเพิ่ม/ลดที่ชวนให้เรนเดอร์ถี่ */
+input[type=number]{appearance:textfield;-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{appearance:none;margin:0}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-thumb{background:#3a404a;border-radius:6px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -3908,10 +3911,10 @@ function attachNumBoxes(){
       if(id==='txtContent') syncLineStyleUI();
       schedule(flag==='s', flag==='q'?'q':flag==='d'?'d':null);
     };
-    inp.addEventListener('input',commit);
+    inp.addEventListener('change',commit);
     /* ออกจากช่องแล้วดึงค่าจริงกลับมาแสดง (เผื่อพิมพ์เกินช่วงหรือเว้นว่างไว้) */
     inp.addEventListener('blur',()=>{ inp.value=gp(path); });
-    inp.addEventListener('keydown',e=>{ if(e.key==='Enter') inp.blur(); });
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ commit(); inp.blur(); } });
   }
 }
 /* เขียนค่าลงป้าย/ช่องกรอก โดยไม่แตะช่องที่ผู้ใช้กำลังพิมพ์อยู่ */
@@ -4120,7 +4123,7 @@ function syncLineStyleUI(){
     row.querySelector('.sw').style.background=st.hex;
     color.addEventListener('input',()=>{ st.hex=color.value; row.querySelector('.sw').style.background=st.hex; S.src.brandDefault=false; schedule(true); });
     const setScale=v=>{ st.scale=clamp(+v||100,40,180); scale.value=st.scale; num.value=st.scale; S.src.brandDefault=false; schedule(true); };
-    scale.addEventListener('input',()=>setScale(scale.value)); num.addEventListener('input',()=>{if(num.value!=='')setScale(num.value);}); num.addEventListener('change',()=>setScale(num.value));
+    scale.addEventListener('input',()=>setScale(scale.value)); num.addEventListener('change',()=>setScale(num.value)); num.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();setScale(num.value);num.blur();}});
     host.appendChild(row);
   });
 }
@@ -4156,7 +4159,7 @@ function syncBoxBandUI(){
     ctl.innerHTML=`<label>กว้างแถบ</label><input type="range" min="0.4" max="${Math.max(1,b.depth-1)}" step="0.1" value="${r.width}"><input class="num" type="number" min="0.4" max="${Math.max(1,b.depth-1)}" step="0.1" value="${r.width}"><span class="unit">มม.</span>`;
     const pr=document.createElement('div'); pr.className='row';
     pr.innerHTML=`<label>ตำแหน่งแถบ</label><input type="range" min="0" max="100" step="1" value="${r.pos}"><input class="num" type="number" min="0" max="100" step="1" value="${r.pos}"><span class="unit">%</span>`;
-    const bindPair=(node,key)=>{ const [slide,num]=node.querySelectorAll('input'); const put=v=>{ v=clamp(+v||0,+slide.min,+slide.max); r[key]=v; r.auto=false; slide.value=v; num.value=v; schedule(false); }; slide.addEventListener('input',e=>put(e.target.value)); num.addEventListener('input',e=>{if(e.target.value!=='')put(e.target.value);}); num.addEventListener('change',e=>put(e.target.value)); };
+    const bindPair=(node,key)=>{ const [slide,num]=node.querySelectorAll('input'); const put=v=>{ v=clamp(+v||0,+slide.min,+slide.max); r[key]=v; r.auto=false; slide.value=v; num.value=v; schedule(false); }; slide.addEventListener('input',e=>put(e.target.value)); num.addEventListener('change',e=>put(e.target.value)); num.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();put(num.value);num.blur();}}); };
     bindPair(ctl,'width'); bindPair(pr,'pos'); host.appendChild(ctl); host.appendChild(pr);
   });
 }
@@ -4225,7 +4228,7 @@ function showMobilePanel(panel){
 function wire(){
   for(const [id,path,kind,lab,fmt,flag] of BIND){
     const el=document.getElementById(id); if(!el) continue;
-    const ev = (kind==='bool'||el.tagName==='SELECT')?'change':'input';
+    const ev = (kind==='bool'||el.tagName==='SELECT'||(kind==='num'&&el.type==='number'))?'change':'input';
     el.addEventListener(ev,()=>{
       let v = kind==='bool'?el.checked : kind==='num'? (+el.value||0) : el.value;
       if(kind==='num'&&el.value==='') v=0;
@@ -4235,6 +4238,9 @@ function wire(){
       if(id==='boxBandN') syncBoxBandUI();
       if(id==='txtContent') syncLineStyleUI();
       schedule(flag==='s', flag==='q'?'q':flag==='d'?'d':null);
+    });
+    if(kind==='num'&&el.type==='number') el.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){ e.preventDefault(); el.dispatchEvent(new Event('change',{bubbles:true})); el.blur(); }
     });
   }
   $('#docname').addEventListener('input',e=>S.name=e.target.value);
