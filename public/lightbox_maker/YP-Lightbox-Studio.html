@@ -357,14 +357,6 @@ Studio</textarea>
           <option value="bg">พื้นสว่าง โลโก้ทึบ</option>
         </select>
       </div>
-      <div class="row"><label>ป้องกันช่องแสงจิ๋ว</label>
-        <select id="sealMode" class="grow">
-          <option value="off">ปิด</option>
-          <option value="standard">มาตรฐาน · อุดช่องไม่เกิน 1.0 มม.</option>
-          <option value="strict">เข้มงวด · อุดช่องไม่เกิน 1.5 มม.</option>
-        </select>
-      </div>
-      <div class="row"><label>ระยะซ้อนสี</label><input type="range" id="sealChoke" min="0" max="0.8" step="0.1" value="0.6"><span class="unit" id="sealChokeV">0.6 มม.</span></div>
       <div class="row" style="margin-bottom:4px"><label>ชั้นสีทั้งหมด</label>
         <span class="grow"></span>
         <button class="minibtn" id="btnPalReset">คืนค่าสีตั้งต้น</button></div>
@@ -3081,14 +3073,6 @@ function runChecks(){
   if(st.bgT>b.bgT+0.001) add('warn',`ปรับความหนาพื้นทึบขึ้นเป็น ${st.bgT.toFixed(1)} มม. อัตโนมัติ เพราะต้องหนากว่าชั้นสี`);
   if(b.bgT<1.0) add('warn','พื้นทึบบางกว่า 1.0 มม. แสงอาจทะลุพื้นหลัง เห็นเป็นฝ้า');
   if(st.diff<0.4) add('warn','ชั้นกระจายแสงบาง อาจเห็นเป็นจุดไฟ LED แทนที่จะเป็นแสงนวล');
-  if(art&&G.lightSeal){
-    if(G.lightSeal.mode==='off') add('warn','ปิดการป้องกันช่องแสงจิ๋วอยู่ — ช่องผิดปกติในตัวอักษรอาจเห็นแสงทะลุด้านหน้า');
-    else {
-      const level=G.lightSeal.mode==='strict'?'เข้มงวด (อุดช่อง ≤1.5 มม.)':'มาตรฐาน (อุดช่อง ≤1.0 มม.)';
-      add('ok',`ป้องกันช่องแสงจิ๋ว: ${level} · รักษาสีบนผิวหน้า`+
-        (G.lightSeal.sealed ? ` · อุดจุดสว่างจิ๋ว ${G.lightSeal.sealed} จุด` : ''));
-    }
-  }
   }
   /* ส่วนที่ให้แสงผ่านล้ำเข้าไปในแนวผนังกรอบ */
   if(art&&G.panel&&G.edtIn){
@@ -3911,8 +3895,6 @@ const BIND=[
  ['colSmooth','art.smooth','num','colSmoothV',v=>v,''],
  ['glowMode','art.glowMode','str',null,null,'g'],
  ['boxBandN','box.bandN','num','boxBandNV',v=>v+' สี',''],
- ['sealMode','art.seal','str',null,null,''],
- ['sealChoke','art.choke','num','sealChokeV',v=>v.toFixed(1)+' มม.',''],
  ['fillHoles','shape.fillHoles','bool',null,null,''],
  ['ring0w','rings.0.w','num','ring0wV',v=>v+' มม.',''],
  ['ring1w','rings.1.w','num','ring1wV',v=>v+' มม.',''],
