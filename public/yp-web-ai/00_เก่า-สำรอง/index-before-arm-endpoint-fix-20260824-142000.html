@@ -833,11 +833,11 @@ const LIGHTCOL=[{k:'warm',n:'แสงวอร์ม',s:'3000K',c:'#ffd9a0'},
 const LIGHTWALL=[{k:'back',n:'ผนังหลัง',s:'ค่าเริ่มต้น'},{k:'all',n:'ทุกผนัง',s:'รอบบูธ'}];
 const LIGHT_MODELS=[
   {k:'clear100',n:'Clear Light',s:'โคมหลัก 100W',url:'./assets/lights/clear-light-100w.glb?v=20260823-1',thumb:'./assets/lights/clear-light-100w.webp?v=20260823-1',scale:1,wallRotationX:Math.PI/2,wallRotationZ:-Math.PI/4,baseNormal:[-.71,0,-.71],baseRoll:-Math.PI/4,baseMeshIndex:9},
-  /* Arm Light V4: mesh 10 คือก้อนฐานยึดผนังที่ปลายก้านด้านหลัง
-     (mesh 9 เป็นเพียงแผ่น/ชิ้นส่วนที่ปลายหัวโคม) จึงต้องใช้ mesh 10
-     เป็นระนาบอ้างอิง แล้วกลับแนวก้านให้หัวโคมหันออกทางเดิน */
-  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,
-    /* ฐานติดขอบผนัง แล้วก้านยื่นเข้าทางเดินเสมอ: หลัง = +Z · ซ้าย = +X · ขวา = -X */
+  /* Arm Light: mesh 9 คือแผ่นฐานยึดผนังของโมเดล (แผ่นบางแนวตั้ง)
+     ต้องใช้ฐานนี้เป็นระนาบอ้างอิง แทน box รวมของโคม/ก้าน เพื่อให้ติดผนัง
+     และหมุนตามผนังหลัง–ซ้าย–ขวาได้จากจุดยึดเดียวกัน */
+  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,wallRotationX:Math.PI/2,baseMeshIndex:9,baseAxis:'z',baseSide:'min',templateRotationY:0,mountMode:'ceiling',modelFlipZ:true,
+    /* ฐานติดคานบน แล้วก้านยื่นเข้าในบูธเสมอ: หลัง = +Z · ซ้าย = +X · ขวา = -X */
     wallRotations:{back:0,left:Math.PI/2,right:-Math.PI/2}}];
 const OFFLINE_LIGHT_MODELS_SCRIPT='./assets/lights/embedded-light-models.js';
 let offlineLightModelsPromise=null;
