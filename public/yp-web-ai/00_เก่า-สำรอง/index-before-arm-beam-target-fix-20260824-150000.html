@@ -836,7 +836,7 @@ const LIGHT_MODELS=[
   /* Arm Light V4: mesh 10 คือก้อนฐานยึดผนังที่ปลายก้านด้านหลัง
      (mesh 9 เป็นเพียงแผ่น/ชิ้นส่วนที่ปลายหัวโคม) จึงต้องใช้ mesh 10
      เป็นระนาบอ้างอิง แล้วกลับแนวก้านให้หัวโคมหันออกทางเดิน */
-  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],beamMode:'downwash',beamInward:.22,
+  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],
     /* ฐานติดขอบผนัง แล้วก้านยื่นเข้าทางเดินเสมอ: หลัง = +Z · ซ้าย = +X · ขวา = -X */
     wallRotations:{back:0,left:Math.PI/2,right:-Math.PI/2}}];
 const OFFLINE_LIGHT_MODELS_SCRIPT='./assets/lights/embedded-light-models.js';
@@ -1874,11 +1874,6 @@ class ThreeBoothRenderer{
     const lightInset=FIXTURE_LIGHT_INSET-FIXTURE_WALL_GAP,modelDef=lightModelDef(),lightSource=modelDef.lightSource||[0,-.14,lightInset];
     points.forEach((p,i)=>{
       const transform=this.fixtureMountTransform(p,spec,t,modelDef),mount=new T.Group();
-      /* Arm Light มีหน้าปล่อยแสงชี้ลง: เล็งใต้หัวโคมและเอียงเข้าบูธเล็กน้อย
-         ไม่ใช้ targetDepth กลางบูธแบบไฟรุ่นอื่น เพื่อไม่ให้กรวยแสงยิงชนผนังตรงข้าม */
-      const beamTargetDepth=modelDef.beamMode==='downwash'
-        ? lightSource[2]+(Number.isFinite(modelDef.beamInward)?modelDef.beamInward:0)
-        : transform.targetDepth;
       mount.name='spotlight-mount';mount.userData.wall=p.w;mount.userData.u=p.u;mount.userData.inward=transform.inward;
       mount.position.set(...transform.position);mount.rotation.y=transform.rotationY;
       const fixture=new T.Group();fixture.name='spotlight-fixture';fixture.userData.fixtureModel=spec.lightFixture;
@@ -1894,7 +1889,7 @@ class ThreeBoothRenderer{
       /* ให้ลำแสงเริ่มจากหน้าหัวโคมจริง ไม่ใช่จุดคงที่กลางก้าน/ชิดผนัง */
       const light=new T.SpotLight(tone.c,lightDef.intensity,span*2.2,.43,.58,2);light.position.set(...lightSource);light.name='spotlight';
       light.castShadow=i<Math.min(4,points.length);if(light.castShadow){light.shadow.mapSize.set(256,256);light.shadow.bias=-.001;}
-      const aim=new T.Object3D();aim.name='spotlight-target';aim.position.set(0,floorY-spec.H,beamTargetDepth);
+      const aim=new T.Object3D();aim.name='spotlight-target';aim.position.set(0,floorY-spec.H,transform.targetDepth);
       light.target=aim;mount.add(aim,light);group.add(mount);
     });
   }
