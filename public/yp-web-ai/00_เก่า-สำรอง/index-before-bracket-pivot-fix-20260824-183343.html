@@ -835,11 +835,11 @@ const LIGHT_MODELS=[
   /* Clear Light V2: เลนส์/หน้าปล่อยแสงของไฟอยู่บนแกน +Y ของ GLB
      เมื่อตั้งหมุน X +90° จะชี้เข้าในบูธตามแกน +Z ของจุดยึดทุกผนัง
      ใช้ mesh 3 เป็นตัวเรือนและยึดระนาบด้านหลัง (แกน Z ต่ำสุด) */
-  {k:'clear100',n:'Clear Light',s:'โคมหลัก 100W',url:'./assets/lights/Spotlight_Clear_100watts_V2.glb?v=20260824-v2',thumb:'./assets/lights/clear-light-100w.webp?v=20260823-1',scale:1,spacing:2.0,spacingRule:'min',wallRotationX:Math.PI/2,baseMeshIndex:3,baseAxis:'z',baseSide:'min',templateRotationY:0,topInset:-.15,fixtureOffsetZ:.10,beamMode:'wallWash',wallWashHeight:.55,wallWashGap:.03,beamAngle:.80,beamPenumbra:.96,beamDecay:1.25,beamDistanceFactor:2.5,wallBeamMix:.68,wallDiffuseMix:.24,wallDiffuseAngle:1.16,wallDiffusePenumbra:1,wallDiffuseDecay:1.15,floorBeamMix:.08,bracketMeshIndices:[0,2,10],bracketFlipAxis:'y',bracketFlipAngle:Math.PI,bracketOffsetZ:-.20,lightSource:[0,-.126,.054]},
+  {k:'clear100',n:'Clear Light',s:'โคมหลัก 100W',url:'./assets/lights/Spotlight_Clear_100watts_V2.glb?v=20260824-v2',thumb:'./assets/lights/clear-light-100w.webp?v=20260823-1',scale:1,wallRotationX:Math.PI/2,baseMeshIndex:3,baseAxis:'z',baseSide:'min',templateRotationY:0,topInset:0,bracketMeshIndices:[0,2,10],bracketFlipAxis:'y',bracketFlipAngle:Math.PI,lightSource:[0,-.126,.054]},
   /* Arm Light V4: mesh 10 คือก้อนฐานยึดผนังที่ปลายก้านด้านหลัง
      (mesh 9 เป็นเพียงแผ่น/ชิ้นส่วนที่ปลายหัวโคม) จึงต้องใช้ mesh 10
      เป็นระนาบอ้างอิง แล้วกลับแนวก้านให้หัวโคมหันออกทางเดิน */
-  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,spacing:1.0,backWallClearance:1.0,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],beamMode:'downwash',beamInward:.95,beamAngle:.70,beamPenumbra:.90,beamDecay:1.6,beamDistanceFactor:2.5,beamMix:.72,beamDiffuseMix:.28,beamDiffuseAngle:1.06,beamDiffusePenumbra:1,beamDiffuseDecay:1.15,
+  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],beamMode:'downwash',beamInward:.22,
     /* ฐานติดขอบผนัง แล้วก้านยื่นเข้าทางเดินเสมอ: หลัง = +Z · ซ้าย = +X · ขวา = -X */
     wallRotations:{back:0,left:Math.PI/2,right:-Math.PI/2}}];
 const OFFLINE_LIGHT_MODELS_SCRIPT='./assets/lights/embedded-light-models.js?v=20260824-clear-v2';
@@ -1176,7 +1176,7 @@ function doorBlocked(side,t){
   return false;
 }
 /* ---- ไฟสปอตไลท์บนผนัง ----
-   ระยะมาตรฐานขึ้นกับรุ่นโคม · ห้องสูงตั้งแต่ 70% จะหักช่วงผนังที่บังออกก่อนคำนวณ */
+   ระยะมาตรฐาน 1 ม./จุด · ห้องสูงตั้งแต่ 70% จะหักช่วงผนังที่บังออกก่อนคำนวณ */
 function lightBlocker(t){
   if(!hasStore())return null;
   const room=storeGeom(t);
@@ -1199,33 +1199,13 @@ function lightSpans(t){
     else add('right',0,S.D);
   }
   return out;}
-function lightSpacing(){
-  const spacing=lightModelDef()?.spacing;
-  return Number.isFinite(spacing)&&spacing>0?spacing:LIGHT_SPACING;}
-function lightAutoCount(length){
-  const spacing=lightSpacing(),rule=lightModelDef()?.spacingRule;
-  if(length<.5)return 0;
-  /* Clear Light ใช้ระยะขั้นต่ำ: ถ้าแบ่งไม่ลงตัวให้เหลือจำนวนดวงที่ทำให้
-     ค่าเฉลี่ยไม่ถี่กว่า 2 ม. แล้วกระจายเท่า ๆ กันตลอดช่วง */
-  const raw=length/spacing,count=rule==='min'?Math.floor(raw):Math.round(raw);
-  return Math.max(1,count);}
 function lightCounts(t){
   const sp=lightSpans(t);
-  const n=sp.map(x=>lightAutoCount(x.e-x.s));
-  const model=lightModelDef(),isArm=model?.k==='arm',backClearance=isArm&&Number.isFinite(model?.backWallClearance)?Math.max(0,model.backWallClearance):0,spacing=lightSpacing(),eps=.003;
-  if(isArm&&backClearance>0)sp.forEach((x,i)=>{
-    if(x.w!=='back')return;
-    const atStart=Math.abs(x.s)<eps,atEnd=Math.abs(x.e-S.W)<eps;
-    if(!atStart&&!atEnd)return;
-    const available=x.e-x.s-(atStart?backClearance:0)-(atEnd?backClearance:0);
-    if(available<=spacing*.75)n[i]=atStart&&atEnd?1:0;
-    else n[i]=Math.max(1,Math.round(available/spacing)+1);
-  });
-  const autoTotal=n.reduce((a,b)=>a+b,0);
+  const n=sp.map(x=>{const L=x.e-x.s;return L<.5?0:Math.max(1,Math.round(L/LIGHT_SPACING));});
   if(S.lightAdj&&sp.length){                       /* ปรับเพิ่ม-ลดที่ช่วงยาวสุด */
     let bi=0; sp.forEach((x,i)=>{if(x.e-x.s>sp[bi].e-sp[bi].s)bi=i;});
     n[bi]=Math.max(0,n[bi]+S.lightAdj);}
-  return{sp,n,total:n.reduce((a,b)=>a+b,0),autoTotal};}
+  return{sp,n,total:n.reduce((a,b)=>a+b,0)};}
 const lightTotal=()=>S.lights?lightCounts(.1).total:0;
 const lightModelDef=()=>LIGHT_MODELS.find(x=>x.k===S.lightFixture)||LIGHT_MODELS[0];
 const lightWattDef=()=>LIGHT_WATTS.find(x=>x.k===S.lightWatts)||LIGHT_WATTS[0];
@@ -1233,33 +1213,10 @@ const lightTotalWatts=()=>lightTotal()*lightWattDef().k;
 const lightPriceTotal=()=>lightTotal()*lightWattDef().price;
 function lightPoints(t){
   if(!S.lights)return[];
-  const {sp,n}=lightCounts(t),out=[],model=lightModelDef(),isArm=model?.k==='arm',backClearance=isArm&&Number.isFinite(model?.backWallClearance)?Math.max(0,model.backWallClearance):0;
-  sp.forEach((x,i)=>{const c=n[i];
-    const fullLen=x.w==='back'?S.W:S.D,eps=.003,spacing=lightSpacing();
-    let start=x.s,end=x.e,count=c,includeEnds=false;
-    /* Arm Light ผนังหลัง: ตัดโคมปลายช่วงที่อยู่ใกล้ผนังซ้าย/ขวา
-       แล้วคำนวณจำนวนใหม่จากช่วงที่เหลือ; ผนังข้างยังใช้ระยะ 1 ม. ตามปกติ */
-    if(isArm&&x.w==='back'&&backClearance>0){
-      const atStart=Math.abs(x.s)<eps,atEnd=Math.abs(x.e-fullLen)<eps;
-      if(atStart)start+=backClearance;
-      if(atEnd)end-=backClearance;
-      const available=end-start;
-      if(available<=spacing*.75){
-        /* ช่วงปลายผนังที่สั้นเกินไปถูกตัดจาก lightCounts แล้ว;
-           ถ้าเป็นผนังหลังทั้งช่วงจริง ๆ ให้ใช้โคมกลางหนึ่งดวง */
-        if(atStart!==atEnd)count=0;
-        else{start=x.s;end=x.e;count=Math.max(1,c);}
-      }else if(atStart||atEnd){
-        includeEnds=true;
-      }
-    }
-    if(count<=0)return;
-    if(end<=start){start=x.s;end=x.e;count=Math.max(1,c);}
-    for(let j=0;j<count;j++){
-      const fraction=includeEnds&&count>1?j/(count-1):(j+.5)/count;
-      out.push({w:x.w,u:start+(end-start)*fraction});
-    }
-  });
+  const {sp,n}=lightCounts(t),out=[];
+  sp.forEach((x,i)=>{const c=n[i];for(let k=0;k<c;k++){
+    out.push({w:x.w,u:x.s+(x.e-x.s)*(k+.5)/c});
+  }});
   return out;}
 
 /* ตำแหน่งประตูตามแนวยาวของด้านนั้น */
@@ -1583,12 +1540,12 @@ class ThreeBoothRenderer{
     this.renderer.domElement.addEventListener('pointerup',this.onObjectPointerUp);
     this.renderer.domElement.addEventListener('pointercancel',this.onObjectPointerUp);
 
-    this.scene.add(new THREE.HemisphereLight(0xe9f0ff,0x242017,1.15));
-    const key=new THREE.DirectionalLight(0xffffff,1.8);
+    this.scene.add(new THREE.HemisphereLight(0xe9f0ff,0x242017,1.5));
+    const key=new THREE.DirectionalLight(0xffffff,2.5);
     key.position.set(8,12,10);key.castShadow=true;
     key.shadow.mapSize.set(1024,1024);key.shadow.bias=-.0003;
     this.scene.add(key);
-    const fill=new THREE.DirectionalLight(0xffd9a0,.45);fill.position.set(-7,6,5);this.scene.add(fill);
+    const fill=new THREE.DirectionalLight(0xffd9a0,.85);fill.position.set(-7,6,5);this.scene.add(fill);
 
     this.boothGroup=new THREE.Group();this.scene.add(this.boothGroup);
     this.currentKey='';this.currentView='perspective';this.lastSize=[0,0];this.active=false;this.raf=0;
@@ -1876,19 +1833,12 @@ class ThreeBoothRenderer{
         const flip=new T.Matrix4().makeRotationAxis(axis,def.bracketFlipAngle);
         const inverseTemplate=template.matrixWorld.clone().invert(),targets=[];
         template.traverse(part=>{if(part.isMesh&&def.bracketMeshIndices.includes(part.userData.fixtureMeshIndex))targets.push(part);});
-        if(targets.length){
-          /* พลิกแต่ละชิ้นรอบศูนย์กลางของตัวเอง เพื่อให้ขายึดถอยกลับเข้าหาผนัง
-             โดยไม่ย้ายชิ้นส่วนด้านข้างออกจากตัวหน้ากระจายแสง */
-          targets.forEach(part=>{
-          const partCenterWorld=new T.Box3().setFromObject(part).getCenter(new T.Vector3()),partCenterLocal=partCenterWorld.applyMatrix4(inverseTemplate);
-          const flipAroundCenter=new T.Matrix4().makeTranslation(partCenterLocal.x,partCenterLocal.y,partCenterLocal.z).multiply(flip).multiply(new T.Matrix4().makeTranslation(-partCenterLocal.x,-partCenterLocal.y,-partCenterLocal.z));
-          const bracketOffset=new T.Matrix4().makeTranslation(0,0,Number.isFinite(def.bracketOffsetZ)?def.bracketOffsetZ:0);
-          const local=inverseTemplate.clone().multiply(part.matrixWorld),flipped=bracketOffset.multiply(flipAroundCenter).multiply(local),wrapper=new T.Group();
+        targets.forEach(part=>{
+          const local=inverseTemplate.clone().multiply(part.matrixWorld),flipped=flip.clone().multiply(local),wrapper=new T.Group();
           wrapper.name='fixture-bracket-flipped';wrapper.matrixAutoUpdate=false;wrapper.matrix.copy(flipped);
           const parent=part.parent;if(parent)parent.remove(part);part.matrixAutoUpdate=true;part.position.set(0,0,0);part.rotation.set(0,0,0);part.scale.set(1,1,1);part.updateMatrix();
           template.add(wrapper);wrapper.add(part);
-          });
-        }
+        });
         template.updateMatrixWorld(true);
       }
       template.name='fixture-template-'+def.k;
@@ -1949,12 +1899,8 @@ class ThreeBoothRenderer{
       const beamTargetDepth=modelDef.beamMode==='downwash'
         ? lightSource[2]+(Number.isFinite(modelDef.beamInward)?modelDef.beamInward:0)
         : transform.targetDepth;
-      const fixtureOffsetZ=Number.isFinite(modelDef.fixtureOffsetZ)?modelDef.fixtureOffsetZ:0;
-      const wallWash=modelDef.beamMode==='wallWash';
-      const floorTargetDepth=modelDef.beamMode==='downwash'?beamTargetDepth:beamTargetDepth-fixtureOffsetZ;
       mount.name='spotlight-mount';mount.userData.wall=p.w;mount.userData.u=p.u;mount.userData.inward=transform.inward;
       mount.position.set(...transform.position);mount.rotation.y=transform.rotationY;
-      if(Number.isFinite(modelDef.fixtureOffsetZ))mount.translateZ(modelDef.fixtureOffsetZ);
       const fixture=new T.Group();fixture.name='spotlight-fixture';fixture.userData.fixtureModel=spec.lightFixture;
       const model=hasModel?this.fixtureModel(spec.lightFixture):null;
       if(model){fixture.add(model);const ceilingMount=fixtureTemplate?.userData.mountMode==='ceiling';
@@ -1968,50 +1914,10 @@ class ThreeBoothRenderer{
         fixture.add(fallback);fixture.position.set(0,-.14,lightInset);fixture.userData.fallback=true;}
       mount.add(fixture);
       /* ให้ลำแสงเริ่มจากหน้าหัวโคมจริง ไม่ใช่จุดคงที่กลางก้าน/ชิดผนัง */
-      const beamMix=Math.max(0,Math.min(1,wallWash
-        ?(Number.isFinite(modelDef.wallBeamMix)?modelDef.wallBeamMix:1)
-        :(Number.isFinite(modelDef.beamMix)?modelDef.beamMix:1)));
-      const beamAngle=Math.max(.05,Math.min(Math.PI/2-.01,Number.isFinite(modelDef.beamAngle)?modelDef.beamAngle:(wallWash?.38:.43)));
-      const beamPenumbra=Math.max(0,Math.min(1,Number.isFinite(modelDef.beamPenumbra)?modelDef.beamPenumbra:(wallWash?.72:.58)));
-      const beamDecay=Math.max(.1,Number.isFinite(modelDef.beamDecay)?modelDef.beamDecay:2);
-      const beamDistance=span*Math.max(1,Number.isFinite(modelDef.beamDistanceFactor)?modelDef.beamDistanceFactor:2.2);
-      const light=new T.SpotLight(tone.c,lightDef.intensity*beamMix,beamDistance,beamAngle,beamPenumbra,beamDecay);light.position.set(...lightSource);light.name='spotlight';
-      light.castShadow=i<Math.min(8,points.length);if(light.castShadow){light.shadow.mapSize.set(512,512);light.shadow.bias=-.0005;light.shadow.normalBias=.012;}
-      const aim=new T.Object3D();aim.name='spotlight-target';
-      if(wallWash){
-        const wallHeight=Number.isFinite(modelDef.wallWashHeight)?modelDef.wallWashHeight:.55;
-        const wallGap=Number.isFinite(modelDef.wallWashGap)?modelDef.wallWashGap:.03;
-        aim.position.set(0,floorY+spec.H*wallHeight-transform.position[1],wallGap-fixtureOffsetZ);
-      }else aim.position.set(0,floorY-transform.position[1],beamTargetDepth);
+      const light=new T.SpotLight(tone.c,lightDef.intensity,span*2.2,.43,.58,2);light.position.set(...lightSource);light.name='spotlight';
+      light.castShadow=i<Math.min(4,points.length);if(light.castShadow){light.shadow.mapSize.set(256,256);light.shadow.bias=-.001;}
+      const aim=new T.Object3D();aim.name='spotlight-target';aim.position.set(0,floorY-spec.H,beamTargetDepth);
       light.target=aim;mount.add(aim,light);group.add(mount);
-      const diffuseMix=Math.max(0,Math.min(1,wallWash
-        ?(Number.isFinite(modelDef.wallDiffuseMix)?modelDef.wallDiffuseMix:0)
-        :(Number.isFinite(modelDef.beamDiffuseMix)?modelDef.beamDiffuseMix:0)));
-      if(diffuseMix>0){
-          const diffuseAngle=Math.max(.05,Math.min(Math.PI/2-.01,wallWash
-            ?(Number.isFinite(modelDef.wallDiffuseAngle)?modelDef.wallDiffuseAngle:1.05)
-            :(Number.isFinite(modelDef.beamDiffuseAngle)?modelDef.beamDiffuseAngle:1.05)));
-          const diffusePenumbra=Math.max(0,Math.min(1,wallWash
-            ?(Number.isFinite(modelDef.wallDiffusePenumbra)?modelDef.wallDiffusePenumbra:1)
-            :(Number.isFinite(modelDef.beamDiffusePenumbra)?modelDef.beamDiffusePenumbra:1)));
-          const diffuseDecay=Math.max(.1,wallWash
-            ?(Number.isFinite(modelDef.wallDiffuseDecay)?modelDef.wallDiffuseDecay:1.2)
-            :(Number.isFinite(modelDef.beamDiffuseDecay)?modelDef.beamDiffuseDecay:1.2));
-          const diffuseLight=new T.SpotLight(tone.c,lightDef.intensity*diffuseMix,beamDistance,diffuseAngle,diffusePenumbra,diffuseDecay);
-          diffuseLight.position.set(...lightSource);diffuseLight.name='spotlight-diffuse';diffuseLight.castShadow=false;
-          const diffuseAim=new T.Object3D();diffuseAim.name='spotlight-diffuse-target';
-          diffuseAim.position.copy(aim.position);diffuseLight.target=diffuseAim;mount.add(diffuseAim,diffuseLight);
-      }
-      if(wallWash){
-        const floorMix=Math.max(0,Math.min(1,Number.isFinite(modelDef.floorBeamMix)?modelDef.floorBeamMix:0));
-        if(floorMix>0){
-          const floorLight=new T.SpotLight(tone.c,lightDef.intensity*floorMix,beamDistance,.92,.98,1.5);
-          floorLight.position.set(...lightSource);floorLight.name='spotlight-floor-fill';floorLight.castShadow=false;
-          const floorAim=new T.Object3D();floorAim.name='spotlight-floor-target';
-          floorAim.position.set(0,floorY-transform.position[1],floorTargetDepth);
-          floorLight.target=floorAim;mount.add(floorAim,floorLight);
-        }
-      }
     });
   }
   storageWall(group,G,floorY,spec,face,color){
@@ -2685,10 +2591,9 @@ function sync(){
     document.querySelectorAll('#oLightCol .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightCol));
     document.querySelectorAll('#oLightWatts .opt').forEach(b=>b.classList.toggle('on',+b.dataset.k===S.lightWatts));
     document.querySelectorAll('#oLightWall .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightWall));
-    const spacing=lightSpacing(),LC=lightCounts(.1),auto=LC.autoTotal;
+    const LC=lightCounts(.1), auto=lightSpans(.1).map(x=>{const L=x.e-x.s;return L<.5?0:Math.max(1,Math.round(L/LIGHT_SPACING));}).reduce((a,b)=>a+b,0);
     document.getElementById('lcount').textContent=LC.total;
-    const spacingLabel=lightModelDef()?.spacingRule==='min'?'ระยะขั้นต่ำ ':'ระยะมาตรฐาน ';
-    let ln=spacingLabel+spacing.toFixed(1)+' ม./จุด · ระบบคำนวณให้ '+auto+' จุด · '+lightTotalWatts()+'W รวม';
+    let ln='ระยะมาตรฐาน 1 ม./จุด · ระบบคำนวณให้ '+auto+' จุด · '+lightTotalWatts()+'W รวม';
     if(lightBlocker(.1))ln+=' · หักช่วงผนังที่ห้องสูงตั้งแต่ 70% บังแล้ว';
     else if(hasStore())ln+=' · ห้องสูงไม่ถึง 70% จึงใช้ระยะผนังเดิม';
     if(S.lightAdj)ln+=' · คุณปรับเป็น '+LC.total+' จุด';

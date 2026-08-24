@@ -839,7 +839,7 @@ const LIGHT_MODELS=[
   /* Arm Light V4: mesh 10 คือก้อนฐานยึดผนังที่ปลายก้านด้านหลัง
      (mesh 9 เป็นเพียงแผ่น/ชิ้นส่วนที่ปลายหัวโคม) จึงต้องใช้ mesh 10
      เป็นระนาบอ้างอิง แล้วกลับแนวก้านให้หัวโคมหันออกทางเดิน */
-  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,spacing:1.0,backWallClearance:1.0,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],beamMode:'downwash',beamInward:.95,beamAngle:.70,beamPenumbra:.90,beamDecay:1.6,beamDistanceFactor:2.5,beamMix:.72,beamDiffuseMix:.28,beamDiffuseAngle:1.06,beamDiffusePenumbra:1,beamDiffuseDecay:1.15,
+  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,spacing:1.0,cornerClearance:.75,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],beamMode:'downwash',beamInward:.95,beamAngle:.70,beamPenumbra:.90,beamDecay:1.6,beamDistanceFactor:2.5,beamMix:.72,beamDiffuseMix:.28,beamDiffuseAngle:1.06,beamDiffusePenumbra:1,beamDiffuseDecay:1.15,
     /* ฐานติดขอบผนัง แล้วก้านยื่นเข้าทางเดินเสมอ: หลัง = +Z · ซ้าย = +X · ขวา = -X */
     wallRotations:{back:0,left:Math.PI/2,right:-Math.PI/2}}];
 const OFFLINE_LIGHT_MODELS_SCRIPT='./assets/lights/embedded-light-models.js?v=20260824-clear-v2';
@@ -1212,20 +1212,10 @@ function lightAutoCount(length){
 function lightCounts(t){
   const sp=lightSpans(t);
   const n=sp.map(x=>lightAutoCount(x.e-x.s));
-  const model=lightModelDef(),isArm=model?.k==='arm',backClearance=isArm&&Number.isFinite(model?.backWallClearance)?Math.max(0,model.backWallClearance):0,spacing=lightSpacing(),eps=.003;
-  if(isArm&&backClearance>0)sp.forEach((x,i)=>{
-    if(x.w!=='back')return;
-    const atStart=Math.abs(x.s)<eps,atEnd=Math.abs(x.e-S.W)<eps;
-    if(!atStart&&!atEnd)return;
-    const available=x.e-x.s-(atStart?backClearance:0)-(atEnd?backClearance:0);
-    if(available<=spacing*.75)n[i]=atStart&&atEnd?1:0;
-    else n[i]=Math.max(1,Math.round(available/spacing)+1);
-  });
-  const autoTotal=n.reduce((a,b)=>a+b,0);
   if(S.lightAdj&&sp.length){                       /* ปรับเพิ่ม-ลดที่ช่วงยาวสุด */
     let bi=0; sp.forEach((x,i)=>{if(x.e-x.s>sp[bi].e-sp[bi].s)bi=i;});
     n[bi]=Math.max(0,n[bi]+S.lightAdj);}
-  return{sp,n,total:n.reduce((a,b)=>a+b,0),autoTotal};}
+  return{sp,n,total:n.reduce((a,b)=>a+b,0)};}
 const lightTotal=()=>S.lights?lightCounts(.1).total:0;
 const lightModelDef=()=>LIGHT_MODELS.find(x=>x.k===S.lightFixture)||LIGHT_MODELS[0];
 const lightWattDef=()=>LIGHT_WATTS.find(x=>x.k===S.lightWatts)||LIGHT_WATTS[0];
@@ -1233,33 +1223,20 @@ const lightTotalWatts=()=>lightTotal()*lightWattDef().k;
 const lightPriceTotal=()=>lightTotal()*lightWattDef().price;
 function lightPoints(t){
   if(!S.lights)return[];
-  const {sp,n}=lightCounts(t),out=[],model=lightModelDef(),isArm=model?.k==='arm',backClearance=isArm&&Number.isFinite(model?.backWallClearance)?Math.max(0,model.backWallClearance):0;
-  sp.forEach((x,i)=>{const c=n[i];
-    const fullLen=x.w==='back'?S.W:S.D,eps=.003,spacing=lightSpacing();
-    let start=x.s,end=x.e,count=c,includeEnds=false;
-    /* Arm Light ผนังหลัง: ตัดโคมปลายช่วงที่อยู่ใกล้ผนังซ้าย/ขวา
-       แล้วคำนวณจำนวนใหม่จากช่วงที่เหลือ; ผนังข้างยังใช้ระยะ 1 ม. ตามปกติ */
-    if(isArm&&x.w==='back'&&backClearance>0){
-      const atStart=Math.abs(x.s)<eps,atEnd=Math.abs(x.e-fullLen)<eps;
-      if(atStart)start+=backClearance;
-      if(atEnd)end-=backClearance;
-      const available=end-start;
-      if(available<=spacing*.75){
-        /* ช่วงปลายผนังที่สั้นเกินไปถูกตัดจาก lightCounts แล้ว;
-           ถ้าเป็นผนังหลังทั้งช่วงจริง ๆ ให้ใช้โคมกลางหนึ่งดวง */
-        if(atStart!==atEnd)count=0;
-        else{start=x.s;end=x.e;count=Math.max(1,c);}
-      }else if(atStart||atEnd){
-        includeEnds=true;
-      }
+  const {sp,n}=lightCounts(t),out=[],model=lightModelDef(),cornerClearance=Number.isFinite(model?.cornerClearance)?Math.max(0,model.cornerClearance):0;
+  sp.forEach((x,i)=>{const c=n[i];for(let k=0;k<c;k++){
+    const fullLen=x.w==='back'?S.W:S.D,eps=.003;
+    let start=x.s,end=x.e;
+    /* เว้นระยะจากมุมจริงของบูธเฉพาะ Arm Light
+       ไม่เว้นที่ขอบห้องเก็บของ/จุดแบ่งช่วง เพื่อไม่ให้ไฟถอยจากผนังเกินจำเป็น */
+    if(cornerClearance>0){
+      if(Math.abs(x.s)<eps)start+=cornerClearance;
+      if(Math.abs(x.e-fullLen)<eps)end-=cornerClearance;
+      /* ผนังสั้นเกินกว่าจะเว้นมุมทั้งสองด้าน ให้ใช้ช่วงเดิมแทน */
+      if(end-start<Math.min(.25,(x.e-x.s)*.5)){start=x.s;end=x.e;}
     }
-    if(count<=0)return;
-    if(end<=start){start=x.s;end=x.e;count=Math.max(1,c);}
-    for(let j=0;j<count;j++){
-      const fraction=includeEnds&&count>1?j/(count-1):(j+.5)/count;
-      out.push({w:x.w,u:start+(end-start)*fraction});
-    }
-  });
+    out.push({w:x.w,u:start+(end-start)*(k+.5)/c});
+  }});
   return out;}
 
 /* ตำแหน่งประตูตามแนวยาวของด้านนั้น */
@@ -2685,7 +2662,7 @@ function sync(){
     document.querySelectorAll('#oLightCol .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightCol));
     document.querySelectorAll('#oLightWatts .opt').forEach(b=>b.classList.toggle('on',+b.dataset.k===S.lightWatts));
     document.querySelectorAll('#oLightWall .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightWall));
-    const spacing=lightSpacing(),LC=lightCounts(.1),auto=LC.autoTotal;
+    const spacing=lightSpacing(),LC=lightCounts(.1),auto=lightSpans(.1).map(x=>lightAutoCount(x.e-x.s)).reduce((a,b)=>a+b,0);
     document.getElementById('lcount').textContent=LC.total;
     const spacingLabel=lightModelDef()?.spacingRule==='min'?'ระยะขั้นต่ำ ':'ระยะมาตรฐาน ';
     let ln=spacingLabel+spacing.toFixed(1)+' ม./จุด · ระบบคำนวณให้ '+auto+' จุด · '+lightTotalWatts()+'W รวม';
