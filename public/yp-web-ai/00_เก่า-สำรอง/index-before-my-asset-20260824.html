@@ -214,25 +214,6 @@ select:focus{border-color:var(--acc)}
   background:rgba(255,255,255,.025);color:var(--tx2);font-size:10.5px;line-height:1.45}
 .catalog-status:empty{display:none}.catalog-status[data-state=success]{border-color:rgba(91,179,126,.45);color:#9bd9b4}
 .catalog-status[data-state=error]{border-color:rgba(239,139,98,.5);color:#f3aa91}
-.asset-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 18px 0;background:rgba(13,16,21,.96)}
-.asset-tab{min-height:36px;border:1px solid var(--line);border-radius:8px 8px 0 0;background:var(--bg2);color:var(--tx2);font-size:11.5px;font-weight:600;cursor:pointer}
-.asset-tab:hover{border-color:var(--acc);color:var(--tx)}
-.asset-tab.on{border-color:var(--acc);background:rgba(224,168,60,.12);color:var(--acc2);box-shadow:inset 0 -2px 0 var(--acc)}
-.asset-pane[hidden]{display:none!important}
-.asset-upload-card{display:grid;gap:9px;padding:11px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.025)}
-.asset-field{display:grid;gap:4px;color:var(--tx2);font-size:10.5px}
-.asset-field input{width:100%;min-width:0;padding:8px 9px;border:1px solid var(--line);border-radius:7px;background:var(--bg2);color:var(--tx);font:inherit;outline:none}
-.asset-field input:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(224,168,60,.12)}
-.asset-size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.asset-file-row{display:flex;align-items:center;gap:8px;min-width:0}
-.asset-file-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx3);font-size:10px}
-.my-asset-list{display:grid;gap:8px;margin-top:11px}
-.my-asset-empty{padding:14px 10px;border:1px dashed var(--line);border-radius:8px;text-align:center;color:var(--tx3);font-size:11px;line-height:1.5}
-.my-asset-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
-.my-asset-card b{display:block;color:var(--tx);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.my-asset-card small{display:block;margin-top:3px;color:var(--tx3);font-size:9.5px;line-height:1.35}
-.my-asset-actions{display:flex;gap:5px;align-items:center}
-.my-asset-actions .btn{padding:6px 8px;font-size:10px;white-space:nowrap}
 .object-selected{margin-top:9px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.025);
   color:var(--tx2);font-size:11px;min-height:39px}
 .object-selected.on{border-color:rgba(224,168,60,.5);color:var(--acc2);background:rgba(224,168,60,.07)}
@@ -422,43 +403,16 @@ select:focus{border-color:var(--acc)}
 
   <section class="dock-page catalog-page" data-dock-page="catalog" aria-hidden="true" id="dockCatalogPage">
   <div class="panel-intro">
-    <div class="panel-eyebrow">ASSET</div>
-    <h2>จัดวาง (Asset)</h2>
-    <p>เลือกอุปกรณ์ที่เตรียมไว้ หรืออัปโหลดไฟล์ GLB ของลูกค้าเพื่อเก็บไว้ใช้กับงานนี้</p>
+    <div class="panel-eyebrow">FURNITURE</div>
+    <h2>เฟอร์นิเจอร์และอุปกรณ์</h2>
+    <p>คลิกหรือแตะรายการเพื่อเพิ่มลงบูธ ระบบจะหาตำแหน่งว่างให้อัตโนมัติ</p>
   </div>
 
-  <div class="asset-tabs" id="assetTabs" role="tablist" aria-label="คลัง Asset">
-    <button class="asset-tab on" type="button" role="tab" aria-selected="true" aria-controls="catalogPane" data-asset-tab="catalog">คลังอุปกรณ์</button>
-    <button class="asset-tab" type="button" role="tab" aria-selected="false" aria-controls="myAssetPane" data-asset-tab="my">My Asset</button>
-  </div>
-
-  <div class="asset-pane" id="catalogPane" data-asset-pane="catalog">
-    <div class="sec catalog-section" id="catalogSection">
-      <div class="sech"><h3>คลังอุปกรณ์</h3><span class="hint">9 รายการ</span></div>
-      <div class="catalog-groups" id="objectCatalog"></div>
-      <div class="catalog-status" id="objectCatalogStatus" role="status" aria-live="polite"></div>
-      <div class="note">คลิกหรือแตะรายการเพื่อเพิ่มลงบูธ ระบบจะหาตำแหน่งว่างให้อัตโนมัติ<br>เลือกวัตถุบนภาพเพื่อย้าย หมุน ทำสำเนา หรือลบด้วยแถบเครื่องมือใต้ภาพ</div>
-    </div>
-  </div>
-
-  <div class="asset-pane" id="myAssetPane" data-asset-pane="my" hidden>
-    <div class="sec my-asset-section" id="myAssetSection">
-      <div class="sech"><h3>My Asset</h3><span class="hint">ไฟล์ของลูกค้า</span></div>
-      <div class="asset-upload-card">
-        <label class="asset-field"><span>ชื่ออุปกรณ์</span><input id="myAssetName" type="text" maxlength="80" placeholder="เช่น เคาน์เตอร์ของลูกค้า"></label>
-        <div class="asset-size-grid" aria-label="ขนาดอ้างอิงของอุปกรณ์ (เมตร)">
-          <label class="asset-field"><span>กว้าง (ม.)</span><input id="myAssetW" type="number" min="0.01" step="0.01" value="1"></label>
-          <label class="asset-field"><span>ลึก (ม.)</span><input id="myAssetD" type="number" min="0.01" step="0.01" value="1"></label>
-          <label class="asset-field"><span>สูง (ม.)</span><input id="myAssetH" type="number" min="0.01" step="0.01" value="1"></label>
-        </div>
-        <input id="myAssetFile" type="file" accept=".glb,model/gltf-binary" hidden>
-        <div class="asset-file-row"><button class="btn sm" type="button" id="myAssetChoose">เลือกไฟล์ .glb</button><span id="myAssetFileName">ยังไม่ได้เลือกไฟล์</span></div>
-        <button class="btn pri sm" type="button" id="myAssetUpload">บันทึก My Asset</button>
-        <div class="note">กรอกขนาดภายนอกโดยประมาณของไฟล์เป็นเมตร เพื่อให้ระบบวางชนขอบและคำนวณพื้นที่ได้ถูกต้อง ไฟล์จะถูกเก็บไว้ในเบราว์เซอร์เครื่องนี้</div>
-      </div>
-      <div class="catalog-status" id="myAssetStatus" role="status" aria-live="polite"></div>
-      <div class="my-asset-list" id="myAssetList"></div>
-    </div>
+  <div class="sec catalog-section" id="catalogSection">
+    <div class="sech"><h3>รายการพร้อมจัดวาง</h3><span class="hint">9 รายการ</span></div>
+    <div class="catalog-groups" id="objectCatalog"></div>
+    <div class="catalog-status" id="objectCatalogStatus" role="status" aria-live="polite"></div>
+    <div class="note">เลือกวัตถุบนภาพเพื่อย้าย หมุน ทำสำเนา หรือลบด้วยแถบเครื่องมือใต้ภาพ</div>
   </div>
   </section>
 
@@ -746,7 +700,7 @@ select:focus{border-color:var(--acc)}
   <button class="dock-tool" type="button" data-dock-page="lighting" aria-pressed="false" aria-label="แสงสว่าง" title="แสงสว่าง">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 22h4M8.5 15.5A6 6 0 1 1 15.5 15.5c-.9.7-1.3 1.3-1.5 2.5h-4c-.2-1.2-.6-1.8-1.5-2.5Z"/></svg><span class="dock-label">แสง</span>
   </button>
-  <button class="dock-tool" type="button" data-dock-page="catalog" aria-pressed="false" aria-label="จัดวาง Asset" title="จัดวาง Asset">
+  <button class="dock-tool" type="button" data-dock-page="catalog" aria-pressed="false" aria-label="เฟอร์นิเจอร์และอุปกรณ์" title="เฟอร์นิเจอร์และอุปกรณ์">
     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg><span class="dock-count" id="dockCount"></span><span class="dock-label">จัดวาง</span>
   </button>
 </nav>
@@ -861,14 +815,6 @@ const OBJECT_CATALOG=[
   furnitureItem({catalogId:'high-table-stool-set',category:'hospitality',type:'table',name:'ชุดโต๊ะสูง + เก้าอี้ 2 ตัว',icon:'◉',size:{w:2.05,d:.8,h:1.08},unitPrice:21500,color:'#8f9398',
     modelUrl:'assets/furniture/high-table-stool-set.glb'}),
   furnitureItem({catalogId:'plant-medium',category:'decor',type:'plant',name:'ต้นไม้',icon:'♧',size:{w:.55,d:.55,h:1.2},unitPrice:3500,color:'#4f8653'})];
-/* My Asset is intentionally kept separate from the built-in catalogue.  The
-   catalogue remains deterministic while customer GLB files can be added and
-   removed without changing the shipped HTML. */
-const CUSTOM_ASSETS=[];
-const CUSTOM_ASSET_URLS=new Map();
-const MY_ASSET_DB_NAME='yp-web-ai-my-assets-v1',MY_ASSET_STORE='assets';
-let myAssetDbPromise=null,pendingMyAssetFile=null;
-const allObjectCatalog=()=>OBJECT_CATALOG.concat(CUSTOM_ASSETS);
 const MAX_BOOTH_HEIGHT=4.9;
 const HEIGHTS=[2.4,3,3.5,4,4.5,4.9];
 const TYPES=[
@@ -921,13 +867,6 @@ function fixtureModelSource(def){
 const OFFLINE_FURNITURE_MODELS_SCRIPT='./assets/furniture/embedded-furniture-models.js';
 let offlineFurnitureModelsPromise=null;
 function furnitureModelSource(item){
-  if(item?.customAsset){
-    let source=CUSTOM_ASSET_URLS.get(item.catalogId);
-    if(!source&&item.file&&globalThis.URL?.createObjectURL){
-      source=URL.createObjectURL(item.file);CUSTOM_ASSET_URLS.set(item.catalogId,source);
-    }
-    return source?Promise.resolve(source):Promise.reject(new Error('My Asset file is unavailable: '+item.name));
-  }
   if(location.protocol!=='file:')return Promise.resolve(item.modelUrl);
   const cached=globalThis.OFFLINE_FURNITURE_MODELS?.[item.catalogId];if(cached)return Promise.resolve(cached);
   if(!offlineFurnitureModelsPromise)offlineFurnitureModelsPromise=new Promise((resolve,reject)=>{
@@ -997,7 +936,7 @@ const fmt=n=>Math.round(n).toLocaleString('en-US');
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const objectSnapshot=()=>JSON.stringify(S.objects);
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
-const objectCatalogDef=id=>allObjectCatalog().find(o=>o.catalogId===id)||null;
+const objectCatalogDef=id=>OBJECT_CATALOG.find(o=>o.catalogId===id)||null;
 const PLACEMENT_GRID=.1;
 const placementRound=value=>Math.round(value/PLACEMENT_GRID)*PLACEMENT_GRID;
 const clampNumber=(value,min,max)=>Math.max(min,Math.min(max,value));
@@ -1072,92 +1011,8 @@ function findCatalogPlacement(catalogId,rotationY=0,preferred=null){
 function announceCatalog(message,state){
   const text=(state==='success'?'✓ ':'! ')+message,box=document.getElementById('objectCatalogStatus');
   if(box){box.dataset.state=state;box.textContent=text;}
-  if(document.getElementById('myAssetPane')&&!document.getElementById('myAssetPane').hidden)setMyAssetStatus(message,state);
   const global=document.getElementById('objectLayoutStatus'),catalogOpen=document.getElementById('dockCatalogPage')?.classList.contains('on');
   if(global)global.textContent=catalogOpen?'':text;
-}
-function setMyAssetStatus(message,state='success'){
-  const box=document.getElementById('myAssetStatus');if(!box)return;
-  if(!message){box.textContent='';delete box.dataset.state;return;}
-  box.dataset.state=state;box.textContent=(state==='success'?'✓ ':'! ')+message;
-}
-function openMyAssetDb(){
-  if(myAssetDbPromise)return myAssetDbPromise;
-  if(!('indexedDB' in window))return Promise.reject(new Error('เบราว์เซอร์นี้ไม่รองรับ IndexedDB'));
-  myAssetDbPromise=new Promise((resolve,reject)=>{
-    const request=window.indexedDB.open(MY_ASSET_DB_NAME,1);
-    request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains(MY_ASSET_STORE))db.createObjectStore(MY_ASSET_STORE,{keyPath:'id'});};
-    request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error('เปิดคลัง My Asset ไม่สำเร็จ'));
-    request.onblocked=()=>reject(new Error('คลัง My Asset ถูกเปิดค้างจากหน้าต่างอื่น'));
-  });
-  return myAssetDbPromise;
-}
-function myAssetReadAll(){return openMyAssetDb().then(db=>new Promise((resolve,reject)=>{
-  const request=db.transaction(MY_ASSET_STORE,'readonly').objectStore(MY_ASSET_STORE).getAll();
-  request.onsuccess=()=>resolve(request.result||[]);request.onerror=()=>reject(request.error||new Error('อ่านคลัง My Asset ไม่สำเร็จ'));
-}));}
-function myAssetPut(record){return openMyAssetDb().then(db=>new Promise((resolve,reject)=>{
-  const request=db.transaction(MY_ASSET_STORE,'readwrite').objectStore(MY_ASSET_STORE).put(record);
-  request.onsuccess=()=>resolve(record);request.onerror=()=>reject(request.error||new Error('บันทึก My Asset ไม่สำเร็จ'));
-}));}
-function myAssetRemove(id){return openMyAssetDb().then(db=>new Promise((resolve,reject)=>{
-  const request=db.transaction(MY_ASSET_STORE,'readwrite').objectStore(MY_ASSET_STORE).delete(id);
-  request.onsuccess=()=>resolve();request.onerror=()=>reject(request.error||new Error('ลบ My Asset ไม่สำเร็จ'));
-}));}
-function customAssetId(){
-  const random=globalThis.crypto?.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2);
-  return 'my-asset-'+Date.now().toString(36)+'-'+random;
-}
-function normalizeMyAsset(record){
-  const size=record?.size||{};
-  const w=Number(size.w)>0?Number(size.w):1,d=Number(size.d)>0?Number(size.d):1,h=Number(size.h)>0?Number(size.h):1;
-  return furnitureItem({catalogId:record.id,category:'my',type:'custom',name:record.name||'My Asset',icon:'GLB',size:{w,d,h},unitPrice:0,color:'#8d939b',
-    modelUrl:'custom',customAsset:true,file:record.file,createdAt:record.createdAt||0});
-}
-function renderMyAssetList(){
-  const list=document.getElementById('myAssetList');if(!list)return;list.innerHTML='';
-  if(!CUSTOM_ASSETS.length){list.innerHTML='<div class="my-asset-empty">ยังไม่มีไฟล์ใน My Asset<br>เลือกไฟล์ .glb ด้านบนเพื่อเพิ่มอุปกรณ์ของลูกค้า</div>';return;}
-  CUSTOM_ASSETS.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).forEach(item=>{
-    const card=el('div','my-asset-card'),info=el('div'),actions=el('div','my-asset-actions');
-    info.innerHTML='<b title="'+esc(item.name)+'">'+esc(item.name)+'</b><small>'+item.size.w+' × '+item.size.d+' × '+item.size.h+' ม. · GLB</small>';
-    const add=el('button','btn sm','เพิ่ม');add.type='button';add.title='เพิ่ม '+item.name+' ลงในบูธ';add.onclick=()=>addCatalogObject(item.catalogId);
-    const del=el('button','btn sm','ลบ');del.type='button';del.title='ลบ '+item.name+' จาก My Asset';del.onclick=()=>deleteMyAsset(item.catalogId);
-    actions.append(add,del);card.append(info,actions);list.appendChild(card);
-  });
-}
-function setAssetTab(tab){
-  const valid=tab==='my'?'my':'catalog';
-  document.querySelectorAll('[data-asset-tab]').forEach(button=>{
-    const active=button.dataset.assetTab===valid;button.classList.toggle('on',active);button.setAttribute('aria-selected',String(active));
-  });
-  document.querySelectorAll('[data-asset-pane]').forEach(pane=>{pane.hidden=pane.dataset.assetPane!==valid;});
-}
-async function deleteMyAsset(id){
-  const item=CUSTOM_ASSETS.find(asset=>asset.catalogId===id);if(!item)return;
-  if(S.objects.some(object=>object.catalogId===id)){setMyAssetStatus('ลบไฟล์นี้ไม่ได้ เพราะมีวัตถุชิ้นนี้อยู่ในบูธแล้ว','error');return;}
-  try{
-    await myAssetRemove(id);CUSTOM_ASSETS.splice(CUSTOM_ASSETS.indexOf(item),1);
-    const url=CUSTOM_ASSET_URLS.get(id);if(url)URL.revokeObjectURL(url);CUSTOM_ASSET_URLS.delete(id);
-    renderMyAssetList();setMyAssetStatus('ลบ '+item.name+' แล้ว','success');
-  }catch(error){setMyAssetStatus(error.message||'ลบ My Asset ไม่สำเร็จ','error');}
-}
-async function saveMyAsset(){
-  const file=pendingMyAssetFile;if(!file){setMyAssetStatus('กรุณาเลือกไฟล์ .glb ก่อนบันทึก','error');return;}
-  if(!file.name.toLowerCase().endsWith('.glb')){setMyAssetStatus('รองรับเฉพาะไฟล์ .glb','error');return;}
-  const name=(document.getElementById('myAssetName')?.value||file.name.replace(/\.glb$/i,'')).trim()||'My Asset';
-  const size={w:Number(document.getElementById('myAssetW')?.value),d:Number(document.getElementById('myAssetD')?.value),h:Number(document.getElementById('myAssetH')?.value)};
-  if(![size.w,size.d,size.h].every(value=>Number.isFinite(value)&&value>0)){setMyAssetStatus('กรุณากรอกขนาด กว้าง ลึก สูง ให้มากกว่า 0','error');return;}
-  const record={id:customAssetId(),name,size,file,createdAt:Date.now()};
-  try{
-    await myAssetPut(record);CUSTOM_ASSETS.push(normalizeMyAsset(record));renderMyAssetList();
-    pendingMyAssetFile=null;document.getElementById('myAssetFile').value='';document.getElementById('myAssetFileName').textContent='ยังไม่ได้เลือกไฟล์';
-    document.getElementById('myAssetName').value='';setMyAssetStatus('บันทึก '+name+' ใน My Asset แล้ว','success');
-  }catch(error){setMyAssetStatus(error.message||'บันทึก My Asset ไม่สำเร็จ','error');}
-}
-async function loadMyAssets(){
-  try{
-    const records=await myAssetReadAll();CUSTOM_ASSETS.splice(0,CUSTOM_ASSETS.length,...records.map(normalizeMyAsset));renderMyAssetList();sync();
-  }catch(error){setMyAssetStatus(error.message||'เปิด My Asset ไม่สำเร็จ','error');}
 }
 const layoutSnapshot=()=>Object.fromEntries(LAYOUT_KEYS.map(key=>[key,S[key]]));
 function plannedCatalogLayout(){
@@ -1265,7 +1120,7 @@ function syncObjectControls(){
 function objectListLabel(){
   if(!S.objects.length)return'ไม่มี';
   const counts=new Map();S.objects.forEach(o=>counts.set(o.catalogId,(counts.get(o.catalogId)||0)+1));
-  return allObjectCatalog().filter(item=>counts.has(item.catalogId)).map(item=>item.name+' × '+counts.get(item.catalogId)).join(' · ');
+  return OBJECT_CATALOG.filter(item=>counts.has(item.catalogId)).map(item=>item.name+' × '+counts.get(item.catalogId)).join(' · ');
 }
 function hx(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');
   return[parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];}
@@ -1617,23 +1472,6 @@ function build(){
   document.getElementById('btnDuplicateObject').onclick=duplicateSelectedObject;
   document.getElementById('btnDeleteObject').onclick=deleteSelectedObject;
 
-  document.querySelectorAll('[data-asset-tab]').forEach(button=>{
-    button.onclick=()=>setAssetTab(button.dataset.assetTab);
-  });
-  const myAssetFile=document.getElementById('myAssetFile'),myAssetChoose=document.getElementById('myAssetChoose');
-  if(myAssetChoose&&myAssetFile){
-    myAssetChoose.onclick=()=>myAssetFile.click();
-    myAssetFile.onchange=event=>{
-      pendingMyAssetFile=event.target.files?.[0]||null;
-      const name=document.getElementById('myAssetName'),label=document.getElementById('myAssetFileName');
-      if(label)label.textContent=pendingMyAssetFile?.name||'ยังไม่ได้เลือกไฟล์';
-      if(name&&pendingMyAssetFile&&!name.value)name.value=pendingMyAssetFile.name.replace(/\.glb$/i,'');
-      if(pendingMyAssetFile)setMyAssetStatus('เลือก '+pendingMyAssetFile.name+' แล้ว กดบันทึกเพื่อเก็บไว้ใน My Asset','success');
-    };
-  }
-  const myAssetUpload=document.getElementById('myAssetUpload');if(myAssetUpload)myAssetUpload.onclick=saveMyAsset;
-  renderMyAssetList();
-
   document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>selectView(t.dataset.v));
 }
 function buildFloorSub(){
@@ -1677,7 +1515,7 @@ function priceLines(){
   if(nL)r.push(['ไฟสปอตไลท์ '+nL+' จุด · '+lightModelDef().n+' · '+lightWattDef().n,lightPriceTotal()]);
   const objectGroups=new Map();
   S.objects.forEach(o=>{const row=objectGroups.get(o.catalogId)||{count:0,total:0};row.count++;row.total+=o.unitPrice;objectGroups.set(o.catalogId,row);});
-  allObjectCatalog().forEach(item=>{const row=objectGroups.get(item.catalogId);
+  OBJECT_CATALOG.forEach(item=>{const row=objectGroups.get(item.catalogId);
     if(row)r.push(['องค์ประกอบ · '+item.name+' × '+row.count,row.total]);});
   if(S.raise>0)r.push(['งานยกพื้น '+S.raise+' ซม.',area*(900+S.raise*38)]);
   r.push(['วัสดุปูพื้น · '+floorName(),area*floorDef().rate]);
@@ -2094,16 +1932,7 @@ class ThreeBoothRenderer{
       model.rotation.y=T.MathUtils.degToRad(item.modelRotationY||0);template.add(model);template.updateMatrixWorld(true);
       const box=new T.Box3().setFromObject(template);if(box.isEmpty())throw new Error('Empty furniture model');
       const center=box.getCenter(new T.Vector3());model.position.x-=center.x;model.position.y-=box.min.y;model.position.z-=center.z;
-      /* Uploaded assets use the dimensions entered in My Asset as their
-         placement envelope, keeping visual scale and collision scale aligned. */
-      if(item.customAsset){
-        template.updateMatrixWorld(true);
-        const fitted=new T.Box3().setFromObject(template),raw=fitted.getSize(new T.Vector3()),target=item.size||{};
-        if(raw.x>.0001&&raw.y>.0001&&raw.z>.0001)
-          template.scale.set((target.w||raw.x)/raw.x,(target.h||raw.y)/raw.y,(target.d||raw.z)/raw.z);
-      }
-      template.updateMatrixWorld(true);
-      template.name='furniture-template-'+key;template.userData.size=new T.Box3().setFromObject(template).getSize(new T.Vector3()).toArray();
+      template.name='furniture-template-'+key;template.userData.size=box.getSize(new T.Vector3()).toArray();
       template.traverse(o=>{o.userData.sharedAsset=true;if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
       this.furnitureTemplates.set(key,template);return template;
     }).catch(error=>{this.furnitureErrors.set(key,error);return null;}).finally(()=>{
@@ -2938,7 +2767,7 @@ function sync(){
       (S.type==='corner'&&S.sideLogo?' · +ผนังข้าง ('+SIDEPOS.find(x=>x.k===S.sidePos).n+')':'')],
     ['ไฟแสงสว่าง',S.lights?('สปอตไลท์ '+lightTotal()+' จุด · '+lightModelDef().n+' · '+LIGHTCOL.find(c=>c.k===S.lightCol).n+
       ' · '+lightWattDef().n+' / ดวง · '+LIGHTWALL.find(w=>w.k===S.lightWall).n):'ไม่มี'],
-    ['คลังอุปกรณ์',objectListLabel()]];
+    ['เฟอร์นิเจอร์และอุปกรณ์',objectListLabel()]];
   document.getElementById('spec').innerHTML=rows.map(r=>
     `<div class="kv"><b>${r[0]}</b><span>${esc(r[1])}</span></div>`).join('');
 
@@ -3093,7 +2922,7 @@ document.querySelectorAll('.qi').forEach(i=>{i.style.cssText=
   'width:100%;padding:10px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);outline:none';});
 document.getElementById('stW').value=1.2;document.getElementById('stD').value=1.2;
 document.getElementById('stHv').value=2.4;
-build();syncDims();sync();loadMyAssets();
+build();syncDims();sync();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>render());
 window.getBoothSpec=()=>JSON.parse(serializeBoothSpec());
 window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispose();},{once:true});
