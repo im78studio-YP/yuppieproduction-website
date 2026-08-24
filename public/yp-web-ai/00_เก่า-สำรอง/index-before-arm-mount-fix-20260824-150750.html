@@ -836,7 +836,7 @@ const LIGHT_MODELS=[
   /* Arm Light: mesh 9 คือแผ่นฐานยึดผนังของโมเดล (แผ่นบางแนวตั้ง)
      ต้องใช้ฐานนี้เป็นระนาบอ้างอิง แทน box รวมของโคม/ก้าน เพื่อให้ติดผนัง
      และหมุนตามผนังหลัง–ซ้าย–ขวาได้จากจุดยึดเดียวกัน */
-  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,wallRotationX:Math.PI/2,baseMeshIndex:9,baseAxis:'z',baseSide:'min',templateRotationY:0,mountMode:'ceiling',modelFlipZ:true,
+  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,wallRotationX:Math.PI/2,baseMeshIndex:9,baseAxis:'y',baseSide:'max',mountMode:'ceiling',modelFlipZ:false,
     /* ฐานติดคานบน แล้วก้านยื่นเข้าในบูธเสมอ: หลัง = +Z · ซ้าย = +X · ขวา = -X */
     wallRotations:{back:0,left:Math.PI/2,right:-Math.PI/2}}];
 const OFFLINE_LIGHT_MODELS_SCRIPT='./assets/lights/embedded-light-models.js';
@@ -1808,9 +1808,7 @@ class ThreeBoothRenderer{
     const def=LIGHT_MODELS.find(model=>model.k===key)||LIGHT_MODELS[0],T=this.THREE;
     const load=fixtureModelSource(def).then(source=>this.modelLoader.loadAsync(source)).then(gltf=>{
       const model=gltf.scene,template=new T.Group();model.scale.setScalar(def.scale);model.rotation.set(def.wallRotationX||0,0,def.wallRotationZ||0);template.add(model);
-      /* โคมแต่ละรุ่นอาจมีแกนส่งออกไม่เหมือนกัน: ค่าเดิมคงไว้ให้ Clear Light
-         แต่ Arm V4 ใช้แกนตามไฟล์ จึงไม่พลิกกลับด้านฐานยึด */
-      template.rotation.y=Number.isFinite(def.templateRotationY)?def.templateRotationY:Math.PI;
+      template.rotation.y=Math.PI;
       if(def.baseNormal)template.quaternion.premultiply(new T.Quaternion().setFromUnitVectors(new T.Vector3(...def.baseNormal).normalize(),new T.Vector3(0,0,-1)));
       if(def.baseRoll)template.quaternion.premultiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,0,1),def.baseRoll));
       template.updateMatrixWorld(true);const box=new T.Box3().setFromObject(template);
@@ -1879,7 +1877,7 @@ class ThreeBoothRenderer{
       const fixture=new T.Group();fixture.name='spotlight-fixture';fixture.userData.fixtureModel=spec.lightFixture;
       const model=hasModel?this.fixtureModel(spec.lightFixture):null;
       if(model){fixture.add(model);const ceilingMount=fixtureTemplate?.userData.mountMode==='ceiling';
-        /* หมุนรอบแกนก้านเพื่อให้หน้าหัวโคมหันลง โดยไม่สลับฐานกับปลายก้าน */
+        /* V4 จัดแกนมาให้ถูกแล้ว จึงไม่ใช้การพลิกแกน Z แบบไฟล์รุ่นเก่า */
         if(ceilingMount&&lightModelDef().modelFlipZ)fixture.rotation.z=Math.PI;
         fixture.position.set(0,ceilingMount?0:-modelDrop,0);}
       else{const fallback=new T.Mesh(new T.CylinderGeometry(.055,.082,.18,12),new T.MeshStandardMaterial({color:0x353a42,roughness:.38,metalness:.72,
