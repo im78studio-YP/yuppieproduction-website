@@ -832,7 +832,12 @@ const LIGHTCOL=[{k:'warm',n:'แสงวอร์ม',s:'3000K',c:'#ffd9a0'},
 const LIGHTWALL=[{k:'back',n:'ผนังหลัง',s:'ค่าเริ่มต้น'},{k:'all',n:'ทุกผนัง',s:'รอบบูธ'}];
 const LIGHT_MODELS=[
   {k:'clear100',n:'Clear Light',s:'โคมหลัก 100W',url:'./assets/lights/clear-light-100w.glb?v=20260823-1',thumb:'./assets/lights/clear-light-100w.webp?v=20260823-1',scale:1,wallRotationX:Math.PI/2,wallRotationZ:-Math.PI/4,baseNormal:[-.71,0,-.71],baseRoll:-Math.PI/4,baseMeshIndex:9},
-  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/arm-light.glb?v=20260823-1',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,wallRotationX:Math.PI/2}];
+  /* Arm Light: mesh 9 คือแผ่นฐานยึดผนังของโมเดล (แผ่นบางแนวตั้ง)
+     ต้องใช้ฐานนี้เป็นระนาบอ้างอิง แทน box รวมของโคม/ก้าน เพื่อให้ติดผนัง
+     และหมุนตามผนังหลัง–ซ้าย–ขวาได้จากจุดยึดเดียวกัน */
+  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/arm-light.glb?v=20260823-1',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,wallRotationX:Math.PI/2,baseMeshIndex:9,
+    /* ฐานติดคานบน แล้วก้านยื่นเข้าในบูธเสมอ: หลัง = +Z · ซ้าย = +X · ขวา = -X */
+    wallRotations:{back:0,left:Math.PI/2,right:-Math.PI/2}}];
 const OFFLINE_LIGHT_MODELS_SCRIPT='./assets/lights/embedded-light-models.js';
 let offlineLightModelsPromise=null;
 function fixtureModelSource(def){
@@ -1459,6 +1464,8 @@ const THREE_VERSION='0.180.0';
 const BOOTH_WALL_THICKNESS=.1;
 const FIXTURE_WALL_GAP=.001;
 const FIXTURE_LIGHT_INSET=.16;
+/* ลดจากยอดผนังเล็กน้อย เพื่อให้แผ่นฐานติดใต้คาน ไม่ฝังทะลุฝาครอบด้านบน */
+const FIXTURE_TOP_INSET=.012;
 let threeRenderer=null,threeRendererPromise=null;
 
 function disposeThreeObject(root){
@@ -1840,11 +1847,14 @@ class ThreeBoothRenderer{
     const template=this.furnitureTemplates.get(item.catalogId);if(template)return template.clone(true);
     this.requestFurnitureTemplate(item);return null;
   }
-  fixtureMountTransform(point,spec,t){
+  fixtureMountTransform(point,spec,t,def){
     const surface=t+FIXTURE_WALL_GAP,normalSpan=point.w==='back'?spec.D:spec.W;
-    if(point.w==='back')return{position:[point.u,spec.H,surface],rotationY:0,targetDepth:normalSpan*.55-surface};
-    if(point.w==='left')return{position:[surface,spec.H,point.u],rotationY:Math.PI/2,targetDepth:normalSpan*.55-surface};
-    return{position:[spec.W-surface,spec.H,point.u],rotationY:-Math.PI/2,targetDepth:normalSpan*.55-surface};
+    const yaw=def?.wallRotations?.[point.w] ?? (point.w==='back'?0:point.w==='left'?Math.PI/2:-Math.PI/2);
+    const top=spec.H-FIXTURE_TOP_INSET;
+    /* local +Z ของโคม = ทิศยื่นเข้าในบูธ หลังหมุนด้วย yaw ของผนังนั้น */
+    if(point.w==='back')return{position:[point.u,top,surface],rotationY:yaw,targetDepth:normalSpan*.55-surface,inward:[0,0,1]};
+    if(point.w==='left')return{position:[surface,top,point.u],rotationY:yaw,targetDepth:normalSpan*.55-surface,inward:[1,0,0]};
+    return{position:[spec.W-surface,top,point.u],rotationY:yaw,targetDepth:normalSpan*.55-surface,inward:[-1,0,0]};
   }
   addSpotlights(group,spec,t,floorY){
     if(!spec.lights)return;
@@ -1854,8 +1864,8 @@ class ThreeBoothRenderer{
     const modelDrop=fixtureTemplate?Math.max(.14,(fixtureTemplate.userData.size?.[1]||0)/2+.02):.14;
     const lightInset=FIXTURE_LIGHT_INSET-FIXTURE_WALL_GAP;
     points.forEach((p,i)=>{
-      const transform=this.fixtureMountTransform(p,spec,t),mount=new T.Group();
-      mount.name='spotlight-mount';mount.userData.wall=p.w;mount.userData.u=p.u;
+      const transform=this.fixtureMountTransform(p,spec,t,lightModelDef()),mount=new T.Group();
+      mount.name='spotlight-mount';mount.userData.wall=p.w;mount.userData.u=p.u;mount.userData.inward=transform.inward;
       mount.position.set(...transform.position);mount.rotation.y=transform.rotationY;
       const fixture=new T.Group();fixture.name='spotlight-fixture';fixture.userData.fixtureModel=spec.lightFixture;
       const model=hasModel?this.fixtureModel(spec.lightFixture):null;
