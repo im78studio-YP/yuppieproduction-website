@@ -261,8 +261,6 @@ select:focus{border-color:var(--acc)}
 .booth-page #dimDiagram,.booth-page .legacy-height{display:none}
 .booth-page #oType{grid-template-columns:repeat(3,1fr)}
 .booth-page #oType .opt.off{display:none}
-.corner-side-wrap{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
-.corner-side-wrap .lbl{margin-bottom:6px}
 .signage-page .brandbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:0 0 15px;padding:0;
   border:0;background:none;overflow:visible}
 .signage-page .brandbar input{grid-column:1/-1;max-width:none;min-width:0;width:100%}
@@ -273,12 +271,25 @@ select:focus{border-color:var(--acc)}
 .light-model-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .light-model-card{overflow:hidden;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--bg2);text-align:left;transition:.15s}
 .light-model-card:hover{border-color:#3a414c}.light-model-card.on{border-color:var(--acc);background:rgba(224,168,60,.08)}
+.light-model-card:disabled{opacity:.55;cursor:not-allowed}.light-model-card:disabled:hover{border-color:var(--line)}
 .light-model-card img{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;background:#151a21;border-bottom:1px solid var(--line)}
 .light-model-thumb-fallback{display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;background:radial-gradient(circle at 50% 42%,rgba(224,168,60,.18),transparent 48%),#151a21;border-bottom:1px solid var(--line);color:var(--acc2);font:700 17px/1 Inter,sans-serif;letter-spacing:.12em}
 .light-model-copy{display:block;padding:8px 9px}.light-model-copy b{display:block;font-size:11.5px;font-weight:600}
 .light-model-copy small{display:block;margin-top:2px;color:var(--tx3);font-size:9.5px;line-height:1.35}
 .light-model-card.on .light-model-copy b{color:var(--acc2)}
 .light-model-status[data-state="loading"]{color:var(--acc2)}.light-model-status[data-state="error"]{color:var(--warn)}
+.light-mix-body{margin-top:9px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.025)}
+.light-mix-body>.note{margin:0 0 8px}
+.light-mix-grid{display:grid;gap:6px}
+.light-mix-row{display:grid;grid-template-columns:minmax(0,1fr) 68px 68px;align-items:center;gap:6px;padding:6px 7px;border:1px solid rgba(255,255,255,.06);border-radius:8px;background:var(--bg2)}
+.light-mix-row b{font-size:10.5px;font-weight:600;color:var(--tx2)}
+.light-mix-row label{display:flex;align-items:center;gap:4px;color:var(--tx3);font-size:9.5px;min-width:0}
+.light-mix-row label span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.light-mix-row input{width:100%;min-width:0;padding:5px 6px;border:1px solid var(--line);border-radius:7px;background:var(--bg3);color:var(--tx);font:600 12px Inter,sans-serif;text-align:center;outline:none}
+.light-mix-row label input{width:36px;flex:1}
+.light-mix-row input:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(224,168,60,.14)}
+.light-mix-row input:disabled{opacity:.45;cursor:not-allowed}
+.light-mix-body[hidden]{display:none}
 .fixed-spec{display:flex;align-items:center;justify-content:space-between;margin-top:9px;padding:9px 11px;border:1px solid var(--line);
   border-radius:9px;background:rgba(255,255,255,.025);font-size:11px;color:var(--tx3)}
 .fixed-spec b{font:600 12px Inter,sans-serif;color:var(--tx2)}
@@ -477,10 +488,6 @@ select:focus{border-color:var(--acc)}
   <div class="sec" id="settingsType">
     <div class="sech"><h3>รูปแบบบูธ</h3><span class="hint">จำนวนด้านเปิด</span></div>
     <div class="g2" id="oType"></div>
-    <div id="cornerSideWrap" class="corner-side-wrap" hidden>
-      <label class="lbl">ตำแหน่งหัวมุม</label>
-      <div class="g2" id="oCornerSide"></div>
-    </div>
     <div class="note" id="typeNote"></div>
   </div>
 
@@ -533,6 +540,12 @@ select:focus{border-color:var(--acc)}
       <div class="fixed-spec"><span>กำลังไฟมาตรฐาน</span><b>100W / จุด</b></div>
       <label class="lbl">ติดบนผนัง</label>
       <div class="g2" id="oLightWall"></div>
+      <label class="lbl">การจัดระบบไฟ</label>
+      <div class="g2" id="oLightMixMode"></div>
+      <div class="light-mix-body" id="oLightMixBody">
+        <div class="note">กำหนดจำนวนโคมแยกตามผนังได้ ระบบจะจัดช่องให้ไม่ซ้อนกัน</div>
+        <div class="light-mix-grid" id="oLightMixGrid"></div>
+      </div>
       <label class="lbl">จำนวนจุด</label>
       <div class="cntrow">
         <button class="btn sm" id="lminus">−</button>
@@ -826,9 +839,6 @@ const TYPES=[
   note:'ผนังด้านหลังด้านเดียว เปิดหน้า ซ้าย ขวา — พบบ่อยในบูธ 6×6 ขึ้นไป'},
  {k:'island',n:'Island',s:'เปิด 4 ด้าน',on:false,walls:[],note:''},
  {k:'cross',n:'Cross-Aisle',s:'คร่อมทางเดิน',on:false,walls:[],note:''}];
-const CORNER_SIDES=[
-  {k:'left',n:'หัวมุมซ้าย',s:'ผนังหลัง + ขวา · เปิดหน้า + ซ้าย',walls:['back','right'],open:'ซ้าย'},
-  {k:'right',n:'หัวมุมขวา',s:'ผนังหลัง + ซ้าย · เปิดหน้า + ขวา',walls:['back','left'],open:'ขวา'}];
 
 const ST_SIZE=[{k:'none',n:'ไม่มี',s:'ค่าเริ่มต้น'},{k:'a',n:'1.2 × 1.2',s:'1.44 ตร.ม.',w:1.2,d:1.2},
   {k:'b',n:'1.2 × 1.5',s:'1.80 ตร.ม.',w:1.2,d:1.5},{k:'c',n:'1.2 × 2.0',s:'2.40 ตร.ม.',w:1.2,d:2.0},
@@ -917,10 +927,11 @@ const WHITE='#f2f3f5';
    alias so the proven controls, rules, pricing, and SVG renderer keep one data path. */
 const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
   wallCol:'white',wallMat:'paint',wallStickerFaces:[],pair:'wood',pairTouched:false,
-  W:6,D:3,H:2.4,type:'inline',cornerSide:'right',
+  W:6,D:3,H:2.4,type:'inline',
   stSize:'none',stW:1.2,stD:1.2,stHmode:2.4,stHv:2.4,stPos:'right',stDoor:'left',stDoorType:'swing',doorTouched:false,
   stSurf:'paint',stPaint:'wall',stFace:'front',doorOff:'start',nameScale:5,
   lights:true,lightFixture:'clear100',lightCol:'warm',lightWall:'back',lightWatts:100,lightAdj:0,
+  lightMixByWall:false,lightWallMix:{back:{clear100:0,arm:0},left:{clear100:0,arm:0},right:{clear100:0,arm:0}},
   raise:0,floor:'carpet',carpet:'grey',tile:'woodL',
   logoType:'diecut',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
   logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[]};
@@ -1149,13 +1160,7 @@ function unitTextW(t){
 }
 const cat=()=>ALLCATS.find(c=>c.k===S.cat);
 const pair=()=>PAIRS.find(p=>p.k===S.pair);
-const cornerSideDef=()=>CORNER_SIDES.find(side=>side.k===S.cornerSide)||CORNER_SIDES[1];
-const cornerWallKey=()=>S.cornerSide==='left'?'right':'left';
-const typ=()=>{
-  const t=TYPES.find(item=>item.k===S.type);
-  if(!t||t.k!=='corner')return t;
-  const side=cornerSideDef();
-  return{...t,n:t.n+' · '+side.n,walls:[...side.walls],note:'บูธหัวมุม '+side.n+' ผนัง '+side.walls.map(w=>WALL_FACES.find(face=>face.k===w)?.n||w).join(' + ')+' เปิดด้านหน้าและด้าน'+side.open};};
+const typ=()=>TYPES.find(t=>t.k===S.type);
 const floorDef=()=>FLOORS.find(f=>f.k===S.floor);
 const hasStore=()=>S.stSize!=='none';
 /* แสดงค่าที่ลูกค้าเลือกเอง ไม่ใช่ค่าที่ระบบหักแล้ว */
@@ -1179,9 +1184,7 @@ function backFreeSpan(t){
 /* ช่วงผนังข้างที่ยังว่างจริง หลังหักส่วนที่ห้องเก็บของบัง */
 function sideFreeLen(t){
   const G=hasStore()?storeGeom(t):null;
-  const sideWall=cornerWallKey();
-  const blocked=(G&&((sideWall==='left'&&G.x<=t+.002)||
-    (sideWall==='right'&&G.x+G.w>=S.W-t-.002)))?(G.y+G.d):0;
+  const blocked=(G&&G.x<=t+.002)?(G.y+G.d):0;
   return Math.max(0,S.D-blocked);}
 const wallAboveStore=()=>{const G=storeGeom(.1);return S.H-((S.raise/100)+G.h);};
 const lockOnStore=()=>hasStore()&&storeGeom(.1).w>S.W*0.5&&wallAboveStore()<1.0;
@@ -1199,9 +1202,9 @@ function lightBlocker(t){
   const room=storeGeom(t);
   return room.h>=S.H*STORAGE_LIGHT_BLOCK_RATIO?room:null;
 }
-function lightSpans(t){
+ function lightSpansFor(t,wallKey){
   const out=[],wl=typ().walls,G=lightBlocker(t),e=.002;
-  const want=k=> S.lightWall==='all' ? wl.indexOf(k)>=0 : (k==='back'&&wl.indexOf('back')>=0);
+  const want=k=>wl.indexOf(k)>=0 && (wallKey? k===wallKey : (S.lightWall==='all' ? true : k==='back'));
   const add=(w,s,end)=>{if(end-s>e)out.push({w,s,e:end});};
   if(want('back')){
     if(G){add('back',0,G.x);add('back',G.x+G.w,S.W);}
@@ -1216,16 +1219,21 @@ function lightSpans(t){
     else add('right',0,S.D);
   }
   return out;}
-function lightSpacing(){
-  const spacing=lightModelDef()?.spacing;
-  return Number.isFinite(spacing)&&spacing>0?spacing:LIGHT_SPACING;}
-function lightAutoCount(length){
-  const spacing=lightSpacing(),rule=lightModelDef()?.spacingRule;
+ function lightSpans(t){return lightSpansFor(t,null);}
+ function lightSpacingFor(modelKey){
+  const def=LIGHT_MODELS.find(x=>x.k===modelKey),spacing=def?.spacing;
+  return Number.isFinite(spacing)&&spacing>0?spacing:LIGHT_SPACING;
+ }
+ function lightAutoCountFor(length,modelKey){
+  const def=LIGHT_MODELS.find(x=>x.k===modelKey),spacing=lightSpacingFor(modelKey),rule=def?.spacingRule;
   if(length<.5)return 0;
-  /* Clear Light ใช้ระยะขั้นต่ำ: ถ้าแบ่งไม่ลงตัวให้เหลือจำนวนดวงที่ทำให้
-     ค่าเฉลี่ยไม่ถี่กว่า 2 ม. แล้วกระจายเท่า ๆ กันตลอดช่วง */
   const raw=length/spacing,count=rule==='min'?Math.floor(raw):Math.round(raw);
-  return Math.max(1,count);}
+  return Math.max(1,count);
+ }
+ function lightSpacing(){
+  return lightSpacingFor(S.lightFixture);}
+ function lightAutoCount(length){
+  return lightAutoCountFor(length,S.lightFixture);}
 function lightCounts(t){
   const sp=lightSpans(t);
   const n=sp.map(x=>lightAutoCount(x.e-x.s));
@@ -1243,13 +1251,90 @@ function lightCounts(t){
     let bi=0; sp.forEach((x,i)=>{if(x.e-x.s>sp[bi].e-sp[bi].s)bi=i;});
     n[bi]=Math.max(0,n[bi]+S.lightAdj);}
   return{sp,n,total:n.reduce((a,b)=>a+b,0),autoTotal};}
-const lightTotal=()=>S.lights?lightCounts(.1).total:0;
 const lightModelDef=()=>LIGHT_MODELS.find(x=>x.k===S.lightFixture)||LIGHT_MODELS[0];
 const lightWattDef=()=>LIGHT_WATTS.find(x=>x.k===S.lightWatts)||LIGHT_WATTS[0];
-const lightTotalWatts=()=>lightTotal()*lightWattDef().k;
-const lightPriceTotal=()=>lightTotal()*lightWattDef().price;
+const MIX_LIGHT_WALLS=[{k:'back',n:'ผนังหลัง'},{k:'left',n:'ผนังซ้าย'},{k:'right',n:'ผนังขวา'}];
+function lightMixCounts(wallKey){
+  const src=S.lightWallMix&&S.lightWallMix[wallKey]||{};
+  return{clear100:Math.max(0,Math.min(50,Math.round(Number(src.clear100)||0))),arm:Math.max(0,Math.min(50,Math.round(Number(src.arm)||0)))};
+}
+function ensureLightMixState(){
+  if(!S.lightWallMix||typeof S.lightWallMix!=='object')S.lightWallMix={};
+  MIX_LIGHT_WALLS.forEach(w=>{
+    const c=S.lightWallMix[w.k]||{};
+    S.lightWallMix[w.k]={clear100:Math.max(0,Math.min(50,Math.round(Number(c.clear100)||0))),arm:Math.max(0,Math.min(50,Math.round(Number(c.arm)||0)))};
+  });
+}
+function autoWallCountFor(t,modelKey,wallKey){
+  const def=LIGHT_MODELS.find(x=>x.k===modelKey),sp=lightSpansFor(t,wallKey),spacing=lightSpacingFor(modelKey),clearance=def?.k==='arm'&&wallKey==='back'&&Number.isFinite(def.backWallClearance)?Math.max(0,def.backWallClearance):0,eps=.003;
+  return sp.reduce((sum,x)=>{
+    let len=x.e-x.s;
+    if(clearance>0){const atStart=Math.abs(x.s)<eps,atEnd=Math.abs(x.e-S.W)<eps;len-= (atStart?clearance:0)+(atEnd?clearance:0);}
+    if(len<=spacing*.75)return sum;
+    const count=def?.k==='arm'&&wallKey==='back'&&clearance>0?Math.max(1,Math.round(len/spacing)+1):lightAutoCountFor(len,modelKey);
+    return sum+count;
+  },0);
+}
+function seedLightMix(){
+  ensureLightMixState();
+  MIX_LIGHT_WALLS.forEach(w=>{
+    S.lightWallMix[w.k]={clear100:0,arm:0};
+    const key=LIGHT_MODELS.some(m=>m.k===S.lightFixture)?S.lightFixture:'clear100';
+    S.lightWallMix[w.k][key]=autoWallCountFor(.1,key,w.k);
+  });
+}
+function lightMixTotal(){
+  ensureLightMixState();
+  return MIX_LIGHT_WALLS.reduce((sum,w)=>{const c=lightMixCounts(w.k);return sum+c.clear100+c.arm;},0);
+}
+function lightMixTotalByModel(modelKey){
+  ensureLightMixState();
+  return MIX_LIGHT_WALLS.reduce((sum,w)=>sum+lightMixCounts(w.k)[modelKey],0);
+}
+const lightTotal=()=>S.lights?(S.lightMixByWall?lightMixTotal():lightCounts(.1).total):0;
+const lightTotalWatts=()=>S.lightMixByWall?(lightMixTotalByModel('clear100')+lightMixTotalByModel('arm'))*lightWattDef().k:lightTotal()*lightWattDef().k;
+const lightPriceTotal=()=>S.lightMixByWall?(lightMixTotalByModel('clear100')+lightMixTotalByModel('arm'))*lightWattDef().price:lightTotal()*lightWattDef().price;
+function lightModelSummary(){
+  if(S.lightMixByWall){
+    const detail=MIX_LIGHT_WALLS.map(w=>{const c=lightMixCounts(w.k),parts=[];if(c.clear100)parts.push('Clear '+c.clear100);if(c.arm)parts.push('Arm '+c.arm);return parts.length?w.n.replace('ผนัง','')+' '+parts.join(' + ') : null;}).filter(Boolean);
+    return'ผสมรายผนัง · '+(detail.join(' · ')||'ยังไม่ได้กำหนด');
+  }
+  return lightModelDef().n+' · '+LIGHTWALL.find(w=>w.k===S.lightWall).n;
+}
+function allocateLightSlots(spans,total){
+  if(total<=0||!spans.length)return[];
+  const lengths=spans.map(x=>Math.max(.001,x.e-x.s)),sum=lengths.reduce((a,b)=>a+b,0),raw=lengths.map(len=>total*len/sum),counts=raw.map(v=>Math.floor(v));
+  let left=total-counts.reduce((a,b)=>a+b,0);
+  while(left>0){let bi=0;for(let i=1;i<raw.length;i++)if(raw[i]-counts[i]>raw[bi]-counts[bi])bi=i;counts[bi]++;left--;}
+  const out=[];spans.forEach((x,i)=>{for(let j=0;j<counts[i];j++)out.push({w:x.w,u:x.s+(x.e-x.s)*(j+.5)/counts[i]});});
+  return out;
+}
+function mixedLightPoints(t){
+  ensureLightMixState();
+  const out=[];
+  MIX_LIGHT_WALLS.forEach(w=>{
+    const c=lightMixCounts(w.k),total=c.clear100+c.arm;
+    let spans=lightSpansFor(t,w.k);
+    if(w.k==='back'&&c.arm>0){
+      const armDef=LIGHT_MODELS.find(x=>x.k==='arm'),clearance=Number.isFinite(armDef?.backWallClearance)?Math.max(0,armDef.backWallClearance):0;
+      if(clearance>0)spans=spans.map(x=>({...x,s:Math.max(x.s,clearance),e:Math.min(x.e,S.W-clearance)})).filter(x=>x.e-x.s>.02);
+    }
+    const slots=allocateLightSlots(spans,total);
+    if(!slots.length)return;
+    const center=w.k==='back'?S.W/2:S.D/2,ordered=slots.map((slot,i)=>({slot,i,d:Math.abs(slot.u-center)})).sort((a,b)=>a.d-b.d);
+    let remain={clear100:c.clear100,arm:c.arm};
+    ordered.forEach(item=>{
+      const preferred=w.k==='back'?'arm':'clear100';
+      const key=remain[preferred]>0?preferred:(remain.clear100>0?'clear100':'arm');
+      if(remain[key]>0){item.slot.model=key;remain[key]--;}
+    });
+    slots.forEach(slot=>{if(slot.model)out.push(slot);});
+  });
+  return out;
+}
 function lightPoints(t){
   if(!S.lights)return[];
+  if(S.lightMixByWall)return mixedLightPoints(t);
   const {sp,n}=lightCounts(t),out=[],model=lightModelDef(),isArm=model?.k==='arm',backClearance=isArm&&Number.isFinite(model?.backWallClearance)?Math.max(0,model.backWallClearance):0;
   sp.forEach((x,i)=>{const c=n[i];
     const fullLen=x.w==='back'?S.W:S.D,eps=.003,spacing=lightSpacing();
@@ -1390,7 +1475,6 @@ function build(){
   const mk=(id,arr,set,f)=>{const box=document.getElementById(id);box.innerHTML='';
     arr.forEach(o=>{const b=el('button','opt',f?f(o):(o.n+(o.s?'<small>'+o.s+'</small>':'')));
       b.dataset.k=String(o.k);b.onclick=()=>{set(o.k);sync();};box.appendChild(b);});};
-  mk('oCornerSide',CORNER_SIDES,v=>{S.cornerSide=v;},o=>o.n+'<small>'+o.s+'</small>');
   mk('oStSize',ST_SIZE,v=>S.stSize=v,o=>o.n+'<small>'+o.s+'</small>');
   mk('oStH',ST_H,v=>{S.stHmode=v;});
   mk('oStPos',ST_POS,v=>{S.stPos=v; if(!S.doorTouched)S.stDoor=autoDoorFor();});
@@ -1406,9 +1490,26 @@ function build(){
   mk('oLightCol',LIGHTCOL,v=>S.lightCol=v);
   mk('oLightWatts',LIGHT_WATTS,v=>S.lightWatts=v,o=>o.n+'<small>สเปกมาตรฐาน</small>');
   mk('oLightWall',LIGHTWALL,v=>{S.lightWall=v;S.lightAdj=0;});
-  document.getElementById('lminus').onclick=()=>{if(lightTotal()>0){S.lightAdj--;sync();}};
-  document.getElementById('lplus').onclick=()=>{S.lightAdj++;sync();};
-  document.getElementById('lreset').onclick=()=>{S.lightAdj=0;sync();};
+  const oLightMixMode=document.getElementById('oLightMixMode');oLightMixMode.innerHTML='';
+  [{k:'single',n:'ระบบเดียว',s:'ตั้งค่าด้านบน'},{k:'mix',n:'ผสมรายผนัง',s:'กำหนด Clear / Arm'}].forEach(o=>{
+    const b=el('button','opt',o.n+'<small>'+o.s+'</small>');b.dataset.k=o.k;
+    b.onclick=()=>{if(o.k==='mix'&&!S.lightMixByWall)seedLightMix();S.lightMixByWall=o.k==='mix';sync();};oLightMixMode.appendChild(b);
+  });
+  const oLightMixGrid=document.getElementById('oLightMixGrid');oLightMixGrid.innerHTML='';
+  MIX_LIGHT_WALLS.forEach(w=>{
+    const row=el('div','light-mix-row');row.dataset.wall=w.k;row.appendChild(el('b',null,w.n));
+    [{k:'clear100',n:'Clear'},{k:'arm',n:'Arm'}].forEach(m=>{
+      const label=document.createElement('label'),span=el('span',null,m.n),input=document.createElement('input');
+      input.type='number';input.min='0';input.max='50';input.step='1';input.dataset.wall=w.k;input.dataset.model=m.k;input.setAttribute('aria-label',w.n+' '+m.n+' จำนวนดวง');
+      const commit=()=>{ensureLightMixState();S.lightWallMix[w.k][m.k]=Math.max(0,Math.min(50,Math.round(Number(input.value)||0)));sync();};
+      input.onchange=commit;input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();commit();input.blur();}};
+      label.append(span,input);row.appendChild(label);
+    });
+    oLightMixGrid.appendChild(row);
+  });
+  document.getElementById('lminus').onclick=()=>{if(!S.lightMixByWall&&lightTotal()>0){S.lightAdj--;sync();}};
+  document.getElementById('lplus').onclick=()=>{if(!S.lightMixByWall){S.lightAdj++;sync();}};
+  document.getElementById('lreset').onclick=()=>{if(!S.lightMixByWall){S.lightAdj=0;sync();}};
   mk('oStSurf',[{k:'paint',n:'ทาสี'},{k:'sticker',n:'ติดสติ๊กเกอร์'}],v=>S.stSurf=v);
   mk('oStFace',ST_FACE,v=>S.stFace=v);
   mk('oRaise',RAISE,v=>S.raise=v);
@@ -1512,7 +1613,7 @@ function priceLines(){
     if(S.stSurf==='sticker')st*=1.22;
     r.push(['ห้องเก็บของ · '+stChosenLabel(),st]);}
   const nL=lightTotal();
-  if(nL)r.push(['ไฟสปอตไลท์ '+nL+' จุด · '+lightModelDef().n+' · '+lightWattDef().n,lightPriceTotal()]);
+  if(nL)r.push(['ไฟสปอตไลท์ '+nL+' จุด · '+lightModelSummary()+' · '+lightWattDef().n,lightPriceTotal()]);
   const objectGroups=new Map();
   S.objects.forEach(o=>{const row=objectGroups.get(o.catalogId)||{count:0,total:0};row.count++;row.total+=o.unitPrice;objectGroups.set(o.catalogId,row);});
   OBJECT_CATALOG.forEach(item=>{const row=objectGroups.get(item.catalogId);
@@ -1694,7 +1795,7 @@ class ThreeBoothRenderer{
     const logoKey=spec.logo?spec.logo.length+':'+spec.logo.slice(-32):'';
     const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.position.x,o.position.y,o.position.z,o.rotationY,
       o.size.w,o.size.d,o.size.h,o.unitPrice]);
-    return JSON.stringify([spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
+    return JSON.stringify([spec.W,spec.D,spec.H,spec.type,spec.raise,spec.floor,spec.carpet,spec.tile,
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
       spec.lightWall,spec.lightWatts,spec.lightAdj,spec.brand,logoKey,spec.logoType,spec.lockup,spec.logoPos,
@@ -1858,12 +1959,10 @@ class ThreeBoothRenderer{
       const B=backFreeSpan(t),available=B.e-B.s,w=Math.min(3.8,available*.76),h=Math.min(w/2,spec.H*.42),ww=h*2;
       this.brandPlane(group,spec,ww,h,[place(B.s,B.e,ww,spec.logoPos),brandCenterY(spec.H,h),t+.012],0,wallFaceColor(spec,'back',a),'brand-lockup-back');
     }
-    const sideWall=cornerWallKey();
-    if(spec.type==='corner'&&spec.sideLogo&&typ().walls.includes(sideWall)){
+    if(spec.type==='corner'&&spec.sideLogo&&typ().walls.includes('left')){
       const free=sideFreeLen(t);if(free>=.8){const start=spec.D-free,w=Math.min(3,free*.72),h=Math.min(w/2,spec.H*.38),ww=h*2;
         const z=spec.sidePos==='outer'?spec.D-ww/2-Math.min(.18,free*.05):start+free/2;
-        const x=sideWall==='left'?t+.012:spec.W-t-.012,rotation=sideWall==='left'?Math.PI/2:-Math.PI/2;
-      this.brandPlane(group,spec,ww,h,[x,brandCenterY(spec.H,h),z],rotation,wallFaceColor(spec,sideWall,a),'brand-lockup-side');}
+      this.brandPlane(group,spec,ww,h,[t+.012,brandCenterY(spec.H,h),z],Math.PI/2,wallFaceColor(spec,'left',a),'brand-lockup-side');}
     }
   }
   fixtureState(key){
@@ -1918,7 +2017,7 @@ class ThreeBoothRenderer{
       this.fixtureTemplates.set(key,template);return template;
     }).catch(error=>{this.fixtureErrors.set(key,error);return null;}).finally(()=>{
       this.fixtureLoads.delete(key);syncLightModelStatus();
-      if(this.fixtureTemplates.has(key)&&BoothSpec.lightFixture===key){this.currentKey='';this.update(BoothSpec);}
+      if(this.fixtureTemplates.has(key)&&(BoothSpec.lightFixture===key||BoothSpec.lightMixByWall)){this.currentKey='';this.update(BoothSpec);}
     });
     this.fixtureLoads.set(key,load);syncLightModelStatus();
   }
@@ -1958,11 +2057,12 @@ class ThreeBoothRenderer{
   addSpotlights(group,spec,t,floorY){
     if(!spec.lights)return;
     const T=this.THREE,points=lightPoints(t),lightDef=lightWattDef(),tone=LIGHTCOL.find(c=>c.k===spec.lightCol),span=Math.max(spec.W,spec.D,spec.H);
-    const hasModel=this.fixtureTemplates.has(spec.lightFixture);if(!hasModel)this.requestFixtureTemplate(spec.lightFixture);
-    const fixtureTemplate=hasModel?this.fixtureTemplates.get(spec.lightFixture):null;
-    const modelDrop=fixtureTemplate?Math.max(.14,(fixtureTemplate.userData.size?.[1]||0)/2+.02):.14;
-    const lightInset=FIXTURE_LIGHT_INSET-FIXTURE_WALL_GAP,modelDef=lightModelDef(),lightSource=modelDef.lightSource||[0,-.14,lightInset];
     points.forEach((p,i)=>{
+      const modelKey=p.model||spec.lightFixture,modelDef=LIGHT_MODELS.find(x=>x.k===modelKey)||LIGHT_MODELS[0];
+      const hasModel=this.fixtureTemplates.has(modelKey);if(!hasModel)this.requestFixtureTemplate(modelKey);
+      const fixtureTemplate=hasModel?this.fixtureTemplates.get(modelKey):null;
+      const modelDrop=fixtureTemplate?Math.max(.14,(fixtureTemplate.userData.size?.[1]||0)/2+.02):.14;
+      const lightInset=FIXTURE_LIGHT_INSET-FIXTURE_WALL_GAP,lightSource=modelDef.lightSource||[0,-.14,lightInset];
       const transform=this.fixtureMountTransform(p,spec,t,modelDef),mount=new T.Group();
       /* Arm Light มีหน้าปล่อยแสงชี้ลง: เล็งใต้หัวโคมและเอียงเข้าบูธเล็กน้อย
          ไม่ใช้ targetDepth กลางบูธแบบไฟรุ่นอื่น เพื่อไม่ให้กรวยแสงยิงชนผนังตรงข้าม */
@@ -1975,8 +2075,8 @@ class ThreeBoothRenderer{
       mount.name='spotlight-mount';mount.userData.wall=p.w;mount.userData.u=p.u;mount.userData.inward=transform.inward;
       mount.position.set(...transform.position);mount.rotation.y=transform.rotationY;
       if(Number.isFinite(modelDef.fixtureOffsetZ))mount.translateZ(modelDef.fixtureOffsetZ);
-      const fixture=new T.Group();fixture.name='spotlight-fixture';fixture.userData.fixtureModel=spec.lightFixture;
-      const model=hasModel?this.fixtureModel(spec.lightFixture):null;
+      const fixture=new T.Group();fixture.name='spotlight-fixture';fixture.userData.fixtureModel=modelKey;
+      const model=hasModel?this.fixtureModel(modelKey):null;
       if(model){fixture.add(model);const ceilingMount=fixtureTemplate?.userData.mountMode==='ceiling';
         /* หมุนแยกจาก template: Clear กลับด้านเฉพาะแนวขายึดรอบแกนแสง
            จึงหันแผ่นยึดเข้าผนัง โดยไม่เปลี่ยนทิศแกน +Z ของลำแสง */
@@ -2494,15 +2594,13 @@ function isoSVG(){
   }
 
   /* ---- โลโก้บนผนังด้านข้าง (เฉพาะบูธมุม) ---- */
-  const sideWall=cornerWallKey();
-  if(S.type==='corner'&&S.sideLogo&&wl.indexOf(sideWall)>=0){
+  if(S.type==='corner'&&S.sideLogo&&wl.indexOf('left')>=0){
     /* จุดเริ่มที่ปลายผนังฝั่งทางเดิน แล้ววิ่งเข้าหาผนังหลัง — กันตัวหนังสือกลับด้าน */
-    const o=sideWall==='left'?P(t,D,H):P(W-t,D,H);
-    const Cside=sideWall==='left'?C30:-C30,Sside=sideWall==='left'?-S30:S30;
-    const M=`matrix(${(Cside*sc).toFixed(3)},${(Sside*sc).toFixed(3)},0,${sc.toFixed(3)},${o[0].toFixed(2)},${o[1].toFixed(2)})`;
+    const o=P(t,D,H);
+    const M=`matrix(${(C30*sc).toFixed(3)},${(-S30*sc).toFixed(3)},0,${sc.toFixed(3)},${o[0].toFixed(2)},${o[1].toFixed(2)})`;
     const fl=sideFreeLen(t);                     /* วัดจากช่วงที่เหลือ ไม่ใช่ผนังทั้งผืน */
     const sideLayout = fl>=4 ? S.lockup : 'stack';
-    if(fl>=.8) g+=lockup(M,fl,H,sideLayout,S.sidePos==='center'?'center':'left',BRAND_TOP_GAP_M,wallFaceColor(S,sideWall,a),'silh');
+    if(fl>=.8) g+=lockup(M,fl,H,sideLayout,S.sidePos==='center'?'center':'left',BRAND_TOP_GAP_M,wallFaceColor(S,'left',a),'silh');
   }
 
   const st=solids.find(x=>x.k==='store');
@@ -2595,6 +2693,13 @@ function render(){
 function syncLightModelStatus(){
   const box=document.getElementById('lightModelStatus');if(!box)return;
   if(!S.lights){box.textContent='';box.dataset.state='idle';return;}
+  if(S.lightMixByWall){
+    const active=['clear100','arm'].filter(key=>lightMixTotalByModel(key)>0),states=active.map(key=>threeRenderer&&threeRenderer.fixtureState?threeRenderer.fixtureState(key):'idle');
+    const failed=states.includes('error'),loading=states.includes('loading'),ready=active.length&&states.every(state=>state==='ready');
+    box.dataset.state=failed?'error':loading?'loading':ready?'ready':'idle';
+    box.textContent=failed?'โหลดโมเดลไฟผสมไม่สำเร็จ · ใช้โคมสำรองบางรายการ':loading?'กำลังโหลดโมเดลไฟที่เลือก…':ready?'โหลดโมเดลไฟผสม 3D แล้ว · ระบบคิด 100W / จุด':'โมเดลไฟผสมจะโหลดเมื่อเปิดมุมมอง 3D';
+    return;
+  }
   const model=lightModelDef(),state=threeRenderer&&threeRenderer.fixtureState?threeRenderer.fixtureState(model.k):'idle';
   box.dataset.state=state;
   box.textContent=state==='ready'?'โหลดโมเดล 3D แล้ว · ระบบคิด 100W / จุด':
@@ -2608,6 +2713,7 @@ function sync(){
   S.H=Math.max(2.4,Math.min(MAX_BOOTH_HEIGHT,S.H||2.4));
   if(!Array.isArray(S.wallStickerFaces))S.wallStickerFaces=[];
   S.wallStickerFaces=S.wallStickerFaces.filter(face=>WALL_FACES.some(item=>item.k===face));
+  S.lightMixByWall=Boolean(S.lightMixByWall);ensureLightMixState();
   if(S.wallMat==='sticker'){
     S.wallStickerFaces=[...new Set([...S.wallStickerFaces,...typ().walls])];S.wallMat='paint';
   }else S.wallMat='paint';
@@ -2651,9 +2757,6 @@ function sync(){
   document.getElementById('dimDiagram').innerHTML=dimDiagram();
 
   document.querySelectorAll('#oType .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.type));
-  const cornerActive=S.type==='corner',cornerWrap=document.getElementById('cornerSideWrap');
-  cornerWrap.hidden=!cornerActive;
-  if(cornerActive)document.querySelectorAll('#oCornerSide .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.cornerSide));
   document.getElementById('typeNote').textContent=typ().note;
 
   document.querySelectorAll('#oStSize .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.stSize));
@@ -2706,17 +2809,32 @@ function sync(){
   document.getElementById('lightBody').style.display=S.lights?'block':'none';
   if(S.lights){
     document.querySelectorAll('#oLightModel .light-model-card').forEach(b=>{const active=b.dataset.k===S.lightFixture;
-      b.classList.toggle('on',active);b.setAttribute('aria-pressed',String(active));});
+      b.classList.toggle('on',active);b.setAttribute('aria-pressed',String(active));b.disabled=S.lightMixByWall;});
     document.querySelectorAll('#oLightCol .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightCol));
     document.querySelectorAll('#oLightWatts .opt').forEach(b=>b.classList.toggle('on',+b.dataset.k===S.lightWatts));
-    document.querySelectorAll('#oLightWall .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightWall));
+    document.querySelectorAll('#oLightWall .opt').forEach(b=>{b.classList.toggle('on',b.dataset.k===S.lightWall);b.disabled=S.lightMixByWall;});
+    document.querySelectorAll('#oLightMixMode .opt').forEach(b=>b.classList.toggle('on',(b.dataset.k==='mix')===S.lightMixByWall));
+    document.getElementById('oLightMixBody').hidden=!S.lightMixByWall;
+    document.querySelectorAll('#oLightMixGrid .light-mix-row').forEach(row=>{
+      const active=typ().walls.includes(row.dataset.wall);row.hidden=!active;
+      row.querySelectorAll('input').forEach(input=>{
+      const val=lightMixCounts(input.dataset.wall)[input.dataset.model];
+      input.disabled=!S.lightMixByWall||!active;
+      if(document.activeElement!==input)input.value=val;
+      });
+    });
+    document.getElementById('lminus').disabled=S.lightMixByWall;
+    document.getElementById('lplus').disabled=S.lightMixByWall;
+    document.getElementById('lreset').disabled=S.lightMixByWall;
     const spacing=lightSpacing(),LC=lightCounts(.1),auto=LC.autoTotal;
-    document.getElementById('lcount').textContent=LC.total;
+    document.getElementById('lcount').textContent=S.lightMixByWall?lightMixTotal():LC.total;
     const spacingLabel=lightModelDef()?.spacingRule==='min'?'ระยะขั้นต่ำ ':'ระยะมาตรฐาน ';
-    let ln=spacingLabel+spacing.toFixed(1)+' ม./จุด · ระบบคำนวณให้ '+auto+' จุด · '+lightTotalWatts()+'W รวม';
+    let ln=S.lightMixByWall
+      ?'ผสมรายผนัง · Clear '+lightMixTotalByModel('clear100')+' ดวง · Arm '+lightMixTotalByModel('arm')+' ดวง · '+lightTotalWatts()+'W รวม'
+      :spacingLabel+spacing.toFixed(1)+' ม./จุด · ระบบคำนวณให้ '+auto+' จุด · '+lightTotalWatts()+'W รวม';
     if(lightBlocker(.1))ln+=' · หักช่วงผนังที่ห้องสูงตั้งแต่ 70% บังแล้ว';
     else if(hasStore())ln+=' · ห้องสูงไม่ถึง 70% จึงใช้ระยะผนังเดิม';
-    if(S.lightAdj)ln+=' · คุณปรับเป็น '+LC.total+' จุด';
+    if(!S.lightMixByWall&&S.lightAdj)ln+=' · คุณปรับเป็น '+LC.total+' จุด';
     document.getElementById('lightNote').textContent=ln;}
   syncLightModelStatus();
   document.querySelectorAll('#oRaise .opt').forEach(b=>b.classList.toggle('on',+b.dataset.k===S.raise));
@@ -2765,8 +2883,8 @@ function sync(){
     ['โลโก้',LOGOTYPES.find(t=>t.k===S.logoType).n+' · '+LOCKUPS.find(t=>t.k===S.lockup).n+
       ' · '+WALLPOS.find(x=>x.k===S.logoPos).n+(lockOnStore()?' · ติดหน้าห้องเก็บของ':'')+
       (S.type==='corner'&&S.sideLogo?' · +ผนังข้าง ('+SIDEPOS.find(x=>x.k===S.sidePos).n+')':'')],
-    ['ไฟแสงสว่าง',S.lights?('สปอตไลท์ '+lightTotal()+' จุด · '+lightModelDef().n+' · '+LIGHTCOL.find(c=>c.k===S.lightCol).n+
-      ' · '+lightWattDef().n+' / ดวง · '+LIGHTWALL.find(w=>w.k===S.lightWall).n):'ไม่มี'],
+    ['ไฟแสงสว่าง',S.lights?('สปอตไลท์ '+lightTotal()+' จุด · '+lightModelSummary()+' · '+LIGHTCOL.find(c=>c.k===S.lightCol).n+
+      ' · '+lightWattDef().n+' / ดวง'): 'ไม่มี'],
     ['เฟอร์นิเจอร์และอุปกรณ์',objectListLabel()]];
   document.getElementById('spec').innerHTML=rows.map(r=>
     `<div class="kv"><b>${r[0]}</b><span>${esc(r[1])}</span></div>`).join('');

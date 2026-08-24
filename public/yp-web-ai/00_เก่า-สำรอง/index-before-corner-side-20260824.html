@@ -261,8 +261,6 @@ select:focus{border-color:var(--acc)}
 .booth-page #dimDiagram,.booth-page .legacy-height{display:none}
 .booth-page #oType{grid-template-columns:repeat(3,1fr)}
 .booth-page #oType .opt.off{display:none}
-.corner-side-wrap{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
-.corner-side-wrap .lbl{margin-bottom:6px}
 .signage-page .brandbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:0 0 15px;padding:0;
   border:0;background:none;overflow:visible}
 .signage-page .brandbar input{grid-column:1/-1;max-width:none;min-width:0;width:100%}
@@ -477,10 +475,6 @@ select:focus{border-color:var(--acc)}
   <div class="sec" id="settingsType">
     <div class="sech"><h3>รูปแบบบูธ</h3><span class="hint">จำนวนด้านเปิด</span></div>
     <div class="g2" id="oType"></div>
-    <div id="cornerSideWrap" class="corner-side-wrap" hidden>
-      <label class="lbl">ตำแหน่งหัวมุม</label>
-      <div class="g2" id="oCornerSide"></div>
-    </div>
     <div class="note" id="typeNote"></div>
   </div>
 
@@ -826,9 +820,6 @@ const TYPES=[
   note:'ผนังด้านหลังด้านเดียว เปิดหน้า ซ้าย ขวา — พบบ่อยในบูธ 6×6 ขึ้นไป'},
  {k:'island',n:'Island',s:'เปิด 4 ด้าน',on:false,walls:[],note:''},
  {k:'cross',n:'Cross-Aisle',s:'คร่อมทางเดิน',on:false,walls:[],note:''}];
-const CORNER_SIDES=[
-  {k:'left',n:'หัวมุมซ้าย',s:'ผนังหลัง + ขวา · เปิดหน้า + ซ้าย',walls:['back','right'],open:'ซ้าย'},
-  {k:'right',n:'หัวมุมขวา',s:'ผนังหลัง + ซ้าย · เปิดหน้า + ขวา',walls:['back','left'],open:'ขวา'}];
 
 const ST_SIZE=[{k:'none',n:'ไม่มี',s:'ค่าเริ่มต้น'},{k:'a',n:'1.2 × 1.2',s:'1.44 ตร.ม.',w:1.2,d:1.2},
   {k:'b',n:'1.2 × 1.5',s:'1.80 ตร.ม.',w:1.2,d:1.5},{k:'c',n:'1.2 × 2.0',s:'2.40 ตร.ม.',w:1.2,d:2.0},
@@ -917,7 +908,7 @@ const WHITE='#f2f3f5';
    alias so the proven controls, rules, pricing, and SVG renderer keep one data path. */
 const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
   wallCol:'white',wallMat:'paint',wallStickerFaces:[],pair:'wood',pairTouched:false,
-  W:6,D:3,H:2.4,type:'inline',cornerSide:'right',
+  W:6,D:3,H:2.4,type:'inline',
   stSize:'none',stW:1.2,stD:1.2,stHmode:2.4,stHv:2.4,stPos:'right',stDoor:'left',stDoorType:'swing',doorTouched:false,
   stSurf:'paint',stPaint:'wall',stFace:'front',doorOff:'start',nameScale:5,
   lights:true,lightFixture:'clear100',lightCol:'warm',lightWall:'back',lightWatts:100,lightAdj:0,
@@ -1149,13 +1140,7 @@ function unitTextW(t){
 }
 const cat=()=>ALLCATS.find(c=>c.k===S.cat);
 const pair=()=>PAIRS.find(p=>p.k===S.pair);
-const cornerSideDef=()=>CORNER_SIDES.find(side=>side.k===S.cornerSide)||CORNER_SIDES[1];
-const cornerWallKey=()=>S.cornerSide==='left'?'right':'left';
-const typ=()=>{
-  const t=TYPES.find(item=>item.k===S.type);
-  if(!t||t.k!=='corner')return t;
-  const side=cornerSideDef();
-  return{...t,n:t.n+' · '+side.n,walls:[...side.walls],note:'บูธหัวมุม '+side.n+' ผนัง '+side.walls.map(w=>WALL_FACES.find(face=>face.k===w)?.n||w).join(' + ')+' เปิดด้านหน้าและด้าน'+side.open};};
+const typ=()=>TYPES.find(t=>t.k===S.type);
 const floorDef=()=>FLOORS.find(f=>f.k===S.floor);
 const hasStore=()=>S.stSize!=='none';
 /* แสดงค่าที่ลูกค้าเลือกเอง ไม่ใช่ค่าที่ระบบหักแล้ว */
@@ -1179,9 +1164,7 @@ function backFreeSpan(t){
 /* ช่วงผนังข้างที่ยังว่างจริง หลังหักส่วนที่ห้องเก็บของบัง */
 function sideFreeLen(t){
   const G=hasStore()?storeGeom(t):null;
-  const sideWall=cornerWallKey();
-  const blocked=(G&&((sideWall==='left'&&G.x<=t+.002)||
-    (sideWall==='right'&&G.x+G.w>=S.W-t-.002)))?(G.y+G.d):0;
+  const blocked=(G&&G.x<=t+.002)?(G.y+G.d):0;
   return Math.max(0,S.D-blocked);}
 const wallAboveStore=()=>{const G=storeGeom(.1);return S.H-((S.raise/100)+G.h);};
 const lockOnStore=()=>hasStore()&&storeGeom(.1).w>S.W*0.5&&wallAboveStore()<1.0;
@@ -1390,7 +1373,6 @@ function build(){
   const mk=(id,arr,set,f)=>{const box=document.getElementById(id);box.innerHTML='';
     arr.forEach(o=>{const b=el('button','opt',f?f(o):(o.n+(o.s?'<small>'+o.s+'</small>':'')));
       b.dataset.k=String(o.k);b.onclick=()=>{set(o.k);sync();};box.appendChild(b);});};
-  mk('oCornerSide',CORNER_SIDES,v=>{S.cornerSide=v;},o=>o.n+'<small>'+o.s+'</small>');
   mk('oStSize',ST_SIZE,v=>S.stSize=v,o=>o.n+'<small>'+o.s+'</small>');
   mk('oStH',ST_H,v=>{S.stHmode=v;});
   mk('oStPos',ST_POS,v=>{S.stPos=v; if(!S.doorTouched)S.stDoor=autoDoorFor();});
@@ -1694,7 +1676,7 @@ class ThreeBoothRenderer{
     const logoKey=spec.logo?spec.logo.length+':'+spec.logo.slice(-32):'';
     const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.position.x,o.position.y,o.position.z,o.rotationY,
       o.size.w,o.size.d,o.size.h,o.unitPrice]);
-    return JSON.stringify([spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
+    return JSON.stringify([spec.W,spec.D,spec.H,spec.type,spec.raise,spec.floor,spec.carpet,spec.tile,
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
       spec.lightWall,spec.lightWatts,spec.lightAdj,spec.brand,logoKey,spec.logoType,spec.lockup,spec.logoPos,
@@ -1858,12 +1840,10 @@ class ThreeBoothRenderer{
       const B=backFreeSpan(t),available=B.e-B.s,w=Math.min(3.8,available*.76),h=Math.min(w/2,spec.H*.42),ww=h*2;
       this.brandPlane(group,spec,ww,h,[place(B.s,B.e,ww,spec.logoPos),brandCenterY(spec.H,h),t+.012],0,wallFaceColor(spec,'back',a),'brand-lockup-back');
     }
-    const sideWall=cornerWallKey();
-    if(spec.type==='corner'&&spec.sideLogo&&typ().walls.includes(sideWall)){
+    if(spec.type==='corner'&&spec.sideLogo&&typ().walls.includes('left')){
       const free=sideFreeLen(t);if(free>=.8){const start=spec.D-free,w=Math.min(3,free*.72),h=Math.min(w/2,spec.H*.38),ww=h*2;
         const z=spec.sidePos==='outer'?spec.D-ww/2-Math.min(.18,free*.05):start+free/2;
-        const x=sideWall==='left'?t+.012:spec.W-t-.012,rotation=sideWall==='left'?Math.PI/2:-Math.PI/2;
-      this.brandPlane(group,spec,ww,h,[x,brandCenterY(spec.H,h),z],rotation,wallFaceColor(spec,sideWall,a),'brand-lockup-side');}
+      this.brandPlane(group,spec,ww,h,[t+.012,brandCenterY(spec.H,h),z],Math.PI/2,wallFaceColor(spec,'left',a),'brand-lockup-side');}
     }
   }
   fixtureState(key){
@@ -2494,15 +2474,13 @@ function isoSVG(){
   }
 
   /* ---- โลโก้บนผนังด้านข้าง (เฉพาะบูธมุม) ---- */
-  const sideWall=cornerWallKey();
-  if(S.type==='corner'&&S.sideLogo&&wl.indexOf(sideWall)>=0){
+  if(S.type==='corner'&&S.sideLogo&&wl.indexOf('left')>=0){
     /* จุดเริ่มที่ปลายผนังฝั่งทางเดิน แล้ววิ่งเข้าหาผนังหลัง — กันตัวหนังสือกลับด้าน */
-    const o=sideWall==='left'?P(t,D,H):P(W-t,D,H);
-    const Cside=sideWall==='left'?C30:-C30,Sside=sideWall==='left'?-S30:S30;
-    const M=`matrix(${(Cside*sc).toFixed(3)},${(Sside*sc).toFixed(3)},0,${sc.toFixed(3)},${o[0].toFixed(2)},${o[1].toFixed(2)})`;
+    const o=P(t,D,H);
+    const M=`matrix(${(C30*sc).toFixed(3)},${(-S30*sc).toFixed(3)},0,${sc.toFixed(3)},${o[0].toFixed(2)},${o[1].toFixed(2)})`;
     const fl=sideFreeLen(t);                     /* วัดจากช่วงที่เหลือ ไม่ใช่ผนังทั้งผืน */
     const sideLayout = fl>=4 ? S.lockup : 'stack';
-    if(fl>=.8) g+=lockup(M,fl,H,sideLayout,S.sidePos==='center'?'center':'left',BRAND_TOP_GAP_M,wallFaceColor(S,sideWall,a),'silh');
+    if(fl>=.8) g+=lockup(M,fl,H,sideLayout,S.sidePos==='center'?'center':'left',BRAND_TOP_GAP_M,wallFaceColor(S,'left',a),'silh');
   }
 
   const st=solids.find(x=>x.k==='store');
@@ -2651,9 +2629,6 @@ function sync(){
   document.getElementById('dimDiagram').innerHTML=dimDiagram();
 
   document.querySelectorAll('#oType .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.type));
-  const cornerActive=S.type==='corner',cornerWrap=document.getElementById('cornerSideWrap');
-  cornerWrap.hidden=!cornerActive;
-  if(cornerActive)document.querySelectorAll('#oCornerSide .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.cornerSide));
   document.getElementById('typeNote').textContent=typ().note;
 
   document.querySelectorAll('#oStSize .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.stSize));
