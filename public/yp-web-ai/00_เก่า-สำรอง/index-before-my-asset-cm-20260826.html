@@ -448,15 +448,15 @@ select:focus{border-color:var(--acc)}
       <div class="sech"><h3>My Asset</h3><span class="hint">ไฟล์ของลูกค้า</span></div>
       <div class="asset-upload-card">
         <label class="asset-field"><span>ชื่ออุปกรณ์</span><input id="myAssetName" type="text" maxlength="80" placeholder="เช่น เคาน์เตอร์ของลูกค้า"></label>
-        <div class="asset-size-grid" aria-label="ขนาดอ้างอิงของอุปกรณ์ (เซนติเมตร)">
-          <label class="asset-field"><span>กว้าง (ซม.)</span><input id="myAssetW" type="number" min="0.1" step="0.1" value="100.0"></label>
-          <label class="asset-field"><span>ลึก (ซม.)</span><input id="myAssetD" type="number" min="0.1" step="0.1" value="100.0"></label>
-          <label class="asset-field"><span>สูง (ซม.)</span><input id="myAssetH" type="number" min="0.1" step="0.1" value="100.0"></label>
+        <div class="asset-size-grid" aria-label="ขนาดอ้างอิงของอุปกรณ์ (เมตร)">
+          <label class="asset-field"><span>กว้าง (ม.)</span><input id="myAssetW" type="number" min="0.0001" step="0.001" value="1"></label>
+          <label class="asset-field"><span>ลึก (ม.)</span><input id="myAssetD" type="number" min="0.0001" step="0.001" value="1"></label>
+          <label class="asset-field"><span>สูง (ม.)</span><input id="myAssetH" type="number" min="0.0001" step="0.001" value="1"></label>
         </div>
         <input id="myAssetFile" type="file" accept=".glb,model/gltf-binary" hidden>
         <div class="asset-file-row"><button class="btn sm" type="button" id="myAssetChoose">เลือกไฟล์ .glb</button><span id="myAssetFileName">ยังไม่ได้เลือกไฟล์</span></div>
         <button class="btn pri sm" type="button" id="myAssetUpload">บันทึก My Asset</button>
-        <div class="note">เมื่อเลือกไฟล์ ระบบจะอ่านขนาดจริงให้อัตโนมัติเป็นเซนติเมตร (กว้าง × ลึก × สูง ตามมาตรฐาน GLB = เมตร) แสดงทศนิยม 1 ตำแหน่ง และยังแก้ไขเองได้ ไฟล์จะถูกเก็บไว้ในเบราว์เซอร์เครื่องนี้</div>
+        <div class="note">เมื่อเลือกไฟล์ ระบบจะอ่านขนาดจริงให้อัตโนมัติ (กว้าง × ลึก × สูง ตามมาตรฐาน GLB = เมตร) และยังแก้ไขเองได้ ไฟล์จะถูกเก็บไว้ในเบราว์เซอร์เครื่องนี้</div>
       </div>
       <div class="catalog-status" id="myAssetStatus" role="status" aria-live="polite"></div>
       <div class="my-asset-list" id="myAssetList"></div>
@@ -1112,17 +1112,13 @@ function customAssetId(){
 }
 function formatMyAssetDimension(value){
   const number=Number(value);if(!Number.isFinite(number)||number<=0)return '';
-  return (number*100).toFixed(1);
+  return String(Number(number.toFixed(4)));
 }
 function setMyAssetDimensions(size){
   [['myAssetW',size.w],['myAssetD',size.d],['myAssetH',size.h]].forEach(([id,value])=>{
     const input=document.getElementById(id);if(!input)return;
     input.value=formatMyAssetDimension(value);input.classList.add('auto-read');input.title='อ่านจากไฟล์ .glb อัตโนมัติ — แก้ไขเองได้';
   });
-}
-function readMyAssetInputMeters(){
-  const cm={w:Number(document.getElementById('myAssetW')?.value),d:Number(document.getElementById('myAssetD')?.value),h:Number(document.getElementById('myAssetH')?.value)};
-  return {cm,meters:{w:cm.w/100,d:cm.d/100,h:cm.h/100}};
 }
 function parseMyAssetGlb(loader,data){
   return new Promise((resolve,reject)=>loader.parse(data,'',resolve,error=>reject(error instanceof Error?error:new Error('อ่านโครงสร้างไฟล์ .glb ไม่สำเร็จ'))));
@@ -1149,7 +1145,7 @@ function renderMyAssetList(){
   if(!CUSTOM_ASSETS.length){list.innerHTML='<div class="my-asset-empty">ยังไม่มีไฟล์ใน My Asset<br>เลือกไฟล์ .glb ด้านบนเพื่อเพิ่มอุปกรณ์ของลูกค้า</div>';return;}
   CUSTOM_ASSETS.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).forEach(item=>{
     const card=el('div','my-asset-card'),info=el('div'),actions=el('div','my-asset-actions');
-    info.innerHTML='<b title="'+esc(item.name)+'">'+esc(item.name)+'</b><small>'+formatMyAssetDimension(item.size.w)+' × '+formatMyAssetDimension(item.size.d)+' × '+formatMyAssetDimension(item.size.h)+' ซม. · GLB</small>';
+    info.innerHTML='<b title="'+esc(item.name)+'">'+esc(item.name)+'</b><small>'+item.size.w+' × '+item.size.d+' × '+item.size.h+' ม. · GLB</small>';
     const add=el('button','btn sm','เพิ่ม');add.type='button';add.title='เพิ่ม '+item.name+' ลงในบูธ';add.onclick=()=>addCatalogObject(item.catalogId);
     const del=el('button','btn sm','ลบ');del.type='button';del.title='ลบ '+item.name+' จาก My Asset';del.onclick=()=>deleteMyAsset(item.catalogId);
     actions.append(add,del);card.append(info,actions);list.appendChild(card);
@@ -1180,8 +1176,8 @@ async function saveMyAsset(){
   }
   if(!file.name.toLowerCase().endsWith('.glb')){setMyAssetStatus('รองรับเฉพาะไฟล์ .glb','error');return;}
   const name=(document.getElementById('myAssetName')?.value||file.name.replace(/\.glb$/i,'')).trim()||'My Asset';
-  const inputDimensions=readMyAssetInputMeters(),size=inputDimensions.meters;
-  if(![inputDimensions.cm.w,inputDimensions.cm.d,inputDimensions.cm.h].every(value=>Number.isFinite(value)&&value>0)){setMyAssetStatus('กรุณากรอกขนาด กว้าง ลึก สูง เป็นเซนติเมตรให้มากกว่า 0','error');return;}
+  const size={w:Number(document.getElementById('myAssetW')?.value),d:Number(document.getElementById('myAssetD')?.value),h:Number(document.getElementById('myAssetH')?.value)};
+  if(![size.w,size.d,size.h].every(value=>Number.isFinite(value)&&value>0)){setMyAssetStatus('กรุณากรอกขนาด กว้าง ลึก สูง ให้มากกว่า 0','error');return;}
   const record={id:customAssetId(),name,size,file,createdAt:Date.now()};
   try{
     await myAssetPut(record);CUSTOM_ASSETS.push(normalizeMyAsset(record));renderMyAssetList();
@@ -1671,7 +1667,7 @@ function build(){
           const dimensions=await readPromise;
           if(pendingMyAssetFile!==selectedFile)return;
           setMyAssetDimensions(dimensions);
-          setMyAssetStatus('อ่านขนาดอัตโนมัติแล้ว: '+formatMyAssetDimension(dimensions.w)+' × '+formatMyAssetDimension(dimensions.d)+' × '+formatMyAssetDimension(dimensions.h)+' ซม. — กดบันทึกเพื่อเก็บไว้ใน My Asset','success');
+          setMyAssetStatus('อ่านขนาดอัตโนมัติแล้ว: '+formatMyAssetDimension(dimensions.w)+' × '+formatMyAssetDimension(dimensions.d)+' × '+formatMyAssetDimension(dimensions.h)+' ม. — กดบันทึกเพื่อเก็บไว้ใน My Asset','success');
         }catch(error){
           if(pendingMyAssetFile===selectedFile)setMyAssetStatus('อ่านขนาดอัตโนมัติไม่ได้ ('+(error.message||'ไฟล์ไม่สมบูรณ์')+') — กรุณากรอกขนาดเองแล้วกดบันทึก','error');
         }finally{
