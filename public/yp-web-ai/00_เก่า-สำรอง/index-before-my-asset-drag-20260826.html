@@ -230,16 +230,11 @@ select:focus{border-color:var(--acc)}
 .asset-file-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx3);font-size:10px}
 .my-asset-list{display:grid;gap:8px;margin-top:11px}
 .my-asset-empty{padding:14px 10px;border:1px dashed var(--line);border-radius:8px;text-align:center;color:var(--tx3);font-size:11px;line-height:1.5}
-.my-asset-card{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);cursor:grab;transition:border-color .15s,background .15s,opacity .15s,box-shadow .15s}
-.my-asset-card:hover{border-color:var(--acc);background:rgba(224,168,60,.06)}
-.my-asset-card:active,.my-asset-card.dragging{cursor:grabbing;opacity:.58;border-color:var(--acc);box-shadow:0 0 0 2px rgba(224,168,60,.15)}
-.my-asset-icon{width:54px;height:54px;display:grid;place-items:center;border:1px solid rgba(224,168,60,.42);border-radius:8px;background:linear-gradient(145deg,#242a34,#14181f);color:var(--acc2);font:700 12px Inter,sans-serif;letter-spacing:.5px;user-select:none}
+.my-asset-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
 .my-asset-card b{display:block;color:var(--tx);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .my-asset-card small{display:block;margin-top:3px;color:var(--tx3);font-size:9.5px;line-height:1.35}
 .my-asset-actions{display:flex;gap:5px;align-items:center}
 .my-asset-actions .btn{padding:6px 8px;font-size:10px;white-space:nowrap}
-#view.asset-drop-target{outline:2px dashed var(--acc);outline-offset:-8px;background:linear-gradient(rgba(224,168,60,.08),rgba(224,168,60,.03))}
-#view.three-active.asset-drop-target{box-shadow:inset 0 0 0 2px rgba(224,168,60,.35)}
 .object-selected{margin-top:9px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.025);
   color:var(--tx2);font-size:11px;min-height:39px}
 .object-selected.on{border-color:rgba(224,168,60,.5);color:var(--acc2);background:rgba(224,168,60,.07)}
@@ -464,7 +459,6 @@ select:focus{border-color:var(--acc)}
         <div class="note">เมื่อเลือกไฟล์ ระบบจะอ่านขนาดจริงให้อัตโนมัติเป็นเมตร (กว้าง × ลึก × สูง ตามมาตรฐาน GLB) แสดงรูปแบบ 0.00 ม. และยังแก้ไขเองได้ ไฟล์จะถูกเก็บไว้ในเบราว์เซอร์เครื่องนี้</div>
       </div>
       <div class="catalog-status" id="myAssetStatus" role="status" aria-live="polite"></div>
-      <div class="note">ลากการ์ด My Asset ไปวางบนพื้นในพื้นที่บูธเพื่อกำหนดตำแหน่งเอง ระบบจะสแนปลงกริด 10 ซม. และตรวจขอบเขต/การชนให้ก่อนวาง</div>
       <div class="my-asset-list" id="myAssetList"></div>
     </div>
   </div>
@@ -1150,47 +1144,15 @@ function normalizeMyAsset(record){
   return furnitureItem({catalogId:record.id,category:'my',type:'custom',name:record.name||'My Asset',icon:'GLB',size:{w,d,h},unitPrice:0,color:'#8d939b',
     modelUrl:'custom',customAsset:true,file:record.file,createdAt:record.createdAt||0});
 }
-function setAssetDropState(active){
-  const view=document.getElementById('view');if(view)view.classList.toggle('asset-drop-target',Boolean(active));
-}
-function draggedMyAssetId(event){
-  const transfer=event?.dataTransfer;if(!transfer)return '';
-  return transfer.getData('application/x-yp-my-asset')||transfer.getData('text/plain')||'';
-}
-function bindMyAssetDrop(){
-  const view=document.getElementById('view');if(!view||view.dataset.myAssetDropBound==='1')return;
-  view.dataset.myAssetDropBound='1';
-  view.addEventListener('dragover',event=>{
-    const id=draggedMyAssetId(event);if(!id||!objectCatalogDef(id)?.customAsset)return;
-    event.preventDefault();if(event.dataTransfer)event.dataTransfer.dropEffect='copy';setAssetDropState(true);
-  });
-  view.addEventListener('dragleave',event=>{
-    if(!view.contains(event.relatedTarget))setAssetDropState(false);
-  });
-  view.addEventListener('drop',event=>{
-    const id=draggedMyAssetId(event);if(!id||!objectCatalogDef(id)?.customAsset)return;
-    event.preventDefault();setAssetDropState(false);
-    if(S.view==='three'&&threeRenderer&&typeof threeRenderer.addCatalogObjectAtDrop==='function'){
-      threeRenderer.addCatalogObjectAtDrop(id,event);return;
-    }
-    addCatalogObject(id);
-  });
-}
 function renderMyAssetList(){
   const list=document.getElementById('myAssetList');if(!list)return;list.innerHTML='';
   if(!CUSTOM_ASSETS.length){list.innerHTML='<div class="my-asset-empty">ยังไม่มีไฟล์ใน My Asset<br>เลือกไฟล์ .glb ด้านบนเพื่อเพิ่มอุปกรณ์ของลูกค้า</div>';return;}
   CUSTOM_ASSETS.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).forEach(item=>{
-    const card=el('div','my-asset-card'),icon=el('div','my-asset-icon','GLB'),info=el('div'),actions=el('div','my-asset-actions');
-    card.draggable=true;card.dataset.catalogId=item.catalogId;card.title='ลาก '+item.name+' ไปวางบนพื้นบูธ หรือกดเพิ่ม';card.setAttribute('aria-label','ลาก '+item.name+' ไปวางในพื้นที่บูธ');
+    const card=el('div','my-asset-card'),info=el('div'),actions=el('div','my-asset-actions');
     info.innerHTML='<b title="'+esc(item.name)+'">'+esc(item.name)+'</b><small>'+formatMyAssetDimension(item.size.w)+' × '+formatMyAssetDimension(item.size.d)+' × '+formatMyAssetDimension(item.size.h)+' ม. · GLB</small>';
     const add=el('button','btn sm','เพิ่ม');add.type='button';add.title='เพิ่ม '+item.name+' ลงในบูธ';add.onclick=()=>addCatalogObject(item.catalogId);
     const del=el('button','btn sm','ลบ');del.type='button';del.title='ลบ '+item.name+' จาก My Asset';del.onclick=()=>deleteMyAsset(item.catalogId);
-    card.addEventListener('dragstart',event=>{
-      if(event.dataTransfer){event.dataTransfer.setData('application/x-yp-my-asset',item.catalogId);event.dataTransfer.setData('text/plain',item.catalogId);event.dataTransfer.effectAllowed='copy';}
-      card.classList.add('dragging');setAssetDropState(true);
-    });
-    card.addEventListener('dragend',()=>{card.classList.remove('dragging');setAssetDropState(false);});
-    actions.append(add,del);card.append(icon,info,actions);list.appendChild(card);
+    actions.append(add,del);card.append(info,actions);list.appendChild(card);
   });
 }
 function setAssetTab(tab){
@@ -1720,7 +1682,6 @@ function build(){
   }
   const myAssetUpload=document.getElementById('myAssetUpload');if(myAssetUpload)myAssetUpload.onclick=saveMyAsset;
   renderMyAssetList();
-  bindMyAssetDrop();
 
   document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>selectView(t.dataset.v));
 }
@@ -1905,18 +1866,6 @@ class ThreeBoothRenderer{
   floorPoint(event){
     this.setRayFromEvent(event);this.dragPlane.constant=-(BoothSpec.raise/100);
     return this.raycaster.ray.intersectPlane(this.dragPlane,this.dragPoint);
-  }
-  addCatalogObjectAtDrop(catalogId,event){
-    const item=objectCatalogDef(catalogId);if(!item)return false;
-    const point=this.floorPoint(event);if(!point){announceCatalog('วาง'+item.name+'ได้เฉพาะบนพื้นบูธ','error');return false;}
-    const rotationY=item.initialRotation||0;
-    const x=+placementRound(point.x).toFixed(3),z=+placementRound(point.z).toFixed(3);
-    if(!isCatalogPlacementValid(catalogId,x,z,rotationY)){
-      announceCatalog('วาง'+item.name+'ไม่ได้ เพราะตำแหน่งอยู่นอกพื้นที่หรือชนกับวัตถุอื่น','error');return false;
-    }
-    const obj=makeCatalogObject(catalogId,x,z);if(!obj)return false;
-    mutateObjects(()=>S.objects.push(obj),obj.id);
-    announceCatalog('เพิ่ม'+item.name+'ลงในบูธแล้ว','success');return true;
   }
   beginObjectDrag(event){
     if(event.button!==0||event.pointerType==='touch'||!this.objectMeshes.size)return;
