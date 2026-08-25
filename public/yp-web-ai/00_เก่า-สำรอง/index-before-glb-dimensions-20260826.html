@@ -222,8 +222,6 @@ select:focus{border-color:var(--acc)}
 .asset-upload-card{display:grid;gap:9px;padding:11px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.025)}
 .asset-field{display:grid;gap:4px;color:var(--tx2);font-size:10.5px}
 .asset-field input{width:100%;min-width:0;padding:8px 9px;border:1px solid var(--line);border-radius:7px;background:var(--bg2);color:var(--tx);font:inherit;outline:none}
-.asset-field input.auto-read{border-color:rgba(91,179,126,.55);box-shadow:inset 0 0 0 1px rgba(91,179,126,.12)}
-.asset-field input.auto-read:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(224,168,60,.12)}
 .asset-field input:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(224,168,60,.12)}
 .asset-size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .asset-file-row{display:flex;align-items:center;gap:8px;min-width:0}
@@ -449,14 +447,14 @@ select:focus{border-color:var(--acc)}
       <div class="asset-upload-card">
         <label class="asset-field"><span>ชื่ออุปกรณ์</span><input id="myAssetName" type="text" maxlength="80" placeholder="เช่น เคาน์เตอร์ของลูกค้า"></label>
         <div class="asset-size-grid" aria-label="ขนาดอ้างอิงของอุปกรณ์ (เมตร)">
-          <label class="asset-field"><span>กว้าง (ม.)</span><input id="myAssetW" type="number" min="0.0001" step="0.001" value="1"></label>
-          <label class="asset-field"><span>ลึก (ม.)</span><input id="myAssetD" type="number" min="0.0001" step="0.001" value="1"></label>
-          <label class="asset-field"><span>สูง (ม.)</span><input id="myAssetH" type="number" min="0.0001" step="0.001" value="1"></label>
+          <label class="asset-field"><span>กว้าง (ม.)</span><input id="myAssetW" type="number" min="0.01" step="0.01" value="1"></label>
+          <label class="asset-field"><span>ลึก (ม.)</span><input id="myAssetD" type="number" min="0.01" step="0.01" value="1"></label>
+          <label class="asset-field"><span>สูง (ม.)</span><input id="myAssetH" type="number" min="0.01" step="0.01" value="1"></label>
         </div>
         <input id="myAssetFile" type="file" accept=".glb,model/gltf-binary" hidden>
         <div class="asset-file-row"><button class="btn sm" type="button" id="myAssetChoose">เลือกไฟล์ .glb</button><span id="myAssetFileName">ยังไม่ได้เลือกไฟล์</span></div>
         <button class="btn pri sm" type="button" id="myAssetUpload">บันทึก My Asset</button>
-        <div class="note">เมื่อเลือกไฟล์ ระบบจะอ่านขนาดจริงให้อัตโนมัติ (กว้าง × ลึก × สูง ตามมาตรฐาน GLB = เมตร) และยังแก้ไขเองได้ ไฟล์จะถูกเก็บไว้ในเบราว์เซอร์เครื่องนี้</div>
+        <div class="note">กรอกขนาดภายนอกโดยประมาณของไฟล์เป็นเมตร เพื่อให้ระบบวางชนขอบและคำนวณพื้นที่ได้ถูกต้อง ไฟล์จะถูกเก็บไว้ในเบราว์เซอร์เครื่องนี้</div>
       </div>
       <div class="catalog-status" id="myAssetStatus" role="status" aria-live="polite"></div>
       <div class="my-asset-list" id="myAssetList"></div>
@@ -869,7 +867,7 @@ const OBJECT_CATALOG=[
 const CUSTOM_ASSETS=[];
 const CUSTOM_ASSET_URLS=new Map();
 const MY_ASSET_DB_NAME='yp-web-ai-my-assets-v1',MY_ASSET_STORE='assets';
-let myAssetDbPromise=null,pendingMyAssetFile=null,myAssetDimensionReadPromise=null;
+let myAssetDbPromise=null,pendingMyAssetFile=null;
 const allObjectCatalog=()=>OBJECT_CATALOG.concat(CUSTOM_ASSETS);
 const MAX_BOOTH_HEIGHT=4.9;
 const HEIGHTS=[2.4,3,3.5,4,4.5,4.9];
@@ -1110,30 +1108,6 @@ function customAssetId(){
   const random=globalThis.crypto?.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2);
   return 'my-asset-'+Date.now().toString(36)+'-'+random;
 }
-function formatMyAssetDimension(value){
-  const number=Number(value);if(!Number.isFinite(number)||number<=0)return '';
-  return String(Number(number.toFixed(4)));
-}
-function setMyAssetDimensions(size){
-  [['myAssetW',size.w],['myAssetD',size.d],['myAssetH',size.h]].forEach(([id,value])=>{
-    const input=document.getElementById(id);if(!input)return;
-    input.value=formatMyAssetDimension(value);input.classList.add('auto-read');input.title='อ่านจากไฟล์ .glb อัตโนมัติ — แก้ไขเองได้';
-  });
-}
-function parseMyAssetGlb(loader,data){
-  return new Promise((resolve,reject)=>loader.parse(data,'',resolve,error=>reject(error instanceof Error?error:new Error('อ่านโครงสร้างไฟล์ .glb ไม่สำเร็จ'))));
-}
-async function readMyAssetDimensions(file){
-  if(!file)throw new Error('ยังไม่ได้เลือกไฟล์ .glb');
-  const [THREE,gltfModule]=await Promise.all([import('three'),import('three/addons/loaders/GLTFLoader.js')]);
-  const loader=new gltfModule.GLTFLoader(),buffer=await file.arrayBuffer(),gltf=await parseMyAssetGlb(loader,buffer);
-  const root=gltf?.scene||gltf?.scenes?.[0];if(!root)throw new Error('ไม่พบโมเดลในไฟล์ .glb');
-  root.updateMatrixWorld(true);
-  const box=new THREE.Box3().setFromObject(root);if(box.isEmpty())throw new Error('ไฟล์ .glb ไม่มีขนาดที่อ่านได้');
-  const size=box.getSize(new THREE.Vector3()),dimensions={w:size.x,d:size.z,h:size.y};
-  if(![dimensions.w,dimensions.d,dimensions.h].every(value=>Number.isFinite(value)&&value>0))throw new Error('ขนาดในไฟล์ .glb ไม่ถูกต้อง');
-  return dimensions;
-}
 function normalizeMyAsset(record){
   const size=record?.size||{};
   const w=Number(size.w)>0?Number(size.w):1,d=Number(size.d)>0?Number(size.d):1,h=Number(size.h)>0?Number(size.h):1;
@@ -1168,12 +1142,7 @@ async function deleteMyAsset(id){
   }catch(error){setMyAssetStatus(error.message||'ลบ My Asset ไม่สำเร็จ','error');}
 }
 async function saveMyAsset(){
-  let file=pendingMyAssetFile;if(!file){setMyAssetStatus('กรุณาเลือกไฟล์ .glb ก่อนบันทึก','error');return;}
-  if(myAssetDimensionReadPromise){
-    const readingFile=file;try{await myAssetDimensionReadPromise;}catch(error){}
-    if(pendingMyAssetFile!==readingFile){setMyAssetStatus('มีการเลือกไฟล์ใหม่ กรุณารอให้ระบบอ่านขนาดไฟล์ล่าสุดก่อน','error');return;}
-    file=pendingMyAssetFile;
-  }
+  const file=pendingMyAssetFile;if(!file){setMyAssetStatus('กรุณาเลือกไฟล์ .glb ก่อนบันทึก','error');return;}
   if(!file.name.toLowerCase().endsWith('.glb')){setMyAssetStatus('รองรับเฉพาะไฟล์ .glb','error');return;}
   const name=(document.getElementById('myAssetName')?.value||file.name.replace(/\.glb$/i,'')).trim()||'My Asset';
   const size={w:Number(document.getElementById('myAssetW')?.value),d:Number(document.getElementById('myAssetD')?.value),h:Number(document.getElementById('myAssetH')?.value)};
@@ -1654,26 +1623,12 @@ function build(){
   const myAssetFile=document.getElementById('myAssetFile'),myAssetChoose=document.getElementById('myAssetChoose');
   if(myAssetChoose&&myAssetFile){
     myAssetChoose.onclick=()=>myAssetFile.click();
-    myAssetFile.onchange=async event=>{
+    myAssetFile.onchange=event=>{
       pendingMyAssetFile=event.target.files?.[0]||null;
       const name=document.getElementById('myAssetName'),label=document.getElementById('myAssetFileName');
       if(label)label.textContent=pendingMyAssetFile?.name||'ยังไม่ได้เลือกไฟล์';
       if(name&&pendingMyAssetFile&&!name.value)name.value=pendingMyAssetFile.name.replace(/\.glb$/i,'');
-      const selectedFile=pendingMyAssetFile;
-      if(selectedFile){
-        setMyAssetStatus('กำลังอ่านขนาดจาก '+selectedFile.name+'…','success');
-        const readPromise=readMyAssetDimensions(selectedFile);myAssetDimensionReadPromise=readPromise;
-        try{
-          const dimensions=await readPromise;
-          if(pendingMyAssetFile!==selectedFile)return;
-          setMyAssetDimensions(dimensions);
-          setMyAssetStatus('อ่านขนาดอัตโนมัติแล้ว: '+formatMyAssetDimension(dimensions.w)+' × '+formatMyAssetDimension(dimensions.d)+' × '+formatMyAssetDimension(dimensions.h)+' ม. — กดบันทึกเพื่อเก็บไว้ใน My Asset','success');
-        }catch(error){
-          if(pendingMyAssetFile===selectedFile)setMyAssetStatus('อ่านขนาดอัตโนมัติไม่ได้ ('+(error.message||'ไฟล์ไม่สมบูรณ์')+') — กรุณากรอกขนาดเองแล้วกดบันทึก','error');
-        }finally{
-          if(myAssetDimensionReadPromise===readPromise)myAssetDimensionReadPromise=null;
-        }
-      }else setMyAssetStatus('','success');
+      if(pendingMyAssetFile)setMyAssetStatus('เลือก '+pendingMyAssetFile.name+' แล้ว กดบันทึกเพื่อเก็บไว้ใน My Asset','success');
     };
   }
   const myAssetUpload=document.getElementById('myAssetUpload');if(myAssetUpload)myAssetUpload.onclick=saveMyAsset;
