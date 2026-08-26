@@ -301,7 +301,6 @@ select:focus{border-color:var(--acc)}
 .light-model-card:hover{border-color:#3a414c}.light-model-card.on{border-color:var(--acc);background:rgba(224,168,60,.08)}
 .light-model-thumb-live{position:relative;display:block;width:100%;aspect-ratio:4/3;overflow:hidden;background:#151a21;border-bottom:1px solid var(--line)}
 .light-model-thumb-live canvas{display:block;width:100%;height:100%}
-.light-model-thumb-live.arm-preview canvas{transform:scaleY(-1)}
 .light-model-thumb-live>span{position:absolute;inset:0;display:grid;place-items:center;color:var(--tx3);font-size:10px}
 .light-model-thumb-live.is-ready>span{display:none}
 .light-model-thumb-fallback{display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;background:radial-gradient(circle at 50% 42%,rgba(224,168,60,.18),transparent 48%),#151a21;border-bottom:1px solid var(--line);color:var(--acc2);font:700 17px/1 Inter,sans-serif;letter-spacing:.12em}
@@ -2514,7 +2513,6 @@ function renderLightModelThumb(model,host){
     const renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.outputColorSpace=T.SRGBColorSpace;
     renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;host.replaceChildren(renderer.domElement);host.classList.add('is-ready');
-    if(model.k==='arm')host.classList.add('arm-preview');
     const hemi=new T.HemisphereLight(0xdbe7f6,0x151821,1.5),key=new T.DirectionalLight(0xfff1d2,2.5),fill=new T.DirectionalLight(0x9fc8ff,1.15);
     key.position.set(3,5,4);fill.position.set(-4,2,-3);scene.add(hemi,key,fill);
     const display=new T.Group(),root=template.clone(true);display.add(root);display.rotation.set(.14,-.58,0);scene.add(display);
