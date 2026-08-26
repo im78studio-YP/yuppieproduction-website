@@ -892,7 +892,7 @@ const TYPES=[
  {k:'corner',n:'Corner',s:'เปิด 2 ด้าน (มุม)',on:true,walls:['back','left'],
   note:'บูธหัวมุม ผนัง 2 ด้าน เปิดด้านหน้าและด้านขวา'},
  {k:'penin',n:'Peninsular',s:'เปิด 3 ด้าน',on:true,walls:['back'],
-  note:'ผนังด้านหลังด้านเดียว เปิดหน้า ซ้าย ขวา — พบบ่อยในบูธ 6×6 ขึ้นไป'},
+  note:'ผนังด้านหลังด้านเดียว เปิดหน้า ซ้าย ขวา · ความหนาผนัง 30 ซม. — พบบ่อยในบูธ 6×6 ขึ้นไป'},
  {k:'island',n:'Island',s:'เปิด 4 ด้าน',on:false,walls:[],note:''},
  {k:'cross',n:'Cross-Aisle',s:'คร่อมทางเดิน',on:false,walls:[],note:''}];
 const CORNER_SIDES=[
@@ -1043,7 +1043,7 @@ function shapesOverlap(a,b,gap=0){
   });
 }
 function placementLimits(item,rotationY=0){
-  const footprint=footprintSize(item.size,rotationY),walls=typ().walls,edge=item.clearance??.05,t=BOOTH_WALL_THICKNESS;
+  const footprint=footprintSize(item.size,rotationY),walls=typ().walls,edge=item.clearance??.05,t=boothWallThickness(S);
   const edgeMinX=(walls.includes('left')?t:0)+edge,edgeMaxX=S.W-(walls.includes('right')?t:0)-edge;
   const edgeMinZ=(walls.includes('back')?t:0)+edge,edgeMaxZ=S.D-edge;
   const minX=edgeMinX+footprint.w/2,maxX=edgeMaxX-footprint.w/2;
@@ -1056,7 +1056,7 @@ function isCatalogPlacementValid(catalogId,x,z,rotationY=0,ignoreId=null){
   if(shape.corners.some(corner=>corner.x<limits.edgeMinX-epsilon||corner.x>limits.edgeMaxX+epsilon||
     corner.z<limits.edgeMinZ-epsilon||corner.z>limits.edgeMaxZ+epsilon))return false;
   if(hasStore()){
-    const G=storeGeom(BOOTH_WALL_THICKNESS),storeShape=placementShape({w:G.w,d:G.d},G.x+G.w/2,G.y+G.d/2,0);
+    const G=storeGeom(boothWallThickness(S)),storeShape=placementShape({w:G.w,d:G.d},G.x+G.w/2,G.y+G.d/2,0);
     if(shapesOverlap(shape,storeShape,item.clearance??.05))return false;
   }
   return !S.objects.some(other=>{
@@ -1413,8 +1413,8 @@ function sideFreeLen(t){
   const blocked=(G&&((sideWall==='left'&&G.x<=t+.002)||
     (sideWall==='right'&&G.x+G.w>=S.W-t-.002)))?(G.y+G.d):0;
   return Math.max(0,S.D-blocked);}
-const wallAboveStore=()=>{const G=storeGeom(.1);return S.H-((S.raise/100)+G.h);};
-const lockOnStore=()=>hasStore()&&storeGeom(.1).w>S.W*0.5&&wallAboveStore()<1.0;
+const wallAboveStore=()=>{const G=storeGeom(boothWallThickness(S));return S.H-((S.raise/100)+G.h);};
+const lockOnStore=()=>hasStore()&&storeGeom(boothWallThickness(S)).w>S.W*0.5&&wallAboveStore()<1.0;
 /* ประตูห้อง: ด้านที่ชิดผนังบูธเปิดไม่ได้ ต้องเลี่ยงไปด้านอื่น */
 function doorBlocked(side,t){
   const wl=typ().walls,G=storeGeom(t),e=.002;
@@ -1473,7 +1473,7 @@ function lightCounts(t){
     let bi=0; sp.forEach((x,i)=>{if(x.e-x.s>sp[bi].e-sp[bi].s)bi=i;});
     n[bi]=Math.max(0,n[bi]+S.lightAdj);}
   return{sp,n,total:n.reduce((a,b)=>a+b,0),autoTotal};}
-const lightTotal=()=>S.lights?lightCounts(.1).total:0;
+const lightTotal=()=>S.lights?lightCounts(boothWallThickness(S)).total:0;
 const lightModelDef=()=>LIGHT_MODELS.find(x=>x.k===S.lightFixture)||LIGHT_MODELS[0];
 const lightWattDef=()=>LIGHT_WATTS.find(x=>x.k===S.lightWatts)||LIGHT_WATTS[0];
 const lightTotalWatts=()=>lightTotal()*lightWattDef().k;
@@ -1518,8 +1518,8 @@ function doorAlong(len,dw){
 function autoDoorFor(){
   const pref=S.stPos==='right'?'left':'right';
   const other=pref==='left'?'right':'left';
-  if(!doorBlocked(pref,.1))return pref;
-  if(!doorBlocked(other,.1))return other;
+  if(!doorBlocked(pref,boothWallThickness(S)))return pref;
+  if(!doorBlocked(other,boothWallThickness(S)))return other;
   return 'front';
 }
 const suggestedSec=()=>pair().sec(S.primary);
@@ -1624,7 +1624,7 @@ function build(){
   mk('oStSize',ST_SIZE,v=>S.stSize=v,o=>o.n+'<small>'+o.s+'</small>');
   mk('oStH',ST_H,v=>{S.stHmode=v;});
   mk('oStPos',ST_POS,v=>{S.stPos=v; if(!S.doorTouched)S.stDoor=autoDoorFor();});
-  mk('oStDoor',ST_DOOR,v=>{if(doorBlocked(v,.1))return;S.stDoor=v;S.doorTouched=true;});
+  mk('oStDoor',ST_DOOR,v=>{if(doorBlocked(v,boothWallThickness(S)))return;S.stDoor=v;S.doorTouched=true;});
   mk('oStDoorType',ST_DOOR_TYPE,v=>S.stDoorType=v);
   mk('oDoorOff',DOOROFF,v=>S.doorOff=v,()=>'');
   mk('oLights',[{k:'on',n:'มีไฟ',s:'ค่าเริ่มต้น'},{k:'off',n:'ไม่มี',s:''}],v=>S.lights=(v==='on'));
@@ -1672,7 +1672,7 @@ function build(){
   WALLPOS.forEach(t=>{const b=el('button','opt',t.n);b.dataset.k=t.k;
     b.onclick=()=>{S.logoPos=t.k;sync();};wp.appendChild(b);});
   document.getElementById('btnSide').onclick=()=>{
-    if(S.type!=='corner'||sideFreeLen(.1)<.8)return; S.sideLogo=!S.sideLogo;sync();};
+    if(S.type!=='corner'||sideFreeLen(boothWallThickness(S))<.8)return; S.sideLogo=!S.sideLogo;sync();};
   const sp=document.getElementById('oSidePos');sp.innerHTML='';
   SIDEPOS.forEach(t=>{const b=el('button','opt',t.n+(t.s?'<small>'+t.s+'</small>':''));b.dataset.k=t.k;
     b.onclick=()=>{S.sidePos=t.k;sync();};sp.appendChild(b);});
@@ -1783,7 +1783,7 @@ function wallRun(){const w=typ().walls;
 function priceLines(){
   const area=S.W*S.D,r=[],wa=wallRun()*S.H;
   if(wa)r.push(['ผนังบูธ '+wa.toFixed(1)+' ตร.ม.',wa*3200]);
-  if(hasStore()){const g=storeGeom(.1);
+  if(hasStore()){const g=storeGeom(boothWallThickness(S));
     let st=22000+g.w*g.d*9000+g.h*3500;
     if(S.stSurf==='sticker')st*=1.22;
     r.push(['ห้องเก็บของ · '+stChosenLabel(),st]);}
@@ -1804,6 +1804,9 @@ const priceTotal=()=>priceLines().reduce((sum,row)=>sum+row[1],0);
 /* ================= Three.js renderer ================= */
 const THREE_VERSION='0.180.0';
 const BOOTH_WALL_THICKNESS=.1;
+/* Peninsular ใช้ผนังเดี่ยวแบบหนา 30 ซม.; รูปแบบอื่นคงผนังมาตรฐาน 10 ซม. */
+const PENINSULAR_WALL_THICKNESS=.3;
+const boothWallThickness=spec=>spec?.type==='penin'?PENINSULAR_WALL_THICKNESS:BOOTH_WALL_THICKNESS;
 const FIXTURE_WALL_GAP=.001;
 const FIXTURE_LIGHT_INSET=.16;
 /* ลดจากยอดผนังเล็กน้อย เพื่อให้แผ่นฐานติดใต้คาน ไม่ฝังทะลุฝาครอบด้านบน */
@@ -2360,7 +2363,7 @@ class ThreeBoothRenderer{
     });
   }
   storageWall(group,G,floorY,spec,face,color){
-    const t=BOOTH_WALL_THICKNESS,front=face==='front'||face==='back',doorFace=spec.stDoor===face;
+    const t=boothWallThickness(spec),front=face==='front'||face==='back',doorFace=spec.stDoor===face;
     const length=front?G.w:G.d,z=face==='front'?G.y+G.d-t/2:G.y+t/2,x=face==='left'?G.x+t/2:G.x+G.w-t/2;
     const material=this.storageMaterial(spec,face),add=(size,position,suffix)=>{
       if(size.some(value=>value<=.008))return;
@@ -2474,7 +2477,7 @@ class ThreeBoothRenderer{
     this.selectionHelper.renderOrder=20;this.boothGroup.add(this.selectionHelper);
   }
   buildBooth(spec){
-    const T=this.THREE,g=this.boothGroup,t=BOOTH_WALL_THICKNESS,floorY=spec.raise/100,a=palette();
+    const T=this.THREE,g=this.boothGroup,t=boothWallThickness(spec),floorY=spec.raise/100,a=palette();
     const span=Math.max(spec.W,spec.D,spec.H),groundGeo=new T.PlaneGeometry(span*5,span*5);
     const groundMat=new T.MeshStandardMaterial({color:0x15181d,roughness:1});
     const ground=new T.Mesh(groundGeo,groundMat);ground.rotation.x=-Math.PI/2;
@@ -2611,7 +2614,7 @@ function planSVG(){
   const sc=Math.min((VW-pad*2)/W,(VH-pad*2)/D);
   const ox=(VW-W*sc)/2,oy=(VH-D*sc)/2;
   const P=(x,y)=>[ox+x*sc,oy+y*sc];
-  const a=palette(),t=.1;
+  const a=palette(),t=boothWallThickness(S);
   let g=`<defs><marker id="plan-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 8 4 L 0 8 z" fill="#f3c86b"/></marker></defs>
     <rect width="${VW}" height="${VH}" fill="#0a0b0e"/>`;
@@ -2708,7 +2711,7 @@ function bindPlanObjectInteractions(container){
 const C30=Math.cos(Math.PI/6),S30=.5;
 const isoRaw=(x,y,z)=>[(x-y)*C30,(x+y)*S30-z];
 function isoSVG(){
-  const W=S.W,D=S.D,H=S.H,a=palette(),VW=1000,VH=600,t=.1,z0=S.raise/100;
+  const W=S.W,D=S.D,H=S.H,a=palette(),VW=1000,VH=600,t=boothWallThickness(S),z0=S.raise/100;
   const wl=typ().walls,solids=[];
   if(S.raise>0)solids.push({x:0,y:0,z:0,w:W,d:D,h:z0,col:shade(floorColor(),1.12),k:'platform'});
   if(wl.indexOf('back')>=0)solids.push({x:0,y:0,z:0,w:W,d:t,h:H,col:wallFaceColor(S,'back',a),k:'wall',face:'back',pri:1});
@@ -3058,7 +3061,7 @@ function sync(){
     if(document.activeElement!==stHeightInput)stHeightInput.value=S.stHv;
     document.querySelectorAll('#oStPos .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.stPos));
     document.querySelectorAll('#oStDoor .opt').forEach(b=>{
-      const blocked=doorBlocked(b.dataset.k,.1);
+      const blocked=doorBlocked(b.dataset.k,boothWallThickness(S));
       b.classList.toggle('off',blocked);
       b.classList.toggle('on',!blocked&&b.dataset.k===S.stDoor);});
     document.querySelectorAll('#oStDoorType .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.stDoorType));
@@ -3072,7 +3075,7 @@ function sync(){
     document.getElementById('oStFaceWrap').style.display=S.stSurf==='sticker'?'block':'none';
     document.getElementById('stPaintWrap').style.display=S.stSurf==='paint'?'block':'none';
     document.querySelectorAll('#oStPaint .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.stPaint));
-    const g=storeGeom(.1),dm=stDims(),want=S.stHmode===0?S.stHv:S.stHmode;
+    const g=storeGeom(boothWallThickness(S)),dm=stDims(),want=S.stHmode===0?S.stHv:S.stHmode;
     let n='ด้านที่ชิดผนังบูธ ระบบใช้ผนังบูธเป็นผนังห้องให้เลย';
     const share=(g.w*g.d)/(S.W*S.D);
     if(share>=.55)
@@ -3096,11 +3099,11 @@ function sync(){
     document.querySelectorAll('#oLightCol .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightCol));
     document.querySelectorAll('#oLightWatts .opt').forEach(b=>b.classList.toggle('on',+b.dataset.k===S.lightWatts));
     document.querySelectorAll('#oLightWall .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightWall));
-    const spacing=lightSpacing(),LC=lightCounts(.1),auto=LC.autoTotal;
+    const spacing=lightSpacing(),LC=lightCounts(boothWallThickness(S)),auto=LC.autoTotal;
     document.getElementById('lcount').textContent=LC.total;
     const spacingLabel=lightModelDef()?.spacingRule==='min'?'ระยะขั้นต่ำ ':'ระยะมาตรฐาน ';
     let ln=spacingLabel+spacing.toFixed(1)+' ม./จุด · ระบบคำนวณให้ '+auto+' จุด · '+lightTotalWatts()+'W รวม';
-    if(lightBlocker(.1))ln+=' · หักช่วงผนังที่ห้องสูงตั้งแต่ 70% บังแล้ว';
+    if(lightBlocker(boothWallThickness(S)))ln+=' · หักช่วงผนังที่ห้องสูงตั้งแต่ 70% บังแล้ว';
     else if(hasStore())ln+=' · ห้องสูงไม่ถึง 70% จึงใช้ระยะผนังเดิม';
     if(S.lightAdj)ln+=' · คุณปรับเป็น '+LC.total+' จุด';
     document.getElementById('lightNote').textContent=ln;}
@@ -3123,7 +3126,7 @@ function sync(){
   const isCorner=S.type==='corner';
   document.getElementById('sideOnly').textContent=isCorner?'':'— เฉพาะบูธหัวมุม (Corner)';
   const bs=document.getElementById('btnSide');
-  const freeL=sideFreeLen(.1), sideOK=isCorner&&freeL>=.8;
+  const freeL=sideFreeLen(boothWallThickness(S)), sideOK=isCorner&&freeL>=.8;
   bs.classList.toggle('off',!sideOK);
   bs.classList.toggle('on',sideOK&&S.sideLogo);
   bs.textContent=(sideOK&&S.sideLogo?'✓ ':'')+'เพิ่มชุดโลโก้และชื่อบนผนังด้านข้าง';
@@ -3140,7 +3143,7 @@ function sync(){
   document.getElementById('tagType').textContent=typ().n;
   document.getElementById('view').setAttribute('aria-label','พื้นที่ออกแบบบูธ กว้าง '+S.W+' เมตร ลึก '+S.D+' เมตร สูง '+S.H+' เมตร');
 
-  const gg=hasStore()?storeGeom(.1):null;
+  const gg=hasStore()?storeGeom(boothWallThickness(S)):null;
   const rows=[['ธุรกิจ',cat().n],
     ['ขนาด','กว้าง '+S.W+' × ลึก '+S.D+' × สูง '+S.H+' ม.'],
     ['รูปแบบบูธ',typ().n+' · ผนัง '+(typ().walls.length?typ().walls.length+' ด้าน':'ไม่มี')],
