@@ -2122,8 +2122,7 @@ class ThreeBoothRenderer{
   dimensionLabel(group,text,position,span,name){
     const T=this.THREE,canvas=document.createElement('canvas');canvas.width=384;canvas.height=96;
     const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle='rgba(9,11,15,.92)';ctx.strokeStyle='#e0a83c';ctx.lineWidth=3;
-    ctx.beginPath();ctx.roundRect(3,3,378,90,14);ctx.fill();ctx.stroke();
+    /* ป้ายมิติแบบโปร่งใส: ให้เห็นเฉพาะตัวเลข ไม่บังภาพบูธด้วยกรอบสีดำ */
     ctx.fillStyle='#f3c86b';ctx.font='600 28px Inter,"Noto Sans Thai",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(text,canvas.width/2,canvas.height/2+1);
     const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.minFilter=T.LinearFilter;
@@ -2144,17 +2143,17 @@ class ThreeBoothRenderer{
       p(0,y,spec.D+offset),p(spec.W,y,spec.D+offset),
       p(0,y,spec.D),p(0,y,spec.D+offset+tick),
       p(spec.W,y,spec.D),p(spec.W,y,spec.D+offset+tick)
-    ],'กว้าง '+fmt(spec.W)+' ม.',[spec.W/2,y+tick*1.8,spec.D+offset],span,'booth-dimension-width');
+    ],fmt(spec.W)+' ม.',[spec.W/2,y+tick*1.8,spec.D+offset],span,'booth-dimension-width');
     this.dimensionGuide(group,[
       p(spec.W+offset,y,0),p(spec.W+offset,y,spec.D),
       p(spec.W,y,0),p(spec.W+offset+tick,y,0),
       p(spec.W,y,spec.D),p(spec.W+offset+tick,y,spec.D)
-    ],'ลึก '+fmt(spec.D)+' ม.',[spec.W+offset,y+tick*1.8,spec.D/2],span,'booth-dimension-depth');
+    ],fmt(spec.D)+' ม.',[spec.W+offset,y+tick*1.8,spec.D/2],span,'booth-dimension-depth');
     this.dimensionGuide(group,[
       p(-offset,0,0),p(-offset,spec.H,0),
       p(0,0,0),p(-offset-tick,0,0),
       p(0,spec.H,0),p(-offset-tick,spec.H,0)
-    ],'สูง '+fmt(spec.H)+' ม.',[-offset,spec.H/2,-tick],span,'booth-dimension-height');
+    ],fmt(spec.H)+' ม.',[-offset,spec.H/2,-tick],span,'booth-dimension-height');
   }
   addBranding(group,spec,t,floorY){
     const a=palette(),place=(s,e,w,align)=>align==='left'?s+w/2:align==='right'?e-w/2:(s+e)/2;
