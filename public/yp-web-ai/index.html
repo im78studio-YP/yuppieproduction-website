@@ -185,7 +185,11 @@ select:focus{border-color:var(--acc)}
 .nscale{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--tx2);
   background:var(--bg3);border:1px solid var(--line);padding:4px 11px;border-radius:9px}
 .nscale input[type=range]{width:104px;accent-color:var(--acc);background:none;border:none;padding:0}
-.nscale b{font:600 12px Inter,sans-serif;color:var(--acc2);min-width:44px;text-align:right}
+.nscale input[type=number]{flex:0 0 46px;width:46px;min-width:46px;max-width:46px;padding:4px 5px;border:1px solid var(--line);
+  border-radius:6px;background:var(--bg2);color:var(--acc2);outline:none;font:600 12px Inter,sans-serif;text-align:center}
+.nscale input[type=number]:focus{border-color:var(--acc);background:rgba(224,168,60,.07)}
+.nscale input[type=number]::-webkit-inner-spin-button,.nscale input[type=number]::-webkit-outer-spin-button{appearance:none;margin:0}
+.nscale input[type=number]{-moz-appearance:textfield}
 .swatch{width:18px;height:18px;border-radius:5px;border:1px solid rgba(255,255,255,.2)}
 .chip2{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--tx2);
   background:var(--bg3);border:1px solid var(--line);padding:5px 10px;border-radius:9px}
@@ -291,7 +295,7 @@ select:focus{border-color:var(--acc)}
 .corner-side-wrap .lbl{margin-bottom:6px}
 .signage-page .brandbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:0 0 15px;padding:0;
   border:0;background:none;overflow:visible}
-.signage-page .brandbar input{grid-column:1/-1;max-width:none;min-width:0;width:100%}
+.signage-page .brandbar>input[type=text]{grid-column:1/-1;max-width:none;min-width:0;width:100%}
 .signage-page .brandbar .nscale{grid-column:1/-1;justify-content:space-between}
 .signage-page .brandbar .sp,.signage-page .brandbar>.chip2{display:none}
 .finish-page .finish-subhead{margin-bottom:8px}
@@ -720,10 +724,10 @@ select:focus{border-color:var(--acc)}
       <button class="btn sm" id="btnLogoCol" style="display:none">ใช้สีจากโลโก้เป็นสีหลัก</button>
       <div class="nscale"><span>ขนาดโลโก้</span>
         <input type="range" id="lsRange" min="1" max="10" step="1" value="5" aria-label="ขนาดโลโก้">
-        <b id="lsVal">5</b></div>
+        <input type="number" id="lsVal" min="1" max="10" step="1" value="5" inputmode="numeric" aria-label="ค่าขนาดโลโก้"></div>
       <div class="nscale"><span>ขนาดชื่อ</span>
-        <input type="range" id="nsRange" min="0" max="10" step="1" value="5">
-        <b id="nsVal">5</b></div>
+        <input type="range" id="nsRange" min="0" max="10" step="1" value="5" aria-label="ขนาดชื่อแบรนด์">
+        <input type="number" id="nsVal" min="0" max="10" step="1" value="5" inputmode="numeric" aria-label="ค่าขนาดชื่อแบรนด์"></div>
       <div class="sp"></div>
       <div class="chip2"><span class="swatch" id="sw1"></span><span class="swatch" id="sw2"></span><span id="pairName">—</span></div>
     </div>
@@ -2997,6 +3001,7 @@ function sync(){
   S.W=Math.max(1,Math.min(30,S.W||1));S.D=Math.max(1,Math.min(30,S.D||1));
   S.H=Math.max(2.4,Math.min(MAX_BOOTH_HEIGHT,S.H||2.4));
   S.logoScale=Math.max(1,Math.min(10,Number(S.logoScale)||5));
+  S.nameScale=Math.max(0,Math.min(10,Number.isFinite(Number(S.nameScale))?Math.round(Number(S.nameScale)):5));
   if(!Array.isArray(S.wallStickerFaces))S.wallStickerFaces=[];
   S.wallStickerFaces=S.wallStickerFaces.filter(face=>WALL_FACES.some(item=>item.k===face));
   if(S.wallMat==='sticker'){
@@ -3122,9 +3127,9 @@ function sync(){
   document.getElementById('logoType').value=S.logoType;
   document.getElementById('logoTypeNote').textContent=LOGOTYPES.find(t=>t.k===S.logoType).s;
   const logoScaleRange=document.getElementById('lsRange');
-  if(logoScaleRange){logoScaleRange.value=S.logoScale;document.getElementById('lsVal').textContent=S.logoScale;}
+  if(logoScaleRange){logoScaleRange.value=S.logoScale;document.getElementById('lsVal').value=S.logoScale;}
   const nameScaleRange=document.getElementById('nsRange');
-  if(nameScaleRange){nameScaleRange.value=S.nameScale;document.getElementById('nsVal').textContent=S.nameScale?S.nameScale:'ซ่อน';}
+  if(nameScaleRange){nameScaleRange.value=S.nameScale;document.getElementById('nsVal').value=S.nameScale;}
   document.querySelectorAll('#oLockup .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lockup));
   document.querySelectorAll('#oLogoPos .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.logoPos));
   const isCorner=S.type==='corner';
@@ -3245,9 +3250,22 @@ document.getElementById('cPick').oninput=e=>setPrimary(e.target.value);
 document.getElementById('cHex').oninput=e=>{const v=e.target.value.trim();
   if(/^#?[0-9a-fA-F]{6}$/.test(v)){S.primary=v[0]==='#'?v:'#'+v;S.colTouched=true;sync();}};
 document.getElementById('nsRange').oninput=e=>{S.nameScale=+e.target.value;
-  document.getElementById('nsVal').textContent=S.nameScale?S.nameScale:'ซ่อน';render();};
+  document.getElementById('nsVal').value=S.nameScale;render();};
 document.getElementById('lsRange').oninput=e=>{S.logoScale=+e.target.value;
-  document.getElementById('lsVal').textContent=S.logoScale;render();};
+  document.getElementById('lsVal').value=S.logoScale;render();};
+const commitScaleInput=(id,key,min,max)=>{
+  const input=document.getElementById(id);if(!input)return;
+  const commit=()=>{
+    const value=Number(input.value);
+    if(!Number.isFinite(value)){sync();return;}
+    S[key]=Math.max(min,Math.min(max,Math.round(value)));
+    sync();
+  };
+  input.addEventListener('change',commit);
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commit();input.blur();}});
+};
+commitScaleInput('lsVal','logoScale',1,10);
+commitScaleInput('nsVal','nameScale',0,10);
 document.getElementById('cPick2').oninput=e=>{S.secondary=e.target.value;S.secTouched=true;sync();};
 document.getElementById('cHex2').oninput=e=>{const v=e.target.value.trim();
   if(/^#?[0-9a-fA-F]{6}$/.test(v)){S.secondary=v[0]==='#'?v:'#'+v;S.secTouched=true;sync();}};
