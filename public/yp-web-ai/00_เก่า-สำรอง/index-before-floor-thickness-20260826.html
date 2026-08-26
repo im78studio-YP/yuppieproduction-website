@@ -2429,11 +2429,8 @@ class ThreeBoothRenderer{
     const ground=new T.Mesh(groundGeo,groundMat);ground.rotation.x=-Math.PI/2;
     ground.position.set(spec.W/2,-.045,spec.D/2);ground.receiveShadow=true;g.add(ground);
 
-    /* ไม่ยกพื้น = แผ่นพรม/พื้นหนา 3 มม.; ยกพื้นยังใช้ความสูงเดิม 5/10/15 ซม.
-       คงผิวด้านบนไว้ที่ระดับ floorY เพื่อไม่ให้วัตถุและผนังขยับตามความหนา */
-    const slabHeight=floorY>0?floorY:.003;
-    const slabCenterY=floorY>0?floorY/2:-slabHeight/2;
-    this.box(g,[spec.W,slabHeight,spec.D],[spec.W/2,slabCenterY,spec.D/2],floorColor(),
+    const slabHeight=Math.max(.04,floorY);
+    this.box(g,[spec.W,slabHeight,spec.D],[spec.W/2,floorY?floorY/2:-.02,spec.D/2],floorColor(),
       {material:this.floorMaterial(spec),castShadow:false,name:'booth-floor'});
     const walls=typ().walls;
     if(walls.includes('back'))this.box(g,[spec.W,spec.H,t],[spec.W/2,spec.H/2,t/2],a.wall,
