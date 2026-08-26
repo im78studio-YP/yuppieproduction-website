@@ -299,10 +299,7 @@ select:focus{border-color:var(--acc)}
 .light-model-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .light-model-card{overflow:hidden;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--bg2);text-align:left;transition:.15s}
 .light-model-card:hover{border-color:#3a414c}.light-model-card.on{border-color:var(--acc);background:rgba(224,168,60,.08)}
-.light-model-thumb-live{position:relative;display:block;width:100%;aspect-ratio:4/3;overflow:hidden;background:#151a21;border-bottom:1px solid var(--line)}
-.light-model-thumb-live canvas{display:block;width:100%;height:100%}
-.light-model-thumb-live>span{position:absolute;inset:0;display:grid;place-items:center;color:var(--tx3);font-size:10px}
-.light-model-thumb-live.is-ready>span{display:none}
+.light-model-card img{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;background:#151a21;border-bottom:1px solid var(--line)}
 .light-model-thumb-fallback{display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;background:radial-gradient(circle at 50% 42%,rgba(224,168,60,.18),transparent 48%),#151a21;border-bottom:1px solid var(--line);color:var(--acc2);font:700 17px/1 Inter,sans-serif;letter-spacing:.12em}
 .light-model-copy{display:block;padding:8px 9px}.light-model-copy b{display:block;font-size:11.5px;font-weight:600}
 .light-model-copy small{display:block;margin-top:2px;color:var(--tx3);font-size:9.5px;line-height:1.35}
@@ -909,11 +906,11 @@ const LIGHT_MODELS=[
   /* Clear Light V2: เลนส์/หน้าปล่อยแสงของไฟอยู่บนแกน +Y ของ GLB
      เมื่อตั้งหมุน X +90° จะชี้เข้าในบูธตามแกน +Z ของจุดยึดทุกผนัง
      ใช้ mesh 3 เป็นตัวเรือนและยึดระนาบด้านหลัง (แกน Z ต่ำสุด) */
-  {k:'clear100',n:'Clear Light',s:'โคมหลัก 100W',url:'./assets/lights/Spotlight_Clear_100watts_V2.glb?v=20260824-v2',scale:1,spacing:2.0,spacingRule:'min',wallRotationX:Math.PI/2,baseMeshIndex:3,baseAxis:'z',baseSide:'min',templateRotationY:0,topInset:-.15,fixtureOffsetZ:.10,beamMode:'wallWash',wallWashHeight:.55,wallWashGap:.03,beamAngle:.80,beamPenumbra:.96,beamDecay:1.25,beamDistanceFactor:2.5,wallBeamMix:.68,wallDiffuseMix:.24,wallDiffuseAngle:1.16,wallDiffusePenumbra:1,wallDiffuseDecay:1.15,floorBeamMix:.08,bracketMeshIndices:[0,2,10],bracketFlipAxis:'y',bracketFlipAngle:Math.PI,bracketOffsetZ:-.20,lightSource:[0,-.126,.054]},
+  {k:'clear100',n:'Clear Light',s:'โคมหลัก 100W',url:'./assets/lights/Spotlight_Clear_100watts_V2.glb?v=20260824-v2',thumb:'./assets/lights/clear-light-100w.webp?v=20260823-1',scale:1,spacing:2.0,spacingRule:'min',wallRotationX:Math.PI/2,baseMeshIndex:3,baseAxis:'z',baseSide:'min',templateRotationY:0,topInset:-.15,fixtureOffsetZ:.10,beamMode:'wallWash',wallWashHeight:.55,wallWashGap:.03,beamAngle:.80,beamPenumbra:.96,beamDecay:1.25,beamDistanceFactor:2.5,wallBeamMix:.68,wallDiffuseMix:.24,wallDiffuseAngle:1.16,wallDiffusePenumbra:1,wallDiffuseDecay:1.15,floorBeamMix:.08,bracketMeshIndices:[0,2,10],bracketFlipAxis:'y',bracketFlipAngle:Math.PI,bracketOffsetZ:-.20,lightSource:[0,-.126,.054]},
   /* Arm Light V4: mesh 10 คือก้อนฐานยึดผนังที่ปลายก้านด้านหลัง
      (mesh 9 เป็นเพียงแผ่น/ชิ้นส่วนที่ปลายหัวโคม) จึงต้องใช้ mesh 10
      เป็นระนาบอ้างอิง แล้วกลับแนวก้านให้หัวโคมหันออกทางเดิน */
-  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',scale:1,spacing:1.0,backWallClearance:1.0,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],beamMode:'downwash',beamInward:.95,beamAngle:.70,beamPenumbra:.90,beamDecay:1.6,beamDistanceFactor:2.5,beamMix:.72,beamDiffuseMix:.28,beamDiffuseAngle:1.06,beamDiffusePenumbra:1,beamDiffuseDecay:1.15,
+  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',thumb:'./assets/lights/arm-light.webp?v=20260823-1',scale:1,spacing:1.0,backWallClearance:1.0,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],beamMode:'downwash',beamInward:.95,beamAngle:.70,beamPenumbra:.90,beamDecay:1.6,beamDistanceFactor:2.5,beamMix:.72,beamDiffuseMix:.28,beamDiffuseAngle:1.06,beamDiffusePenumbra:1,beamDiffuseDecay:1.15,
     /* ฐานติดขอบผนัง แล้วก้านยื่นเข้าทางเดินเสมอ: หลัง = +Z · ซ้าย = +X · ขวา = -X */
     wallRotations:{back:0,left:Math.PI/2,right:-Math.PI/2}}];
 const OFFLINE_LIGHT_MODELS_SCRIPT='./assets/lights/embedded-light-models.js?v=20260824-clear-v2';
@@ -1620,8 +1617,9 @@ function build(){
   mk('oDoorOff',DOOROFF,v=>S.doorOff=v,()=>'');
   mk('oLights',[{k:'on',n:'มีไฟ',s:'ค่าเริ่มต้น'},{k:'off',n:'ไม่มี',s:''}],v=>S.lights=(v==='on'));
   const oLightModel=document.getElementById('oLightModel');oLightModel.innerHTML='';
-  LIGHT_MODELS.forEach(model=>{const b=el('button','light-model-card','<div class="light-model-thumb-live" data-thumb-key="'+model.k+'" aria-label="ภาพพรีวิวโคม '+model.n+'"><span>กำลังโหลดภาพพรีวิว…</span></div>'+
+  LIGHT_MODELS.forEach(model=>{const b=el('button','light-model-card','<img src="'+model.thumb+'" alt="ภาพตัวอย่างโคม '+model.n+'" loading="lazy">'+
       '<span class="light-model-copy"><b>'+model.n+'</b><small>'+model.s+'</small></span>');
+    const thumb=b.querySelector('img');thumb.onerror=()=>{const fallback=el('div','light-model-thumb-fallback',model.k==='arm'?'ARM LIGHT':'CLEAR LIGHT');fallback.setAttribute('aria-label','ไม่มีภาพตัวอย่าง · '+model.n);thumb.replaceWith(fallback);};
     b.type='button';b.dataset.k=model.k;b.setAttribute('aria-pressed','false');b.onclick=()=>{S.lightFixture=model.k;sync();};oLightModel.appendChild(b);});
   mk('oLightCol',LIGHTCOL,v=>S.lightCol=v);
   mk('oLightWatts',LIGHT_WATTS,v=>S.lightWatts=v,o=>o.n+'<small>สเปกมาตรฐาน</small>');
@@ -2484,64 +2482,12 @@ function loadThreeRenderer(){
     .then(([THREE,controls,gltf])=>threeRenderer=new ThreeBoothRenderer(THREE,controls.OrbitControls,gltf.GLTFLoader));
   return threeRendererPromise;
 }
-let lightThumbRenderers=new Map();
-let lightThumbQueuePromise=null;
-function lightThumbFallback(host,model){
-  if(!host||!host.isConnected)return;
-  const fallback=el('div','light-model-thumb-fallback',model.k==='arm'?'ARM LIGHT':'CLEAR LIGHT');
-  fallback.setAttribute('aria-label','ไม่มีภาพตัวอย่าง · '+model.n);host.replaceWith(fallback);
-}
-function waitForLightTemplate(model){
-  if(!threeRenderer)return Promise.reject(new Error('Three.js renderer is unavailable'));
-  threeRenderer.requestFixtureTemplate(model.k);
-  return new Promise((resolve,reject)=>{
-    const started=Date.now();
-    const poll=()=>{
-      if(threeRenderer.fixtureTemplates.has(model.k))return resolve(threeRenderer.fixtureTemplates.get(model.k));
-      if(threeRenderer.fixtureErrors.has(model.k))return reject(threeRenderer.fixtureErrors.get(model.k));
-      if(Date.now()-started>60000)return reject(new Error('Light model preview timed out'));
-      setTimeout(poll,80);
-    };poll();
-  });
-}
-function renderLightModelThumb(model,host){
-  if(!host||!host.isConnected||lightThumbRenderers.has(model.k))return;
-  waitForLightTemplate(model).then(template=>{
-    if(!host.isConnected)return;
-    const T=threeRenderer.THREE,scene=new T.Scene();scene.background=new T.Color('#151a21');
-    const camera=new T.PerspectiveCamera(32,4/3,.01,1000);
-    const renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.outputColorSpace=T.SRGBColorSpace;
-    renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;host.replaceChildren(renderer.domElement);host.classList.add('is-ready');
-    const hemi=new T.HemisphereLight(0xdbe7f6,0x151821,1.5),key=new T.DirectionalLight(0xfff1d2,2.5),fill=new T.DirectionalLight(0x9fc8ff,1.15);
-    key.position.set(3,5,4);fill.position.set(-4,2,-3);scene.add(hemi,key,fill);
-    const display=new T.Group(),root=template.clone(true);display.add(root);display.rotation.set(.14,-.58,0);scene.add(display);
-    const resize=()=>{
-      if(!host.isConnected)return;
-      const rect=host.getBoundingClientRect(),w=Math.max(1,Math.floor(rect.width)),h=Math.max(1,Math.floor(rect.height));
-      renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.render(scene,camera);
-    };
-    display.updateMatrixWorld(true);let box=new T.Box3().setFromObject(display),size=box.getSize(new T.Vector3()),center=box.getCenter(new T.Vector3());display.position.sub(center);display.updateMatrixWorld(true);
-    box=new T.Box3().setFromObject(display);size=box.getSize(size);const maxDim=Math.max(size.x,size.y,size.z),fit=maxDim*1.28;
-    camera.position.set(fit*1.55,fit*.82,fit*1.72);camera.lookAt(0,0,0);camera.near=Math.max(.001,fit/100);camera.far=fit*20;camera.updateProjectionMatrix();resize();
-    const observer=new ResizeObserver(resize);observer.observe(host);lightThumbRenderers.set(model.k,{renderer,scene,camera,display,observer});
-  }).catch(()=>lightThumbFallback(host,model));
-}
-function queueLightModelThumbs(){
-  if(lightThumbQueuePromise)return lightThumbQueuePromise;
-  if(!threeRenderer)return Promise.resolve();
-  lightThumbQueuePromise=Promise.all(LIGHT_MODELS.map(model=>{
-    const host=document.querySelector('#oLightModel [data-thumb-key="'+model.k+'"]');
-    return host?renderLightModelThumb(model,host):null;
-  })).catch(()=>{});
-  return lightThumbQueuePromise;
-}
 function renderThreeView(container){
   container.classList.add('three-active');
-  if(threeRenderer){threeRenderer.mount(container);threeRenderer.update(BoothSpec);queueLightModelThumbs();return;}
+  if(threeRenderer){threeRenderer.mount(container);threeRenderer.update(BoothSpec);return;}
   if(!container.querySelector('.three-status'))
     container.innerHTML='<div class="three-status">กำลังโหลด Three.js '+THREE_VERSION+'…</div>';
-  loadThreeRenderer().then(r=>{queueLightModelThumbs();if(S.view==='three'){r.mount(container);r.update(BoothSpec);}})
+  loadThreeRenderer().then(r=>{if(S.view==='three'){r.mount(container);r.update(BoothSpec);}})
     .catch(()=>{if(S.view==='three')showThreeFallback(container,'อุปกรณ์นี้ไม่รองรับ WebGL หรือโหลด Three.js ไม่สำเร็จ');});
 }
 function selectView(view){
