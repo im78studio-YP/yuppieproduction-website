@@ -718,6 +718,9 @@ select:focus{border-color:var(--acc)}
       <button class="btn sm" id="btnLogo">＋ โลโก้</button>
       <img id="logoPrev" class="lg-prev" alt="ตัวอย่างโลโก้ที่อัปโหลด" style="display:none">
       <button class="btn sm" id="btnLogoCol" style="display:none">ใช้สีจากโลโก้เป็นสีหลัก</button>
+      <div class="nscale"><span>ขนาดโลโก้</span>
+        <input type="range" id="lsRange" min="1" max="10" step="1" value="5" aria-label="ขนาดโลโก้">
+        <b id="lsVal">5</b></div>
       <div class="nscale"><span>ขนาดชื่อ</span>
         <input type="range" id="nsRange" min="0" max="10" step="1" value="5">
         <b id="nsVal">5</b></div>
@@ -993,12 +996,16 @@ const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
   wallCol:'white',wallMat:'paint',wallStickerFaces:[],pair:'wood',pairTouched:false,
   W:6,D:3,H:2.4,type:'inline',cornerSide:'right',
   stSize:'none',stW:1.2,stD:1.2,stHmode:2.4,stHv:2.4,stPos:'right',stDoor:'left',stDoorType:'swing',doorTouched:false,
-  stSurf:'paint',stPaint:'wall',stFace:'front',doorOff:'start',nameScale:5,
+  stSurf:'paint',stPaint:'wall',stFace:'front',doorOff:'start',logoScale:5,nameScale:5,
   lights:true,lightFixture:'clear100',lightCol:'warm',lightWall:'back',lightWatts:100,lightAdj:0,
   raise:0,floor:'carpet',carpet:'grey',tile:'woodL',carpetTextureData:null,carpetTextureName:'',carpetTextureId:0,
   logoType:'diecut',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
   logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[]};
 const S=BoothSpec;
+const logoScaleFactor=value=>{
+  const v=Math.max(1,Math.min(10,Number(value)||5));
+  return v<=5 ? .55+(v-1)*.1125 : 1+(v-5)*.16;
+};
 const serializeBoothSpec=()=>JSON.stringify(BoothSpec);
 const objectEditor={selectedId:null,past:[],future:[],seq:0};
 const LAYOUT_KEYS=['W','D','type','stSize','stW','stD','stPos'];
@@ -1980,7 +1987,7 @@ class ThreeBoothRenderer{
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
       spec.lightWall,spec.lightWatts,spec.lightAdj,spec.brand,logoKey,spec.logoType,spec.lockup,spec.logoPos,
-      spec.nameScale,spec.sideLogo,spec.sidePos,spec.carpetTextureId||0,objects]);
+      spec.logoScale,spec.nameScale,spec.sideLogo,spec.sidePos,spec.carpetTextureId||0,objects]);
   }
   update(spec){
     const key=this.visualKey(spec);if(key===this.currentKey)return;
@@ -2093,11 +2100,13 @@ class ThreeBoothRenderer{
       }
       const dark=lum(spec.logoType==='sticker'||spec.logoType==='light'?'#ffffff':bg)<.55;
       const ink=dark?'#ffffff':shade(a.acc,.68),brand=(spec.brand||'YOUR BRAND').toUpperCase();
+      const logoScale=logoScaleFactor(spec.logoScale);
       const logo=(rx,ry,rw,rh)=>{
-        if(image){const ar=image.naturalWidth/image.naturalHeight;let w=rw,h=w/ar;if(h>rh){h=rh;w=h*ar;}
-          x.drawImage(image,rx+(rw-w)/2,ry,w,h);
-        }else{x.strokeStyle=ink;x.lineWidth=7;x.setLineDash([18,12]);x.strokeRect(rx,ry,rw,rh);x.setLineDash([]);
-          x.fillStyle=ink;x.globalAlpha=.65;x.font='700 48px Inter, sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('LOGO',rx+rw/2,ry+rh/2);x.globalAlpha=1;}
+        const sw=rw*logoScale,sh=rh*logoScale,sx=rx+(rw-sw)/2,sy=ry+(rh-sh)/2;
+        if(image){const ar=image.naturalWidth/image.naturalHeight;let w=sw,h=w/ar;if(h>sh){h=sh;w=h*ar;}
+          x.drawImage(image,sx+(sw-w)/2,sy+(sh-h)/2,w,h);
+        }else{x.strokeStyle=ink;x.lineWidth=7;x.setLineDash([18,12]);x.strokeRect(sx,sy,sw,sh);x.setLineDash([]);
+          x.fillStyle=ink;x.globalAlpha=.65;x.font='700 48px Inter, sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('LOGO',sx+sw/2,sy+sh/2);x.globalAlpha=1;}
       };
       const name=(rx,ry,rw,rh)=>{if(spec.nameScale<=0)return;x.fillStyle=ink;x.textAlign='center';x.textBaseline='middle';
         let fs=52+spec.nameScale*7;x.font='700 '+fs+'px Inter, "Noto Sans Thai", sans-serif';while(fs>28&&x.measureText(brand).width>rw){fs-=2;x.font='700 '+fs+'px Inter, "Noto Sans Thai", sans-serif';}
@@ -2790,26 +2799,28 @@ function isoSVG(){
     const wallInk=inkOn(bg), nameCol=nameColOn(bg), FID=filtId||'silh';
     const AR=S.logo?S.logoAR:2.2;
     let out=`<g transform="${M}">`;
+    const logoScale=logoScaleFactor(S.logoScale);
     const drawLogo=(x,y,w,h)=>{
-      const padX=w*.10,padY=h*.16;
+      const sw=w*logoScale,sh=h*logoScale,sx=x+(w-sw)/2,sy=y+(h-sh)/2;
+      const padX=sw*.10,padY=sh*.16;
       let o='';
       if(S.logoType==='light'){
-        o+=`<rect x="${(x-padX*1.9).toFixed(2)}" y="${y.toFixed(2)}" width="${(w+padX*3.8).toFixed(2)}"
-          height="${(h+padY*1.9).toFixed(2)}" rx="${(h*.14).toFixed(3)}" fill="#ffe9a8" opacity=".22"/>`;
-        o+=`<rect x="${(x-padX).toFixed(2)}" y="${y.toFixed(2)}" width="${(w+padX*2).toFixed(2)}"
-          height="${(h+padY).toFixed(2)}" rx="${(h*.10).toFixed(3)}" fill="#fff9e8" opacity=".97"/>`;
+        o+=`<rect x="${(sx-padX*1.9).toFixed(2)}" y="${sy.toFixed(2)}" width="${(sw+padX*3.8).toFixed(2)}"
+          height="${(sh+padY*1.9).toFixed(2)}" rx="${(sh*.14).toFixed(3)}" fill="#ffe9a8" opacity=".22"/>`;
+        o+=`<rect x="${(sx-padX).toFixed(2)}" y="${sy.toFixed(2)}" width="${(sw+padX*2).toFixed(2)}"
+          height="${(sh+padY).toFixed(2)}" rx="${(sh*.10).toFixed(3)}" fill="#fff9e8" opacity=".97"/>`;
       }else if(S.logoType==='sticker'){
-        o+=`<rect x="${(x-padX).toFixed(2)}" y="${y.toFixed(2)}" width="${(w+padX*2).toFixed(2)}"
-          height="${(h+padY).toFixed(2)}" rx="${(h*.09).toFixed(3)}" fill="${wallInk==='#ffffff'?'#ffffff':'#1a1a1a'}" opacity=".9"/>`;}
+        o+=`<rect x="${(sx-padX).toFixed(2)}" y="${sy.toFixed(2)}" width="${(sw+padX*2).toFixed(2)}"
+          height="${(sh+padY).toFixed(2)}" rx="${(sh*.09).toFixed(3)}" fill="${wallInk==='#ffffff'?'#ffffff':'#1a1a1a'}" opacity=".9"/>`;}
       if(S.logo){
         const f=S.logoType==='diecut'?` filter="url(#${FID})"`:'';
-        o+=`<image href="${S.logo}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}"
-          height="${h.toFixed(2)}" preserveAspectRatio="xMidYMid meet"${f}/>`;
+        o+=`<image href="${S.logo}" x="${sx.toFixed(2)}" y="${sy.toFixed(2)}" width="${sw.toFixed(2)}"
+          height="${sh.toFixed(2)}" preserveAspectRatio="xMidYMid meet"${f}/>`;
       }else{
-        o+=`<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}"
-          rx="${(h*.1).toFixed(3)}" fill="none" stroke="${wallInk}" stroke-width="${(h*.04).toFixed(3)}"
-          stroke-dasharray="${(h*.13).toFixed(3)} ${(h*.09).toFixed(3)}" opacity=".45"/>`;
-        o+=`<text x="${(x+w/2).toFixed(2)}" y="${(y+h*.62).toFixed(2)}" font-size="${(h*.3).toFixed(3)}"
+        o+=`<rect x="${sx.toFixed(2)}" y="${sy.toFixed(2)}" width="${sw.toFixed(2)}" height="${sh.toFixed(2)}"
+          rx="${(sh*.1).toFixed(3)}" fill="none" stroke="${wallInk}" stroke-width="${(sh*.04).toFixed(3)}"
+          stroke-dasharray="${(sh*.13).toFixed(3)} ${(sh*.09).toFixed(3)}" opacity=".45"/>`;
+        o+=`<text x="${(sx+sw/2).toFixed(2)}" y="${(sy+sh*.62).toFixed(2)}" font-size="${(sh*.3).toFixed(3)}"
           fill="${wallInk}" text-anchor="middle" font-family="Inter,sans-serif" opacity=".4">LOGO</text>`;}
       return o;};
     const drawName=(x,y,fs,anchor)=>`<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" font-size="${fs.toFixed(3)}"
@@ -2823,30 +2834,32 @@ function isoSVG(){
     if(!showName){                       /* สไลเดอร์ = 0 → โชว์เฉพาะโลโก้ */
       let lh=fh*.18,lw=lh*AR; const maxW=fw*.45;
       if(lw>maxW){lw=maxW;lh=lw/AR;}
-      const anchor=anchorFor(align,lw,fw);
+      const anchor=anchorFor(align,lw*logoScale,fw);
       out+=drawLogo(anchor-lw/2,vTop,lw,lh);
     }else if(layout==='stack'){
       let lh=fh*.16,lw=lh*AR; const maxW=fw*.42;
       if(lw>maxW){lw=maxW;lh=lw/AR;}
       const fs=Math.min(fh*.085*NS,(fw*wAllow)/uw);
       const tw=fs*uw;
-      const bw=Math.max(lw,tw), anchor=anchorFor(align,bw,fw);
+      const bw=Math.max(lw*logoScale,tw), anchor=anchorFor(align,bw,fw);
       out+=drawLogo(anchor-lw/2,vTop,lw,lh);
-      out+=drawName(anchor,vTop+lh+Math.max(fs*1.05,lh*.26),fs,'middle');
+      out+=drawName(anchor,vTop+lh*logoScale+Math.max(fs*1.05,lh*.26),fs,'middle');
     }else{
       let lh=fh*.15,lw=lh*AR; const maxW=fw*.28;
       if(lw>maxW){lw=maxW;lh=lw/AR;}
       const gap=fw*.03;
-      const fs=Math.min(fh*.08*NS,Math.max(fh*.025,(fw*wAllow-lw-gap)/uw));
+      const fs=Math.min(fh*.08*NS,Math.max(fh*.025,(fw*wAllow-lw*logoScale-gap)/uw));
       const tw=fs*uw;
-      const bw=lw+gap+tw, anchor=anchorFor(align,bw,fw), u0=anchor-bw/2;
-      const cy=vTop+lh/2;
+      const bw=lw*logoScale+gap+tw, anchor=anchorFor(align,bw,fw), u0=anchor-bw/2;
+      const cy=vTop+lh*logoScale/2;
       if(layout==='logoLeft'){
-        out+=drawLogo(u0,vTop,lw,lh);
-        out+=drawName(u0+lw+gap,cy+fs*.36,fs,'start');
+        const logoX=u0+(lw*(1-logoScale))/2;
+        out+=drawLogo(logoX,vTop,lw,lh);
+        out+=drawName(u0+lw*logoScale+gap,cy+fs*.36,fs,'start');
       }else{
         out+=drawName(u0,cy+fs*.36,fs,'start');
-        out+=drawLogo(u0+tw+gap,vTop,lw,lh);
+        const logoX=u0+tw+gap+(lw*(logoScale-1))/2;
+        out+=drawLogo(logoX,vTop,lw,lh);
       }
     }
     return out+'</g>';
@@ -2978,6 +2991,7 @@ function syncLightModelStatus(){
 function sync(){
   S.W=Math.max(1,Math.min(30,S.W||1));S.D=Math.max(1,Math.min(30,S.D||1));
   S.H=Math.max(2.4,Math.min(MAX_BOOTH_HEIGHT,S.H||2.4));
+  S.logoScale=Math.max(1,Math.min(10,Number(S.logoScale)||5));
   if(!Array.isArray(S.wallStickerFaces))S.wallStickerFaces=[];
   S.wallStickerFaces=S.wallStickerFaces.filter(face=>WALL_FACES.some(item=>item.k===face));
   if(S.wallMat==='sticker'){
@@ -3100,6 +3114,10 @@ function sync(){
 
   document.getElementById('logoType').value=S.logoType;
   document.getElementById('logoTypeNote').textContent=LOGOTYPES.find(t=>t.k===S.logoType).s;
+  const logoScaleRange=document.getElementById('lsRange');
+  if(logoScaleRange){logoScaleRange.value=S.logoScale;document.getElementById('lsVal').textContent=S.logoScale;}
+  const nameScaleRange=document.getElementById('nsRange');
+  if(nameScaleRange){nameScaleRange.value=S.nameScale;document.getElementById('nsVal').textContent=S.nameScale?S.nameScale:'ซ่อน';}
   document.querySelectorAll('#oLockup .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lockup));
   document.querySelectorAll('#oLogoPos .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.logoPos));
   const isCorner=S.type==='corner';
@@ -3215,6 +3233,8 @@ document.getElementById('cHex').oninput=e=>{const v=e.target.value.trim();
   if(/^#?[0-9a-fA-F]{6}$/.test(v)){S.primary=v[0]==='#'?v:'#'+v;S.colTouched=true;sync();}};
 document.getElementById('nsRange').oninput=e=>{S.nameScale=+e.target.value;
   document.getElementById('nsVal').textContent=S.nameScale?S.nameScale:'ซ่อน';render();};
+document.getElementById('lsRange').oninput=e=>{S.logoScale=+e.target.value;
+  document.getElementById('lsVal').textContent=S.logoScale;render();};
 document.getElementById('cPick2').oninput=e=>{S.secondary=e.target.value;S.secTouched=true;sync();};
 document.getElementById('cHex2').oninput=e=>{const v=e.target.value.trim();
   if(/^#?[0-9a-fA-F]{6}$/.test(v)){S.secondary=v[0]==='#'?v:'#'+v;S.secTouched=true;sync();}};
