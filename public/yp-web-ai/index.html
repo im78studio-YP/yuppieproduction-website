@@ -327,7 +327,7 @@ select:focus{border-color:var(--acc)}
   width:max-content;max-width:calc(100% - 24px);align-items:center;grid-template-columns:none;gap:4px;margin:0;padding:6px;
   border:1px solid rgba(224,168,60,.38);border-radius:10px;background:rgba(9,11,15,.88);backdrop-filter:blur(12px);
   box-shadow:0 12px 28px rgba(0,0,0,.36)}
-#view.three-active+.object-actions.canvas-object-toolbar{display:flex}
+.asset-panel-open #view.three-active+.object-actions.canvas-object-toolbar{display:flex}
 .canvas-object-toolbar .btn{min-height:36px;padding:7px 9px;font-size:10.5px;border-color:transparent;background:transparent;white-space:nowrap}
 .canvas-object-toolbar .btn:hover{border-color:var(--line);background:var(--bg4)}
 .canvas-object-toolbar .btn.danger{color:#ef9b82}
@@ -586,9 +586,9 @@ select:focus{border-color:var(--acc)}
       <div class="note light-model-status" id="lightModelStatus" role="status" aria-live="polite"></div>
       <label class="lbl">สีแสง</label>
       <div class="g2" id="oLightCol"></div>
-      <label class="lbl">กำลังไฟต่อดวง · กำหนดคงที่</label>
+      <label class="lbl">กำลังไฟต่อดวง</label>
       <div class="g2" id="oLightWatts" style="grid-template-columns:1fr"></div>
-      <div class="fixed-spec"><span>กำลังไฟมาตรฐาน</span><b>100W / จุด</b></div>
+      <div class="fixed-spec"><span>กำลังไฟมาตรฐาน</span><b id="lightWattStandard">100W / จุด</b></div>
       <label class="lbl">ติดบนผนัง</label>
       <div class="g2" id="oLightWall"></div>
       <label class="lbl">จำนวนจุด</label>
@@ -917,7 +917,7 @@ const LIGHT_MODELS=[
   /* Arm Light V4: mesh 10 คือก้อนฐานยึดผนังที่ปลายก้านด้านหลัง
      (mesh 9 เป็นเพียงแผ่น/ชิ้นส่วนที่ปลายหัวโคม) จึงต้องใช้ mesh 10
      เป็นระนาบอ้างอิง แล้วกลับแนวก้านให้หัวโคมหันออกทางเดิน */
-  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 100W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',scale:1,spacing:1.0,backWallClearance:1.0,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],beamMode:'downwash',beamInward:.95,beamAngle:.70,beamPenumbra:.90,beamDecay:1.6,beamDistanceFactor:2.5,beamMix:.72,beamDiffuseMix:.28,beamDiffuseAngle:1.06,beamDiffusePenumbra:1,beamDiffuseDecay:1.15,
+  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 10W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',scale:1,spacing:1.0,backWallClearance:1.0,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],beamMode:'downwash',beamInward:.95,beamAngle:.70,beamPenumbra:.90,beamDecay:1.6,beamDistanceFactor:2.5,beamMix:.72,beamDiffuseMix:.28,beamDiffuseAngle:1.06,beamDiffusePenumbra:1,beamDiffuseDecay:1.15,
     /* ฐานติดขอบผนัง แล้วก้านยื่นเข้าทางเดินเสมอ: หลัง = +Z · ซ้าย = +X · ขวา = -X */
     wallRotations:{back:0,left:Math.PI/2,right:-Math.PI/2}}];
 const OFFLINE_LIGHT_MODELS_SCRIPT='./assets/lights/embedded-light-models.js?v=20260824-clear-v2';
@@ -953,7 +953,8 @@ function furnitureModelSource(item){
   });
   return offlineFurnitureModelsPromise.then(models=>{const source=models[item.catalogId];if(!source)throw new Error('Embedded furniture model is missing: '+item.catalogId);return source;});
 }
-const LIGHT_WATTS=[{k:100,n:'100W',price:1500,intensity:52}];
+const LIGHT_WATTS=[{k:100,n:'100W',price:1500,intensity:52},{k:10,n:'10W',price:1500,intensity:52}];
+const lightDefaultWatts=fixtureKey=>fixtureKey==='arm'?10:100;
 const LIGHT_SPACING=1.0;
 const STORAGE_LIGHT_BLOCK_RATIO=.70;
 const BRAND_TOP_GAP_M=.30;
@@ -997,7 +998,7 @@ const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
   W:6,D:3,H:2.4,type:'inline',cornerSide:'right',
   stSize:'none',stW:1.2,stD:1.2,stHmode:2.4,stHv:2.4,stPos:'right',stDoor:'left',stDoorType:'swing',doorTouched:false,
   stSurf:'paint',stPaint:'wall',stFace:'front',doorOff:'start',logoScale:5,nameScale:5,
-  lights:true,lightFixture:'clear100',lightCol:'warm',lightWall:'back',lightWatts:100,lightAdj:0,
+  lights:true,lightFixture:'clear100',lightCol:'white',lightWall:'back',lightWatts:100,lightAdj:0,
   raise:0,floor:'carpet',carpet:'grey',tile:'woodL',carpetTextureData:null,carpetTextureName:'',carpetTextureId:0,
   logoType:'diecut',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
   logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[]};
@@ -2984,11 +2985,12 @@ function syncLightModelStatus(){
   const box=document.getElementById('lightModelStatus');if(!box)return;
   if(!S.lights){box.textContent='';box.dataset.state='idle';return;}
   const model=lightModelDef(),state=threeRenderer&&threeRenderer.fixtureState?threeRenderer.fixtureState(model.k):'idle';
+  const wattLabel=lightWattDef().n+' / จุด';
   box.dataset.state=state;
-  box.textContent=state==='ready'?'โหลดโมเดล 3D แล้ว · ระบบคิด 100W / จุด':
+  box.textContent=state==='ready'?'โหลดโมเดล 3D แล้ว · ระบบคิด '+wattLabel:
     state==='loading'?'กำลังโหลดโมเดล '+model.n+'…':
-    state==='error'?'โหลดโมเดลไม่สำเร็จ · ใช้โคมสำรองและยังคิด 100W / จุด':
-    'โมเดลจะโหลดเมื่อเปิดมุมมอง 3D · ทุกแบบคิด 100W / จุด';
+    state==='error'?'โหลดโมเดลไม่สำเร็จ · ใช้โคมสำรองและยังคิด '+wattLabel:
+    'โมเดลจะโหลดเมื่อเปิดมุมมอง 3D · ระบบคิด '+wattLabel;
 }
 
 function sync(){
@@ -3002,7 +3004,7 @@ function sync(){
   }else S.wallMat='paint';
   if(!LIGHT_MODELS.some(model=>model.k===S.lightFixture))S.lightFixture=LIGHT_MODELS[0].k;
   if(!ST_DOOR_TYPE.some(type=>type.k===S.stDoorType))S.stDoorType='swing';
-  S.lightWatts=100;
+  S.lightWatts=lightDefaultWatts(S.lightFixture);
   if(S.stHmode===0)S.stHv=Math.max(1.5,Math.min(MAX_BOOTH_HEIGHT,S.stHv||2.4));
   reconcileCatalogLayout();
   if(!objectById(objectEditor.selectedId))objectEditor.selectedId=null;
@@ -3099,6 +3101,8 @@ function sync(){
     document.querySelectorAll('#oLightCol .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightCol));
     document.querySelectorAll('#oLightWatts .opt').forEach(b=>b.classList.toggle('on',+b.dataset.k===S.lightWatts));
     document.querySelectorAll('#oLightWall .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightWall));
+    const wattStandard=document.getElementById('lightWattStandard');
+    if(wattStandard)wattStandard.textContent=lightWattDef().n+' / จุด';
     const spacing=lightSpacing(),LC=lightCounts(boothWallThickness(S)),auto=LC.autoTotal;
     document.getElementById('lcount').textContent=LC.total;
     const spacingLabel=lightModelDef()?.spacingRule==='min'?'ระยะขั้นต่ำ ':'ระยะมาตรฐาน ';
@@ -3199,7 +3203,9 @@ document.querySelectorAll('.dock-tool').forEach(b=>{
   if(page)b.setAttribute('aria-controls',page.id||'dockPanel');
 });
 function showDockPage(page,source){
-  workspace.classList.remove('dock-collapsed');dockPanel.setAttribute('aria-hidden','false');
+  workspace.classList.remove('dock-collapsed');
+  workspace.classList.toggle('asset-panel-open',page==='catalog');
+  dockPanel.setAttribute('aria-hidden','false');
   document.querySelectorAll('.dock-page').forEach(p=>{
     const active=p.dataset.dockPage===page;p.classList.toggle('on',active);p.setAttribute('aria-hidden',String(!active));
   });
@@ -3210,7 +3216,11 @@ function showDockPage(page,source){
   if(activePage)activePage.scrollTop=0;
 }
 document.querySelectorAll('.dock-tool').forEach(b=>b.onclick=()=>showDockPage(b.dataset.dockPage,b));
-document.getElementById('dockClose').onclick=()=>{workspace.classList.add('dock-collapsed');dockPanel.setAttribute('aria-hidden','true');};
+document.getElementById('dockClose').onclick=()=>{
+  workspace.classList.remove('asset-panel-open');
+  workspace.classList.add('dock-collapsed');
+  dockPanel.setAttribute('aria-hidden','true');
+};
 
 const summaryToggle=document.getElementById('summaryToggle'),summaryPopover=document.getElementById('summaryPopover'),summaryClose=document.getElementById('summaryClose');
 function closeHeaderSummary(returnFocus=true){
