@@ -290,18 +290,6 @@ select:focus{border-color:var(--acc)}
 .prompt-card .sech h3{font-size:12px;color:var(--tx2)}
 .prompt-textarea{display:block;width:100%;min-height:350px;resize:vertical;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#0c1015;color:var(--tx);font:11px/1.65 Inter,"Noto Sans Thai",sans-serif;white-space:pre-wrap;outline:none}
 .prompt-textarea:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(224,168,60,.12)}
-.prompt-fidelity{margin-top:10px;padding:10px 11px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.02)}
-.prompt-fidelity-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
-.prompt-fidelity-head label{font-size:11px;color:var(--tx2)}
-.prompt-fidelity-head span{font-size:9.5px;color:var(--tx3);text-align:right}
-.prompt-fidelity-control{display:grid;grid-template-columns:minmax(0,1fr) 46px auto;align-items:center;gap:8px}
-.prompt-fidelity-control input[type=range]{width:100%;accent-color:var(--acc);background:none;border:none;padding:0}
-.prompt-fidelity-control input[type=number]{width:46px;min-width:46px;padding:4px 5px;border:1px solid var(--line);border-radius:6px;background:var(--bg2);color:var(--acc2);outline:none;font:600 12px Inter,sans-serif;text-align:center}
-.prompt-fidelity-control input[type=number]:focus{border-color:var(--acc);background:rgba(224,168,60,.07)}
-.prompt-fidelity-control input[type=number]::-webkit-inner-spin-button,.prompt-fidelity-control input[type=number]::-webkit-outer-spin-button{appearance:none;margin:0}
-.prompt-fidelity-control input[type=number]{-moz-appearance:textfield}
-.prompt-fidelity-control em{font-style:normal;font-size:10px;color:var(--tx3)}
-.prompt-fidelity-note{margin-top:6px;color:var(--tx3);font-size:10px;line-height:1.5}
 .prompt-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:9px}
 .prompt-actions .btn{width:100%;min-height:38px}
 .prompt-actions .btn:disabled{opacity:.42}
@@ -510,18 +498,6 @@ select:focus{border-color:var(--acc)}
       <div class="prompt-card">
         <div class="sech"><h3>PROMPT จากแบบปัจจุบัน</h3><span class="hint">อัปเดตอัตโนมัติ</span></div>
         <textarea id="designPrompt" class="prompt-textarea" readonly spellcheck="false" aria-label="PROMPT จากแบบปัจจุบัน"></textarea>
-        <div class="prompt-fidelity" id="promptFidelityControl">
-          <div class="prompt-fidelity-head">
-            <label for="promptFidelityRange">ระดับการคงรูปแบบบูธ</label>
-            <span>0 = เหมือนแบบเดิม · 10 = อิสระขึ้น</span>
-          </div>
-          <div class="prompt-fidelity-control">
-            <input type="range" id="promptFidelityRange" min="0" max="10" step="1" value="0" aria-label="ระดับการคงรูปแบบบูธของ AI">
-            <input type="number" id="promptFidelityVal" min="0" max="10" step="1" value="0" inputmode="numeric" aria-label="ค่าระดับการคงรูปแบบบูธของ AI">
-            <em>/10</em>
-          </div>
-          <div class="prompt-fidelity-note" id="promptFidelityNote">รักษาแบบอ้างอิงอย่างเคร่งครัด และคงขนาดบูธเดิม</div>
-        </div>
         <div class="prompt-actions">
           <button class="btn pri sm" type="button" id="promptCopy">คัดลอก PROMPT</button>
           <button class="btn sm" type="button" id="promptRenderAi" disabled aria-disabled="true" title="Render AI จะเปิดใช้งานในเฟสถัดไป">Render AI<span class="prompt-soon">เร็ว ๆ นี้</span></button>
@@ -1062,7 +1038,7 @@ const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
   lights:true,lightFixture:'clear100',lightCol:'white',lightWall:'back',lightWatts:100,lightAdj:0,
   raise:0,floor:'carpet',carpet:'grey',tile:'woodL',carpetTextureData:null,carpetTextureName:'',carpetTextureId:0,
   logoType:'diecut',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
-  logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[],promptFidelity:0};
+  logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[]};
 const S=BoothSpec;
 const logoScaleFactor=value=>{
   const v=Math.max(1,Math.min(10,Number(value)||5));
@@ -1414,36 +1390,9 @@ function objectListLabel(){
   const counts=new Map();S.objects.forEach(o=>counts.set(o.catalogId,(counts.get(o.catalogId)||0)+1));
   return allObjectCatalog().filter(item=>counts.has(item.catalogId)).map(item=>item.name+' × '+counts.get(item.catalogId)).join(' · ');
 }
-const PROMPT_FIDELITY_MIN=0,PROMPT_FIDELITY_MAX=10;
-function promptFidelityValue(value=S.promptFidelity){
-  const numeric=Number(value);
-  return Number.isFinite(numeric)?clampNumber(Math.round(numeric),PROMPT_FIDELITY_MIN,PROMPT_FIDELITY_MAX):PROMPT_FIDELITY_MIN;
-}
-function promptFidelityGuidance(value=S.promptFidelity){
-  const level=promptFidelityValue(value);
-  if(level===0)return'รักษาแบบอ้างอิงอย่างเคร่งครัด: ห้ามเปลี่ยนผัง ตำแหน่ง องค์ประกอบ และสัดส่วนหลักของบูธ';
-  if(level<=2)return'รักษาผังและองค์ประกอบหลักตามแบบ อนุญาตให้ปรับรายละเอียดเล็กน้อยเท่านั้น';
-  if(level<=5)return'ปรับบรรยากาศและรายละเอียดได้พอประมาณ แต่ต้องคงผัง ขนาด และองค์ประกอบหลักตามแบบ';
-  if(level<=8)return'ปรับสไตล์ วัสดุ แสง และรายละเอียดได้ค่อนข้างอิสระ แต่ต้องคงโครงสร้างและภาพรวมบูธเดิม';
-  return'ปรับสไตล์ วัสดุ แสง และรายละเอียดได้อิสระขึ้น แต่ภาพรวมบูธยังต้องคล้ายแบบเดิม';
-}
-function syncPromptFidelityControls(){
-  const value=promptFidelityValue();
-  const range=document.getElementById('promptFidelityRange');if(range)range.value=value;
-  const field=document.getElementById('promptFidelityVal');
-  if(field&&document.activeElement!==field)field.value=value;
-  const note=document.getElementById('promptFidelityNote');if(note)note.textContent=promptFidelityGuidance(value);
-}
-function setPromptFidelity(value){
-  const numeric=Number(value);
-  if(!Number.isFinite(numeric)){syncPromptFidelityControls();return false;}
-  S.promptFidelity=promptFidelityValue(numeric);
-  syncPromptFidelityControls();updatePromptPreview();return true;
-}
 function buildDesignPrompt(){
   const boothType=typ()||{};
   const business=cat()?.n||S.cat||'ไม่ระบุ';
-  const promptFidelity=promptFidelityValue();
   const floor=(()=>{try{return floorName();}catch(e){return S.floor||'ไม่ระบุ';}})();
   const logoType=LOGOTYPES.find(item=>item.k===S.logoType)?.n||S.logoType||'ไม่ระบุ';
   const lockup=LOCKUPS.find(item=>item.k===S.lockup)?.n||S.lockup||'ไม่ระบุ';
@@ -1462,7 +1411,7 @@ function buildDesignPrompt(){
     'สร้างภาพเรนเดอร์ 3D ของบูธแสดงสินค้าแบบสมจริง',
     'ประเภทธุรกิจ: '+business,
     'รูปแบบบูธ: '+(boothType.n||S.type||'ไม่ระบุ'),
-    'ขนาดบูธ (ต้องคงที่): กว้าง '+S.W+' ม. × ลึก '+S.D+' ม. × สูง '+S.H+' ม. — ห้าม AI เปลี่ยนแปลง',
+    'ขนาดบูธ: กว้าง '+S.W+' ม. × ลึก '+S.D+' ม. × สูง '+S.H+' ม.',
     'ผนังที่ใช้งาน: '+wallFaces,
     'พื้น: '+(S.raise?'ยกพื้น '+S.raise+' ซม. · ':'ไม่ยกพื้น · ')+floor,
     'ผิวผนัง: '+wallFinishSummary(),
@@ -1471,8 +1420,6 @@ function buildDesignPrompt(){
     'ห้องเก็บของ: '+store+(storeHeight?' · สูง '+storeHeight:''),
     'แสงสว่าง: '+lights,
     'อุปกรณ์ในบูธ: '+objectListLabel(),
-    'ระดับการคงรูปแบบบูธ: '+promptFidelity+'/10',
-    promptFidelityGuidance(promptFidelity),
     'มุมมอง: perspective ระดับสายตา เน้นสัดส่วนจริง วัสดุ เงา และแสงสมจริง'
   ].join('\n');
 }
@@ -3140,7 +3087,6 @@ function sync(){
   S.H=Math.max(2.4,Math.min(MAX_BOOTH_HEIGHT,S.H||2.4));
   S.logoScale=Math.max(1,Math.min(10,Number(S.logoScale)||5));
   S.nameScale=Math.max(0,Math.min(10,Number.isFinite(Number(S.nameScale))?Math.round(Number(S.nameScale)):5));
-  S.promptFidelity=promptFidelityValue(S.promptFidelity);
   if(!Array.isArray(S.wallStickerFaces))S.wallStickerFaces=[];
   S.wallStickerFaces=S.wallStickerFaces.filter(face=>WALL_FACES.some(item=>item.k===face));
   if(S.wallMat==='sticker'){
@@ -3317,7 +3263,6 @@ function sync(){
   document.getElementById('plines').innerHTML=estimateLines.map(r=>
     `<div class="kv"><b style="color:var(--tx2);font-weight:400">${r[0]}</b></div>`).join('');
   document.getElementById('summaryCount').textContent=String(estimateLines.length);
-  syncPromptFidelityControls();
   updatePromptPreview();
   render();
 }
@@ -3365,16 +3310,6 @@ function showDockPage(page,source){
 document.querySelectorAll('.dock-tool').forEach(b=>b.onclick=()=>showDockPage(b.dataset.dockPage,b));
 const promptCopyButton=document.getElementById('promptCopy');
 if(promptCopyButton)promptCopyButton.onclick=copyDesignPrompt;
-const promptFidelityRange=document.getElementById('promptFidelityRange');
-const promptFidelityInput=document.getElementById('promptFidelityVal');
-if(promptFidelityRange)promptFidelityRange.oninput=e=>setPromptFidelity(e.target.value);
-if(promptFidelityInput){
-  const commitPromptFidelity=()=>setPromptFidelity(promptFidelityInput.value);
-  promptFidelityInput.addEventListener('change',commitPromptFidelity);
-  promptFidelityInput.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){e.preventDefault();commitPromptFidelity();promptFidelityInput.blur();}
-  });
-}
 document.getElementById('dockClose').onclick=()=>{
   workspace.classList.remove('asset-panel-open');
   workspace.classList.add('dock-collapsed');
