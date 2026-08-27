@@ -1414,100 +1414,6 @@ function objectListLabel(){
   const counts=new Map();S.objects.forEach(o=>counts.set(o.catalogId,(counts.get(o.catalogId)||0)+1));
   return allObjectCatalog().filter(item=>counts.has(item.catalogId)).map(item=>item.name+' × '+counts.get(item.catalogId)).join(' · ');
 }
-function promptSafeNumber(value,fallback=0){
-  const numeric=Number(value);return Number.isFinite(numeric)?numeric:fallback;
-}
-function promptNumber(value,digits=2){return promptSafeNumber(value).toFixed(digits);}
-function promptWallThickness(){
-  try{return promptSafeNumber(boothWallThickness(S));}catch(e){return 0;}
-}
-function promptObjectShape(obj){
-  const position=obj?.position||{},size=obj?.size||{},rotation=promptSafeNumber(obj?.rotationY);
-  return placementShape({w:promptSafeNumber(size.w),d:promptSafeNumber(size.d)},
-    promptSafeNumber(position.x),promptSafeNumber(position.z),rotation);
-}
-function promptObjectBounds(obj){
-  const shape=promptObjectShape(obj),corners=shape.corners||[];
-  const xs=corners.map(point=>point.x),zs=corners.map(point=>point.z);
-  return{minX:Math.min(...xs),maxX:Math.max(...xs),minZ:Math.min(...zs),maxZ:Math.max(...zs)};
-}
-function promptObjectWallDistances(obj){
-  const bounds=promptObjectBounds(obj),width=promptSafeNumber(S.W),depth=promptSafeNumber(S.D),thickness=promptWallThickness();
-  const walls=typ()?.walls||[],leftBoundary=walls.includes('left')?thickness:0,rightBoundary=width-(walls.includes('right')?thickness:0),
-    backBoundary=walls.includes('back')?thickness:0,frontBoundary=depth;
-  return{
-    left:Math.max(0,bounds.minX-leftBoundary),right:Math.max(0,rightBoundary-bounds.maxX),
-    back:Math.max(0,bounds.minZ-backBoundary),front:Math.max(0,frontBoundary-bounds.maxZ)
-  };
-}
-function promptObjectZone(obj){
-  const position=obj?.position||{},x=promptSafeNumber(position.x),z=promptSafeNumber(position.z),width=promptSafeNumber(S.W),depth=promptSafeNumber(S.D);
-  const horizontal=width&&x<width/3?'ซ้าย':width&&x>width*2/3?'ขวา':'กลาง';
-  const vertical=depth&&z<depth/3?'ด้านหลัง':depth&&z>depth*2/3?'ด้านหน้า':'กึ่งกลาง';
-  const distances=promptObjectWallDistances(obj),nearest=Object.entries(distances).sort((a,b)=>a[1]-b[1])[0];
-  const nearestLabel={left:'ผนังซ้าย',right:'ผนังขวา',back:'ผนังหลัง',front:'ขอบเปิดด้านหน้า'}[nearest?.[0]]||'ขอบพื้นที่';
-  return vertical+'-'+horizontal+' · ใกล้'+nearestLabel;
-}
-function boothGeometryPrompt(){
-  const boothType=typ()||{},width=promptSafeNumber(S.W),depth=promptSafeNumber(S.D),height=promptSafeNumber(S.H),thickness=promptWallThickness();
-  const floorLevel=promptSafeNumber(S.raise)/100;
-  const walls=boothType.walls||[],wallName=face=>WALL_FACES.find(item=>item.k===face)?.n||face;
-  const wallSegments=walls.map(face=>{
-    if(face==='back')return'- '+wallName(face)+': ยาวตามแกน X '+promptNumber(width)+' ม. × สูง '+promptNumber(height)+' ม. × หนา '+promptNumber(thickness)+' ม. · อยู่ที่ Z=0 ถึง Z='+promptNumber(thickness)+' ม. และครอบคลุม X=0 ถึง X='+promptNumber(width)+' ม.';
-    if(face==='left')return'- '+wallName(face)+': ยาวตามแกน Z '+promptNumber(depth)+' ม. × สูง '+promptNumber(height)+' ม. × หนา '+promptNumber(thickness)+' ม. · อยู่ที่ X=0 ถึง X='+promptNumber(thickness)+' ม. และครอบคลุม Z=0 ถึง Z='+promptNumber(depth)+' ม.';
-    if(face==='right')return'- '+wallName(face)+': ยาวตามแกน Z '+promptNumber(depth)+' ม. × สูง '+promptNumber(height)+' ม. × หนา '+promptNumber(thickness)+' ม. · อยู่ที่ X='+promptNumber(Math.max(0,width-thickness))+' ถึง X='+promptNumber(width)+' ม. และครอบคลุม Z=0 ถึง Z='+promptNumber(depth)+' ม.';
-    return'- '+wallName(face)+': ยึดตามแนวขอบบูธในแบบ 3D โดยใช้ความหนา '+promptNumber(thickness)+' ม.';
-  });
-  const floorLabel=(()=>{try{return floorName();}catch(e){return S.floor||'พื้นตามแบบ';}})();
-  const textureLabel=S.carpetTextureData?'ใช้ Texture ที่ลูกค้าอัปโหลดชื่อ '+(S.carpetTextureName||'ไฟล์พื้น')+' ปูต่อเนื่องเต็มพื้นที่':'ใช้พื้นผิวมาตรฐานของโปรแกรม ปูต่อเนื่องเต็มพื้นที่';
-  const innerStartX=walls.includes('left')?thickness:0,innerEndX=walls.includes('right')?Math.max(innerStartX,width-thickness):width;
-  const innerStartZ=walls.includes('back')?thickness:0;
-  return[
-    'ล็อกเรขาคณิตผนังและพื้น (ต้องรักษาตามแบบ 3D ห้าม AI วาดใหม่)',
-    'ขอบเขตพื้นที่บูธจริง: กว้าง '+promptNumber(width)+' ม. × ลึก '+promptNumber(depth)+' ม. · จุดอ้างอิงมุมหลังซ้ายคือ X=0, Y=0, Z=0 · พื้นด้านบนอยู่ที่ Y='+promptNumber(floorLevel)+' ม.',
-    'พื้น/พรมคือพื้นบูธชิ้นเดียวแบบสี่เหลี่ยมเต็มขนาด กว้าง '+promptNumber(width)+' ม. × ลึก '+promptNumber(depth)+' ม. · ขอบนอกอยู่ที่ X=0 ถึง X='+promptNumber(width)+' ม. และ Z=0 ถึง Z='+promptNumber(depth)+' ม. · '+floorLabel+' · '+textureLabel,
-    'ขอบพื้นต้องเสมอกรอบพื้นที่บูธ ห้ามทำเป็นพรมผืนเล็กหรือพรมแยกชิ้น ห้ามล้นออกนอกกรอบ ห้ามมีขอบพรม/ฐานดำเพิ่ม และห้ามเว้นช่องระหว่างพรมกับผนัง',
-    'แนวพื้นที่ใช้งานที่มองเห็นภายในผนังอยู่ประมาณ X='+promptNumber(innerStartX)+' ถึง X='+promptNumber(innerEndX)+' ม. และ Z='+promptNumber(innerStartZ)+' ถึง Z='+promptNumber(depth)+' ม. แต่ห้ามเปลี่ยนขนาดพื้นเต็ม W×D',
-    'เมื่อตรวจจากมุมมองด้านบน มุมและขอบพรมต้องตรงกับกรอบบูธและแนวฐานผนังทุกด้านที่มีจริง โดยเฉพาะมุมผนังหลัง–ผนังซ้าย/ขวา · ให้ยึดผังด้านบนและตัวเลขนี้ก่อนมุมมอง perspective',
-    'ผนังจริง '+(walls.length?walls.map(wallName).join(' + '):'ไม่มี')+' · ความหนาผนังทุกด้าน '+promptNumber(thickness)+' ม. · ผนังต้องตั้งฉากกับพื้นและเริ่มจากแนวขอบเดียวกับพื้น',
-    wallSegments.length?'รายละเอียดแนวผนัง:\n'+wallSegments.join('\n'):'',
-    'ข้อบังคับเรขาคณิต: ห้ามเพิ่ม ลด เลื่อน หมุน เอียง หรือตัดผนังและพื้น ห้ามเปลี่ยนสัดส่วน W/D/H ห้ามเพิ่มผนังที่ไม่มีในรูปแบบบูธที่เลือก และห้ามใช้เลนส์กว้างจนทำให้แนวขอบดูคลาดเคลื่อน'
-  ].filter(Boolean).join('\n');
-}
-function objectLayoutPrompt(){
-  const boothType=typ()||{},width=promptSafeNumber(S.W),depth=promptSafeNumber(S.D),height=promptSafeNumber(S.H);
-  const walls=(boothType.walls||[]).map(face=>WALL_FACES.find(item=>item.k===face)?.n||face).join(', ')||'ไม่มี';
-  const openFaces=['left','right'].filter(face=>!(boothType.walls||[]).includes(face))
-    .map(face=>WALL_FACES.find(item=>item.k===face)?.n||face);
-  const objects=Array.isArray(S.objects)?S.objects:[];
-  const header=[
-    'ข้อมูลผังบูธและตำแหน่งอุปกรณ์ (ต้องคงตามแบบ 3D)',
-    'ระบบอ้างอิงตำแหน่ง: มุมหลังซ้ายของพื้นบูธเป็นจุดเริ่มต้น; แกน X จากซ้ายไปขวา, แกน Y จากพื้นขึ้นด้านบน, แกน Z จากด้านหลังไปด้านหน้า; หน่วยเมตร',
-    'ขนาดบูธ: กว้าง '+promptNumber(width)+' ม. × ลึก '+promptNumber(depth)+' ม. × สูง '+promptNumber(height)+' ม.',
-    'ผนังที่มีจริง: '+walls,
-    'ด้านเปิดและทางเดิน: '+(openFaces.length?openFaces.join(', ')+' และด้านหน้า':'ด้านหน้าเท่านั้น')
-  ];
-  if(boothType.note)header.push('รายละเอียดรูปแบบบูธ: '+boothType.note);
-  if(!objects.length)return header.concat('อุปกรณ์ที่ลูกค้าเลือก: ไม่มี','ห้ามเพิ่มอุปกรณ์หรือองค์ประกอบอื่นที่ไม่มีในแบบ').join('\n');
-  const records=objects.map((obj,index)=>{
-    const item=objectCatalogDef(obj.catalogId),position=obj.position||{},size=obj.size||item?.size||{},distances=promptObjectWallDistances(obj);
-    const name=item?.name||'อุปกรณ์กำหนดเอง',rotation=promptSafeNumber(obj.rotationY),x=promptSafeNumber(position.x),z=promptSafeNumber(position.z);
-    const baseY=promptSafeNumber(position.y),heightM=promptSafeNumber(size.h);
-    return{
-      index:index+1,name,x,z,baseY,heightM,
-      normalizedX:width?x/width:0,normalizedZ:depth?z/depth:0,
-      size:{w:promptSafeNumber(size.w),d:promptSafeNumber(size.d),h:heightM},
-      rotation,zone:promptObjectZone(obj),
-      distance_to_walls_m:{left:distances.left,right:distances.right,back:distances.back,front_open:distances.front}
-    };
-  });
-  const readable=records.map(record=>{
-    const d=record.distance_to_walls_m,s=record.size;
-    return'- ชิ้นที่ '+record.index+': '+record.name+' 1 ชิ้น · จุดอ้างอิงกลางฐาน X '+promptNumber(record.x)+' ม., Z '+promptNumber(record.z)+' ม. · ตำแหน่งสัมพัทธ์ X '+promptNumber(record.normalizedX*100,1)+'% / Z '+promptNumber(record.normalizedZ*100,1)+'% · ฐานสูงจากพื้น '+promptNumber(record.baseY)+' ม. · ขนาด กว้าง '+promptNumber(s.w)+' × ลึก '+promptNumber(s.d)+' × สูง '+promptNumber(s.h)+' ม. · หมุนแกน Y '+promptNumber(record.rotation)+'° · โซน '+record.zone+' · ระยะจากขอบ ซ้าย '+promptNumber(d.left)+' / ขวา '+promptNumber(d.right)+' / หลัง '+promptNumber(d.back)+' / ด้านหน้า '+promptNumber(d.front_open)+' ม.';
-  }).join('\n');
-  return header.concat('อุปกรณ์ที่ลูกค้าเลือกและตำแหน่งที่ต้องคงเดิม:',readable,
-    'ข้อบังคับ: ห้ามเพิ่ม ลด ย้าย หรือหมุนอุปกรณ์ ห้ามเปลี่ยนขนาดและจำนวน ให้ยึดตำแหน่งและระยะจากผนังตามรายการนี้ ห้ามจัดวางใหม่ตามความสวยงามของภาพ').join('\n');
-}
 const PROMPT_FIDELITY_MIN=0,PROMPT_FIDELITY_MAX=10;
 function promptFidelityValue(value=S.promptFidelity){
   const numeric=Number(value);
@@ -1515,7 +1421,7 @@ function promptFidelityValue(value=S.promptFidelity){
 }
 function promptFidelityGuidance(value=S.promptFidelity){
   const level=promptFidelityValue(value);
-  if(level===0)return'รักษาแบบอ้างอิงอย่างเคร่งครัด: ห้ามเปลี่ยนผัง ตำแหน่ง องค์ประกอบ และสัดส่วนหลักของบูธ รวมถึงแนวผนังและขอบเขตพื้น/พรม';
+  if(level===0)return'รักษาแบบอ้างอิงอย่างเคร่งครัด: ห้ามเปลี่ยนผัง ตำแหน่ง องค์ประกอบ และสัดส่วนหลักของบูธ';
   if(level<=2)return'รักษาผังและองค์ประกอบหลักตามแบบ อนุญาตให้ปรับรายละเอียดเล็กน้อยเท่านั้น';
   if(level<=5)return'ปรับบรรยากาศและรายละเอียดได้พอประมาณ แต่ต้องคงผัง ขนาด และองค์ประกอบหลักตามแบบ';
   if(level<=8)return'ปรับสไตล์ วัสดุ แสง และรายละเอียดได้ค่อนข้างอิสระ แต่ต้องคงโครงสร้างและภาพรวมบูธเดิม';
@@ -1560,16 +1466,13 @@ function buildDesignPrompt(){
     'ผนังที่ใช้งาน: '+wallFaces,
     'พื้น: '+(S.raise?'ยกพื้น '+S.raise+' ซม. · ':'ไม่ยกพื้น · ')+floor,
     'ผิวผนัง: '+wallFinishSummary(),
-    boothGeometryPrompt(),
     'โลโก้: '+logoType+' · '+lockup+' · ตำแหน่ง '+logoPos+' · ขนาด '+S.logoScale+'/10',
     'ชื่อแบรนด์: '+(S.brand||'YOUR BRAND')+' · ขนาด '+S.nameScale+'/10',
     'ห้องเก็บของ: '+store+(storeHeight?' · สูง '+storeHeight:''),
     'แสงสว่าง: '+lights,
     'อุปกรณ์ในบูธ: '+objectListLabel(),
-    objectLayoutPrompt(),
     'ระดับการคงรูปแบบบูธ: '+promptFidelity+'/10',
     promptFidelityGuidance(promptFidelity),
-    'ข้อกำหนดคงที่: ไม่ว่าระดับความอิสระใด ต้องคงขนาดบูธ ผังผนัง จำนวน ตำแหน่ง ขนาด และการหมุนของอุปกรณ์ตามแบบเดิม',
     'มุมมอง: perspective ระดับสายตา เน้นสัดส่วนจริง วัสดุ เงา และแสงสมจริง'
   ].join('\n');
 }
