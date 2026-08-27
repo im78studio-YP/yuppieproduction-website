@@ -427,7 +427,7 @@ Studio</textarea>
       <p class="hint" id="modeHint" style="margin:6px 0 10px"></p>
       <div class="row"><label>ความลึกกล่อง</label><input type="range" id="bDepth" min="12" max="80" step="1" value="40"><span class="unit" id="bDepthV">40 มม.</span></div>
       <div id="fullThick">
-      <div class="row"><label>ชั้นสีหน้า</label><input type="range" id="bColorT" min="0.4" max="2.4" step="0.1" value="0.4"><span class="unit" id="bColorTV">0.4 มม.</span></div>
+      <div class="row"><label>ชั้นสีหน้า</label><input type="range" id="bColorT" min="0.4" max="2.4" step="0.1" value="0.6"><span class="unit" id="bColorTV">0.6 มม.</span></div>
       <div class="row"><label>ชั้นกระจายแสง</label><input type="range" id="bDiff" min="0.4" max="1.2" step="0.1" value="0.4"><span class="unit" id="bDiffV">0.4 มม.</span></div>
       <div class="row" id="fullBgT"><label>ความหนาพื้นทึบ</label><input type="range" id="bBgT" min="0.6" max="3" step="0.1" value="2.4"><span class="unit" id="bBgTV">2.4 มม.</span></div>
       </div>
@@ -595,10 +595,10 @@ function defaults(){ return {
         {hex:'#ff2d8f',name:'สี 1',glow:true} ],
   /* เก็บสีข้อความและสีลวดลายแยกกัน: สลับแท็บแล้วห้ามสีจากอีกงานเข้ามา active */
   palByMode:{text:null,image:null},
-   /* ค่าเริ่มต้นสำหรับหัว 0.4 มม.: สีหน้า 0.4 (2 ชั้น) + กระจายแสง 0.4 (2 ชั้น) = 0.8 มม.
+   /* ค่าเริ่มต้นสำหรับหัว 0.4 มม.: สีหน้า 0.6 (3 ชั้น) + กระจายแสง 0.4 (2 ชั้น) = 1.0 มม.
      ไม่มีความหนากลางเหลือให้ Slicer เติม infill; แผ่นบังแสงใต้รอยต่อจัดการแสงรั่วแยกต่างหาก
      กรอบข้าง 2.4 · ฝาหลัง 2.8 · เผื่อสวม 0.2 · บ่าหนา 1.6 สูง 10 */
-   box:{ W:256,H:256,depth:40,colorT:0.4,diff:0.4,bgT:1.2,frame:2.4,back:2.8,
+   box:{ W:256,H:256,depth:40,colorT:0.6,diff:0.4,bgT:1.2,frame:2.4,back:2.8,
         frameColor:'#1a1a1a', backColor:'#1a1a1a', bandN:1, bandColors:['#1a1a1a'], bandRules:[] },
   hw:{ hole:'frame', dia:7, hang:false,
        joint:'snap', lipH:10, lipW:1.6, lipCl:0.2, bossW:8, screwDepth:10,
@@ -2071,12 +2071,12 @@ function geomStack(){
     const H=shellSpec();
     return {colorT:0,diff:0,bgT:0,frameZ0:0,total:H.total,shell:H};
   }
-  const colorT=clamp(+b.colorT||0.4,0.4,2.4), diff=clamp(+b.diff||0.4,0.4,1.2);
+  const colorT=clamp(+b.colorT||0.6,0.4,2.4), diff=clamp(+b.diff||0.4,0.4,1.2);
   const bgT = Math.max(b.bgT, colorT+0.2);
   /* หน้าแบบซ้อนชั้น: สีอยู่ชั้นหน้า แล้วมีแผ่นขาวนมเต็มพื้นที่รองรับอยู่ด้านหลัง
      จึงไม่มีรอยต่อสีแบบปลายชนปลายที่แสงลอดได้ */
   /* หน้าแบบถอดเปลี่ยนได้: สีหน้ากับชั้นกระจายแสงมีความหนาเป็นอิสระ
-     โดยค่าเริ่มต้นรวมกันเป็น 0.4 + 0.4 = 0.8 มม. */
+     โดยค่าเริ่มต้นรวมกันเป็น 0.6 + 0.4 = 1.0 มม. */
   const faceBaseT=isLayered()?diff:bgT;
    /* โมดูลถอดเปลี่ยนได้: กรอบเริ่มต่อจากผิวหน้าสีทันทีเพื่อรองรับหน้าแปลน
       แผ่นขาวนมอยู่เฉพาะช่องในของกรอบ ส่วนลิ้น/บ่ารับเป็นวงแหวนของฝาหน้า
@@ -4266,8 +4266,8 @@ function pushToUI(){
   if(S.build&&S.build.mode==='layered') S.build.mode='service';
   if(!['off','standard','strict'].includes(S.art.seal)) S.art.seal='off';
   if(!isFinite(+S.art.choke)) S.art.choke=0.6;
-  /* โปรไฟล์หน้ากล่องไฟหัว 0.4 มม.: สีหน้า 0.4–2.4 และ diffuser 0.4–1.2 */
-  if(!isFinite(+S.box.colorT)||+S.box.colorT<0.4||+S.box.colorT>2.4) S.box.colorT=0.4;
+  /* โปรไฟล์หน้ากล่องไฟหัว 0.4 มม.: สีหน้า 0.4–2.4 (ค่าเริ่มต้น 0.6) และ diffuser 0.4–1.2 */
+  if(!isFinite(+S.box.colorT)||+S.box.colorT<0.4||+S.box.colorT>2.4) S.box.colorT=0.6;
   if(!isFinite(+S.box.diff)||+S.box.diff<0.4||+S.box.diff>1.2) S.box.diff=0.4;
   for(const [id,path,kind,lab,fmt] of BIND){
     const el=document.getElementById(id); if(!el) continue;
