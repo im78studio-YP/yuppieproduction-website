@@ -347,10 +347,6 @@ select:focus{border-color:var(--acc)}
 .prompt-card{padding:14px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025)}
 .prompt-card .sech{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 .prompt-card .sech h3{font-size:12px;color:var(--tx2)}
-.prompt-style-field{display:grid;gap:6px;margin-bottom:10px}
-.prompt-style-field label{font-size:11px;color:var(--tx2)}
-.prompt-style-field select{min-height:39px;border-color:rgba(224,168,60,.32);background:var(--bg2);color:var(--tx)}
-.prompt-style-note{color:var(--tx3);font-size:9.5px;line-height:1.5}
 .prompt-textarea{display:block;width:100%;min-height:350px;resize:vertical;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#0c1015;color:var(--tx);font:11px/1.65 Inter,"Noto Sans Thai",sans-serif;white-space:pre-wrap;outline:none}
 .prompt-textarea:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(224,168,60,.12)}
 .prompt-fidelity{margin-top:10px;padding:10px 11px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.02)}
@@ -648,21 +644,6 @@ select:focus{border-color:var(--acc)}
     <div class="tool-page-body" id="dockPromptBody">
       <div class="prompt-card">
         <div class="sech"><h3>PROMPT จากแบบปัจจุบัน</h3><span class="hint">อัปเดตอัตโนมัติ</span></div>
-        <div class="prompt-style-field">
-          <label for="promptRenderStyle">สไตล์ในการเรนเดอร์</label>
-          <select id="promptRenderStyle" aria-label="เลือกสไตล์ในการเรนเดอร์">
-            <option value="modern-minimalist">สไตล์มินิมอลร่วมสมัย (Modern Minimalist)</option>
-            <option value="futuristic-tech">สไตล์เทคโนโลยีล้ำสมัย (Futuristic Tech)</option>
-            <option value="eco-sustainable">สไตล์รักษ์โลกและยั่งยืน (Eco-Friendly &amp; Sustainable)</option>
-            <option value="luxury-premium">สไตล์หรูหราพรีเมียม (Luxury Premium)</option>
-            <option value="industrial-loft">สไตล์อินดัสเทรียล ลอฟท์ (Industrial Loft / Raw Material)</option>
-            <option value="pop-art-vibrant">สไตล์ป๊อปอาร์ตและสีสันฉูดฉาด (Pop Art / Vibrant Color Block)</option>
-            <option value="neo-traditional">สไตล์ศิลปะดั้งเดิมผสมความโมเดิร์น (Neo-Traditional / Cultural Fusion)</option>
-            <option value="cyberpunk-synthwave">สไตล์ไซเบอร์พังก์ (Cyberpunk / Synthwave)</option>
-            <option value="surreal-dreamy">สไตล์แฟนตาซี เหนือจริง (Surrealism / Dreamy Fantasy)</option>
-          </select>
-          <div class="prompt-style-note" id="promptRenderStyleNote">เส้นสายเรียบง่าย พื้นที่โปร่ง โทนร่วมสมัย และวัสดุที่ดูสะอาด</div>
-        </div>
         <textarea id="designPrompt" class="prompt-textarea" readonly spellcheck="false" aria-label="PROMPT จากแบบปัจจุบัน"></textarea>
         <div class="prompt-fidelity" id="promptFidelityControl">
           <div class="prompt-fidelity-head">
@@ -1318,23 +1299,10 @@ const AI_RENDER_SCHEMA_VERSION=1;
 const AI_LOCK_LEVELS=Object.freeze(['LOCKED','STYLEABLE','OPTIONAL']);
 const AI_ALLOWED_CHANGES=Object.freeze(['material','color','finish','graphic','lighting','reflection','atmosphere','add','remove','position','rotation','scale']);
 const AI_OPTIONAL_CATEGORIES=Object.freeze(['products','plants','people','props']);
-const AI_RENDER_STYLE_DEFAULT='modern-minimalist';
-const AI_RENDER_STYLES=Object.freeze([
-  {key:'modern-minimalist',th:'สไตล์มินิมอลร่วมสมัย',en:'Modern Minimalist',prompt:'ใช้เส้นสายเรียบง่าย พื้นที่โปร่ง โทนสีร่วมสมัย วัสดุสะอาด และรายละเอียดเท่าที่จำเป็น'},
-  {key:'futuristic-tech',th:'สไตล์เทคโนโลยีล้ำสมัย',en:'Futuristic Tech',prompt:'ใช้รูปทรงล้ำสมัย ผิวโลหะหรือกระจก เส้นแสงดิจิทัล และบรรยากาศเทคโนโลยีระดับพรีเมียม'},
-  {key:'eco-sustainable',th:'สไตล์รักษ์โลกและยั่งยืน',en:'Eco-Friendly & Sustainable',prompt:'ใช้วัสดุธรรมชาติหรือวัสดุหมุนเวียน โทนสีอบอุ่น พื้นผิวไม้และสีเขียว พร้อมภาพลักษณ์ที่เป็นมิตรต่อสิ่งแวดล้อม'},
-  {key:'luxury-premium',th:'สไตล์หรูหราพรีเมียม',en:'Luxury Premium',prompt:'ใช้วัสดุและงานผิวระดับพรีเมียม โทนสีสุขุม รายละเอียดประณีต แสงเน้นมิติ และบรรยากาศหรูหรา'},
-  {key:'industrial-loft',th:'สไตล์อินดัสเทรียล ลอฟท์',en:'Industrial Loft / Raw Material',prompt:'ใช้วัสดุเปลือย เช่น โลหะดำ คอนกรีต ไม้ และพื้นผิวดิบ โดยรักษาความเรียบร้อยและความเป็นงานนิทรรศการ'},
-  {key:'pop-art-vibrant',th:'สไตล์ป๊อปอาร์ตและสีสันฉูดฉาด',en:'Pop Art / Vibrant Color Block',prompt:'ใช้สีสดจัด กราฟิกทรงเรขาคณิตแบบ Color Block จุดเด่นชัดเจน และบรรยากาศสนุกมีพลัง'},
-  {key:'neo-traditional',th:'สไตล์ศิลปะดั้งเดิมผสมความโมเดิร์น',en:'Neo-Traditional / Cultural Fusion',prompt:'ผสมลวดลาย วัสดุ หรืออัตลักษณ์วัฒนธรรมแบบดั้งเดิมเข้ากับรูปทรงและงานตกแต่งร่วมสมัยอย่างสมดุล'},
-  {key:'cyberpunk-synthwave',th:'สไตล์ไซเบอร์พังก์',en:'Cyberpunk / Synthwave',prompt:'ใช้แสงนีออน โทนม่วง ชมพู ฟ้า พื้นผิวโลหะเข้ม และบรรยากาศดิจิทัลแบบ Cyberpunk โดยยังผลิตก่อสร้างได้จริง'},
-  {key:'surreal-dreamy',th:'สไตล์แฟนตาซี เหนือจริง',en:'Surrealism / Dreamy Fantasy',prompt:'ใช้บรรยากาศเหนือจริง รูปทรงและแสงที่ชวนฝัน สีสันมีมิติ และรายละเอียดแฟนตาซีโดยไม่เปลี่ยน Geometry หลัก'}
-]);
-const aiRenderStyle=value=>AI_RENDER_STYLES.find(style=>style.key===value)||AI_RENDER_STYLES[0];
 function defaultAIRenderingSettings(){
   return{schemaVersion:AI_RENDER_SCHEMA_VERSION,allowOptionalProps:false,
     optionalPermissions:{products:false,plants:false,people:false,props:false},
-    renderStyle:AI_RENDER_STYLE_DEFAULT,camera:null,preview:null};
+    camera:null,preview:null};
 }
 const BoothSpec={version:2,cat:'food',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
   wallCol:'white',wallMat:'paint',wallStickerFaces:[],wallStickers:{
@@ -1493,7 +1461,6 @@ function normalizeAIRenderingSettings(spec=S){
   source.schemaVersion=AI_RENDER_SCHEMA_VERSION;
   source.allowOptionalProps=source.allowOptionalProps===true;
   source.optionalPermissions=Object.fromEntries(AI_OPTIONAL_CATEGORIES.map(key=>[key,permissions[key]===true]));
-  source.renderStyle=aiRenderStyle(source.renderStyle).key;
   source.camera=source.camera&&typeof source.camera==='object'?source.camera:null;
   source.preview=source.preview&&typeof source.preview==='object'?source.preview:null;
   spec.aiRendering=source;spec.version=Math.max(2,Number(spec.version)||1);return source;
@@ -2448,20 +2415,10 @@ function setPromptFidelity(value){
   S.promptFidelity=promptFidelityValue(numeric);
   syncPromptFidelityControls();updatePromptPreview();return true;
 }
-function syncPromptRenderStyleControls(){
-  const state=normalizeAIRenderingSettings(S),style=aiRenderStyle(state.renderStyle);
-  const select=document.getElementById('promptRenderStyle');if(select&&select.value!==style.key)select.value=style.key;
-  const note=document.getElementById('promptRenderStyleNote');if(note)note.textContent=style.prompt;
-}
-function setPromptRenderStyle(value){
-  const state=normalizeAIRenderingSettings(S),style=aiRenderStyle(value);
-  state.renderStyle=style.key;syncPromptRenderStyleControls();updatePromptPreview();return style;
-}
 function buildDesignPrompt(){
   const boothType=typ()||{};
   const business=cat()?.n||S.cat||'ไม่ระบุ';
   const promptFidelity=promptFidelityValue();
-  const renderStyle=aiRenderStyle(normalizeAIRenderingSettings(S).renderStyle);
   const floor=(()=>{try{return floorName();}catch(e){return S.floor||'ไม่ระบุ';}})();
   const logoType=LOGOTYPES.find(item=>item.k===S.logoType)?.n||S.logoType||'ไม่ระบุ';
   const logoShape=LOGOSHAPES.find(item=>item.k===S.logoShape)?.n||S.logoShape||'ไม่ระบุ';
@@ -2479,8 +2436,6 @@ function buildDesignPrompt(){
   return[
     'สร้างภาพเรนเดอร์ 3D ของบูธแสดงสินค้าแบบสมจริง',
     'ประเภทธุรกิจ: '+business,
-    'สไตล์การออกแบบและเรนเดอร์: '+renderStyle.th+' ('+renderStyle.en+')',
-    'แนวทางสไตล์: '+renderStyle.prompt,
     'รูปแบบบูธ: '+(boothType.n||S.type||'ไม่ระบุ'),
     'ขนาดบูธ (ต้องคงที่): กว้าง '+S.W+' ม. × ลึก '+S.D+' ม. × สูง '+S.H+' ม. — ห้าม AI เปลี่ยนแปลง',
     'ผนังที่ใช้งาน: '+wallFaces,
@@ -2501,7 +2456,6 @@ function buildDesignPrompt(){
   ].join('\n');
 }
 function updatePromptPreview(){
-  syncPromptRenderStyleControls();
   const field=document.getElementById('designPrompt');
   if(field)field.value=buildDesignPrompt();
 }
@@ -5288,8 +5242,6 @@ const promptCopyButton=document.getElementById('promptCopy');
 if(promptCopyButton)promptCopyButton.onclick=copyDesignPrompt;
 const promptCleanScreenshotButton=document.getElementById('promptCleanScreenshot');
 if(promptCleanScreenshotButton)promptCleanScreenshotButton.onclick=downloadCleanScreenshot;
-const promptRenderStyleSelect=document.getElementById('promptRenderStyle');
-if(promptRenderStyleSelect)promptRenderStyleSelect.onchange=e=>setPromptRenderStyle(e.target.value);
 const promptFidelityRange=document.getElementById('promptFidelityRange');
 const promptFidelityInput=document.getElementById('promptFidelityVal');
 if(promptFidelityRange)promptFidelityRange.oninput=e=>setPromptFidelity(e.target.value);
