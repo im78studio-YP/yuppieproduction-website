@@ -276,16 +276,9 @@ select:focus{border-color:var(--acc)}
 .dock-close{position:absolute;z-index:6;right:14px;top:14px;width:34px;height:34px;border-radius:50%;
   border:1px solid var(--line);background:var(--bg2);color:var(--tx2);font-size:20px;line-height:1}
 .dock-close:hover{border-color:var(--acc);color:var(--acc2)}
-.dock-page{display:none;height:100%;padding-bottom:76px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.dock-page{display:none;height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
 .dock-page.on{display:block}
 .dock-page[aria-hidden=true]{display:none}
-.dock-update-bar{position:absolute;z-index:9;left:0;right:0;bottom:0;padding:11px 18px calc(11px + env(safe-area-inset-bottom));
-  border-top:1px solid var(--line);background:rgba(13,16,21,.97);backdrop-filter:blur(12px)}
-.dock-update-button{width:100%;min-height:43px;border:1px solid var(--acc);border-radius:9px;background:var(--acc);color:#1c1404;
-  box-shadow:0 8px 20px rgba(224,168,60,.16);font:700 13px Inter,"Noto Sans Thai",sans-serif;letter-spacing:.02em;transition:.15s}
-.dock-update-button:hover{background:var(--acc2);border-color:var(--acc2);transform:translateY(-1px)}
-.dock-update-button:active{transform:translateY(0)}
-.dock-update-button:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
 .panel-intro{position:sticky;z-index:5;top:0;padding:15px 56px 12px 18px;border-bottom:1px solid var(--line);
   background:rgba(13,16,21,.96);backdrop-filter:blur(12px)}
 .panel-eyebrow,.rail-eyebrow{font:600 10px Inter,sans-serif;letter-spacing:1.25px;text-transform:uppercase;color:var(--acc)}
@@ -818,10 +811,6 @@ select:focus{border-color:var(--acc)}
     </div>
     <div class="tool-page-body" id="dockLightingBody"></div>
   </section>
-
-  <div class="dock-update-bar" id="dockUpdateBar">
-    <button class="dock-update-button" id="dockUpdate" type="button">Update</button>
-  </div>
 
 </div>
 
@@ -3742,17 +3731,10 @@ if(promptFidelityInput){
 }
 const placementSnapInput=document.getElementById('placementSnapEnabled');
 if(placementSnapInput)placementSnapInput.onchange=e=>{S.placementSnap=!!e.target.checked;sync();};
-function closeDockPanel(returnFocus=true){
+document.getElementById('dockClose').onclick=()=>{
   workspace.classList.remove('asset-panel-open');
   workspace.classList.add('dock-collapsed');
   dockPanel.setAttribute('aria-hidden','true');
-  if(returnFocus)requestAnimationFrame(()=>document.querySelector('.dock-tool.on')?.focus());
-}
-document.getElementById('dockClose').onclick=()=>closeDockPanel(true);
-document.getElementById('dockUpdate').onclick=()=>{
-  if(/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName||''))document.activeElement.blur();
-  sync();
-  closeDockPanel(true);
 };
 
 const summaryToggle=document.getElementById('summaryToggle'),summaryPopover=document.getElementById('summaryPopover'),summaryClose=document.getElementById('summaryClose');
