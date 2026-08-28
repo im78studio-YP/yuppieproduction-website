@@ -1169,15 +1169,12 @@ const FURNITURE_CATEGORIES=[
   {k:'media',n:'สื่อและป้าย'},
   {k:'hospitality',n:'ประชุมและรับรอง'},
   {k:'decor',n:'ตกแต่ง'}];
-const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:null,modelScale:1,modelRotationY:0,initialRotation:0,
-  capabilities:null,ports:[],collision:null,...item});
+const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:null,modelScale:1,modelRotationY:0,initialRotation:0,...item});
 const OBJECT_CATALOG=[
   furnitureItem({catalogId:'entrance-frame',category:'structure',type:'entranceFrame',name:'กรอบทางเข้า',icon:'FRAME',size:{w:1,d:2.4,h:2.4},unitPrice:0,color:'#f2f3f5',
-    clearance:0,anchor:'back-right',backWallOnly:true,rotationStep:0,capabilities:['floorPlaceable','attachable','resizable','styleable','compound'],
-    ports:['frame-left-front','frame-right-front'],collision:{layer:'structure',shapeMode:'compound'},thumbUrl:'assets/structure/entrance-frame-reference.png'}),
+    clearance:0,anchor:'back-right',backWallOnly:true,rotationStep:0,thumbUrl:'assets/structure/entrance-frame-reference.png'}),
   furnitureItem({catalogId:'downlight-beam',category:'structure',type:'downlightBeam',name:'คานไฟดาวน์ไลท์',icon:'BEAM',size:{w:6,d:.3,h:2.4},unitPrice:0,color:'#f2f3f5',
-    mount:'ceiling',clearance:0,anchor:'back-center',rotationStep:45,capabilities:['ceilingMountable','attachable','resizable','styleable','compound'],
-    collision:{layer:'structure',shapeMode:'box'},thumbUrl:'assets/structure/downlight-beam-reference.png'}),
+    mount:'ceiling',clearance:0,anchor:'back-center',rotationStep:45,thumbUrl:'assets/structure/downlight-beam-reference.png'}),
   furnitureItem({catalogId:'counter-standard',category:'reception',type:'counter',name:'เคาน์เตอร์',icon:'▰',size:{w:1.2,d:.6,h:1},unitPrice:28000,color:'#b88142',
     modelUrl:'assets/furniture/counter-standard.glb',thumbUrl:'assets/furniture/counter-standard.webp'}),
   furnitureItem({catalogId:'shelf-standard',category:'display',type:'shelf',name:'ชั้นโชว์',icon:'▥',size:{w:1,d:.45,h:2},unitPrice:18000,color:'#b99668'}),
@@ -1596,16 +1593,6 @@ function currentCameraManifest(spec=S){
   const saved=normalizeAIRenderingSettings(spec).camera;
   return saved?JSON.parse(JSON.stringify(saved)):null;
 }
-function manifestSceneCollision(obj,item){
-  normalizeSceneObjectModel(obj,item);return{layer:obj.collision.layer,shapeMode:obj.collision.shapeMode,tolerance:manifestNumber(obj.collision.tolerance),
-    shapes:sceneCollisionShapeDefinitions(obj,item).map(shape=>({id:shape.id,type:shape.type,dimensions:manifestSize(shape.size.w,shape.size.d,shape.size.h),
-      offset:manifestVector(shape.offset.x,shape.offset.y,shape.offset.z)}))};
-}
-function manifestSceneAttachment(obj){
-  if(!obj?.attachment?.targetId)return null;const attachment=obj.attachment;
-  return{targetId:attachment.targetId,sourcePort:attachment.sourcePort,targetPort:attachment.targetPort,
-    syncDimensions:[...(attachment.syncDimensions||[])],offset:manifestVector(attachment.offset?.x,attachment.offset?.y,attachment.offset?.z),status:attachment.status};
-}
 function buildGeometryManifest(spec=S){
   const typeDef=manifestBoothType(spec),walls=typeDef.walls||[],thickness=boothWallThickness(spec),floorY=(Number(spec.raise)||0)/100;
   const objects=[],push=node=>{objects.push(node);return node;};
@@ -1618,9 +1605,8 @@ function buildGeometryManifest(spec=S){
   walls.forEach(face=>push(manifestWallNode(face,spec,typeDef,thickness,floorY)));
   if(hasStore()){
     const panels=storagePanels(thickness),room=panels.G;
-    const target=sceneTargetNode('storage-room',spec);
     push({id:'storage-room',type:'storage-room',name:'ห้องเก็บของ',parentId:'booth-root',geometry:{kind:'room',panels:{front:true,back:panels.back,left:panels.left,right:panels.right},
-      door:{face:spec.stDoor,type:spec.stDoorType,offset:spec.doorOff}},dimensions:manifestSize(room.w,room.d,room.h),ports:(target?.ports||[]).map(port=>({id:port.id,role:port.role,position:manifestVector(port.position.x,floorY+port.position.y,port.position.z)})),
+      door:{face:spec.stDoor,type:spec.stDoorType,offset:spec.doorOff}},dimensions:manifestSize(room.w,room.d,room.h),
       transform:{position:manifestVector(room.x+room.w/2,floorY+room.h/2,room.y+room.d/2),rotationDeg:manifestVector()},
       materialIntent:String(spec.stSurf||'paint')+':'+String(spec.stPaint||'wall'),
       semantics:manifestSemantics('LOCKED',{materialIntent:String(spec.stSurf||'paint'),allowedChanges:['material','color','finish','graphic','lighting','reflection']}),
@@ -1654,12 +1640,10 @@ function buildGeometryManifest(spec=S){
     semantics:manifestSemantics('STYLEABLE',{materialIntent:'preserve-fixture-count-and-placement',allowedChanges:['material','color','finish','lighting','reflection']}),
     source:{kind:'derived',path:'BoothSpec.lights/light*'}}));
   (Array.isArray(spec.objects)?spec.objects:[]).forEach((obj,index)=>{
-    const item=objectCatalogDef(obj.catalogId),size=obj.size||item?.size||{},position=obj.position||{},rule=normalizeObjectAIRule(obj,item);normalizeSceneObjectModel(obj,item);
+    const item=objectCatalogDef(obj.catalogId),size=obj.size||item?.size||{},position=obj.position||{},rule=normalizeObjectAIRule(obj,item);
     push({id:String(obj.id||'asset-'+(index+1)),type:String(obj.type||item?.type||'asset'),name:item?.name||String(obj.catalogId||'Asset'),parentId:'booth-root',
       catalogId:obj.catalogId||null,geometry:{kind:isEntranceFrameObject(obj)?'entrance-frame':isDownlightBeamObject(obj)?'downlight-beam':'catalog-object',structure:obj.structure?JSON.parse(JSON.stringify(obj.structure)):null},
       dimensions:manifestSize(size.w,size.d,size.h),transform:{position:manifestVector(position.x,floorY+(Number(position.y)||0),position.z),rotationDeg:manifestVector(0,obj.rotationY,0)},
-      capabilities:{...obj.capabilities},placement:{...obj.placement},attachment:manifestSceneAttachment(obj),collision:manifestSceneCollision(obj,item),
-      ports:localScenePorts(obj).map(port=>({id:port.id,role:port.role,localPosition:manifestVector(port.position.x,port.position.y,port.position.z)})),
       editorLocked:obj.locked===true,materialIntent:rule.materialIntent,
       semantics:{...JSON.parse(JSON.stringify(rule)),allowedChanges:rule.allowedChanges.filter(change=>!rule.geometryLocked||!['position','rotation','scale'].includes(change))},
       source:{kind:'BoothSpec',path:'objects['+index+']'}});
@@ -1685,35 +1669,6 @@ const isEntranceFrameObject=obj=>obj?.type==='entranceFrame'||obj?.catalogId==='
 const isDownlightBeamItem=item=>item?.type==='downlightBeam'||item?.catalogId==='downlight-beam';
 const isDownlightBeamObject=obj=>obj?.type==='downlightBeam'||obj?.catalogId==='downlight-beam';
 const DOWNLIGHT_MODEL_URL='./assets/lights/Downlight_V1.glb';
-const SCENE_OBJECT_SCHEMA_VERSION=1;
-const SCENE_CAPABILITY_KEYS=Object.freeze(['floorPlaceable','wallMountable','ceilingMountable','attachable','resizable','rotatable','repeatable','styleable','compound']);
-const SCENE_COLLISION_LAYERS=Object.freeze(['structure','furniture','decoration','surface','optional-prop']);
-function defaultSceneCapabilities(item={}){
-  const declared=Array.isArray(item.capabilities)?item.capabilities:null,source=declared||[
-    item.mount==='ceiling'?'ceilingMountable':item.mount==='wall'?'wallMountable':'floorPlaceable',
-    item.category==='structure'?'resizable':'rotatable','styleable',item.category==='decor'?'repeatable':null];
-  return Object.fromEntries(SCENE_CAPABILITY_KEYS.map(key=>[key,source.includes(key)]));
-}
-function normalizeSceneObjectModel(obj,item=objectCatalogDef(obj?.catalogId)){
-  if(!obj||typeof obj!=='object')return null;
-  obj.sceneSchemaVersion=SCENE_OBJECT_SCHEMA_VERSION;
-  const defaults=defaultSceneCapabilities(item),declared=obj.capabilities&&typeof obj.capabilities==='object'?obj.capabilities:{};
-  obj.capabilities=Object.fromEntries(SCENE_CAPABILITY_KEYS.map(key=>[key,typeof declared[key]==='boolean'?declared[key]:defaults[key]]));
-  const collision=obj.collision&&typeof obj.collision==='object'?obj.collision:{},catalogCollision=item?.collision||{};
-  const defaultLayer=item?.category==='structure'?'structure':item?.category==='decor'?'decoration':'furniture';
-  collision.layer=SCENE_COLLISION_LAYERS.includes(collision.layer)?collision.layer:(catalogCollision.layer||defaultLayer);
-  collision.shapeMode=collision.shapeMode||catalogCollision.shapeMode||(isEntranceFrameObject(obj)?'compound':'box');
-  collision.tolerance=clampNumber(Number(collision.tolerance)||.002,0,.05);obj.collision=collision;
-  const placement=obj.placement&&typeof obj.placement==='object'?obj.placement:{};
-  placement.mode=obj.attachment?.targetId?'attached':(placement.mode==='surface'?'surface':'free');
-  placement.surface=String(placement.surface||item?.mount||'floor');placement.snapGrid=PLACEMENT_GRID;obj.placement=placement;
-  if(obj.attachment&&typeof obj.attachment==='object'&&obj.attachment.targetId){
-    obj.attachment={targetId:String(obj.attachment.targetId),sourcePort:String(obj.attachment.sourcePort||''),targetPort:String(obj.attachment.targetPort||''),
-      syncDimensions:Array.isArray(obj.attachment.syncDimensions)?[...new Set(obj.attachment.syncDimensions.filter(key=>['width','depth','height'].includes(key)))]:[],
-      offset:{x:Number(obj.attachment.offset?.x)||0,y:Number(obj.attachment.offset?.y)||0,z:Number(obj.attachment.offset?.z)||0},status:String(obj.attachment.status||'pending')};
-  }else obj.attachment=null;
-  return obj;
-}
 function entranceFrameDefaults(spec=S){
   return{projection:Math.min(2.4,Math.max(.5,Number(spec.D)||3)),height:Math.min(2.4,Math.max(.5,Number(spec.H)||2.4)),
     pierWidth:Math.min(1,Math.max(.3,Number(spec.W)||6)),thickness:.15,color:'#f2f3f5'};
@@ -1733,57 +1688,6 @@ function normalizeEntranceFrameObject(obj,spec=S){
 function entranceFrameArea(obj){
   const cfg=normalizeEntranceFrameObject(obj).structure;
   return 2*(cfg.pierWidth*cfg.height+cfg.pierWidth*cfg.projection);
-}
-function localScenePorts(obj){
-  if(!obj)return[];
-  if(isEntranceFrameObject(obj)){
-    const cfg=normalizeEntranceFrameObject(obj).structure,z=cfg.projection/2-cfg.thickness/2;
-    return[
-      {id:'frame-left-front',role:'structure-joint',position:{x:-cfg.pierWidth/2,y:0,z}},
-      {id:'frame-right-front',role:'structure-joint',position:{x:cfg.pierWidth/2,y:0,z}}
-    ];
-  }
-  const item=objectCatalogDef(obj.catalogId),ports=Array.isArray(obj.ports)&&obj.ports.length?obj.ports:(Array.isArray(item?.ports)?item.ports:[]);
-  return ports.filter(port=>port&&typeof port==='object'&&port.id&&port.position).map(port=>({id:String(port.id),role:String(port.role||'joint'),
-    position:{x:Number(port.position.x)||0,y:Number(port.position.y)||0,z:Number(port.position.z)||0}}));
-}
-function sceneTargetNode(id,spec=S){
-  if(id==='storage-room'){
-    if(!hasStore())return null;
-    const t=boothWallThickness(spec),G=storeGeom(t),frontZ=G.y+G.d-t/2;
-    return{id:'storage-room',type:'storage-room',dimensions:{width:G.w,depth:G.d,height:G.h},
-      ports:[{id:'storage-left-front',role:'structure-joint',position:{x:G.x,y:0,z:frontZ}},
-        {id:'storage-right-front',role:'structure-joint',position:{x:G.x+G.w,y:0,z:frontZ}}]};
-  }
-  const obj=(spec.objects||[]).find(item=>item.id===id);if(!obj)return null;
-  const rad=((Number(obj.rotationY)||0)%360)*Math.PI/180,c=Math.cos(rad),s=Math.sin(rad),base=obj.position||{};
-  return{id:obj.id,type:obj.type,dimensions:{width:obj.size?.w||0,depth:obj.size?.d||0,height:obj.size?.h||0},ports:localScenePorts(obj).map(port=>({
-    ...port,position:{x:(Number(base.x)||0)+port.position.x*c+port.position.z*s,y:(Number(base.y)||0)+port.position.y,
-      z:(Number(base.z)||0)-port.position.x*s+port.position.z*c}}))};
-}
-function sceneAttachmentActive(obj){return !!(obj?.attachment?.targetId&&obj.attachment.status==='attached');}
-function resolveSceneAttachment(obj,spec=S){
-  normalizeSceneObjectModel(obj);const attachment=obj?.attachment;if(!attachment?.targetId)return false;
-  const target=sceneTargetNode(attachment.targetId,spec);if(!target){attachment.status='missing';obj.placement.mode='free';return false;}
-  if(isEntranceFrameObject(obj)&&attachment.syncDimensions.includes('depth')){
-    obj.structure.projection=target.dimensions.depth;normalizeEntranceFrameObject(obj,spec);
-  }
-  const source=localScenePorts(obj).find(port=>port.id===attachment.sourcePort),targetPort=target.ports.find(port=>port.id===attachment.targetPort);
-  if(!source||!targetPort){attachment.status='invalid';obj.placement.mode='free';return false;}
-  const rad=((Number(obj.rotationY)||0)%360)*Math.PI/180,c=Math.cos(rad),s=Math.sin(rad),offset=attachment.offset||{};
-  const sourceX=source.position.x*c+source.position.z*s,sourceZ=-source.position.x*s+source.position.z*c;
-  obj.position.x=+placementRound(targetPort.position.x-sourceX+(Number(offset.x)||0)).toFixed(3);
-  obj.position.y=+(targetPort.position.y-source.position.y+(Number(offset.y)||0)).toFixed(3);
-  obj.position.z=+placementRound(targetPort.position.z-sourceZ+(Number(offset.z)||0)).toFixed(3);
-  attachment.status='attached';obj.placement.mode='attached';return true;
-}
-function resolveSceneAttachments(spec=S){
-  (Array.isArray(spec.objects)?spec.objects:[]).forEach(obj=>{normalizeSceneObjectModel(obj);if(obj.attachment?.targetId)resolveSceneAttachment(obj,spec);});
-}
-function sceneAttachmentLabel(attachment){
-  if(!attachment?.targetId)return'วางอิสระ';
-  const side=attachment.targetPort==='storage-left-front'?'ด้านซ้าย':attachment.targetPort==='storage-right-front'?'ด้านขวา':attachment.targetPort;
-  return attachment.targetId==='storage-room'?'เชื่อม'+side+'ของห้องเก็บของ':'เชื่อมกับ '+attachment.targetId+' · '+side;
 }
 function downlightBeamDefaults(spec=S){
   return{length:Math.max(.5,Number(spec.W)||6),depth:.3,thickness:.2,height:Math.max(.5,Number(spec.H)||2.4),lightCount:5,color:'#f2f3f5',lightColor:'#fff4d6',wallAttached:true};
@@ -1895,33 +1799,6 @@ function shapesOverlap(a,b,gap=0){
     return distance<radiusA+radiusB+gap-.0001;
   });
 }
-function sceneCollisionShapeDefinitions(obj,item=objectCatalogDef(obj?.catalogId)){
-  const size=obj?.size||item?.size||{w:0,d:0,h:0};
-  if(isEntranceFrameObject(obj)||isEntranceFrameItem(item)){
-    const cfg=obj&&isEntranceFrameObject(obj)?normalizeEntranceFrameObject(obj).structure:{
-      projection:Number(size.d)||2.4,height:Number(size.h)||2.4,pierWidth:Number(size.w)||1,thickness:.15};
-    const pierHeight=Math.max(.05,cfg.height-cfg.thickness);
-    return[
-      {id:'canopy',type:'box',size:{w:cfg.pierWidth,d:cfg.projection,h:cfg.thickness},offset:{x:0,y:cfg.height-cfg.thickness/2,z:0}},
-      {id:'front-pier',type:'box',size:{w:cfg.pierWidth,d:cfg.thickness,h:pierHeight},offset:{x:0,y:pierHeight/2,z:cfg.projection/2-cfg.thickness/2}}
-    ];
-  }
-  return[{id:'body',type:'box',size:{w:Number(size.w)||0,d:Number(size.d)||0,h:Number(size.h)||0},
-    offset:{x:0,y:(Number(size.h)||0)/2,z:0}}];
-}
-function worldCollisionVolumes(item,size,x,z,rotationY=0,obj=null){
-  const proxy=obj||{catalogId:item?.catalogId,type:item?.type,size,position:{x,y:0,z},rotationY},baseY=Number(proxy.position?.y)||0;
-  proxy.size=size||proxy.size;const rad=((Number(rotationY)||0)%360)*Math.PI/180,c=Math.cos(rad),s=Math.sin(rad);
-  return sceneCollisionShapeDefinitions(proxy,item).map(def=>{
-    const ox=Number(def.offset?.x)||0,oz=Number(def.offset?.z)||0,oy=Number(def.offset?.y)||0;
-    const cx=Number(x)+ox*c+oz*s,cz=Number(z)-ox*s+oz*c,h=Math.max(0,Number(def.size?.h)||0);
-    return{id:def.id,shape:placementShape({w:Number(def.size?.w)||0,d:Number(def.size?.d)||0},cx,cz,rotationY),minY:baseY+oy-h/2,maxY:baseY+oy+h/2};
-  });
-}
-function collisionVolumesOverlap(a,b,gap=0){
-  const vertical=a.minY<b.maxY-.0001&&b.minY<a.maxY-.0001;
-  return vertical&&shapesOverlap(a.shape,b.shape,gap);
-}
 function placementLimits(item,rotationY=0,sizeOverride=null){
   const footprint=footprintSize(sizeOverride||item.size,rotationY),walls=typ().walls,edge=item.clearance??.05,t=boothWallThickness(S),ceiling=item.mount==='ceiling';
   const edgeMinX=ceiling?edge:(walls.includes('left')?t:0)+edge,edgeMaxX=ceiling?S.W-edge:S.W-(walls.includes('right')?t:0)-edge;
@@ -1931,9 +1808,9 @@ function placementLimits(item,rotationY=0,sizeOverride=null){
   const minZ=edgeMinZ+footprint.d/2,maxZ=edgeMaxZ-footprint.d/2;
   return minX<=maxX&&minZ<=maxZ?{minX,maxX,minZ,maxZ,edgeMinX,edgeMaxX,edgeMinZ,edgeMaxZ,footprint}:null;
 }
-function isCatalogPlacementValid(catalogId,x,z,rotationY=0,ignoreId=null,sizeOverride=null,allowOverlap=ALLOW_ASSET_OVERLAP,objectOverride=null){
+function isCatalogPlacementValid(catalogId,x,z,rotationY=0,ignoreId=null,sizeOverride=null,allowOverlap=ALLOW_ASSET_OVERLAP){
   const item=objectCatalogDef(catalogId),size=sizeOverride||item?.size,limits=item&&placementLimits(item,rotationY,size);if(!item||!limits||!size)return false;
-  const epsilon=.0001,shape=placementShape(size,x,z,rotationY),volumes=worldCollisionVolumes(item,size,x,z,rotationY,objectOverride);
+  const epsilon=.0001,shape=placementShape(size,x,z,rotationY);
   if(shape.corners.some(corner=>corner.x<limits.edgeMinX-epsilon||corner.x>limits.edgeMaxX+epsilon||
     corner.z<limits.edgeMinZ-epsilon||corner.z>limits.edgeMaxZ+epsilon))return false;
   if(item.mount!=='ceiling'&&isCurvedWallType(S)&&typ().walls.includes('back')){
@@ -1945,22 +1822,20 @@ function isCatalogPlacementValid(catalogId,x,z,rotationY=0,ignoreId=null,sizeOve
     if(curve&&probes.some(point=>point.z<curve.pointAtX(point.x).z+boothWallThickness(S)/2+clearance-epsilon))return false;
   }
   if(item.mount!=='ceiling'&&hasStore()){
-    const G=storeGeom(boothWallThickness(S)),storeVolume={shape:placementShape({w:G.w,d:G.d},G.x+G.w/2,G.y+G.d/2,0),minY:0,maxY:G.h};
-    const attached=objectOverride?.attachment?.targetId==='storage-room',gap=attached?-(objectOverride.collision?.tolerance||.002):(item.clearance??.05);
-    if(volumes.some(volume=>collisionVolumesOverlap(volume,storeVolume,gap)))return false;
+    const G=storeGeom(boothWallThickness(S)),storeShape=placementShape({w:G.w,d:G.d},G.x+G.w/2,G.y+G.d/2,0);
+    if(shapesOverlap(shape,storeShape,item.clearance??.05))return false;
   }
   const photoPlatform=photo360PlatformLayout(S);
   if(item.mount!=='ceiling'&&photoPlatform){
-    const platformVolume={shape:placementShape({w:photoPlatform.diameter,d:photoPlatform.diameter},photoPlatform.x,photoPlatform.z,0),minY:0,maxY:photoPlatform.height};
-    if(volumes.some(volume=>collisionVolumesOverlap(volume,platformVolume,item.clearance??.05)))return false;
+    const platformShape=placementShape({w:photoPlatform.diameter,d:photoPlatform.diameter},photoPlatform.x,photoPlatform.z,0);
+    if(shapesOverlap(shape,platformShape,item.clearance??.05))return false;
   }
   if(allowOverlap)return true;
   return !S.objects.some(other=>{
     if(other.id===ignoreId)return false;
     const otherItem=objectCatalogDef(other.catalogId),gap=Math.max(item.clearance??.05,otherItem?.clearance??.05);
     if((item.mount==='ceiling')!==(otherItem?.mount==='ceiling'))return false;
-    const otherVolumes=worldCollisionVolumes(otherItem,other.size,other.position.x,other.position.z,other.rotationY||0,other);
-    return volumes.some(volume=>otherVolumes.some(otherVolume=>collisionVolumesOverlap(volume,otherVolume,gap)));
+    return shapesOverlap(shape,placementShape(other.size,other.position.x,other.position.z,other.rotationY||0),gap);
   });
 }
 function findCatalogPlacement(catalogId,rotationY=0,preferred=null,sizeOverride=null){
@@ -2153,9 +2028,8 @@ function plannedCatalogLayout(){
       const item=objectCatalogDef(object.catalogId);if(!item){possible=false;break;}
       if(isEntranceFrameObject(object))normalizeEntranceFrameObject(object);
       if(isDownlightBeamObject(object))normalizeDownlightBeamObject(object);
-      normalizeSceneObjectModel(object,item);if(object.attachment?.targetId)resolveSceneAttachment(object,S);
-      const valid=isCatalogPlacementValid(object.catalogId,object.position.x,object.position.z,object.rotationY||0,null,object.size,ALLOW_ASSET_OVERLAP,object);
-      const position=valid?{x:object.position.x,z:object.position.z}:sceneAttachmentActive(object)?null:findCatalogPlacement(object.catalogId,object.rotationY||0,object.position,object.size);
+      const valid=isCatalogPlacementValid(object.catalogId,object.position.x,object.position.z,object.rotationY||0,null,object.size);
+      const position=valid?{x:object.position.x,z:object.position.z}:findCatalogPlacement(object.catalogId,object.rotationY||0,object.position,object.size);
       if(!position){possible=false;break;}
       planned.push({...object,position:{...object.position,x:position.x,z:position.z}});
     }
@@ -2201,7 +2075,6 @@ function makeCatalogObject(catalogId,x,z){
   normalizeObjectAIRule(object,item);
   if(isEntranceFrameItem(item)){object.structure=entranceFrameDefaults(S);normalizeEntranceFrameObject(object);}
   if(isDownlightBeamItem(item)){object.structure=downlightBeamDefaults(S);normalizeDownlightBeamObject(object);}
-  normalizeSceneObjectModel(object,item);
   return object;
 }
 function addCatalogObject(catalogId){
@@ -2233,32 +2106,12 @@ function moveEntranceFrameToSide(id,side){
   const x=side==='left'?limits.minX:limits.maxX,z=limits.minZ;
   if(!isCatalogPlacementValid(obj.catalogId,x,z,0,obj.id,obj.size)){
     announceCatalog('ย้ายกรอบทางเข้าไม่ได้ เพราะอยู่นอกขอบเขตหรือชนโครงสร้างหลัก','error');return false;}
-  const before=objectSnapshot();obj.attachment=null;normalizeSceneObjectModel(obj,item);obj.rotationY=0;obj.position.x=+placementRound(x).toFixed(3);obj.position.z=+placementRound(z).toFixed(3);
+  const before=objectSnapshot();obj.rotationY=0;obj.position.x=+placementRound(x).toFixed(3);obj.position.z=+placementRound(z).toFixed(3);
   recordObjectHistory(before);objectEditor.selectedId=obj.id;sync();announceCatalog('ย้ายกรอบทางเข้าไปด้าน'+(side==='left'?'ซ้าย':'ขวา')+'แล้ว','success');return true;
-}
-function setEntranceFrameAttachment(id,mode){
-  const obj=objectById(id),item=obj&&objectCatalogDef(obj.catalogId);if(!obj||!item||!isEntranceFrameObject(obj))return false;
-  if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return false;}
-  const before=objectSnapshot(),previous=JSON.parse(JSON.stringify(obj));
-  if(mode==='free'){
-    obj.attachment=null;normalizeSceneObjectModel(obj,item);recordObjectHistory(before);objectEditor.selectedId=id;sync();
-    announceCatalog('ปลดกรอบทางเข้าเป็นการวางอิสระแล้ว','success');return true;
-  }
-  if(!hasStore()){announceCatalog('ต้องสร้างห้องเก็บของก่อนจึงจะเชื่อมโครงสร้างได้','error');return false;}
-  const onLeft=mode==='storage-left';
-  obj.rotationY=0;obj.attachment={targetId:'storage-room',sourcePort:onLeft?'frame-right-front':'frame-left-front',
-    targetPort:onLeft?'storage-left-front':'storage-right-front',syncDimensions:['depth'],offset:{x:0,y:0,z:0},status:'pending'};
-  normalizeSceneObjectModel(obj,item);resolveSceneAttachment(obj,S);
-  const limits=placementLimits(item,0,obj.size),valid=limits&&isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,0,obj.id,obj.size,true,obj);
-  if(!valid){Object.keys(obj).forEach(key=>delete obj[key]);Object.assign(obj,previous);
-    announceCatalog('เชื่อมด้านนี้ไม่ได้ เพราะกรอบจะอยู่นอกขอบเขตบูธหรือชนโครงสร้าง','error');sync();return false;}
-  recordObjectHistory(before);objectEditor.selectedId=id;sync();
-  announceCatalog('เชื่อมกรอบทางเข้ากับ'+(onLeft?'ด้านซ้าย':'ด้านขวา')+'ของห้องเก็บของแล้ว','success');return true;
 }
 function updateEntranceFrameObject(id,key,value){
   const obj=objectById(id),item=obj&&objectCatalogDef(obj.catalogId);if(!obj||!item||!isEntranceFrameObject(obj))return;
   if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
-  if(key==='projection'&&sceneAttachmentActive(obj)){announceCatalog('ระยะยื่นกำลังตามความลึกห้องเก็บของ กรุณาปลดการเชื่อมก่อนแก้ไข','error');return;}
   const before=objectSnapshot(),previous={structure:{...obj.structure},size:{...obj.size},position:{...obj.position},rotationY:obj.rotationY};
   if(key==='color'){
     const color=String(value||'').trim();if(!/^#?[0-9a-fA-F]{6}$/.test(color))return;
@@ -2271,7 +2124,7 @@ function updateEntranceFrameObject(id,key,value){
   if(!limits){Object.assign(obj,previous);announceCatalog('ขนาดกรอบทางเข้าใหญ่เกินพื้นที่บูธ','error');sync();return;}
   obj.position.z=+placementRound(limits.minZ).toFixed(3);
   obj.position.x=+placementRound(clampNumber(obj.position.x,limits.minX,limits.maxX)).toFixed(3);
-  if(!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,0,obj.id,obj.size,ALLOW_ASSET_OVERLAP,obj)){
+  if(!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,0,obj.id,obj.size)){
     const alternate=findCatalogPlacement(obj.catalogId,0,obj.position,obj.size);
     if(!alternate){obj.structure=previous.structure;obj.size=previous.size;obj.position=previous.position;obj.rotationY=previous.rotationY;
       announceCatalog('ปรับขนาดไม่ได้ เพราะเกินขอบเขตหรือชนโครงสร้างหลัก','error');sync();return;}
@@ -2280,21 +2133,17 @@ function updateEntranceFrameObject(id,key,value){
   recordObjectHistory(before);objectEditor.selectedId=id;sync();
 }
 function entranceFrameEditorMarkup(obj){
-  const cfg=normalizeEntranceFrameObject(obj).structure,side=entranceFrameSide(obj),attachment=sceneAttachmentActive(obj)&&obj.attachment?.targetId==='storage-room'?obj.attachment:null,
-    attachedLeft=attachment?.targetPort==='storage-left-front',attachedRight=attachment?.targetPort==='storage-right-front',row=(label,key,value,min,max,initial,disabled=false)=>
-    '<div class="structure-editor-row"><label>'+label+'</label><input type="range" min="'+min+'" max="'+max+'" step="0.05" value="'+value.toFixed(2)+'" data-frame-range="'+key+'"'+(disabled?' disabled':'')+'>'+
-    '<input type="number" min="'+min+'" max="'+max+'" step="0.05" value="'+value.toFixed(2)+'" data-frame-input="'+key+'" data-reset-default="'+initial+'" aria-label="'+label+'"'+(disabled?' disabled':'')+'><span class="unit">ม.</span></div>';
+  const cfg=normalizeEntranceFrameObject(obj).structure,side=entranceFrameSide(obj),row=(label,key,value,min,max,initial)=>
+    '<div class="structure-editor-row"><label>'+label+'</label><input type="range" min="'+min+'" max="'+max+'" step="0.05" value="'+value.toFixed(2)+'" data-frame-range="'+key+'">'+
+    '<input type="number" min="'+min+'" max="'+max+'" step="0.05" value="'+value.toFixed(2)+'" data-frame-input="'+key+'" data-reset-default="'+initial+'" aria-label="'+label+'"><span class="unit">ม.</span></div>';
   return '<div class="structure-editor" data-frame-editor="'+esc(obj.id)+'">'+
     '<div class="structure-editor-actions"><button class="btn sm'+(side==='left'?' on':'')+'" type="button" data-frame-side="left">ชิดซ้าย</button><button class="btn sm'+(side==='right'?' on':'')+'" type="button" data-frame-side="right">ชิดขวา</button></div>'+
-    '<label class="structure-editor-note">การเชื่อมโครงสร้าง</label><div class="structure-editor-actions"><button class="btn sm'+(!attachment?' on':'')+'" type="button" data-frame-attach="free">วางอิสระ</button>'+
-    '<button class="btn sm'+(attachedLeft?' on':'')+'" type="button" data-frame-attach="storage-left"'+(!hasStore()?' disabled':'')+'>ต่อซ้ายของห้อง</button>'+
-    '<button class="btn sm'+(attachedRight?' on':'')+'" type="button" data-frame-attach="storage-right"'+(!hasStore()?' disabled':'')+'>ต่อขวาของห้อง</button></div>'+
-    row('ระยะยื่น','projection',cfg.projection,.5,Math.max(.5,S.D),Math.min(2.4,S.D).toFixed(2),!!attachment)+
+    row('ระยะยื่น','projection',cfg.projection,.5,Math.max(.5,S.D),Math.min(2.4,S.D).toFixed(2))+
     row('ความสูง','height',cfg.height,.5,Math.max(.5,S.H),Math.min(2.4,S.H).toFixed(2))+
     row('ความกว้างเสา','pierWidth',cfg.pierWidth,.3,Math.max(.3,Math.min(3,S.W)),Math.min(1,S.W).toFixed(2))+
     row('ความหนาโครง','thickness',cfg.thickness,.05,Math.min(.3,cfg.pierWidth*.8,cfg.height*.45),'0.15')+
     '<label class="structure-editor-note">สีผิวโครงสร้าง</label><div class="structure-editor-color"><input type="color" value="'+cfg.color+'" data-frame-color><input type="text" maxlength="7" value="'+cfg.color.toUpperCase()+'" data-frame-hex aria-label="รหัสสีกรอบทางเข้า"></div>'+
-    '<div class="structure-editor-note">'+sceneAttachmentLabel(attachment)+' · '+(attachment?'ระยะยื่นตามความลึกห้องอัตโนมัติ':'ลากบนภาพเพื่อเลื่อนซ้าย–ขวา')+' · Snap '+placementStepLabel()+' · พื้นที่ผิวประมาณ '+entranceFrameArea(obj).toFixed(2)+' ตร.ม.</div></div>';
+    '<div class="structure-editor-note">ยึดกับผนังหลังอัตโนมัติ · ลากบนภาพเพื่อเลื่อนซ้าย–ขวา · Snap '+placementStepLabel()+' · พื้นที่ผิวประมาณ '+entranceFrameArea(obj).toFixed(2)+' ตร.ม.</div></div>';
 }
 function bindEntranceFrameEditor(box,obj){
   box.querySelectorAll('[data-frame-range]').forEach(range=>{const key=range.dataset.frameRange,input=box.querySelector('[data-frame-input="'+key+'"]');
@@ -2302,7 +2151,6 @@ function bindEntranceFrameEditor(box,obj){
   box.querySelectorAll('[data-frame-input]').forEach(input=>{const key=input.dataset.frameInput,range=box.querySelector('[data-frame-range="'+key+'"]');
     input.oninput=()=>{if(range&&input.value!=='')range.value=input.value;};input.onchange=()=>updateEntranceFrameObject(obj.id,key,input.value);});
   box.querySelectorAll('[data-frame-side]').forEach(button=>button.onclick=()=>moveEntranceFrameToSide(obj.id,button.dataset.frameSide));
-  box.querySelectorAll('[data-frame-attach]').forEach(button=>button.onclick=()=>setEntranceFrameAttachment(obj.id,button.dataset.frameAttach));
   const pick=box.querySelector('[data-frame-color]'),hex=box.querySelector('[data-frame-hex]');
   if(pick)pick.onchange=()=>updateEntranceFrameObject(obj.id,'color',pick.value);
   if(hex)hex.onchange=()=>updateEntranceFrameObject(obj.id,'color',hex.value);
@@ -2380,8 +2228,6 @@ function duplicateSelectedObject(){
   const copy=makeCatalogObject(source.catalogId,position.x,position.z);if(!copy)return;
   copy.position.y=source.position.y;copy.rotationY=source.rotationY;copy.size={...source.size};copy.unitPrice=source.unitPrice;
   if(source.structure)copy.structure={...source.structure};
-  if(source.capabilities)copy.capabilities={...source.capabilities};if(source.collision)copy.collision={...source.collision};
-  copy.attachment=null;copy.placement={...(source.placement||{}),mode:'free'};normalizeSceneObjectModel(copy,item);
   if(source.ai)copy.ai=JSON.parse(JSON.stringify(source.ai));normalizeObjectAIRule(copy,item);
   mutateObjects(()=>S.objects.push(copy),copy.id);announceCatalog('ทำสำเนา'+item.name+'แล้ว','success');
 }
@@ -2557,11 +2403,11 @@ function objectLayoutPrompt(){
     const item=objectCatalogDef(obj.catalogId),position=obj.position||{},size=obj.size||item?.size||{},distances=promptObjectWallDistances(obj);
     const name=item?.name||'อุปกรณ์กำหนดเอง',rotation=promptSafeNumber(obj.rotationY),x=promptSafeNumber(position.x),z=promptSafeNumber(position.z);
     const baseY=promptSafeNumber(position.y),heightM=promptSafeNumber(size.h);
-    normalizeSceneObjectModel(obj,item);return{
+    return{
       index:index+1,name,x,z,baseY,heightM,
       normalizedX:width?x/width:0,normalizedZ:depth?z/depth:0,
       size:{w:promptSafeNumber(size.w),d:promptSafeNumber(size.d),h:heightM},
-      rotation,zone:promptObjectZone(obj),attachment:obj.attachment?JSON.parse(JSON.stringify(obj.attachment)):null,
+      rotation,zone:promptObjectZone(obj),
       distance_to_walls_m:{left:distances.left,right:distances.right,back:distances.back,front_open:distances.front}
     };
   });
@@ -2571,8 +2417,7 @@ function objectLayoutPrompt(){
     const frameDetail=frame?' · เป็นโครงรูปตัว L เปิดโล่งใต้คาน: แผ่นคานบนกว้าง '+promptNumber(frame.pierWidth)+' ม. ยื่นจากผนังหลัง '+promptNumber(frame.projection)+' ม. หนา '+promptNumber(frame.thickness)+' ม.; เสาหน้ากว้าง '+promptNumber(frame.pierWidth)+' ม. สูง '+promptNumber(frame.height)+' ม. หนา '+promptNumber(frame.thickness)+' ม.; สี '+frame.color.toUpperCase()+'; ต้องเชื่อมกับผนังหลังและห้ามปิดช่องทางเข้า':'';
     const beam=isDownlightBeamObject(source)?normalizeDownlightBeamObject(source).structure:null;
     const beamDetail=beam?' · เป็นคานแขวนแนวนอน: ยาว '+promptNumber(beam.length)+' ม. × ลึก '+promptNumber(beam.depth)+' ม. × หนา '+promptNumber(beam.thickness)+' ม. · ระดับท้องคาน '+promptNumber(beam.height-beam.thickness)+' ม. · ฝังดาวน์ไลท์ '+beam.lightCount+' ดวง กระจายเท่ากันและส่องลงพื้น · สีคาน '+beam.color.toUpperCase()+' · สีแสง '+beam.lightColor.toUpperCase():'';
-    const attachmentDetail=record.attachment?' · ความสัมพันธ์โครงสร้าง: '+sceneAttachmentLabel(record.attachment)+' และต้องรักษารอยต่อกับชิ้นเป้าหมายให้ตรงกัน':'';
-    return'- ชิ้นที่ '+record.index+': '+record.name+' 1 ชิ้น · จุดอ้างอิงกลางฐาน X '+promptNumber(record.x)+' ม., Z '+promptNumber(record.z)+' ม. · ตำแหน่งสัมพัทธ์ X '+promptNumber(record.normalizedX*100,1)+'% / Z '+promptNumber(record.normalizedZ*100,1)+'% · ฐานสูงจากพื้น '+promptNumber(record.baseY)+' ม. · ขนาด กว้าง '+promptNumber(s.w)+' × ลึก '+promptNumber(s.d)+' × สูง '+promptNumber(s.h)+' ม. · หมุนแกน Y '+promptNumber(record.rotation)+'° · โซน '+record.zone+' · ระยะจากขอบ ซ้าย '+promptNumber(d.left)+' / ขวา '+promptNumber(d.right)+' / หลัง '+promptNumber(d.back)+' / ด้านหน้า '+promptNumber(d.front_open)+' ม.'+frameDetail+beamDetail+attachmentDetail;
+    return'- ชิ้นที่ '+record.index+': '+record.name+' 1 ชิ้น · จุดอ้างอิงกลางฐาน X '+promptNumber(record.x)+' ม., Z '+promptNumber(record.z)+' ม. · ตำแหน่งสัมพัทธ์ X '+promptNumber(record.normalizedX*100,1)+'% / Z '+promptNumber(record.normalizedZ*100,1)+'% · ฐานสูงจากพื้น '+promptNumber(record.baseY)+' ม. · ขนาด กว้าง '+promptNumber(s.w)+' × ลึก '+promptNumber(s.d)+' × สูง '+promptNumber(s.h)+' ม. · หมุนแกน Y '+promptNumber(record.rotation)+'° · โซน '+record.zone+' · ระยะจากขอบ ซ้าย '+promptNumber(d.left)+' / ขวา '+promptNumber(d.right)+' / หลัง '+promptNumber(d.back)+' / ด้านหน้า '+promptNumber(d.front_open)+' ม.'+frameDetail+beamDetail;
   }).join('\n');
   return header.concat('อุปกรณ์ที่ลูกค้าเลือกและตำแหน่งที่ต้องคงเดิม:',readable,
     'ข้อบังคับ: ห้ามเพิ่ม ลด ย้าย หรือหมุนอุปกรณ์ ห้ามเปลี่ยนขนาดและจำนวน ให้ยึดตำแหน่งและระยะจากผนังตามรายการนี้ ห้ามจัดวางใหม่ตามความสวยงามของภาพ').join('\n');
@@ -3675,12 +3520,10 @@ class ThreeBoothRenderer{
       if(this.selectionHelper)this.selectionHelper.update();syncObjectControls();this.renderer.render(this.scene,this.camera);return;
     }
     const obj=objectById(drag.id),root=this.objectMeshes.get(drag.id),point=this.floorPoint(event);if(!obj||!root||!point||objectLocked(obj))return;
-    event.preventDefault();const nextX=+placementValue(point.x+drag.offsetX).toFixed(3),nextZ=+placementValue(point.z+drag.offsetZ).toFixed(3);
-    if(sceneAttachmentActive(obj)&&Math.hypot(nextX-drag.startX,nextZ-drag.startZ)>.003){obj.attachment=null;normalizeSceneObjectModel(obj);}
-    obj.position.x=nextX;
+    event.preventDefault();obj.position.x=+placementValue(point.x+drag.offsetX).toFixed(3);
     if(isEntranceFrameObject(obj)){
       const item=objectCatalogDef(obj.catalogId),limits=item&&placementLimits(item,0,obj.size);if(limits)obj.position.z=+placementRound(limits.minZ).toFixed(3);
-    }else{obj.position.z=nextZ;if(isDownlightBeamObject(obj))obj.structure.wallAttached=false;}
+    }else{obj.position.z=+placementValue(point.z+drag.offsetZ).toFixed(3);if(isDownlightBeamObject(obj))obj.structure.wallAttached=false;}
     root.position.x=obj.position.x;root.position.z=obj.position.z;
     drag.moved=drag.moved||Math.hypot(obj.position.x-drag.startX,obj.position.z-drag.startZ)>.003;
     if(this.selectionHelper)this.selectionHelper.update();this.renderer.render(this.scene,this.camera);
@@ -3695,7 +3538,7 @@ class ThreeBoothRenderer{
     }
     if(drag.moved){
       const obj=objectById(drag.id),item=obj&&objectCatalogDef(obj.catalogId);
-      if(!obj||!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,obj.rotationY||0,obj.id,obj.size,ALLOW_ASSET_OVERLAP,obj)){
+      if(!obj||!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,obj.rotationY||0,obj.id,obj.size)){
         if(obj){obj.position.x=drag.startX;obj.position.z=drag.startZ;}
         announceCatalog('ย้าย'+(item?.name||'วัตถุ')+'ไม่ได้ เพราะอยู่นอกขอบเขตหรือชนโครงสร้างหลัก','error');this.currentKey='';sync();return;
       }
@@ -3707,8 +3550,7 @@ class ThreeBoothRenderer{
     const wallStickers=WALL_FACES.map(({k})=>{const sticker=wallStickerFor(k,spec);return[k,sticker.id||0,sticker.w,sticker.h,sticker.rotation||0,
       sticker.mode,sticker.patternSize,sticker.offsetX,sticker.offsetY,!!sticker.data];});
     const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.locked===true,o.position.x,o.position.y,o.position.z,o.rotationY,
-      o.size.w,o.size.d,o.size.h,o.unitPrice,o.structure?.projection,o.structure?.height,o.structure?.pierWidth,o.structure?.thickness,o.structure?.color,
-      o.attachment?.targetId,o.attachment?.sourcePort,o.attachment?.targetPort,o.attachment?.status]);
+      o.size.w,o.size.d,o.size.h,o.unitPrice,o.structure?.projection,o.structure?.height,o.structure?.pierWidth,o.structure?.thickness,o.structure?.color]);
     return JSON.stringify([spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),wallStickers,spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
@@ -5159,8 +5001,7 @@ function sync(){
   S.promptFidelity=promptFidelityValue(S.promptFidelity);
   if(typeof S.placementSnap!=='boolean')S.placementSnap=true;
   if(!Array.isArray(S.objects))S.objects=[];
-  S.objects.forEach(object=>{normalizeObjectAIRule(object);if(isEntranceFrameObject(object))normalizeEntranceFrameObject(object,S);if(isDownlightBeamObject(object))normalizeDownlightBeamObject(object,S);normalizeSceneObjectModel(object);});
-  resolveSceneAttachments(S);
+  S.objects.forEach(object=>{normalizeObjectAIRule(object);if(isEntranceFrameObject(object))normalizeEntranceFrameObject(object,S);if(isDownlightBeamObject(object))normalizeDownlightBeamObject(object,S);});
   if(!Array.isArray(S.wallStickerFaces))S.wallStickerFaces=[];
   S.wallStickerFaces=S.wallStickerFaces.filter(face=>WALL_FACES.some(item=>item.k===face));
   WALL_FACES.forEach(({k})=>{const sticker=wallStickerFor(k);
@@ -5179,7 +5020,6 @@ function sync(){
   S.lightWatts=lightDefaultWatts(S.lightFixture);
   if(S.stHmode===0)S.stHv=Math.max(1.5,Math.min(MAX_BOOTH_HEIGHT,S.stHv||2.4));
   reconcileCatalogLayout();
-  resolveSceneAttachments(S);
   if(!objectById(objectEditor.selectedId))objectEditor.selectedId=null;
   syncObjectControls();
 
