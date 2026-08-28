@@ -1,6 +1,6 @@
 # AI Rendering Data Flow and Test Plan
 
-Status: Phase 1 foundation  
+Status: Phase 3 Clean Screenshot export
 Schema: `BoothSpec.version = 2`, `aiRendering.schemaVersion = 1`
 
 ## 1. Compatibility strategy
@@ -67,34 +67,60 @@ Default policy:
 
 The existing `object.locked` field remains an editor-interaction lock and is intentionally separate from `object.ai.lockLevel`.
 
-## 4. Planned semantic adapter
+## 4. Implemented semantic adapter
 
-The Geometry Manifest phase will generate stable nodes for both explicit and derived Scene elements:
+`window.getGeometryManifest()` now creates a fresh snapshot from the current `BoothSpec`. The Manifest contains:
+
+- a right-handed, metre-based coordinate system with origin at the back-left floor corner
+- booth type, W/D/H, floor elevation, wall thickness, present walls, and open faces
+- the current serialized camera
+- optional-prop permissions
+- stable nodes for explicit and derived Scene elements
+
+Generated nodes include:
 
 - `booth-floor`
 - `wall-back`, `wall-left`, `wall-right`
 - `storage-room` and its opening/door
 - `branding-main` and side branding
-- `lighting-group` and fixture transforms
+- individual wall-light fixture nodes and attachment transforms
 - `photo360-platform`
 - every item in `BoothSpec.objects`
-- `camera-active`
+- every catalog object, including structure configuration for entrance frames and downlight beams
 
-Each manifest node will contain a stable ID, type, dimensions, position, rotation, semantic level, geometry constraint, material intent, allowed changes, parent relationship, and source path in `BoothSpec`.
+Each node contains a stable ID, type, dimensions, position, rotation, semantic level, geometry constraint, material intent, allowed changes, parent relationship, and source path in `BoothSpec`.
 
-## 5. Planned Clean Screenshot export
+`STYLEABLE` nodes remain geometry-locked. Their allow-list excludes position, rotation, and scale so visual freedom cannot silently become layout freedom.
 
-1. Wait for pending model and texture loads.
-2. Snapshot camera, controls target, renderer size, pixel ratio, exposure, background, and helper visibility.
-3. Hide dimension objects and selection helpers.
-4. Preserve the current viewport aspect ratio.
-5. Resize temporarily so the long edge is at least 1,536 px.
-6. Render once and export PNG from the WebGL canvas.
-7. Restore every renderer, camera, helper, and viewport setting in `finally`.
+## 5. Implemented camera serialization
 
-The Screenshot will not contain HTML UI because only the Three.js canvas is exported.
+`window.getCameraManifest()` returns the active Three.js perspective camera and OrbitControls target:
 
-## 6. Planned Prompt Builder
+- preset name or `custom`
+- position and target
+- up vector
+- FOV, near, far, and aspect ratio
+- viewport width, height, aspect ratio, and renderer pixel ratio
+
+Camera state is refreshed after a preset selection, viewport resize, orbit, or zoom. An unframed `(0,0,0)` startup camera is rejected and never saved as an authoritative view.
+
+## 6. Implemented Clean Screenshot export
+
+The PROMPT panel now provides `ดาวน์โหลด Clean Screenshot`. The export pipeline:
+
+1. Waits up to 10 seconds for pending models and floor/wall textures.
+2. Snapshots the renderer size, pixel ratio, camera aspect, controls state, background, animation state, and helper visibility.
+3. Hides the external Scene ground, dimension objects, curved-wall guide edge, and object/branding selection helpers.
+4. Uses a neutral clean background while preserving the exact current viewport aspect ratio.
+5. Temporarily resizes the drawing buffer so the long edge is at least 1,536 px.
+6. Renders once and creates a PNG Blob directly from the Three.js canvas.
+7. Creates matching camera and Geometry Manifest snapshots for that capture.
+8. Stores only small preview metadata in `BoothSpec.aiRendering.preview`; it never stores the PNG/base64 payload in Scene state.
+9. Restores every changed renderer, camera, helper, controls, background, and animation setting in `finally`.
+
+The Screenshot contains no HTML UI because only the Three.js canvas is exported. The public local integration hook is `window.exportCleanScreenshot(options)`; `download`, `minLongEdge`, `background`, `fileName`, `includeDataUrl`, and `assetTimeoutMs` can be supplied when composing a later render package.
+
+## 7. Planned Prompt Builder
 
 The Prompt will be natural language and will not embed the raw Manifest. It will contain four named sections:
 
@@ -105,7 +131,7 @@ The Prompt will be natural language and will not embed the raw Manifest. It will
 
 The existing 0–10 control will be redefined as style creativity only. Geometry and camera constraints will remain unchanged at every value.
 
-## 7. Planned Preview
+## 8. Planned Preview
 
 Before Generate, the user will see:
 
@@ -119,7 +145,7 @@ Before Generate, the user will see:
 
 `Render AI` remains disabled until a later integration phase.
 
-## 8. Test plan
+## 9. Test plan
 
 ### Data migration
 
@@ -163,11 +189,11 @@ Before Generate, the user will see:
 - Desktop and mobile menus
 - JavaScript syntax and browser console errors
 
-## 9. Delivery phases
+## 10. Delivery phases
 
-1. Requirements, Data Flow, schema, and migration
-2. Geometry Manifest and camera serialization
-3. Clean Screenshot export
+1. Completed — Requirements, Data Flow, schema, and migration
+2. Completed — Geometry Manifest and camera serialization
+3. Completed — Clean Screenshot export
 4. AI permission controls and structured Prompt Builder
 5. Render-package Preview and QA
 6. Future AI provider integration after separate approval

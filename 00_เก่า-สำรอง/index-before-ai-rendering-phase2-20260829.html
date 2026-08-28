@@ -363,7 +363,6 @@ select:focus{border-color:var(--acc)}
 .prompt-fidelity-note{margin-top:6px;color:var(--tx3);font-size:10px;line-height:1.5}
 .prompt-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:9px}
 .prompt-actions .btn{width:100%;min-height:38px}
-.prompt-actions .prompt-clean{grid-column:1/-1}
 .prompt-actions .btn:disabled{opacity:.42}
 .prompt-soon{display:block;font-size:9px;color:var(--tx3);margin-top:2px}
 .prompt-status{min-height:19px;margin-top:8px;color:var(--line-gr);font-size:11px}
@@ -660,7 +659,6 @@ select:focus{border-color:var(--acc)}
         <div class="prompt-actions">
           <button class="btn pri sm" type="button" id="promptCopy">คัดลอก PROMPT</button>
           <button class="btn sm" type="button" id="promptRenderAi" disabled aria-disabled="true" title="Render AI จะเปิดใช้งานในเฟสถัดไป">Render AI<span class="prompt-soon">เร็ว ๆ นี้</span></button>
-          <button class="btn sm prompt-clean" type="button" id="promptCleanScreenshot">ดาวน์โหลด Clean Screenshot<span class="prompt-soon">PNG · ใช้มุมกล้องปัจจุบัน</span></button>
         </div>
         <div class="prompt-status" id="promptStatus" role="status" aria-live="polite"></div>
         <div class="note">PROMPT นี้รวมตัวเลือกปัจจุบันของบูธ เช่น ขนาด รูปแบบ วัสดุ สี โลโก้ แสง และอุปกรณ์ที่จัดวางไว้ เพื่อใช้ต่อในขั้นตอน Render AI</div>
@@ -1486,141 +1484,6 @@ function normalizeObjectAIRule(obj,item=objectCatalogDef(obj?.catalogId)){
   source.allowedChanges=[...new Set(requested.filter(change=>AI_ALLOWED_CHANGES.includes(change)))];
   if(source.lockLevel!=='OPTIONAL'){source.presenceRequired=true;source.optionalCategory=null;}
   obj.ai=source;return source;
-}
-/* ================= AI geometry manifest =================
-   Keep this data-only layer independent from the visual prompt. Geometry remains
-   authoritative even when an object is STYLEABLE (appearance may change, transform may not). */
-const manifestNumber=(value,digits=4)=>{
-  const numeric=Number(value);return Number.isFinite(numeric)?+numeric.toFixed(digits):0;
-};
-const manifestVector=(x=0,y=0,z=0)=>({x:manifestNumber(x),y:manifestNumber(y),z:manifestNumber(z)});
-const manifestSize=(width=0,depth=0,height=0)=>({width:manifestNumber(width),depth:manifestNumber(depth),height:manifestNumber(height)});
-function manifestSemantics(lockLevel='LOCKED',options={}){
-  const optional=lockLevel==='OPTIONAL',styleable=options.styleable!==false;
-  const requested=Array.isArray(options.allowedChanges)?options.allowedChanges:
-    (styleable?['material','color','finish','graphic','lighting','reflection']:[]);
-  return{lockLevel:AI_LOCK_LEVELS.includes(lockLevel)?lockLevel:'LOCKED',geometryLocked:options.geometryLocked!==false,
-    styleable,presenceRequired:optional?options.presenceRequired===true:options.presenceRequired!==false,
-    optionalCategory:optional&&AI_OPTIONAL_CATEGORIES.includes(options.optionalCategory)?options.optionalCategory:null,
-    materialIntent:String(options.materialIntent||'follow-current-scene'),
-    allowedChanges:[...new Set(requested.filter(change=>AI_ALLOWED_CHANGES.includes(change)&&!['position','rotation','scale'].includes(change)))]};
-}
-function manifestBoothType(spec=S){
-  const base=TYPES.find(item=>item.k===spec.type)||{k:spec.type,n:spec.type,walls:[]};
-  if(base.k!=='corner')return{...base,walls:[...(base.walls||[])]};
-  const side=CORNER_SIDES.find(item=>item.k===spec.cornerSide)||CORNER_SIDES[1];
-  return{...base,n:base.n+' · '+side.n,walls:[...side.walls]};
-}
-function manifestWallNode(face,spec,typeDef,thickness,floorY){
-  const common={id:'wall-'+face,type:'wall',name:WALL_FACES.find(item=>item.k===face)?.n||face,parentId:'booth-root',
-    materialIntent:wallFinishKind(spec,face)==='sticker'?'preserve-selected-wall-graphic':'preserve-selected-wall-finish',
-    semantics:manifestSemantics('LOCKED',{materialIntent:wallFinishKind(spec,face),
-      allowedChanges:['material','color','finish','graphic','lighting','reflection']})};
-  if(face==='back'&&spec.type==='photo360'){
-    const curve=wallCurveInfo(spec);
-    return{...common,geometry:{kind:'curved-wall',radius:manifestNumber(curve.radius),arcAngleRad:manifestNumber(curve.arcAngle),
-      arcLength:manifestNumber(curve.arcLength),sagitta:manifestNumber(curve.sagitta),thickness:manifestNumber(thickness)},
-      dimensions:manifestSize(curve.arcLength,thickness,spec.H),
-      transform:{position:manifestVector(spec.W/2,floorY+spec.H/2,curve.sagitta/2),rotationDeg:manifestVector()},
-      source:{kind:'derived',path:'BoothSpec.type/wallRadius'}};
-  }
-  const back=face==='back',width=back?spec.W:thickness,depth=back?thickness:spec.D;
-  const x=face==='right'?spec.W-thickness/2:face==='left'?thickness/2:spec.W/2;
-  const z=back?thickness/2:spec.D/2;
-  return{...common,geometry:{kind:'box'},dimensions:manifestSize(width,depth,spec.H),
-    transform:{position:manifestVector(x,floorY+spec.H/2,z),rotationDeg:manifestVector()},
-    source:{kind:'derived',path:'BoothSpec.type/dimensions'}};
-}
-function manifestBrandTransform(spec,physical,floorY,thickness){
-  if(spec.logoMount==='floor')return{position:manifestVector(spec.logoFloorX,floorY+.1+physical.height/2,spec.logoFloorZ),
-    rotationDeg:manifestVector(0,spec.logoFloorRotation,0)};
-  const face=spec.logoWall||'back',centerY=floorY+spec.logoWallY,depth=Number(spec.logoDepth)||.05;
-  if(face==='back'&&spec.type==='photo360'){
-    const curve=wallCurveInfo(spec),fraction=clampNumber(spec.logoWallU/Math.max(.001,curve.arcLength),0,1),angle=(fraction-.5)*curve.arcAngle;
-    const centerX=curve.half+curve.radius*Math.sin(angle),point=curve.pointAtX(centerX,thickness/2+.012+depth/2);
-    return{position:manifestVector(point.x,centerY,point.z),rotationDeg:manifestVector(0,point.rotationY*180/Math.PI,0),
-      attachment:{face,curveDistance:manifestNumber(spec.logoWallU)}};
-  }
-  if(face==='left')return{position:manifestVector(thickness+.012+depth/2,centerY,spec.logoWallU),rotationDeg:manifestVector(0,90,0),attachment:{face}};
-  if(face==='right')return{position:manifestVector(spec.W-thickness-.012-depth/2,centerY,spec.logoWallU),rotationDeg:manifestVector(0,-90,0),attachment:{face}};
-  return{position:manifestVector(spec.logoWallU,centerY,thickness+.012+depth/2),rotationDeg:manifestVector(),attachment:{face}};
-}
-function manifestLightTransform(point,spec,thickness){
-  const def=lightModelDef(),surface=thickness+FIXTURE_WALL_GAP,top=spec.H-(Number.isFinite(def?.topInset)?def.topInset:FIXTURE_TOP_INSET);
-  if(point.w==='back'&&spec.type==='photo360'){
-    const curve=wallCurveInfo(spec),p=curve.pointAt(point.u/spec.W,thickness/2+FIXTURE_WALL_GAP);
-    return{position:manifestVector(p.x,top,p.z),rotationDeg:manifestVector(0,p.rotationY*180/Math.PI,0)};
-  }
-  if(point.w==='left')return{position:manifestVector(surface,top,point.u),rotationDeg:manifestVector(0,90,0)};
-  if(point.w==='right')return{position:manifestVector(spec.W-surface,top,point.u),rotationDeg:manifestVector(0,-90,0)};
-  return{position:manifestVector(point.u,top,surface),rotationDeg:manifestVector()};
-}
-function currentCameraManifest(spec=S){
-  if(threeRenderer?.cameraManifest)return threeRenderer.cameraManifest();
-  const saved=normalizeAIRenderingSettings(spec).camera;
-  return saved?JSON.parse(JSON.stringify(saved)):null;
-}
-function buildGeometryManifest(spec=S){
-  const typeDef=manifestBoothType(spec),walls=typeDef.walls||[],thickness=boothWallThickness(spec),floorY=(Number(spec.raise)||0)/100;
-  const objects=[],push=node=>{objects.push(node);return node;};
-  const slabHeight=floorY>0?floorY:.003,slabCenterY=floorY>0?floorY/2:-slabHeight/2;
-  push({id:'booth-floor',type:'floor',name:'พื้นบูธ',parentId:'booth-root',geometry:{kind:'box'},
-    dimensions:manifestSize(spec.W,spec.D,slabHeight),transform:{position:manifestVector(spec.W/2,slabCenterY,spec.D/2),rotationDeg:manifestVector()},
-    materialIntent:(()=>{try{return floorName();}catch(e){return String(spec.floor||'floor');}})(),
-    semantics:manifestSemantics('LOCKED',{materialIntent:String(spec.floor||'floor'),allowedChanges:['material','color','finish','graphic','lighting','reflection']}),
-    source:{kind:'derived',path:'BoothSpec.W/D/raise/floor'}});
-  walls.forEach(face=>push(manifestWallNode(face,spec,typeDef,thickness,floorY)));
-  if(hasStore()){
-    const panels=storagePanels(thickness),room=panels.G;
-    push({id:'storage-room',type:'storage-room',name:'ห้องเก็บของ',parentId:'booth-root',geometry:{kind:'room',panels:{front:true,back:panels.back,left:panels.left,right:panels.right},
-      door:{face:spec.stDoor,type:spec.stDoorType,offset:spec.doorOff}},dimensions:manifestSize(room.w,room.d,room.h),
-      transform:{position:manifestVector(room.x+room.w/2,floorY+room.h/2,room.y+room.d/2),rotationDeg:manifestVector()},
-      materialIntent:String(spec.stSurf||'paint')+':'+String(spec.stPaint||'wall'),
-      semantics:manifestSemantics('LOCKED',{materialIntent:String(spec.stSurf||'paint'),allowedChanges:['material','color','finish','graphic','lighting','reflection']}),
-      source:{kind:'derived',path:'BoothSpec.st*'}});
-  }
-  const platform=photo360PlatformLayout(spec);
-  if(platform)push({id:'photo360-platform',type:'platform',name:'แท่นถ่ายภาพ 360',parentId:'booth-root',geometry:{kind:'cylinder',diameter:manifestNumber(platform.diameter)},
-    dimensions:manifestSize(platform.diameter,platform.diameter,platform.height),
-    transform:{position:manifestVector(platform.x,floorY+platform.height/2,platform.z),rotationDeg:manifestVector()},
-    materialIntent:'dark-neutral-platform',semantics:manifestSemantics('LOCKED',{allowedChanges:['material','color','finish','lighting','reflection']}),
-    source:{kind:'derived',path:'BoothSpec.type'}});
-  const physical=brandPhysicalSize(spec),brandingVisible=brandScaleValue(spec.logoScale)>0||brandScaleValue(spec.nameScale)>0;
-  if(brandingVisible){
-    const transform=manifestBrandTransform(spec,physical,floorY,thickness);
-    push({id:'branding-main',type:'branding',name:'โลโก้และชื่อแบรนด์',parentId:'booth-root',geometry:{kind:spec.logoShape||'cutout',mount:spec.logoMount||'wall'},
-      dimensions:manifestSize(physical.width,Number(spec.logoDepth)||.05,physical.height),transform,
-      materialIntent:'preserve-uploaded-logo-and-brand-identity',
-      semantics:manifestSemantics('STYLEABLE',{materialIntent:'brand-identity',allowedChanges:['material','color','finish','graphic','lighting','reflection']}),
-      source:{kind:'derived',path:'BoothSpec.logo* / brand'}});
-    if(spec.logoMount==='floor'){
-      const base=logoBaseSize(spec);
-      push({id:'branding-base',type:'support-base',name:'ฐานโลโก้ตั้งพื้น',parentId:'branding-main',geometry:{kind:'box'},
-        dimensions:manifestSize(base.width,base.depth,.1),transform:{position:manifestVector(spec.logoFloorX,floorY+.05,spec.logoFloorZ),rotationDeg:manifestVector(0,spec.logoFloorRotation,0)},
-        materialIntent:String(spec.logoBaseColor||'#20252d'),semantics:manifestSemantics('LOCKED',{materialIntent:String(spec.logoBaseColor||'#20252d'),allowedChanges:['material','color','finish','reflection']}),
-        source:{kind:'derived',path:'BoothSpec.logoBase*'}});
-    }
-  }
-  if(spec.lights)lightPoints(thickness).forEach((point,index)=>push({id:'wall-light-'+String(index+1).padStart(2,'0'),type:'light-fixture',
-    name:lightModelDef()?.n||'โคมไฟ',parentId:'booth-root',geometry:{kind:'fixture',catalogId:spec.lightFixture,attachmentFace:point.w,along:manifestNumber(point.u)},
-    dimensions:null,transform:manifestLightTransform(point,spec,thickness),materialIntent:(LIGHTCOL.find(item=>item.k===spec.lightCol)?.n||spec.lightCol)+' '+String(spec.lightWatts)+'W',
-    semantics:manifestSemantics('STYLEABLE',{materialIntent:'preserve-fixture-count-and-placement',allowedChanges:['material','color','finish','lighting','reflection']}),
-    source:{kind:'derived',path:'BoothSpec.lights/light*'}}));
-  (Array.isArray(spec.objects)?spec.objects:[]).forEach((obj,index)=>{
-    const item=objectCatalogDef(obj.catalogId),size=obj.size||item?.size||{},position=obj.position||{},rule=normalizeObjectAIRule(obj,item);
-    push({id:String(obj.id||'asset-'+(index+1)),type:String(obj.type||item?.type||'asset'),name:item?.name||String(obj.catalogId||'Asset'),parentId:'booth-root',
-      catalogId:obj.catalogId||null,geometry:{kind:isEntranceFrameObject(obj)?'entrance-frame':isDownlightBeamObject(obj)?'downlight-beam':'catalog-object',structure:obj.structure?JSON.parse(JSON.stringify(obj.structure)):null},
-      dimensions:manifestSize(size.w,size.d,size.h),transform:{position:manifestVector(position.x,floorY+(Number(position.y)||0),position.z),rotationDeg:manifestVector(0,obj.rotationY,0)},
-      editorLocked:obj.locked===true,materialIntent:rule.materialIntent,
-      semantics:{...JSON.parse(JSON.stringify(rule)),allowedChanges:rule.allowedChanges.filter(change=>!rule.geometryLocked||!['position','rotation','scale'].includes(change))},
-      source:{kind:'BoothSpec',path:'objects['+index+']'}});
-  });
-  const ai=normalizeAIRenderingSettings(spec);
-  return{schemaVersion:AI_RENDER_SCHEMA_VERSION,coordinateSystem:{origin:'back-left-floor',handedness:'right-handed',unit:'m',
-      axes:{x:'left-to-right',y:'floor-to-up',z:'back-to-front'}},
-    booth:{id:'booth-root',type:typeDef.k,name:typeDef.n||typeDef.k,dimensions:manifestSize(spec.W,spec.D,spec.H),floorElevation:manifestNumber(floorY),
-      wallThickness:manifestNumber(thickness),walls:[...walls],openFaces:['back','left','right','front'].filter(face=>face==='front'||!walls.includes(face))},
-    camera:currentCameraManifest(spec),permissions:{allowOptionalProps:ai.allowOptionalProps,optionalCategories:{...ai.optionalPermissions}},objects};
 }
 const PLACEMENT_GRID=.05;
 const placementStepLabel=()=>Math.round(PLACEMENT_GRID*100)+' ซม.';
@@ -2470,27 +2333,6 @@ async function copyDesignPrompt(){
   window.clearTimeout(copyDesignPrompt.timer);
   copyDesignPrompt.timer=window.setTimeout(()=>{if(status)status.textContent='';},2400);
 }
-async function createCleanScreenshot(options={}){
-  const renderer=threeRenderer||await loadThreeRenderer();
-  renderer.update(BoothSpec);
-  return renderer.exportCleanScreenshot(options);
-}
-async function downloadCleanScreenshot(){
-  const button=document.getElementById('promptCleanScreenshot'),status=document.getElementById('promptStatus');
-  if(button?.disabled)return;
-  if(button)button.disabled=true;if(status)status.textContent='กำลังเตรียม Scene และสร้าง Clean Screenshot…';
-  try{
-    const result=await createCleanScreenshot({download:true,minLongEdge:1536,includeDataUrl:false});
-    if(status)status.textContent='ดาวน์โหลด '+result.fileName+' ('+result.width+' × '+result.height+' px) แล้ว';
-  }catch(error){
-    console.error('Clean Screenshot export failed',error);
-    if(status)status.textContent='สร้าง Clean Screenshot ไม่สำเร็จ กรุณาลองใหม่';
-  }finally{
-    if(button)button.disabled=false;
-    window.clearTimeout(downloadCleanScreenshot.timer);
-    downloadCleanScreenshot.timer=window.setTimeout(()=>{if(status)status.textContent='';},5000);
-  }
-}
 function hx(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');
   return[parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];}
 const toHex=a=>'#'+a.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
@@ -3217,13 +3059,6 @@ class ThreeBoothRenderer{
     this.controls.minPolarAngle=0;
     this.controls.maxPolarAngle=Math.PI/2-.025;
     this.controls.zoomToCursor=true;
-    this.applyingCameraPreset=false;
-    this.onControlsChange=()=>{
-      if(this.applyingCameraPreset||!this.active)return;
-      this.currentView='custom';this.viewButtons.forEach(button=>button.classList.remove('on'));
-      this.commitCameraState();
-    };
-    this.controls.addEventListener('change',this.onControlsChange);
 
     this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.pointerDrag=null;
     this.raycaster=new THREE.Raycaster();this.pointer=new THREE.Vector2();
@@ -3267,7 +3102,7 @@ class ThreeBoothRenderer{
     canvas.removeEventListener('pointermove',this.onObjectPointerMove);canvas.removeEventListener('pointerup',this.onObjectPointerUp);
     canvas.removeEventListener('pointercancel',this.onObjectPointerUp);
     canvas.removeEventListener('lostpointercapture',this.onObjectLostPointerCapture);
-    this.resizeObserver.disconnect();this.controls.removeEventListener('change',this.onControlsChange);this.controls.dispose();
+    this.resizeObserver.disconnect();this.controls.dispose();
     this.scene.remove(this.boothGroup);disposeThreeObject(this.boothGroup);this.renderer.dispose();
     this.fixtureTemplates.forEach(template=>{template.traverse(o=>{if(o.userData)delete o.userData.sharedAsset;});disposeThreeObject(template);});
     this.fixtureTemplates.clear();this.fixtureLoads.clear();this.fixtureErrors.clear();
@@ -3284,96 +3119,7 @@ class ThreeBoothRenderer{
     const r=this.host.getBoundingClientRect(),w=Math.max(1,Math.floor(r.width)),h=Math.max(1,Math.floor(r.height));
     if(w===this.lastSize[0]&&h===this.lastSize[1])return;
     this.lastSize=[w,h];this.renderer.setSize(w,h,false);this.camera.aspect=w/h;
-    this.camera.updateProjectionMatrix();this.renderer.render(this.scene,this.camera);this.commitCameraState();
-  }
-  cameraManifest(viewportOverride=null){
-    const r=this.host.getBoundingClientRect(),position=this.camera.position,target=this.controls.target,up=this.camera.up;
-    const viewportWidth=Math.max(1,Math.floor(viewportOverride?.width||r.width||this.lastSize[0]||1));
-    const viewportHeight=Math.max(1,Math.floor(viewportOverride?.height||r.height||this.lastSize[1]||1));
-    const viewportPixelRatio=viewportOverride?.pixelRatio??this.renderer.getPixelRatio();
-    return{id:'camera-active',projection:'perspective',preset:this.currentView||'custom',
-      position:manifestVector(position.x,position.y,position.z),target:manifestVector(target.x,target.y,target.z),up:manifestVector(up.x,up.y,up.z),
-      fov:manifestNumber(this.camera.fov),near:manifestNumber(this.camera.near),far:manifestNumber(this.camera.far),aspect:manifestNumber(this.camera.aspect,6),
-      viewport:{width:viewportWidth,height:viewportHeight,aspect:manifestNumber(viewportWidth/viewportHeight,6),pixelRatio:manifestNumber(viewportPixelRatio,3)}};
-  }
-  commitCameraState(){
-    if(!this.camera||!this.controls)return null;
-    if(this.camera.position.distanceToSquared(this.controls.target)<1e-8)return null;
-    const state=this.cameraManifest();normalizeAIRenderingSettings(BoothSpec).camera=state;return state;
-  }
-  pendingSceneAssets(){
-    const promises=[];
-    if(this.floorImagePromise)promises.push(this.floorImagePromise);
-    if(this.downlightLoad)promises.push(this.downlightLoad);
-    this.fixtureLoads.forEach(promise=>promises.push(promise));
-    this.furnitureLoads.forEach(promise=>promises.push(promise));
-    this.wallStickerLoads.forEach(promise=>promises.push(promise));
-    return [...new Set(promises.filter(promise=>promise&&typeof promise.then==='function'))];
-  }
-  async waitForSceneAssets(timeoutMs=10000){
-    const deadline=Date.now()+Math.max(0,Number(timeoutMs)||0);
-    for(let pass=0;pass<5;pass++){
-      const pending=this.pendingSceneAssets();
-      if(!pending.length)break;
-      const remaining=deadline-Date.now();if(remaining<=0)break;
-      let timeoutId=0;
-      const outcome=await Promise.race([
-        Promise.allSettled(pending).then(()=> 'settled'),
-        new Promise(resolve=>{timeoutId=setTimeout(()=>resolve('timeout'),remaining);})
-      ]);
-      if(timeoutId)clearTimeout(timeoutId);
-      if(outcome==='timeout')break;
-      this.currentKey='';this.update(BoothSpec);
-    }
-    this.currentKey='';this.update(BoothSpec);
-    return this.pendingSceneAssets().length===0;
-  }
-  cleanScreenshotFileName(){
-    const now=new Date(),pad=value=>String(value).padStart(2,'0');
-    const stamp=now.getFullYear()+pad(now.getMonth()+1)+pad(now.getDate())+'-'+pad(now.getHours())+pad(now.getMinutes())+pad(now.getSeconds());
-    return 'YP-Booth-Clean-'+manifestNumber(BoothSpec.W)+'x'+manifestNumber(BoothSpec.D)+'-'+stamp+'.png';
-  }
-  async exportCleanScreenshot(options={}){
-    await this.waitForSceneAssets(options.assetTimeoutMs??10000);
-    const T=this.THREE,sourceWidth=Math.max(1,this.lastSize[0]||Math.floor(this.host.getBoundingClientRect().width)||16);
-    const sourceHeight=Math.max(1,this.lastSize[1]||Math.floor(this.host.getBoundingClientRect().height)||9);
-    const sourceAspect=sourceWidth/sourceHeight,minLongEdge=Math.max(1536,Math.floor(Number(options.minLongEdge)||1536));
-    const longEdge=Math.max(minLongEdge,sourceWidth,sourceHeight);
-    const width=sourceAspect>=1?longEdge:Math.max(1,Math.round(longEdge*sourceAspect));
-    const height=sourceAspect>=1?Math.max(1,Math.round(longEdge/sourceAspect)):longEdge;
-    const oldSize=this.renderer.getSize(new T.Vector2()),oldPixelRatio=this.renderer.getPixelRatio(),oldAspect=this.camera.aspect;
-    const oldBackground=this.scene.background,oldControlsEnabled=this.controls.enabled,wasAnimating=!!this.raf;
-    const hidden=[];
-    this.boothGroup.traverse(object=>{
-      const name=object.name||'';
-      if(name==='scene-ground'||name==='object-selection'||name==='brand-selection'||name==='brand-selection-proxy'||
-        name==='booth-wall-back-curved-edge'||name.startsWith('booth-dimension-')){
-        hidden.push([object,object.visible]);object.visible=false;
-      }
-    });
-    if(this.raf)cancelAnimationFrame(this.raf);this.raf=0;this.controls.enabled=false;
-    try{
-      this.scene.background=new T.Color(options.background||'#e8eaee');
-      this.renderer.setPixelRatio(1);this.renderer.setSize(width,height,false);
-      this.camera.aspect=width/height;this.camera.updateProjectionMatrix();this.renderer.render(this.scene,this.camera);
-      const canvas=this.renderer.domElement;
-      const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(new Error('ไม่สามารถสร้างไฟล์ PNG ได้')),'image/png'));
-      const fileName=String(options.fileName||this.cleanScreenshotFileName()).replace(/[\\/:*?"<>|]+/g,'-');
-      const camera=this.cameraManifest({width,height,pixelRatio:1}),manifest=buildGeometryManifest(BoothSpec);manifest.camera=camera;
-      const preview={kind:'clean-screenshot',width,height,aspect:manifestNumber(width/height,6),fileName,createdAt:new Date().toISOString(),camera};
-      normalizeAIRenderingSettings(BoothSpec).preview=preview;
-      const dataUrl=options.includeDataUrl?canvas.toDataURL('image/png'):null;
-      if(options.download){
-        const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=fileName;link.hidden=true;
-        document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
-      }
-      return{blob,dataUrl,width,height,aspect:width/height,fileName,camera,manifest};
-    }finally{
-      hidden.forEach(([object,visible])=>{object.visible=visible;});
-      this.scene.background=oldBackground;this.renderer.setPixelRatio(oldPixelRatio);this.renderer.setSize(oldSize.x,oldSize.y,false);
-      this.camera.aspect=oldAspect;this.camera.updateProjectionMatrix();this.controls.enabled=oldControlsEnabled;
-      this.renderer.render(this.scene,this.camera);if(wasAnimating&&this.active)this.start();
-    }
+    this.camera.updateProjectionMatrix();this.renderer.render(this.scene,this.camera);
   }
   setRayFromEvent(event){
     const r=this.renderer.domElement.getBoundingClientRect();
@@ -4327,7 +4073,7 @@ class ThreeBoothRenderer{
     const T=this.THREE,g=this.boothGroup,t=boothWallThickness(spec),floorY=spec.raise/100,a=palette();
     const span=Math.max(spec.W,spec.D,spec.H),groundGeo=new T.PlaneGeometry(span*5,span*5);
     const groundMat=new T.MeshStandardMaterial({color:0x15181d,roughness:1});
-    const ground=new T.Mesh(groundGeo,groundMat);ground.name='scene-ground';ground.rotation.x=-Math.PI/2;
+    const ground=new T.Mesh(groundGeo,groundMat);ground.rotation.x=-Math.PI/2;
     ground.position.set(spec.W/2,-.045,spec.D/2);ground.receiveShadow=true;g.add(ground);
 
     /* ไม่ยกพื้น = แผ่นพรม/พื้นหนา 3 มม.; ยกพื้นยังใช้ความสูงเดิม 5/10/15 ซม.
@@ -4373,11 +4119,11 @@ class ThreeBoothRenderer{
       target.set(spec.W/2,0,spec.D/2);
     }else if(view==='perspective')this.camera.position.set(spec.W*.72,Math.max(spec.H*.72,2.2),spec.D+span*1.35);
     else this.camera.position.set(spec.W+span*.9,Math.max(spec.H+span*.5,3.2),spec.D+span*.9);
-    this.applyingCameraPreset=true;this.controls.target.copy(target);this.camera.lookAt(target);
+    this.controls.target.copy(target);this.camera.lookAt(target);
     const damping=this.controls.enableDamping;this.controls.enableDamping=false;this.controls.update();this.controls.enableDamping=damping;
-    this.currentView=view;this.applyingCameraPreset=false;
+    this.currentView=view;
     this.viewButtons.forEach((b,k)=>b.classList.toggle('on',k===view));
-    this.renderer.render(this.scene,this.camera);this.commitCameraState();
+    this.renderer.render(this.scene,this.camera);
   }
 }
 
@@ -5236,8 +4982,6 @@ function showDockPage(page,source){
 document.querySelectorAll('.dock-tool').forEach(b=>b.onclick=()=>showDockPage(b.dataset.dockPage,b));
 const promptCopyButton=document.getElementById('promptCopy');
 if(promptCopyButton)promptCopyButton.onclick=copyDesignPrompt;
-const promptCleanScreenshotButton=document.getElementById('promptCleanScreenshot');
-if(promptCleanScreenshotButton)promptCleanScreenshotButton.onclick=downloadCleanScreenshot;
 const promptFidelityRange=document.getElementById('promptFidelityRange');
 const promptFidelityInput=document.getElementById('promptFidelityVal');
 if(promptFidelityRange)promptFidelityRange.oninput=e=>setPromptFidelity(e.target.value);
@@ -5508,11 +5252,6 @@ build();syncDims();sync();initGlobalNumericResets();loadMyAssets();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>render());
 window.getBoothSpec=()=>JSON.parse(serializeBoothSpec());
 window.getAIRenderingState=()=>JSON.parse(JSON.stringify(normalizeAIRenderingSettings(S)));
-window.getCameraManifest=()=>currentCameraManifest(S);
-window.getGeometryManifest=()=>JSON.parse(JSON.stringify(buildGeometryManifest(S)));
-window.exportCleanScreenshot=(options={})=>createCleanScreenshot(options);
-/* Validate the data-only manifest once during startup; later callers always receive a fresh snapshot. */
-buildGeometryManifest(S);
 window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispose();},{once:true});
 </script>
 </body>
