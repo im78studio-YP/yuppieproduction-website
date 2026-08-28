@@ -1084,7 +1084,7 @@ const LIGHT_MODELS=[
   /* Arm Light V4: mesh 10 คือก้อนฐานยึดผนังที่ปลายก้านด้านหลัง
      (mesh 9 เป็นเพียงแผ่น/ชิ้นส่วนที่ปลายหัวโคม) จึงต้องใช้ mesh 10
      เป็นระนาบอ้างอิง แล้วกลับแนวก้านให้หัวโคมหันออกทางเดิน */
-  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 10W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',scale:1,spacing:1.0,backWallClearance:1.0,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],beamMode:'downwash',beamTargetHeightRatio:.83,beamTargetDepth:.04,beamAngle:.58,beamPenumbra:.88,beamDecay:1.6,beamDistanceFactor:2.5,beamMix:.72,beamDiffuseMix:.20,beamDiffuseAngle:.80,beamDiffusePenumbra:1,beamDiffuseDecay:1.15,
+  {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 10W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',scale:1,spacing:1.0,backWallClearance:1.0,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],beamMode:'downwash',beamInward:.95,beamAngle:.70,beamPenumbra:.90,beamDecay:1.6,beamDistanceFactor:2.5,beamMix:.72,beamDiffuseMix:.28,beamDiffuseAngle:1.06,beamDiffusePenumbra:1,beamDiffuseDecay:1.15,
     /* ฐานติดขอบผนัง แล้วก้านยื่นเข้าทางเดินเสมอ: หลัง = +Z · ซ้าย = +X · ขวา = -X */
     wallRotations:{back:0,left:Math.PI/2,right:-Math.PI/2}}];
 const OFFLINE_LIGHT_MODELS_SCRIPT='./assets/lights/embedded-light-models.js?v=20260824-clear-v2';
@@ -1242,11 +1242,6 @@ function isCatalogPlacementValid(catalogId,x,z,rotationY=0,ignoreId=null){
   if(hasStore()){
     const G=storeGeom(boothWallThickness(S)),storeShape=placementShape({w:G.w,d:G.d},G.x+G.w/2,G.y+G.d/2,0);
     if(shapesOverlap(shape,storeShape,item.clearance??.05))return false;
-  }
-  const photoPlatform=photo360PlatformLayout(S);
-  if(photoPlatform){
-    const platformShape=placementShape({w:photoPlatform.diameter,d:photoPlatform.diameter},photoPlatform.x,photoPlatform.z,0);
-    if(shapesOverlap(shape,platformShape,item.clearance??.05))return false;
   }
   return !S.objects.some(other=>{
     if(other.id===ignoreId)return false;
@@ -1703,7 +1698,6 @@ function buildDesignPrompt(){
     'พื้น: '+(S.raise?'ยกพื้น '+S.raise+' ซม. · ':'ไม่ยกพื้น · ')+floor,
     'ผิวผนัง: '+wallFinishSummary(),
     boothGeometryPrompt(),
-    ...(S.type==='photo360'?['แท่นยืนวงกลมสำหรับมุมถ่ายภาพ 360: เส้นผ่านศูนย์กลาง 1.00 ม. × สูง 0.10 ม. · อยู่กึ่งกลางด้านหน้าผนังโค้ง']:[]),
     'โลโก้: '+logoType+' · '+lockup+' · ตำแหน่ง '+logoPos+' · ขนาด '+S.logoScale+'/10',
     'ชื่อแบรนด์: '+(S.brand||'YOUR BRAND')+' · ขนาด '+S.nameScale+'/10',
     'ห้องเก็บของ: '+store+(storeHeight?' · สูง '+storeHeight:''),
@@ -2199,13 +2193,6 @@ const BOOTH_WALL_THICKNESS=.1;
 /* Peninsular / Photo Backdrop / Photo 360 ใช้ผนังเดี่ยวแบบหนา 30 ซม.; รูปแบบอื่นคงผนังมาตรฐาน 10 ซม. */
 const PENINSULAR_WALL_THICKNESS=.3;
 const boothWallThickness=spec=>['penin','backdrop','photo360'].includes(spec?.type)?PENINSULAR_WALL_THICKNESS:BOOTH_WALL_THICKNESS;
-const PHOTO360_PLATFORM_DIAMETER=1;
-const PHOTO360_PLATFORM_HEIGHT=.1;
-const PHOTO360_PLATFORM_FRONT_GAP=.15;
-const photo360PlatformLayout=spec=>spec?.type==='photo360'?{
-  diameter:PHOTO360_PLATFORM_DIAMETER,height:PHOTO360_PLATFORM_HEIGHT,
-  x:(Number(spec.W)||6)/2,z:Math.max(PHOTO360_PLATFORM_DIAMETER/2,Number(spec.D||3)-PHOTO360_PLATFORM_DIAMETER/2-PHOTO360_PLATFORM_FRONT_GAP)
-}:null;
 const wallCurveMinRadius=spec=>Math.max(3,(Number(spec?.W)||6)/2);
 function wallCurveInfo(spec){
   if(spec?.type!=='photo360')return null;
@@ -2773,8 +2760,7 @@ class ThreeBoothRenderer{
       /* Arm Light มีหน้าปล่อยแสงชี้ลง: เล็งใต้หัวโคมและเอียงเข้าบูธเล็กน้อย
          ไม่ใช้ targetDepth กลางบูธแบบไฟรุ่นอื่น เพื่อไม่ให้กรวยแสงยิงชนผนังตรงข้าม */
       const beamTargetDepth=modelDef.beamMode==='downwash'
-        ?(Number.isFinite(modelDef.beamTargetDepth)?modelDef.beamTargetDepth:
-          lightSource[2]+(Number.isFinite(modelDef.beamInward)?modelDef.beamInward:0))
+        ? lightSource[2]+(Number.isFinite(modelDef.beamInward)?modelDef.beamInward:0)
         : transform.targetDepth;
       const fixtureOffsetZ=Number.isFinite(modelDef.fixtureOffsetZ)?modelDef.fixtureOffsetZ:0;
       const wallWash=modelDef.beamMode==='wallWash';
@@ -2809,12 +2795,7 @@ class ThreeBoothRenderer{
         const wallHeight=Number.isFinite(modelDef.wallWashHeight)?modelDef.wallWashHeight:.55;
         const wallGap=Number.isFinite(modelDef.wallWashGap)?modelDef.wallWashGap:.03;
         aim.position.set(0,floorY+spec.H*wallHeight-transform.position[1],wallGap-fixtureOffsetZ);
-      }else{
-        const targetHeight=Number.isFinite(modelDef.beamTargetHeightRatio)
-          ?floorY+spec.H*Math.max(0,Math.min(1,modelDef.beamTargetHeightRatio))
-          :floorY;
-        aim.position.set(0,targetHeight-transform.position[1],beamTargetDepth);
-      }
+      }else aim.position.set(0,floorY-transform.position[1],beamTargetDepth);
       light.target=aim;mount.add(aim,light);group.add(mount);
       const diffuseMix=Math.max(0,Math.min(1,wallWash
         ?(Number.isFinite(modelDef.wallDiffuseMix)?modelDef.wallDiffuseMix:0)
@@ -2952,15 +2933,6 @@ class ThreeBoothRenderer{
       root.rotation.y=this.THREE.MathUtils.degToRad(obj.rotationY||0);group.add(root);this.objectMeshes.set(obj.id,root);
     });
   }
-  addPhoto360Platform(group,spec,floorY){
-    const layout=photo360PlatformLayout(spec);if(!layout)return;
-    const T=this.THREE,geometry=new T.CylinderGeometry(layout.diameter/2,layout.diameter/2,layout.height,64,1,false);
-    const sideMaterial=new T.MeshStandardMaterial({color:0x20252d,roughness:.78,metalness:.04});
-    const topMaterial=new T.MeshStandardMaterial({color:0x3b424d,roughness:.68,metalness:.08});
-    const platform=new T.Mesh(geometry,[sideMaterial,topMaterial,sideMaterial]);
-    platform.position.set(layout.x,floorY+layout.height/2,layout.z);platform.name='photo360-platform';
-    platform.castShadow=true;platform.receiveShadow=true;group.add(platform);
-  }
   setSelected(id){
     if(this.selectionHelper){const parent=this.selectionHelper.parent;if(parent)parent.remove(this.selectionHelper);
       disposeThreeObject(this.selectionHelper);this.selectionHelper=null;}
@@ -3001,7 +2973,6 @@ class ThreeBoothRenderer{
       if(panels.right)this.storageWall(g,G,floorY,spec,'right',storeColor);
       this.door(g,G,floorY,spec);
     }
-    this.addPhoto360Platform(g,spec,floorY);
     this.addCatalogObjects(g,spec,floorY);
     this.addBranding(g,spec,t,floorY);
     this.addSpotlights(g,spec,t,floorY);
@@ -3151,14 +3122,6 @@ function planSVG(){
       if(S.stDoor==='left') g+=dl(G.x,ay,G.x+dd,ay);
       if(S.stDoor==='right')g+=dl(G.x+G.w,ay,G.x+G.w-dd,ay);
     }}
-  const photoPlatform=photo360PlatformLayout(S);
-  if(photoPlatform){
-    const center=P(photoPlatform.x,photoPlatform.z),radius=photoPlatform.diameter*sc/2;
-    g+=`<circle cx="${center[0].toFixed(1)}" cy="${center[1].toFixed(1)}" r="${radius.toFixed(1)}"
-      fill="#343b45" fill-opacity=".92" stroke="#e0a83c" stroke-width="1.5"/>
-      <text x="${center[0].toFixed(1)}" y="${(center[1]+3.5).toFixed(1)}" fill="#f2f3f5" font-size="9"
-      font-weight="600" text-anchor="middle" font-family="'Noto Sans Thai',sans-serif">แท่น 360 Ø1 ม.</text>`;
-  }
   const objectNode=obj=>{
     const item=objectCatalogDef(obj.catalogId),name=item?.name||'องค์ประกอบ',shape=placementShape(obj.size,obj.position.x,obj.position.z,obj.rotationY||0);
     const ordered=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>P(
