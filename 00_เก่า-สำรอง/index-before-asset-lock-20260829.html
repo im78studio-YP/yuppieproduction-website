@@ -446,8 +446,6 @@ select:focus{border-color:var(--acc)}
 .selected-card{border-color:rgba(224,168,60,.28)}
 .selected-card h4{margin:5px 0 0;color:var(--tx);font-size:14px;font-weight:600}
 .selected-card .object-selected{margin-top:10px;min-height:44px;display:flex;align-items:center}
-.object-lock-state{color:var(--acc2)!important}
-.object-inspector-lock{display:none}
 .selected-tip{margin-top:7px;color:var(--tx3);font-size:10.5px;line-height:1.5}
 .catalog-page>.selected-card{margin:0 18px 22px}
 
@@ -460,8 +458,6 @@ select:focus{border-color:var(--acc)}
 .canvas-object-toolbar .btn{min-height:36px;padding:7px 9px;font-size:10.5px;border-color:transparent;background:transparent;white-space:nowrap}
 .canvas-object-toolbar .btn:hover{border-color:var(--line);background:var(--bg4)}
 .canvas-object-toolbar .btn.danger{color:#ef9b82}
-.canvas-object-toolbar #btnLockObject.on{border-color:rgba(224,168,60,.62);background:rgba(224,168,60,.16);color:var(--acc2)}
-.canvas-object-toolbar.locked-selected .tool-mode{background:rgba(138,145,156,.16);color:#cbd1da}
 .canvas-object-toolbar .tool-mode{display:flex;align-items:center;min-height:36px;padding:7px 10px;border-radius:7px;
   background:rgba(224,168,60,.14);color:var(--acc2);font-size:10.5px;font-weight:600;white-space:nowrap}
 .canvas-object-toolbar .tool-sep{width:1px;height:22px;margin:0 2px;background:var(--line)}
@@ -495,8 +491,6 @@ select:focus{border-color:var(--acc)}
   .dock-update-button{min-height:48px;font-size:14px}
   .vtop{overflow-x:auto}.tag{display:none}.brandbar{flex-wrap:wrap;overflow:visible}.brandbar input{min-width:180px}
   .object-actions.canvas-object-toolbar{position:static;left:auto;bottom:auto;transform:none;align-self:center;margin:-52px 8px 8px;overflow-x:auto;max-width:calc(100% - 16px)}
-  .selected-card .object-selected{display:block}
-  .object-inspector-lock{display:inline-flex;flex:0 0 100%;justify-content:center;margin-top:8px}
   .booth-curve-field{display:none}.booth-curve-mobile-trigger{display:flex}
   .modal.mobile-radius-modal{align-items:flex-end;padding:0;background:rgba(5,6,8,.66)}
   .modal.mobile-radius-modal .radius-mobile-sheet{width:100%;max-width:none;padding:18px 18px calc(18px + env(safe-area-inset-bottom));
@@ -518,8 +512,6 @@ select:focus{border-color:var(--acc)}
   .canvas-object-toolbar .btn:before{font-size:15px}
   #btnRotateObject:before{content:'↻'}#btnDuplicateObject:before{content:'⧉'}#btnDeleteObject:before{content:'×'}
   #btnUndoObject:before{content:'↶'}#btnRedoObject:before{content:'↷'}
-  .canvas-object-toolbar #btnLockObject{width:52px;min-width:52px;padding:7px 5px;font-size:9px}
-  .canvas-object-toolbar #btnLockObject:before{content:none}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
@@ -959,7 +951,6 @@ select:focus{border-color:var(--acc)}
     <div id="view" role="tabpanel" aria-label="พื้นที่ออกแบบบูธ"></div>
     <div class="object-actions canvas-object-toolbar" id="objectToolbar" role="toolbar" aria-label="เครื่องมือจัดวางวัตถุ">
       <span class="tool-mode" title="ลากวัตถุบนพื้นเพื่อย้ายตำแหน่ง">✥ ย้าย</span>
-      <button class="btn" id="btnLockObject" type="button" title="ล็อก Asset" aria-label="ล็อก Asset ที่เลือก">Lock</button>
       <button class="btn" id="btnRotateObject" type="button" title="หมุน 45 องศา" aria-label="หมุนวัตถุ 45 องศา">↻ หมุน 45°</button>
       <button class="btn" id="btnDuplicateObject" type="button" title="ทำสำเนา" aria-label="ทำสำเนาวัตถุ">⧉ สำเนา</button>
       <button class="btn danger" id="btnDeleteObject" type="button" title="ลบ" aria-label="ลบวัตถุ">ลบ</button>
@@ -1438,7 +1429,6 @@ const fmt=n=>Math.round(n).toLocaleString('en-US');
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const objectSnapshot=()=>JSON.stringify(S.objects);
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
-const objectLocked=obj=>obj?.locked===true;
 const objectCatalogDef=id=>allObjectCatalog().find(o=>o.catalogId===id)||null;
 const PLACEMENT_GRID=.05;
 const placementStepLabel=()=>Math.round(PLACEMENT_GRID*100)+' ซม.';
@@ -1821,7 +1811,7 @@ function mutateObjects(change,selectedId){
 function makeCatalogObject(catalogId,x,z){
   const item=objectCatalogDef(catalogId);if(!item)return null;
   const id='obj-'+Date.now().toString(36)+'-'+(++objectEditor.seq).toString(36);
-  const object={id,type:item.type,catalogId:item.catalogId,locked:false,
+  const object={id,type:item.type,catalogId:item.catalogId,
     position:{x:Number.isFinite(x)?x:S.W/2,y:0,z:Number.isFinite(z)?z:S.D/2},
     rotationY:item.initialRotation||0,size:{w:item.size.w,d:item.size.d,h:item.size.h},unitPrice:item.unitPrice};
   if(isEntranceFrameItem(item)){object.structure=entranceFrameDefaults(S);normalizeEntranceFrameObject(object);}
@@ -1851,7 +1841,6 @@ function selectLogoPlacement(selected=true){
 function entranceFrameSide(obj){return Number(obj?.position?.x)<S.W/2?'left':'right';}
 function moveEntranceFrameToSide(id,side){
   const obj=objectById(id),item=obj&&objectCatalogDef(obj.catalogId);if(!obj||!item||!isEntranceFrameObject(obj))return false;
-  if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return false;}
   normalizeEntranceFrameObject(obj);const limits=placementLimits(item,0,obj.size);if(!limits)return false;
   const x=side==='left'?limits.minX:limits.maxX,z=limits.minZ;
   if(!isCatalogPlacementValid(obj.catalogId,x,z,0,obj.id,obj.size)){
@@ -1861,7 +1850,6 @@ function moveEntranceFrameToSide(id,side){
 }
 function updateEntranceFrameObject(id,key,value){
   const obj=objectById(id),item=obj&&objectCatalogDef(obj.catalogId);if(!obj||!item||!isEntranceFrameObject(obj))return;
-  if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
   const before=objectSnapshot(),previous={structure:{...obj.structure},size:{...obj.size},position:{...obj.position},rotationY:obj.rotationY};
   if(key==='color'){
     const color=String(value||'').trim();if(!/^#?[0-9a-fA-F]{6}$/.test(color))return;
@@ -1906,7 +1894,6 @@ function bindEntranceFrameEditor(box,obj){
 }
 function rotateSelectedObject(){
   const obj=objectById(objectEditor.selectedId);if(!obj)return;
-  if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
   if(isEntranceFrameObject(obj)){moveEntranceFrameToSide(obj.id,obj.position.x<S.W/2?'right':'left');return;}
   const rotationY=(obj.rotationY+45)%360,item=objectCatalogDef(obj.catalogId);
   if(!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,rotationY,obj.id,obj.size)){
@@ -1915,7 +1902,6 @@ function rotateSelectedObject(){
 }
 function duplicateSelectedObject(){
   const source=objectById(objectEditor.selectedId);if(!source)return;
-  if(objectLocked(source)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
   const item=objectCatalogDef(source.catalogId),position=findCatalogPlacement(source.catalogId,source.rotationY,
     {x:source.position.x+.4,z:source.position.z+.4},source.size);
   if(!position){announceCatalog('พื้นที่ไม่เพียงพอสำหรับทำสำเนา'+item.name,'error');return;}
@@ -1925,15 +1911,8 @@ function duplicateSelectedObject(){
   mutateObjects(()=>S.objects.push(copy),copy.id);announceCatalog('ทำสำเนา'+item.name+'แล้ว','success');
 }
 function deleteSelectedObject(){
-  const id=objectEditor.selectedId,obj=objectById(id);if(!obj)return;
-  if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
+  const id=objectEditor.selectedId;if(!objectById(id))return;
   mutateObjects(()=>{S.objects=S.objects.filter(o=>o.id!==id);},null);
-}
-function toggleSelectedObjectLock(){
-  const obj=objectById(objectEditor.selectedId);if(!obj)return;
-  const next=!objectLocked(obj),item=objectCatalogDef(obj.catalogId),before=objectSnapshot();
-  obj.locked=next;recordObjectHistory(before);objectEditor.selectedId=obj.id;sync();
-  announceCatalog((next?'ล็อก ':'ปลดล็อก ')+(item?.name||'Asset')+'แล้ว','success');
 }
 function undoObjectChange(){
   if(!objectEditor.past.length)return;
@@ -1946,7 +1925,7 @@ function redoObjectChange(){
   objectEditor.selectedId=null;sync();
 }
 function syncObjectControls(){
-  const obj=objectById(objectEditor.selectedId),item=obj&&objectCatalogDef(obj.catalogId),locked=objectLocked(obj),brandSelected=logoEditor.selected,box=document.getElementById('objectSelected');
+  const obj=objectById(objectEditor.selectedId),item=obj&&objectCatalogDef(obj.catalogId),brandSelected=logoEditor.selected,box=document.getElementById('objectSelected');
   box.classList.toggle('on',!!obj||brandSelected);
   box.classList.toggle('structure-active',!!obj&&isEntranceFrameObject(obj));
   const info=document.getElementById('placementGridInfo');
@@ -1954,13 +1933,9 @@ function syncObjectControls(){
     const name=item?.name||'อุปกรณ์กำหนดเอง',p=obj.position||{},snap=S.placementSnap===false?'วางอิสระ':'Snap 5 ซม.';
     box.innerHTML='<b>'+esc(name)+'</b> · หมุน '+Number(obj.rotationY||0).toFixed(0)+'°'+
       '<small>จุดกึ่งกลางฐาน · X '+placementMeters(p.x)+' · Y '+placementMeters(p.y)+' · Z '+placementMeters(p.z)+' ม.</small>'+ 
-      '<small>'+snap+' · ระยะจัดวาง '+placementStepLabel()+'</small>'+
-      (locked?'<small class="object-lock-state">ล็อกอยู่ · กด Unlock ก่อนแก้ไขหรือย้ายตำแหน่ง</small>':'')+
-      '<button class="btn sm object-inspector-lock" type="button" aria-label="'+(locked?'ปลดล็อก':'ล็อก')+' Asset ที่เลือก">'+(locked?'Unlock Asset':'Lock Asset')+'</button>'+
-      (isEntranceFrameObject(obj)?entranceFrameEditorMarkup(obj):'');
-    const inspectorLock=box.querySelector('.object-inspector-lock');if(inspectorLock)inspectorLock.onclick=toggleSelectedObjectLock;
-    if(isEntranceFrameObject(obj)){bindEntranceFrameEditor(box,obj);if(locked)box.querySelectorAll('.structure-editor input,.structure-editor button').forEach(control=>control.disabled=true);}
-    if(info)info.innerHTML='<b>'+esc(name)+(locked?' · ล็อก':'')+'</b><small>พิกัดกลางฐาน: X '+placementMeters(p.x)+' · Z '+placementMeters(p.z)+' ม. · หมุน '+Number(obj.rotationY||0).toFixed(0)+'°</small>';
+      '<small>'+snap+' · ระยะจัดวาง '+placementStepLabel()+'</small>'+(isEntranceFrameObject(obj)?entranceFrameEditorMarkup(obj):'');
+    if(isEntranceFrameObject(obj))bindEntranceFrameEditor(box,obj);
+    if(info)info.innerHTML='<b>'+esc(name)+'</b><small>พิกัดกลางฐาน: X '+placementMeters(p.x)+' · Z '+placementMeters(p.z)+' ม. · หมุน '+Number(obj.rotationY||0).toFixed(0)+'°</small>';
   }else if(brandSelected){
     const location=S.logoMount==='floor'
       ?'พิกัด X '+placementMeters(S.logoFloorX)+' · Z '+placementMeters(S.logoFloorZ)+' ม.'
@@ -1971,12 +1946,7 @@ function syncObjectControls(){
     box.textContent='ยังไม่ได้เลือกองค์ประกอบ';
     if(info)info.textContent='Snap 5 ซม. · คลิก Asset เพื่อดูพิกัด';
   }
-  ['btnRotateObject','btnDuplicateObject','btnDeleteObject'].forEach(id=>document.getElementById(id).disabled=!obj||locked);
-  const lockButton=document.getElementById('btnLockObject');if(lockButton){
-    lockButton.disabled=!obj;lockButton.classList.toggle('on',!!obj&&locked);lockButton.textContent=locked?'Unlock':'Lock';
-    lockButton.title=locked?'ปลดล็อก Asset':'ล็อก Asset';lockButton.setAttribute('aria-label',locked?'ปลดล็อก Asset ที่เลือก':'ล็อก Asset ที่เลือก');
-    lockButton.setAttribute('aria-pressed',String(!!obj&&locked));
-  }
+  ['btnRotateObject','btnDuplicateObject','btnDeleteObject'].forEach(id=>document.getElementById(id).disabled=!obj);
   const rotateButton=document.getElementById('btnRotateObject');if(rotateButton){const frame=!!obj&&isEntranceFrameObject(obj);
     rotateButton.textContent=frame?'⇄ สลับด้าน':'↻ หมุน 45°';rotateButton.title=frame?'สลับกรอบทางเข้าระหว่างซ้ายและขวา':'หมุน 45 องศา';}
   document.getElementById('btnUndoObject').disabled=!objectEditor.past.length;
@@ -1984,8 +1954,7 @@ function syncObjectControls(){
   const snapToggle=document.getElementById('placementSnapEnabled');if(snapToggle)snapToggle.checked=S.placementSnap!==false;
   const count=document.getElementById('dockCount');if(count)count.textContent=S.objects.length?String(S.objects.length):'';
   const toolbar=document.getElementById('objectToolbar'),workspaceNode=document.getElementById('workspace'),positionButton=document.getElementById('btnPositionLogo3D');
-  if(toolbar){toolbar.classList.toggle('brand-selected',brandSelected);toolbar.classList.toggle('locked-selected',!!obj&&locked);
-    const mode=toolbar.querySelector('.tool-mode');if(mode)mode.textContent=brandSelected?'✥ ลากโลโก้เพื่อย้าย':locked?'ล็อกแล้ว':'✥ ย้าย';}
+  if(toolbar){toolbar.classList.toggle('brand-selected',brandSelected);const mode=toolbar.querySelector('.tool-mode');if(mode)mode.textContent=brandSelected?'✥ ลากโลโก้เพื่อย้าย':'✥ ย้าย';}
   if(workspaceNode)workspaceNode.classList.toggle('logo-placement-active',brandSelected);
   if(positionButton){positionButton.classList.toggle('on',brandSelected);positionButton.textContent=brandSelected?'✓ พร้อมลากโลโก้ใน 3D':'จัดตำแหน่งใน 3D';}
 }
@@ -2549,7 +2518,6 @@ function build(){
   });
   document.getElementById('btnUndoObject').onclick=undoObjectChange;
   document.getElementById('btnRedoObject').onclick=redoObjectChange;
-  document.getElementById('btnLockObject').onclick=toggleSelectedObjectLock;
   document.getElementById('btnRotateObject').onclick=rotateSelectedObject;
   document.getElementById('btnDuplicateObject').onclick=duplicateSelectedObject;
   document.getElementById('btnDeleteObject').onclick=deleteSelectedObject;
@@ -3048,9 +3016,7 @@ class ThreeBoothRenderer{
     }
     const id=hit.object.userData.objectId,obj=objectById(id),root=this.objectMeshes.get(id),point=this.floorPoint(event);
     if(!obj||!root||!point)return;
-    event.preventDefault();event.stopImmediatePropagation();selectObject(id);
-    if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กด Unlock เพื่อแก้ไขตำแหน่ง','error');return;}
-    this.controls.enabled=false;
+    event.preventDefault();event.stopImmediatePropagation();selectObject(id);this.controls.enabled=false;
     this.renderer.domElement.setPointerCapture(event.pointerId);
     this.pointerDrag={kind:'asset',pointerId:event.pointerId,id,before:objectSnapshot(),startX:obj.position.x,startZ:obj.position.z,
       offsetX:root.position.x-point.x,offsetZ:root.position.z-point.z,moved:false};
@@ -3078,7 +3044,7 @@ class ThreeBoothRenderer{
       }
       if(this.selectionHelper)this.selectionHelper.update();syncObjectControls();this.renderer.render(this.scene,this.camera);return;
     }
-    const obj=objectById(drag.id),root=this.objectMeshes.get(drag.id),point=this.floorPoint(event);if(!obj||!root||!point||objectLocked(obj))return;
+    const obj=objectById(drag.id),root=this.objectMeshes.get(drag.id),point=this.floorPoint(event);if(!obj||!root||!point)return;
     event.preventDefault();obj.position.x=+placementValue(point.x+drag.offsetX).toFixed(3);
     if(isEntranceFrameObject(obj)){
       const item=objectCatalogDef(obj.catalogId),limits=item&&placementLimits(item,0,obj.size);if(limits)obj.position.z=+placementRound(limits.minZ).toFixed(3);
@@ -3108,7 +3074,7 @@ class ThreeBoothRenderer{
     const logoKey=spec.logo?spec.logo.length+':'+spec.logo.slice(-32):'';
     const wallStickers=WALL_FACES.map(({k})=>{const sticker=wallStickerFor(k,spec);return[k,sticker.id||0,sticker.w,sticker.h,sticker.rotation||0,
       sticker.mode,sticker.patternSize,sticker.offsetX,sticker.offsetY,!!sticker.data];});
-    const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.locked===true,o.position.x,o.position.y,o.position.z,o.rotationY,
+    const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.position.x,o.position.y,o.position.z,o.rotationY,
       o.size.w,o.size.d,o.size.h,o.unitPrice,o.structure?.projection,o.structure?.height,o.structure?.pierWidth,o.structure?.thickness,o.structure?.color]);
     return JSON.stringify([spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),wallStickers,spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
@@ -3890,7 +3856,7 @@ class ThreeBoothRenderer{
     if(this.selectionHelper){const parent=this.selectionHelper.parent;if(parent)parent.remove(this.selectionHelper);
       disposeThreeObject(this.selectionHelper);this.selectionHelper=null;}
     const root=this.objectMeshes.get(id);if(!root)return;
-    const obj=objectById(id);this.selectionHelper=new this.THREE.BoxHelper(root,objectLocked(obj)?0x8a919c:0xe0a83c);this.selectionHelper.name='object-selection';
+    this.selectionHelper=new this.THREE.BoxHelper(root,0xe0a83c);this.selectionHelper.name='object-selection';
     this.selectionHelper.material.depthTest=false;this.selectionHelper.material.transparent=true;this.selectionHelper.material.opacity=.95;
     this.selectionHelper.renderOrder=20;this.boothGroup.add(this.selectionHelper);
   }
@@ -4114,13 +4080,13 @@ function planSVG(){
       shape.z+shape.axes[0].z*shape.half[0]*a+shape.axes[1].z*shape.half[1]*b));
     const points=ordered.map(point=>point.map(value=>value.toFixed(1)).join(',')).join(' '),center=P(shape.x,shape.z);
     const front=P(shape.x+shape.axes[1].x*shape.half[1]*.78,shape.z+shape.axes[1].z*shape.half[1]*.78);
-    const bounds=footprintSize(obj.size,obj.rotationY||0),selected=obj.id===objectEditor.selectedId,locked=objectLocked(obj),fill=item?.color||'#626b78';
+    const bounds=footprintSize(obj.size,obj.rotationY||0),selected=obj.id===objectEditor.selectedId,fill=item?.color||'#626b78';
     const label=bounds.w*sc>=48&&bounds.d*sc>=25?name:(item?.icon||'▪');
-    const aria=name+' · X '+obj.position.x.toFixed(2)+' เมตร · Z '+obj.position.z.toFixed(2)+' เมตร · หมุน '+(obj.rotationY||0)+' องศา'+(locked?' · ล็อกอยู่':'');
-    let node=`<g class="plan-object${selected?' selected':''}${locked?' locked':''}" data-object-id="${esc(obj.id)}" role="button" tabindex="0"
+    const aria=name+' · X '+obj.position.x.toFixed(2)+' เมตร · Z '+obj.position.z.toFixed(2)+' เมตร · หมุน '+(obj.rotationY||0)+' องศา';
+    let node=`<g class="plan-object${selected?' selected':''}" data-object-id="${esc(obj.id)}" role="button" tabindex="0"
       aria-label="${esc(aria)}" aria-pressed="${selected}"><title>${esc(aria)}</title>
       <polygon class="plan-footprint" points="${points}" fill="${fill}" fill-opacity=".88"
-        stroke="${locked?'#8a919c':selected?'#f3c86b':'#d8dde5'}" stroke-width="${selected?'2.5':'1.15'}"/>`;
+        stroke="${selected?'#f3c86b':'#d8dde5'}" stroke-width="${selected?'2.5':'1.15'}"/>`;
     node+=`<line x1="${center[0].toFixed(1)}" y1="${center[1].toFixed(1)}" x2="${front[0].toFixed(1)}" y2="${front[1].toFixed(1)}"
       stroke="#f3c86b" stroke-width="1.4" marker-end="url(#plan-arrow)"/>`;
     node+=`<text x="${center[0].toFixed(1)}" y="${(center[1]+3.5).toFixed(1)}" fill="${inkOn(fill)}" font-size="9"

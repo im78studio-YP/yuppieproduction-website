@@ -1,49 +1,38 @@
-# Design QA — Photo 360 Radius Mobile Popup
+# Design QA — Asset Lock / Unlock
 
-- Source visual truth: `C:\Users\Admin\AppData\Local\Temp\codex-clipboard-f087b458-bcdd-4a34-9580-b2e3de978418.png` (desktop radius control) and `D:\YP Job\2026\CoWork\Website_TeamYuppie\613016.jpg` (existing mobile UI language)
+- Source visual truth: `C:\Users\Admin\AppData\Local\Temp\codex-clipboard-a554a903-22cd-40de-9154-e697b6ddaafd.png`
 - Implementation: `D:\YP Job\2026\CoWork\Website_TeamYuppie\yuppieproduction-website\public\yp-web-ai\index.html`
-- Source pixels: 374 × 375 px (desktop control) and 914 × 2048 px (mobile app view)
-- Implementation screenshot: unavailable
-- CSS viewport and density normalization: unavailable because the browser verification surface blocks the local `file:///` page
-- State: Booth Size panel → มุมถ่ายภาพ 360 selected → mobile R trigger → bottom popup open
+- Desktop evidence: `qa/asset-lock-implementation.png`
+- Mobile evidence: `qa/asset-lock-mobile.png`
+- Focused toolbar evidence: `qa/asset-lock-toolbar.png`
+- Side-by-side evidence: `qa/asset-lock-comparison.png`
+- Verified viewports: desktop 1191 × 912 CSS px and mobile 390 × 844 CSS px
 
-## Full-view comparison evidence
+## Visual comparison
 
-The existing desktop and mobile interface references were inspected. The revised implementation could not be captured because the browser verification surface rejects local `file:///` pages. No alternate browser automation surface was used.
+The new Lock / Unlock control is inserted directly after the move status in the existing floating Asset toolbar. It reuses the toolbar's compact dark styling and gold active treatment. In the locked state, the button reads `Unlock`, the move status reads `ล็อกแล้ว`, and editing actions are visibly disabled without changing the surrounding toolbar hierarchy.
 
-## Focused region comparison evidence
+## Interaction verification
 
-Static inspection confirms the mobile breakpoint swaps the inline desktop control for a compact R-value trigger. The trigger opens a bottom sheet containing the current value, 3–100 m slider, numeric input, explanatory note, close control, and “เสร็จสิ้น” button. A rendered focused-region comparison is unavailable for the same browser-policy reason.
+- Selecting an Asset enables the Lock button on desktop and mobile.
+- Lock keeps the Asset selectable so the user can always reach Unlock.
+- While locked, rotate, duplicate, delete, drag, and editable structure controls are blocked.
+- A locked counter remained at `X 3.00 · Z 2.15` after a real pointer drag across the 3D canvas.
+- Unlock restores all editing actions immediately.
+- Inspector text, placement summary, 3D selection outline, and floor-plan accessibility text expose the locked state.
+- The toolbar remains contained in the 390 px mobile viewport and scrolls horizontally inside itself when needed; the page has no horizontal overflow.
+- The temporary QA Asset was removed after testing, returning the design state to its prior item count.
 
 ## Findings
 
-- [P2] Browser-rendered mobile layout and live interaction evidence is unavailable.
-  - Location: Booth Size panel and `#mPhoto360Radius` at viewport widths up to 820 px.
-  - Evidence: JavaScript syntax and static DOM assertions pass; no post-change screenshot or touch/drag interaction could be captured.
-  - Impact: Exact bottom-sheet spacing, safe-area fit, and live slider responsiveness have not been visually confirmed.
-  - Fix: Reload the local page on a mobile viewport, select “มุมถ่ายภาพ 360”, open “ปรับรัศมีผนังโค้ง R”, drag from 3.50 m toward another value, and confirm the 3D wall updates immediately.
+- No P0, P1, or P2 fidelity or interaction issues remain.
+- The reference shows the pre-lock toolbar; the implementation preserves its layout and adds only the requested state control.
 
-## Required fidelity surfaces
+## Verification
 
-- Fonts and typography: existing Inter and Noto Sans Thai stack reused; rendered comparison blocked.
-- Spacing and layout rhythm: existing panel tokens and 18 px bottom-sheet radius reused; rendered comparison blocked.
-- Colors and visual tokens: existing `--acc`, `--acc2`, `--line`, `--bg2`, `--bg3`, `--tx2`, and `--tx3` tokens reused.
-- Image quality and asset fidelity: no image assets were added or changed.
-- Copy and content: R range is 3–100 m, default is 3.50 m, and mobile actions are written in Thai consistently with the existing UI.
+- JavaScript syntax: passed.
+- `git diff --check`: passed.
+- Desktop and mobile browser checks: passed.
+- Runtime interaction errors: none observed during add, lock, blocked drag, unlock, and cleanup checks.
 
-## Comparison history
-
-- Initial pass: changed the default/range and added the mobile bottom sheet; JavaScript syntax and static DOM assertions passed; browser capture remained blocked by the local-file URL policy.
-
-## Implementation checklist
-
-- [x] Set R range to 3–100 m with 0.01 m steps.
-- [x] Set the initial R value to 3.50 m in HTML and application state.
-- [x] Keep the inline slider and numeric input on desktop.
-- [x] Replace the inline control with a popup trigger at mobile widths.
-- [x] Add a mobile bottom sheet with synchronized slider, numeric input, close, backdrop, Escape, and “เสร็จสิ้น”.
-- [x] Clamp all R values to the valid range and update the 3D scene immediately.
-- [x] Close the popup if the booth type changes or the viewport returns to desktop.
-- [ ] Capture and compare the rendered mobile state.
-
-final result: blocked
+final result: passed
