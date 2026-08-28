@@ -482,12 +482,13 @@ select:focus{border-color:var(--acc)}
   </div>
 
   <div class="asset-grid-card" id="assetGridCard">
-    <div class="asset-grid-head"><b>ช่วยจัดวาง Asset</b><span>Snap 5 ซม. · ไม่แสดงเส้นกริด</span></div>
+    <div class="asset-grid-head"><b>ช่วยจัดวาง Asset</b><span>พื้น + ผนัง · กริด 5 ซม.</span></div>
     <div class="asset-grid-options">
+      <label class="grid-check"><input type="checkbox" id="placementGridVisible" checked> แสดงกริดพื้น/ผนัง</label>
       <label class="grid-check"><input type="checkbox" id="placementSnapEnabled" checked> Snap ทุก 5 ซม.</label>
     </div>
-    <div class="placement-readout" id="placementGridInfo">Snap 5 ซม. · คลิก Asset เพื่อดูพิกัด</div>
-    <div class="note" style="margin-top:0">ระบบใช้ระยะ 5 ซม. สำหรับจัดวางและตรวจขอบเขต/การชน โดยไม่วาดเส้นกริดบนพื้นที่ทำงาน เพื่อลดภาระการเรนเดอร์</div>
+    <div class="placement-readout" id="placementGridInfo">กริดอ้างอิง 5 ซม. · คลิก Asset เพื่อดูพิกัด</div>
+    <div class="note" style="margin-top:0">เส้นหลักทุก 50 ซม. เส้นย่อยทุก 5 ซม. · ใช้พิกัดจุดกึ่งกลางฐานเป็นหลัก · ตรวจขอบเขตและการชนก่อนวาง</div>
   </div>
 
   <div class="asset-pane" id="catalogPane" data-asset-pane="catalog">
@@ -515,7 +516,7 @@ select:focus{border-color:var(--acc)}
         <div class="note">เมื่อเลือกไฟล์ ระบบจะอ่านขนาดจริงให้อัตโนมัติเป็นเมตร (กว้าง × ลึก × สูง ตามมาตรฐาน GLB) แสดงรูปแบบ 0.00 ม. และยังแก้ไขเองได้ ไฟล์จะถูกเก็บไว้ในเบราว์เซอร์เครื่องนี้</div>
       </div>
       <div class="catalog-status" id="myAssetStatus" role="status" aria-live="polite"></div>
-      <div class="note">ลากการ์ด My Asset ไปวางบนพื้นในพื้นที่บูธเพื่อกำหนดตำแหน่งเอง ระบบจะสแนประยะ 5 ซม. และตรวจขอบเขต/การชนให้ก่อนวาง</div>
+      <div class="note">ลากการ์ด My Asset ไปวางบนพื้นในพื้นที่บูธเพื่อกำหนดตำแหน่งเอง ระบบจะสแนปลงกริด 5 ซม. และตรวจขอบเขต/การชนให้ก่อนวาง</div>
       <div class="my-asset-list" id="myAssetList"></div>
     </div>
   </div>
@@ -1084,7 +1085,7 @@ const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
   raise:0,floor:'carpet',carpet:'grey',tile:'woodL',carpetTextureData:null,carpetTextureName:'',carpetTextureId:0,
   logoType:'diecut',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
   logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,
-  placementSnap:true};
+  placementGridVisible:true,placementSnap:true};
 const S=BoothSpec;
 const logoScaleFactor=value=>{
   const v=Math.max(1,Math.min(10,Number(value)||5));
@@ -1103,7 +1104,10 @@ const objectSnapshot=()=>JSON.stringify(S.objects);
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
 const objectCatalogDef=id=>allObjectCatalog().find(o=>o.catalogId===id)||null;
 const PLACEMENT_GRID=.05;
+const PLACEMENT_MAJOR_GRID=.5;
 const placementStepLabel=()=>Math.round(PLACEMENT_GRID*100)+' ซม.';
+const placementMajorStepCount=Math.max(1,Math.round(PLACEMENT_MAJOR_GRID/PLACEMENT_GRID));
+const assetPlacementModeOpen=()=>document.getElementById('dockCatalogPage')?.classList.contains('on')===true;
 const placementMeters=value=>Number.isFinite(Number(value))?Number(value).toFixed(2):'0.00';
 const placementRound=value=>Math.round(value/PLACEMENT_GRID)*PLACEMENT_GRID;
 const placementValue=value=>S.placementSnap===false?Number(value):placementRound(value);
@@ -1433,15 +1437,16 @@ function syncObjectControls(){
     const name=item?.name||'อุปกรณ์กำหนดเอง',p=obj.position||{},snap=S.placementSnap===false?'วางอิสระ':'Snap 5 ซม.';
     box.innerHTML='<b>'+esc(name)+'</b> · หมุน '+Number(obj.rotationY||0).toFixed(0)+'°'+
       '<small>จุดกึ่งกลางฐาน · X '+placementMeters(p.x)+' · Y '+placementMeters(p.y)+' · Z '+placementMeters(p.z)+' ม.</small>'+ 
-      '<small>'+snap+' · ระยะจัดวาง '+placementStepLabel()+'</small>';
+      '<small>'+snap+' · กริดอ้างอิง '+placementStepLabel()+'</small>';
     if(info)info.innerHTML='<b>'+esc(name)+'</b><small>พิกัดกลางฐาน: X '+placementMeters(p.x)+' · Z '+placementMeters(p.z)+' ม. · หมุน '+Number(obj.rotationY||0).toFixed(0)+'°</small>';
   }else{
     box.textContent='ยังไม่ได้เลือกองค์ประกอบ';
-    if(info)info.textContent='Snap 5 ซม. · คลิก Asset เพื่อดูพิกัด';
+    if(info)info.textContent='กริดอ้างอิง 5 ซม. · คลิก Asset เพื่อดูพิกัด';
   }
   ['btnRotateObject','btnDuplicateObject','btnDeleteObject'].forEach(id=>document.getElementById(id).disabled=!obj);
   document.getElementById('btnUndoObject').disabled=!objectEditor.past.length;
   document.getElementById('btnRedoObject').disabled=!objectEditor.future.length;
+  const gridToggle=document.getElementById('placementGridVisible');if(gridToggle)gridToggle.checked=S.placementGridVisible!==false;
   const snapToggle=document.getElementById('placementSnapEnabled');if(snapToggle)snapToggle.checked=S.placementSnap!==false;
   const count=document.getElementById('dockCount');if(count)count.textContent=S.objects.length?String(S.objects.length):'';
 }
@@ -1519,7 +1524,7 @@ function objectLayoutPrompt(){
   const header=[
     'ข้อมูลผังบูธและตำแหน่งอุปกรณ์ (ต้องคงตามแบบ 3D)',
     'ระบบอ้างอิงตำแหน่ง: มุมหลังซ้ายของพื้นบูธเป็นจุดเริ่มต้น; แกน X จากซ้ายไปขวา, แกน Y จากพื้นขึ้นด้านบน, แกน Z จากด้านหลังไปด้านหน้า; หน่วยเมตร',
-    'การจัดวาง Asset ใช้ Snap ระยะ 5 ซม. (0.05 ม.) โดยไม่แสดงเส้นกริด · พิกัดที่ระบุคือจุดกึ่งกลางฐานและต้องคงตามค่า',
+    'การจัดวาง Asset ใช้กริด 5 ซม. (0.05 ม.) · พิกัดที่ระบุคือจุดกึ่งกลางฐานและต้องคงตามค่า',
     'ขนาดบูธ: กว้าง '+promptNumber(width)+' ม. × ลึก '+promptNumber(depth)+' ม. × สูง '+promptNumber(height)+' ม.',
     'ผนังที่มีจริง: '+walls,
     'ด้านเปิดและทางเดิน: '+(openFaces.length?openFaces.join(', ')+' และด้านหน้า':'ด้านหน้าเท่านั้น')
@@ -2147,7 +2152,7 @@ class ThreeBoothRenderer{
     this.controls.maxPolarAngle=Math.PI/2-.025;
     this.controls.zoomToCursor=true;
 
-    this.objectMeshes=new Map();this.selectionHelper=null;this.pointerDrag=null;
+    this.objectMeshes=new Map();this.selectionHelper=null;this.placementGrid=null;this.pointerDrag=null;
     this.raycaster=new THREE.Raycaster();this.pointer=new THREE.Vector2();
     this.dragPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);this.dragPoint=new THREE.Vector3();
     this.onObjectPointerDown=e=>this.beginObjectDrag(e);
@@ -2267,12 +2272,12 @@ class ThreeBoothRenderer{
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
       spec.lightWall,spec.lightWatts,spec.lightAdj,spec.brand,logoKey,spec.logoType,spec.lockup,spec.logoPos,
-       spec.logoScale,spec.nameScale,spec.sideLogo,spec.sidePos,spec.carpetTextureId||0,objects]);
+       spec.logoScale,spec.nameScale,spec.sideLogo,spec.sidePos,spec.carpetTextureId||0,spec.placementGridVisible!==false,objects]);
   }
   update(spec){
     const key=this.visualKey(spec);if(key===this.currentKey)return;
     this.currentKey=key;this.buildId=(this.buildId||0)+1;this.scene.remove(this.boothGroup);disposeThreeObject(this.boothGroup);
-    this.objectMeshes=new Map();this.selectionHelper=null;
+    this.objectMeshes=new Map();this.selectionHelper=null;this.placementGrid=null;
     this.boothGroup=new this.THREE.Group();this.scene.add(this.boothGroup);this.buildBooth(spec);this.setSelected(objectEditor.selectedId);
     const span=Math.max(spec.W,spec.D,spec.H);
     this.controls.minDistance=Math.max(1.2,span*.34);this.controls.maxDistance=Math.max(8,span*4.8);
@@ -2786,6 +2791,56 @@ class ThreeBoothRenderer{
     this.addBranding(g,spec,t,floorY);
     this.addSpotlights(g,spec,t,floorY);
     this.addBoothDimensions(g,spec,floorY);
+    this.buildPlacementGrid(spec);
+  }
+  buildPlacementGrid(spec){
+    const T=this.THREE;
+    if(this.placementGrid){
+      this.boothGroup.remove(this.placementGrid);
+      disposeThreeObject(this.placementGrid);
+      this.placementGrid=null;
+    }
+    const should=spec&&spec.placementGridVisible!==false&&assetPlacementModeOpen()&&S.view==='three';
+    if(!should)return null;
+    const group=new T.Group();group.name='placement-grid-5cm';
+    const minor=[],major=[],step=PLACEMENT_GRID,majorEvery=placementMajorStepCount;
+    const push=(target,a,b)=>target.push(a[0],a[1],a[2],b[0],b[1],b[2]);
+    const addSet=(data,color,opacity,name)=>{
+      if(!data.length)return;
+      const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(data,3));
+      const material=new T.LineBasicMaterial({color,transparent:true,opacity,depthTest:true,depthWrite:false});
+      const lines=new T.LineSegments(geometry,material);lines.name=name;lines.renderOrder=18;group.add(lines);
+    };
+    const bucket=index=>index%majorEvery===0?major:minor;
+    const addFloor=()=>{
+      const y=spec.raise/100+.006,nx=Math.floor(spec.W/step+1e-6),nz=Math.floor(spec.D/step+1e-6);
+      for(let i=1;i<nx;i++){const x=i*step;push(bucket(i),[x,y,0],[x,y,spec.D]);}
+      for(let j=1;j<nz;j++){const z=j*step;push(bucket(j),[0,y,z],[spec.W,y,z]);}
+    };
+    const addBack=()=>{
+      if(!typ().walls.includes('back'))return;
+      const z=boothWallThickness(spec)+.004,base=spec.raise/100,nx=Math.floor(spec.W/step+1e-6),ny=Math.floor((spec.H-base)/step+1e-6);
+      for(let i=1;i<nx;i++){const x=i*step;push(bucket(i),[x,base,z],[x,spec.H,z]);}
+      for(let j=1;j<ny;j++){const y=base+j*step;push(bucket(j),[0,y,z],[spec.W,y,z]);}
+    };
+    const addSide=face=>{
+      if(!typ().walls.includes(face))return;
+      const t=boothWallThickness(spec),x=face==='left'?t+.004:spec.W-t-.004,base=spec.raise/100,nz=Math.floor(spec.D/step+1e-6),ny=Math.floor((spec.H-base)/step+1e-6);
+      for(let i=1;i<nz;i++){const z=i*step;push(bucket(i),[x,base,z],[x,spec.H,z]);}
+      for(let j=1;j<ny;j++){const y=base+j*step;push(bucket(j),[x,base+j*step,0],[x,base+j*step,spec.D]);}
+    };
+    addFloor();addBack();addSide('left');addSide('right');
+    addSet(minor,0x69737e,.22,'placement-grid-minor');
+    addSet(major,0xe0a83c,.58,'placement-grid-major');
+    group.userData.gridStep=step;
+    this.boothGroup.add(group);this.placementGrid=group;
+    return group;
+  }
+  refreshPlacementGrid(){
+    const should=this.active&&S.view==='three'&&assetPlacementModeOpen()&&S.placementGridVisible!==false;
+    if(should&&!this.placementGrid)this.buildPlacementGrid(BoothSpec);
+    if(this.placementGrid)this.placementGrid.visible=should;
+    if(this.active)this.renderer.render(this.scene,this.camera);
   }
   setCameraView(view){
     const spec=BoothSpec,span=Math.max(spec.W,spec.D,spec.H),floorY=spec.raise/100;
@@ -2874,10 +2929,10 @@ function queueLightModelThumbs(){
 }
 function renderThreeView(container){
   container.classList.add('three-active');
-  if(threeRenderer){threeRenderer.mount(container);threeRenderer.update(BoothSpec);queueLightModelThumbs();return;}
+  if(threeRenderer){threeRenderer.mount(container);threeRenderer.update(BoothSpec);threeRenderer.refreshPlacementGrid();queueLightModelThumbs();return;}
   if(!container.querySelector('.three-status'))
     container.innerHTML='<div class="three-status">กำลังโหลด Three.js '+THREE_VERSION+'…</div>';
-  loadThreeRenderer().then(r=>{queueLightModelThumbs();if(S.view==='three'){r.mount(container);r.update(BoothSpec);}})
+  loadThreeRenderer().then(r=>{queueLightModelThumbs();if(S.view==='three'){r.mount(container);r.update(BoothSpec);r.refreshPlacementGrid();}})
     .catch(()=>{if(S.view==='three')showThreeFallback(container,'อุปกรณ์นี้ไม่รองรับ WebGL หรือโหลด Three.js ไม่สำเร็จ');});
 }
 function selectView(view){
@@ -2897,6 +2952,15 @@ function planSVG(){
     <rect width="${VW}" height="${VH}" fill="#0a0b0e"/>`;
   g+=`<rect x="${ox}" y="${oy}" width="${(W*sc).toFixed(1)}" height="${(D*sc).toFixed(1)}"
        fill="${floorColor()}" opacity=".35" stroke="#333a44" stroke-width="1"/>`;
+  if(S.placementGridVisible!==false){
+    const step=PLACEMENT_GRID,majorEvery=placementMajorStepCount;
+    const addGridLine=(a,b,major)=>{const p=P(a[0],a[1]),q=P(b[0],b[1]);
+      g+=`<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${q[0].toFixed(1)}" y2="${q[1].toFixed(1)}"
+        stroke="${major?'#e0a83c':'#69737e'}" stroke-width="${major?'1.05':'.45'}" opacity="${major?'.42':'.18'}"/>`;};
+    const nx=Math.floor(W/step+1e-6),nz=Math.floor(D/step+1e-6);
+    for(let i=1;i<nx;i++)addGridLine([i*step,0],[i*step,D],i%majorEvery===0);
+    for(let j=1;j<nz;j++)addGridLine([0,j*step],[W,j*step],j%majorEvery===0);
+  }
   const wall=(x,y,w,d)=>{const p=P(x,y);
     return `<rect x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" width="${(w*sc).toFixed(1)}"
       height="${(d*sc).toFixed(1)}" fill="${a.wall}" stroke="rgba(0,0,0,.45)" stroke-width=".8"/>`;};
@@ -2948,7 +3012,8 @@ function planSVG(){
   };
   S.objects.forEach(obj=>{g+=objectNode(obj);});
   const selectedObject=objectById(objectEditor.selectedId),selectedItem=selectedObject&&objectCatalogDef(selectedObject.catalogId);
-  const legend=S.objects.length?('เฟอร์นิเจอร์ '+S.objects.length+' ชิ้น · ลูกศร = ด้านหน้า'+(selectedItem?' · เลือก '+selectedItem.name:'')):'ยังไม่มีเฟอร์นิเจอร์ในผัง';
+  const gridLabel=S.placementGridVisible!==false?' · กริด 5 ซม.':'';
+  const legend=S.objects.length?('เฟอร์นิเจอร์ '+S.objects.length+' ชิ้น · ลูกศร = ด้านหน้า'+(selectedItem?' · เลือก '+selectedItem.name:'')+gridLabel):'ยังไม่มีเฟอร์นิเจอร์ในผัง'+gridLabel;
   g+=`<rect x="10" y="10" width="250" height="23" rx="6" fill="#11151b" stroke="#303641"/>
     <text x="20" y="25.5" fill="#cbd1da" font-size="9.5" font-family="'Noto Sans Thai',sans-serif">${esc(legend)}</text>`;
   const open=(x1,y1,x2,y2)=>{const p=P(x1,y1),q=P(x2,y2);
@@ -3271,6 +3336,7 @@ function sync(){
   S.logoScale=Math.max(1,Math.min(10,Number(S.logoScale)||5));
   S.nameScale=Math.max(0,Math.min(10,Number.isFinite(Number(S.nameScale))?Math.round(Number(S.nameScale)):5));
   S.promptFidelity=promptFidelityValue(S.promptFidelity);
+  if(typeof S.placementGridVisible!=='boolean')S.placementGridVisible=true;
   if(typeof S.placementSnap!=='boolean')S.placementSnap=true;
   if(!Array.isArray(S.wallStickerFaces))S.wallStickerFaces=[];
   S.wallStickerFaces=S.wallStickerFaces.filter(face=>WALL_FACES.some(item=>item.k===face));
@@ -3491,6 +3557,7 @@ function showDockPage(page,source){
   });
   const activePage=document.querySelector('.dock-page.on');
   if(activePage)activePage.scrollTop=0;
+  if(threeRenderer)threeRenderer.refreshPlacementGrid();
   if(page==='prompt')updatePromptPreview();
 }
 document.querySelectorAll('.dock-tool').forEach(b=>b.onclick=()=>showDockPage(b.dataset.dockPage,b));
@@ -3506,12 +3573,15 @@ if(promptFidelityInput){
     if(e.key==='Enter'){e.preventDefault();commitPromptFidelity();promptFidelityInput.blur();}
   });
 }
+const placementGridInput=document.getElementById('placementGridVisible');
+if(placementGridInput)placementGridInput.onchange=e=>{S.placementGridVisible=!!e.target.checked;sync();};
 const placementSnapInput=document.getElementById('placementSnapEnabled');
 if(placementSnapInput)placementSnapInput.onchange=e=>{S.placementSnap=!!e.target.checked;sync();};
 document.getElementById('dockClose').onclick=()=>{
   workspace.classList.remove('asset-panel-open');
   workspace.classList.add('dock-collapsed');
   dockPanel.setAttribute('aria-hidden','true');
+  if(threeRenderer)threeRenderer.refreshPlacementGrid();
 };
 
 const summaryToggle=document.getElementById('summaryToggle'),summaryPopover=document.getElementById('summaryPopover'),summaryClose=document.getElementById('summaryClose');
