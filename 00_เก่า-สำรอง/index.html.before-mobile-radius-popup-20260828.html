@@ -334,26 +334,6 @@ select:focus{border-color:var(--acc)}
 .booth-curve-field input[type=number]::-webkit-inner-spin-button,.booth-curve-field input[type=number]::-webkit-outer-spin-button{appearance:none;margin:0}
 .booth-curve-field input[type=number]{-moz-appearance:textfield}
 .booth-curve-field span{font-size:10px;color:var(--tx3)}
-.booth-curve-mobile-trigger{display:none;width:100%;align-items:center;justify-content:space-between;gap:12px;padding:10px 11px;
-  border:1px solid var(--line);border-radius:8px;background:var(--bg2);color:var(--tx);text-align:left}
-.booth-curve-mobile-trigger span{font-size:11px;color:var(--tx2)}
-.booth-curve-mobile-trigger b{color:var(--acc2);font:600 13px Inter,sans-serif;white-space:nowrap}
-.radius-mobile-sheet{text-align:left!important}
-.radius-mobile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
-.radius-mobile-head small{display:block;margin-bottom:3px;color:var(--acc2);font-size:9px;font-weight:700;letter-spacing:.1em}
-.radius-mobile-head h2{margin:0;font-size:18px}
-.radius-mobile-value{display:flex;align-items:baseline;justify-content:center;gap:6px;margin:4px 0 14px}
-.radius-mobile-value strong{color:var(--acc2);font:700 32px/1 Inter,sans-serif}
-.radius-mobile-value span{color:var(--tx2);font-size:13px}
-.radius-mobile-control input[type=range]{display:block;width:100%;accent-color:var(--acc);background:none;border:0;padding:4px 0}
-.radius-mobile-scale{display:flex;justify-content:space-between;gap:12px;margin-top:5px;color:var(--tx3);font-size:9.5px}
-.radius-mobile-input{display:flex;align-items:center;gap:8px;margin-top:15px}
-.radius-mobile-input label{flex:1;color:var(--tx2);font-size:11px}
-.radius-mobile-input input{width:92px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg3);color:var(--acc2);outline:none;font:600 14px Inter,sans-serif;text-align:right}
-.radius-mobile-input input:focus{border-color:var(--acc)}
-.radius-mobile-input span{color:var(--tx3);font-size:11px}
-.radius-mobile-done{width:100%;margin-top:16px}
-.radius-modal-open{overflow:hidden}
 .corner-side-wrap{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
 .corner-side-wrap .lbl{margin-bottom:6px}
 .signage-page .brandbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:0 0 15px;padding:0;
@@ -424,10 +404,6 @@ select:focus{border-color:var(--acc)}
   .panel{right:60px;width:calc(100vw - 60px)}
   .vtop{overflow-x:auto}.tag{display:none}.brandbar{flex-wrap:wrap;overflow:visible}.brandbar input{min-width:180px}
   .object-actions.canvas-object-toolbar{position:static;left:auto;bottom:auto;transform:none;align-self:center;margin:-52px 8px 8px;overflow-x:auto;max-width:calc(100% - 16px)}
-  .booth-curve-field{display:none}.booth-curve-mobile-trigger{display:flex}
-  .modal.mobile-radius-modal{align-items:flex-end;padding:0;background:rgba(5,6,8,.66)}
-  .modal.mobile-radius-modal .radius-mobile-sheet{width:100%;max-width:none;padding:18px 18px calc(18px + env(safe-area-inset-bottom));
-    border-width:1px 0 0;border-radius:18px 18px 0 0;box-shadow:0 -18px 50px rgba(0,0,0,.42)}
 }
 @media(max-width:480px){
   .header-actions .btn{padding:7px 9px}.logo>div:last-child{display:none}.logo .m{width:28px;height:28px}.summary-trigger-label{display:none}.summary-trigger{min-width:38px;justify-content:center}.header-total{min-width:70px}.header-total strong{font-size:13px}
@@ -654,13 +630,10 @@ select:focus{border-color:var(--acc)}
     <div id="photo360CurveWrap" class="booth-curve-wrap" hidden>
       <div class="booth-curve-field">
         <label for="photo360RadiusRange">รัศมีผนังโค้ง R</label>
-        <input id="photo360RadiusRange" type="range" min="3" max="100" step="0.01" value="3.50" aria-label="ปรับรัศมีผนังโค้ง R">
-        <input id="photo360Radius" type="number" min="3" max="100" step="0.01" value="3.50" inputmode="decimal" aria-label="ค่ารัศมีผนังโค้ง R">
+        <input id="photo360RadiusRange" type="range" min="3.01" max="100" step="0.01" value="10.00" aria-label="ปรับรัศมีผนังโค้ง R">
+        <input id="photo360Radius" type="number" min="3.01" max="100" step="0.01" value="10.00" inputmode="decimal" aria-label="ค่ารัศมีผนังโค้ง R">
         <span>ม.</span>
       </div>
-      <button type="button" class="booth-curve-mobile-trigger" id="photo360RadiusMobileOpen" aria-haspopup="dialog" aria-controls="mPhoto360Radius">
-        <span>ปรับรัศมีผนังโค้ง R</span><b id="photo360RadiusMobileSummary">3.50 ม.</b>
-      </button>
       <div class="note" id="photo360CurveNote">โค้งเว้าเข้าหาพื้นที่ถ่ายภาพ · ค่าต่ำสุดขึ้นกับครึ่งหนึ่งของความกว้างผนัง</div>
     </div>
     <div class="note" id="typeNote"></div>
@@ -892,27 +865,6 @@ select:focus{border-color:var(--acc)}
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h5M8 16h8"/><path d="m18 2 .7 1.8L20.5 4.5l-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L18 2Z"/></svg><span class="dock-label">PROMPT</span>
   </button>
 </nav>
-</div>
-
-<div class="modal mobile-radius-modal" id="mPhoto360Radius" role="dialog" aria-modal="true" aria-labelledby="photo360RadiusModalTitle" aria-hidden="true" onclick="if(event.target===this)closePhoto360RadiusModal()">
-  <div class="sheet radius-mobile-sheet">
-    <div class="radius-mobile-head">
-      <div><small>PHOTO 360</small><h2 id="photo360RadiusModalTitle">ปรับรัศมีผนังโค้ง R</h2></div>
-      <button class="close" id="photo360RadiusMobileClose" type="button" aria-label="ปิดหน้าต่างปรับรัศมี">×</button>
-    </div>
-    <div class="radius-mobile-value"><strong id="photo360RadiusMobileValue">3.50</strong><span>ม.</span></div>
-    <div class="radius-mobile-control">
-      <input id="photo360RadiusMobileRange" type="range" min="3" max="100" step="0.01" value="3.50" aria-label="ปรับรัศมีผนังโค้ง R บนมือถือ">
-      <div class="radius-mobile-scale"><span>โค้งมาก · 3 ม.</span><span>เกือบตรง · 100 ม.</span></div>
-    </div>
-    <div class="radius-mobile-input">
-      <label for="photo360RadiusMobileInput">กำหนดค่า R</label>
-      <input id="photo360RadiusMobileInput" type="number" min="3" max="100" step="0.01" value="3.50" inputmode="decimal">
-      <span>ม.</span>
-    </div>
-    <div class="note" id="photo360RadiusMobileNote">เลื่อนเพื่อปรับความโค้ง ระบบจะอัปเดตภาพ 3D ทันที</div>
-    <button type="button" class="btn pri lg radius-mobile-done" id="photo360RadiusMobileDone">เสร็จสิ้น</button>
-  </div>
 </div>
 
 <div class="modal show" id="mRelease" role="dialog" aria-modal="true" aria-labelledby="releaseTitle" aria-describedby="releaseIntro" aria-hidden="false" onclick="if(event.target===this)closeReleaseNotes()">
@@ -1153,12 +1105,12 @@ const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
   lights:true,lightFixture:'clear100',lightCol:'white',lightWall:'back',lightWatts:100,lightAdj:0,
   raise:0,floor:'carpet',carpet:'grey',tile:'woodL',carpetTextureData:null,carpetTextureName:'',carpetTextureId:0,
   logoType:'diecut',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
-  logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,wallRadius:3.5,
+  logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,wallRadius:10,
   placementSnap:true};
 const S=BoothSpec;
 const FIXED_BOOTH_TYPES=new Set(['backdrop','photo360']);
 const isFixedBoothType=type=>FIXED_BOOTH_TYPES.has(type);
-const PHOTO360_DEFAULT_RADIUS=3.5;
+const PHOTO360_DEFAULT_RADIUS=10;
 const logoScaleFactor=value=>{
   const v=Math.max(1,Math.min(10,Number(value)||5));
   return v<=5 ? .55+(v-1)*.1125 : 1+(v-5)*.16;
@@ -2176,7 +2128,7 @@ const BOOTH_WALL_THICKNESS=.1;
 /* Peninsular / Photo Backdrop / Photo 360 ใช้ผนังเดี่ยวแบบหนา 30 ซม.; รูปแบบอื่นคงผนังมาตรฐาน 10 ซม. */
 const PENINSULAR_WALL_THICKNESS=.3;
 const boothWallThickness=spec=>isFixedBoothType(spec?.type)||spec?.type==='penin'?PENINSULAR_WALL_THICKNESS:BOOTH_WALL_THICKNESS;
-const wallCurveMinRadius=spec=>Math.max(3,(Number(spec?.W)||6)/2);
+const wallCurveMinRadius=spec=>Math.max(3.01,(Number(spec?.W)||6)/2+.01);
 function wallCurveInfo(spec){
   if(spec?.type!=='photo360')return null;
   const width=Math.max(1,Number(spec.W)||6),half=width/2,minRadius=wallCurveMinRadius({...spec,W:width});
@@ -3527,21 +3479,14 @@ function sync(){
   const fixedType=isFixedBoothType(S.type);
   ['dW','dD','dH'].forEach(id=>{const input=document.getElementById(id);if(input)input.disabled=fixedType;});
   document.querySelectorAll('#oPreset .opt,#oHeight .opt').forEach(button=>button.disabled=fixedType);
-  const curveWrap=document.getElementById('photo360CurveWrap'),curveRange=document.getElementById('photo360RadiusRange'),curveInput=document.getElementById('photo360Radius'),curveNote=document.getElementById('photo360CurveNote'),
-    curveMobileRange=document.getElementById('photo360RadiusMobileRange'),curveMobileInput=document.getElementById('photo360RadiusMobileInput'),curveMobileValue=document.getElementById('photo360RadiusMobileValue'),
-    curveMobileSummary=document.getElementById('photo360RadiusMobileSummary'),curveMobileNote=document.getElementById('photo360RadiusMobileNote');
+  const curveWrap=document.getElementById('photo360CurveWrap'),curveRange=document.getElementById('photo360RadiusRange'),curveInput=document.getElementById('photo360Radius'),curveNote=document.getElementById('photo360CurveNote');
   if(curveWrap)curveWrap.hidden=S.type!=='photo360';
   if(S.type==='photo360'){
     const minRadius=wallCurveMinRadius(S).toFixed(2),radius=Number(S.wallRadius).toFixed(2);
     if(curveRange){curveRange.min=minRadius;curveRange.value=radius;}
     if(curveInput){curveInput.min=minRadius;curveInput.value=radius;}
-    if(curveMobileRange){curveMobileRange.min=minRadius;curveMobileRange.value=radius;}
-    if(curveMobileInput){curveMobileInput.min=minRadius;curveMobileInput.value=radius;}
-    if(curveMobileValue)curveMobileValue.textContent=radius;
-    if(curveMobileSummary)curveMobileSummary.textContent=radius+' ม.';
   }
-  if(curveNote&&S.type==='photo360'){const curve=wallCurveInfo(S),note='โค้งเว้าเข้าหาพื้นที่ถ่ายภาพ · R ต่ำสุด '+wallCurveMinRadius(S).toFixed(2)+' ม. · ความลึกโค้ง '+curve.sagitta.toFixed(2)+' ม. · แนวโค้งยาว '+curve.arcLength.toFixed(2)+' ม.';curveNote.textContent=note;if(curveMobileNote)curveMobileNote.textContent=note;}
-  if(S.type!=='photo360'&&document.getElementById('mPhoto360Radius')?.classList.contains('show'))closePhoto360RadiusModal(false);
+  if(curveNote&&S.type==='photo360'){const curve=wallCurveInfo(S);curveNote.textContent='โค้งเว้าเข้าหาพื้นที่ถ่ายภาพ · R ต่ำสุด '+wallCurveMinRadius(S).toFixed(2)+' ม. · ความลึกโค้ง '+curve.sagitta.toFixed(2)+' ม. · แนวโค้งยาว '+curve.arcLength.toFixed(2)+' ม.';}
   document.getElementById('typeNote').textContent=typ().note;
 
   document.querySelectorAll('#oStSize .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.stSize));
@@ -3786,7 +3731,7 @@ document.getElementById('cHex2').oninput=e=>{const v=e.target.value.trim();
 document.getElementById('stW').oninput=e=>{S.stW=parseFloat(e.target.value)||1.2;sync();};
 document.getElementById('stD').oninput=e=>{S.stD=parseFloat(e.target.value)||1.2;sync();};
 document.getElementById('stHv').oninput=e=>{S.stHv=parseFloat(e.target.value)||2.4;sync();};
-const setPhoto360Radius=value=>{const radius=parseFloat(value),min=wallCurveMinRadius(S);if(Number.isFinite(radius))S.wallRadius=Math.max(min,Math.min(100,radius));sync();};
+const setPhoto360Radius=value=>{const radius=parseFloat(value);if(Number.isFinite(radius))S.wallRadius=radius;sync();};
 document.getElementById('photo360RadiusRange').oninput=e=>setPhoto360Radius(e.target.value);
 const photo360RadiusInput=document.getElementById('photo360Radius');
 photo360RadiusInput.oninput=e=>{
@@ -3794,28 +3739,6 @@ photo360RadiusInput.oninput=e=>{
   if(Number.isFinite(radius)&&radius>=min&&radius<=100)setPhoto360Radius(radius);
 };
 photo360RadiusInput.onchange=e=>setPhoto360Radius(e.target.value);
-const photo360RadiusModal=document.getElementById('mPhoto360Radius'),photo360RadiusMobileOpen=document.getElementById('photo360RadiusMobileOpen'),
-  photo360RadiusMobileRange=document.getElementById('photo360RadiusMobileRange'),photo360RadiusMobileInput=document.getElementById('photo360RadiusMobileInput');
-function openPhoto360RadiusModal(){
-  if(S.type!=='photo360')return;
-  photo360RadiusModal.classList.add('show');photo360RadiusModal.setAttribute('aria-hidden','false');document.body.classList.add('radius-modal-open');
-  requestAnimationFrame(()=>photo360RadiusMobileRange.focus());
-}
-function closePhoto360RadiusModal(returnFocus=true){
-  photo360RadiusModal.classList.remove('show');photo360RadiusModal.setAttribute('aria-hidden','true');document.body.classList.remove('radius-modal-open');
-  if(returnFocus&&photo360RadiusMobileOpen.offsetParent!==null)photo360RadiusMobileOpen.focus();
-}
-photo360RadiusMobileOpen.onclick=openPhoto360RadiusModal;
-document.getElementById('photo360RadiusMobileClose').onclick=()=>closePhoto360RadiusModal();
-document.getElementById('photo360RadiusMobileDone').onclick=()=>closePhoto360RadiusModal();
-photo360RadiusMobileRange.oninput=e=>setPhoto360Radius(e.target.value);
-photo360RadiusMobileInput.oninput=e=>{
-  const radius=parseFloat(e.target.value),min=wallCurveMinRadius(S);
-  if(Number.isFinite(radius)&&radius>=min&&radius<=100)setPhoto360Radius(radius);
-};
-photo360RadiusMobileInput.onchange=e=>setPhoto360Radius(e.target.value);
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&photo360RadiusModal.classList.contains('show')){event.preventDefault();closePhoto360RadiusModal();}});
-if(window.matchMedia){window.matchMedia('(min-width:821px)').addEventListener('change',event=>{if(event.matches&&photo360RadiusModal.classList.contains('show'))closePhoto360RadiusModal(false);});}
 document.addEventListener('keydown',e=>{
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))return;
   const mod=e.ctrlKey||e.metaKey;
