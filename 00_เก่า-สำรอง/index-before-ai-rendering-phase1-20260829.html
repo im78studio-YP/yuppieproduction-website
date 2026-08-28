@@ -1293,16 +1293,7 @@ const WHITE='#f2f3f5';
 /* ================= state ================= */
 /* BoothSpec is the serializable single source of truth. S remains as a compatibility
    alias so the proven controls, rules, pricing, and SVG renderer keep one data path. */
-const AI_RENDER_SCHEMA_VERSION=1;
-const AI_LOCK_LEVELS=Object.freeze(['LOCKED','STYLEABLE','OPTIONAL']);
-const AI_ALLOWED_CHANGES=Object.freeze(['material','color','finish','graphic','lighting','reflection','atmosphere','add','remove','position','rotation','scale']);
-const AI_OPTIONAL_CATEGORIES=Object.freeze(['products','plants','people','props']);
-function defaultAIRenderingSettings(){
-  return{schemaVersion:AI_RENDER_SCHEMA_VERSION,allowOptionalProps:false,
-    optionalPermissions:{products:false,plants:false,people:false,props:false},
-    camera:null,preview:null};
-}
-const BoothSpec={version:2,cat:'food',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
+const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
   wallCol:'white',wallMat:'paint',wallStickerFaces:[],wallStickers:{
     back:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0},
     left:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0},
@@ -1320,7 +1311,7 @@ const BoothSpec={version:2,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
   logoMount:'wall',logoWall:'back',logoWidth:2,logoDepth:.05,logoBaseWidth:0,logoBaseDepth:0,logoBaseColor:'#20252d',logoColor:'#2e7d4f',logoColorTouched:false,logoWallU:3,logoWallY:1.6,
   logoFloorX:3,logoFloorZ:1.5,logoFloorRotation:0,
   logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,wallRadius:3.5,
-  placementSnap:true,aiRendering:defaultAIRenderingSettings()};
+  placementSnap:true};
 const S=BoothSpec;
 const MAX_CARPET_TEXTURE_UPLOADS=3;
 const MAX_TILE_TEXTURE_UPLOADS=3;
@@ -1453,38 +1444,6 @@ const objectSnapshot=()=>JSON.stringify(S.objects);
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
 const objectLocked=obj=>obj?.locked===true;
 const objectCatalogDef=id=>allObjectCatalog().find(o=>o.catalogId===id)||null;
-function normalizeAIRenderingSettings(spec=S){
-  const source=spec.aiRendering&&typeof spec.aiRendering==='object'?spec.aiRendering:{};
-  const permissions=source.optionalPermissions&&typeof source.optionalPermissions==='object'?source.optionalPermissions:{};
-  source.schemaVersion=AI_RENDER_SCHEMA_VERSION;
-  source.allowOptionalProps=source.allowOptionalProps===true;
-  source.optionalPermissions=Object.fromEntries(AI_OPTIONAL_CATEGORIES.map(key=>[key,permissions[key]===true]));
-  source.camera=source.camera&&typeof source.camera==='object'?source.camera:null;
-  source.preview=source.preview&&typeof source.preview==='object'?source.preview:null;
-  spec.aiRendering=source;spec.version=Math.max(2,Number(spec.version)||1);return source;
-}
-function defaultObjectAIRule(item){
-  const optional=item?.category==='decor',structure=item?.category==='structure';
-  return{lockLevel:optional?'OPTIONAL':'LOCKED',geometryLocked:!optional,styleable:true,
-    presenceRequired:!optional,optionalCategory:optional?'plants':null,
-    materialIntent:item?.color||'follow-current-scene',
-    allowedChanges:optional?['material','color','finish','add','remove','position','rotation','scale']:
-      structure?['material','color','finish','lighting','reflection']:['material','color','finish','reflection']};
-}
-function normalizeObjectAIRule(obj,item=objectCatalogDef(obj?.catalogId)){
-  if(!obj||typeof obj!=='object')return null;
-  const defaults=defaultObjectAIRule(item),source=obj.ai&&typeof obj.ai==='object'?obj.ai:{};
-  source.lockLevel=AI_LOCK_LEVELS.includes(source.lockLevel)?source.lockLevel:defaults.lockLevel;
-  source.geometryLocked=typeof source.geometryLocked==='boolean'?source.geometryLocked:defaults.geometryLocked;
-  source.styleable=typeof source.styleable==='boolean'?source.styleable:defaults.styleable;
-  source.presenceRequired=typeof source.presenceRequired==='boolean'?source.presenceRequired:defaults.presenceRequired;
-  source.optionalCategory=AI_OPTIONAL_CATEGORIES.includes(source.optionalCategory)?source.optionalCategory:defaults.optionalCategory;
-  source.materialIntent=String(source.materialIntent||defaults.materialIntent||'follow-current-scene');
-  const requested=Array.isArray(source.allowedChanges)?source.allowedChanges:defaults.allowedChanges;
-  source.allowedChanges=[...new Set(requested.filter(change=>AI_ALLOWED_CHANGES.includes(change)))];
-  if(source.lockLevel!=='OPTIONAL'){source.presenceRequired=true;source.optionalCategory=null;}
-  obj.ai=source;return source;
-}
 const PLACEMENT_GRID=.05;
 const placementStepLabel=()=>Math.round(PLACEMENT_GRID*100)+' ซม.';
 const placementMeters=value=>Number.isFinite(Number(value))?Number(value).toFixed(2):'0.00';
@@ -1898,7 +1857,6 @@ function makeCatalogObject(catalogId,x,z){
   const object={id,type:item.type,catalogId:item.catalogId,locked:false,
     position:{x:Number.isFinite(x)?x:S.W/2,y:0,z:Number.isFinite(z)?z:S.D/2},
     rotationY:item.initialRotation||0,size:{w:item.size.w,d:item.size.d,h:item.size.h},unitPrice:item.unitPrice};
-  normalizeObjectAIRule(object,item);
   if(isEntranceFrameItem(item)){object.structure=entranceFrameDefaults(S);normalizeEntranceFrameObject(object);}
   if(isDownlightBeamItem(item)){object.structure=downlightBeamDefaults(S);normalizeDownlightBeamObject(object);}
   return object;
@@ -2054,7 +2012,6 @@ function duplicateSelectedObject(){
   const copy=makeCatalogObject(source.catalogId,position.x,position.z);if(!copy)return;
   copy.position.y=source.position.y;copy.rotationY=source.rotationY;copy.size={...source.size};copy.unitPrice=source.unitPrice;
   if(source.structure)copy.structure={...source.structure};
-  if(source.ai)copy.ai=JSON.parse(JSON.stringify(source.ai));normalizeObjectAIRule(copy,item);
   mutateObjects(()=>S.objects.push(copy),copy.id);announceCatalog('ทำสำเนา'+item.name+'แล้ว','success');
 }
 function deleteSelectedObject(){
@@ -4676,7 +4633,6 @@ function syncLightModelStatus(){
 }
 
 function sync(){
-  normalizeAIRenderingSettings(S);
   if(isFixedBoothType(S.type)){S.W=6;S.D=3;S.H=2.4;}
   S.W=Math.max(1,Math.min(30,S.W||1));S.D=Math.max(1,Math.min(30,S.D||1));
   S.H=Math.max(2.4,Math.min(MAX_BOOTH_HEIGHT,S.H||2.4));
@@ -4696,8 +4652,7 @@ function sync(){
   normalizeFloorStickerSize(S);
   S.promptFidelity=promptFidelityValue(S.promptFidelity);
   if(typeof S.placementSnap!=='boolean')S.placementSnap=true;
-  if(!Array.isArray(S.objects))S.objects=[];
-  S.objects.forEach(object=>{normalizeObjectAIRule(object);if(isEntranceFrameObject(object))normalizeEntranceFrameObject(object,S);if(isDownlightBeamObject(object))normalizeDownlightBeamObject(object,S);});
+  S.objects.forEach(object=>{if(isEntranceFrameObject(object))normalizeEntranceFrameObject(object,S);if(isDownlightBeamObject(object))normalizeDownlightBeamObject(object,S);});
   if(!Array.isArray(S.wallStickerFaces))S.wallStickerFaces=[];
   S.wallStickerFaces=S.wallStickerFaces.filter(face=>WALL_FACES.some(item=>item.k===face));
   WALL_FACES.forEach(({k})=>{const sticker=wallStickerFor(k);
@@ -5251,7 +5206,6 @@ document.getElementById('stHv').value=2.4;
 build();syncDims();sync();initGlobalNumericResets();loadMyAssets();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>render());
 window.getBoothSpec=()=>JSON.parse(serializeBoothSpec());
-window.getAIRenderingState=()=>JSON.parse(JSON.stringify(normalizeAIRenderingSettings(S)));
 window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispose();},{once:true});
 </script>
 </body>

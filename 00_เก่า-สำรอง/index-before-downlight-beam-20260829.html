@@ -293,8 +293,6 @@ select:focus{border-color:var(--acc)}
 .structure-editor-row .unit{color:var(--tx3);font-size:9px}
 .structure-editor-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .structure-editor-actions .btn.on{border-color:var(--acc);background:rgba(224,168,60,.16);color:var(--acc2)}
-.structure-editor-actions label{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;color:var(--tx2);font-size:10px;background:var(--bg3)}
-.structure-editor-actions label input[type=color]{width:34px;height:26px;padding:2px;border:0;border-radius:5px;background:transparent}
 .structure-editor-color{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px;align-items:center}
 .structure-editor-color input[type=color]{width:38px;height:32px;padding:2px;border:1px solid var(--line);border-radius:7px;background:var(--bg3)}
 .structure-editor-color input[type=text]{width:100%;min-width:0;padding:7px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg3);color:var(--tx);font:600 10px Inter,sans-serif}
@@ -1152,8 +1150,6 @@ const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:n
 const OBJECT_CATALOG=[
   furnitureItem({catalogId:'entrance-frame',category:'structure',type:'entranceFrame',name:'กรอบทางเข้า',icon:'FRAME',size:{w:1,d:2.4,h:2.4},unitPrice:0,color:'#f2f3f5',
     clearance:0,anchor:'back-right',backWallOnly:true,rotationStep:0,thumbUrl:'assets/structure/entrance-frame-reference.png'}),
-  furnitureItem({catalogId:'downlight-beam',category:'structure',type:'downlightBeam',name:'คานไฟดาวน์ไลท์',icon:'BEAM',size:{w:6,d:.3,h:2.4},unitPrice:0,color:'#f2f3f5',
-    mount:'ceiling',clearance:0,anchor:'back-center',rotationStep:45,thumbUrl:'assets/structure/downlight-beam-reference.png'}),
   furnitureItem({catalogId:'counter-standard',category:'reception',type:'counter',name:'เคาน์เตอร์',icon:'▰',size:{w:1.2,d:.6,h:1},unitPrice:28000,color:'#b88142',
     modelUrl:'assets/furniture/counter-standard.glb',thumbUrl:'assets/furniture/counter-standard.webp'}),
   furnitureItem({catalogId:'shelf-standard',category:'display',type:'shelf',name:'ชั้นโชว์',icon:'▥',size:{w:1,d:.45,h:2},unitPrice:18000,color:'#b99668'}),
@@ -1293,16 +1289,7 @@ const WHITE='#f2f3f5';
 /* ================= state ================= */
 /* BoothSpec is the serializable single source of truth. S remains as a compatibility
    alias so the proven controls, rules, pricing, and SVG renderer keep one data path. */
-const AI_RENDER_SCHEMA_VERSION=1;
-const AI_LOCK_LEVELS=Object.freeze(['LOCKED','STYLEABLE','OPTIONAL']);
-const AI_ALLOWED_CHANGES=Object.freeze(['material','color','finish','graphic','lighting','reflection','atmosphere','add','remove','position','rotation','scale']);
-const AI_OPTIONAL_CATEGORIES=Object.freeze(['products','plants','people','props']);
-function defaultAIRenderingSettings(){
-  return{schemaVersion:AI_RENDER_SCHEMA_VERSION,allowOptionalProps:false,
-    optionalPermissions:{products:false,plants:false,people:false,props:false},
-    camera:null,preview:null};
-}
-const BoothSpec={version:2,cat:'food',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
+const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
   wallCol:'white',wallMat:'paint',wallStickerFaces:[],wallStickers:{
     back:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0},
     left:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0},
@@ -1320,7 +1307,7 @@ const BoothSpec={version:2,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
   logoMount:'wall',logoWall:'back',logoWidth:2,logoDepth:.05,logoBaseWidth:0,logoBaseDepth:0,logoBaseColor:'#20252d',logoColor:'#2e7d4f',logoColorTouched:false,logoWallU:3,logoWallY:1.6,
   logoFloorX:3,logoFloorZ:1.5,logoFloorRotation:0,
   logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,wallRadius:3.5,
-  placementSnap:true,aiRendering:defaultAIRenderingSettings()};
+  placementSnap:true};
 const S=BoothSpec;
 const MAX_CARPET_TEXTURE_UPLOADS=3;
 const MAX_TILE_TEXTURE_UPLOADS=3;
@@ -1453,38 +1440,6 @@ const objectSnapshot=()=>JSON.stringify(S.objects);
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
 const objectLocked=obj=>obj?.locked===true;
 const objectCatalogDef=id=>allObjectCatalog().find(o=>o.catalogId===id)||null;
-function normalizeAIRenderingSettings(spec=S){
-  const source=spec.aiRendering&&typeof spec.aiRendering==='object'?spec.aiRendering:{};
-  const permissions=source.optionalPermissions&&typeof source.optionalPermissions==='object'?source.optionalPermissions:{};
-  source.schemaVersion=AI_RENDER_SCHEMA_VERSION;
-  source.allowOptionalProps=source.allowOptionalProps===true;
-  source.optionalPermissions=Object.fromEntries(AI_OPTIONAL_CATEGORIES.map(key=>[key,permissions[key]===true]));
-  source.camera=source.camera&&typeof source.camera==='object'?source.camera:null;
-  source.preview=source.preview&&typeof source.preview==='object'?source.preview:null;
-  spec.aiRendering=source;spec.version=Math.max(2,Number(spec.version)||1);return source;
-}
-function defaultObjectAIRule(item){
-  const optional=item?.category==='decor',structure=item?.category==='structure';
-  return{lockLevel:optional?'OPTIONAL':'LOCKED',geometryLocked:!optional,styleable:true,
-    presenceRequired:!optional,optionalCategory:optional?'plants':null,
-    materialIntent:item?.color||'follow-current-scene',
-    allowedChanges:optional?['material','color','finish','add','remove','position','rotation','scale']:
-      structure?['material','color','finish','lighting','reflection']:['material','color','finish','reflection']};
-}
-function normalizeObjectAIRule(obj,item=objectCatalogDef(obj?.catalogId)){
-  if(!obj||typeof obj!=='object')return null;
-  const defaults=defaultObjectAIRule(item),source=obj.ai&&typeof obj.ai==='object'?obj.ai:{};
-  source.lockLevel=AI_LOCK_LEVELS.includes(source.lockLevel)?source.lockLevel:defaults.lockLevel;
-  source.geometryLocked=typeof source.geometryLocked==='boolean'?source.geometryLocked:defaults.geometryLocked;
-  source.styleable=typeof source.styleable==='boolean'?source.styleable:defaults.styleable;
-  source.presenceRequired=typeof source.presenceRequired==='boolean'?source.presenceRequired:defaults.presenceRequired;
-  source.optionalCategory=AI_OPTIONAL_CATEGORIES.includes(source.optionalCategory)?source.optionalCategory:defaults.optionalCategory;
-  source.materialIntent=String(source.materialIntent||defaults.materialIntent||'follow-current-scene');
-  const requested=Array.isArray(source.allowedChanges)?source.allowedChanges:defaults.allowedChanges;
-  source.allowedChanges=[...new Set(requested.filter(change=>AI_ALLOWED_CHANGES.includes(change)))];
-  if(source.lockLevel!=='OPTIONAL'){source.presenceRequired=true;source.optionalCategory=null;}
-  obj.ai=source;return source;
-}
 const PLACEMENT_GRID=.05;
 const placementStepLabel=()=>Math.round(PLACEMENT_GRID*100)+' ซม.';
 const placementMeters=value=>Number.isFinite(Number(value))?Number(value).toFixed(2):'0.00';
@@ -1493,9 +1448,6 @@ const placementValue=value=>S.placementSnap===false?Number(value):placementRound
 const clampNumber=(value,min,max)=>Math.max(min,Math.min(max,value));
 const isEntranceFrameItem=item=>item?.type==='entranceFrame';
 const isEntranceFrameObject=obj=>obj?.type==='entranceFrame'||obj?.catalogId==='entrance-frame';
-const isDownlightBeamItem=item=>item?.type==='downlightBeam'||item?.catalogId==='downlight-beam';
-const isDownlightBeamObject=obj=>obj?.type==='downlightBeam'||obj?.catalogId==='downlight-beam';
-const DOWNLIGHT_MODEL_URL='./assets/lights/Downlight_V1.glb';
 function entranceFrameDefaults(spec=S){
   return{projection:Math.min(2.4,Math.max(.5,Number(spec.D)||3)),height:Math.min(2.4,Math.max(.5,Number(spec.H)||2.4)),
     pierWidth:Math.min(1,Math.max(.3,Number(spec.W)||6)),thickness:.15,color:'#f2f3f5'};
@@ -1515,29 +1467,6 @@ function normalizeEntranceFrameObject(obj,spec=S){
 function entranceFrameArea(obj){
   const cfg=normalizeEntranceFrameObject(obj).structure;
   return 2*(cfg.pierWidth*cfg.height+cfg.pierWidth*cfg.projection);
-}
-function downlightBeamDefaults(spec=S){
-  return{length:Math.max(.5,Number(spec.W)||6),depth:.3,thickness:.2,height:Math.max(.5,Number(spec.H)||2.4),lightCount:5,color:'#f2f3f5',lightColor:'#fff4d6',wallAttached:true};
-}
-function normalizeDownlightBeamObject(obj,spec=S){
-  if(!isDownlightBeamObject(obj))return obj;
-  const defaults=downlightBeamDefaults(spec),config=obj.structure&&typeof obj.structure==='object'?obj.structure:{};
-  const length=placementRound(clampNumber(Number(config.length)||defaults.length,.5,Math.max(.5,Number(spec.W)||6)));
-  const depth=placementRound(clampNumber(Number(config.depth)||defaults.depth,.15,Math.max(.15,Number(spec.D)||3)));
-  const thickness=placementRound(clampNumber(Number(config.thickness)||defaults.thickness,.05,Math.min(.6,Math.max(.05,Number(spec.H)||2.4))));
-  let height=placementRound(clampNumber(Number(config.height)||defaults.height,Math.max(.5,thickness),Math.max(.5,Number(spec.H)||2.4)));
-  const lightCount=Math.round(clampNumber(Number(config.lightCount)||defaults.lightCount,1,12));
-  const color=/^#[0-9a-fA-F]{6}$/.test(String(config.color||''))?String(config.color).toLowerCase():defaults.color;
-  const lightColor=/^#[0-9a-fA-F]{6}$/.test(String(config.lightColor||''))?String(config.lightColor).toLowerCase():defaults.lightColor;
-  const wallAttached=config.wallAttached!==false;
-  if(wallAttached)height=placementRound(Math.max(.5,Number(spec.H)||2.4));
-  obj.type='downlightBeam';obj.structure={length,depth,thickness,height,lightCount,color,lightColor,wallAttached};
-  obj.size={w:length,d:depth,h:height};obj.unitPrice=0;
-  if(wallAttached&&Math.abs(Number(obj.rotationY)||0)%180<.001&&obj.position){
-    const wallFront=typ().walls.includes('back')?boothWallThickness(spec):0;
-    obj.position.z=+placementRound(wallFront+depth/2).toFixed(3);
-  }
-  return obj;
 }
 const logoWallLength=(spec=S)=>wallFaceLength(spec,spec.logoWall||'back');
 const brandSurfaceWidth=(spec=S)=>{
@@ -1627,9 +1556,9 @@ function shapesOverlap(a,b,gap=0){
   });
 }
 function placementLimits(item,rotationY=0,sizeOverride=null){
-  const footprint=footprintSize(sizeOverride||item.size,rotationY),walls=typ().walls,edge=item.clearance??.05,t=boothWallThickness(S),ceiling=item.mount==='ceiling';
-  const edgeMinX=ceiling?edge:(walls.includes('left')?t:0)+edge,edgeMaxX=ceiling?S.W-edge:S.W-(walls.includes('right')?t:0)-edge;
-  const backBoundary=ceiling?0:(walls.includes('back')?(isCurvedWallType(S)?t/2:t):0);
+  const footprint=footprintSize(sizeOverride||item.size,rotationY),walls=typ().walls,edge=item.clearance??.05,t=boothWallThickness(S);
+  const edgeMinX=(walls.includes('left')?t:0)+edge,edgeMaxX=S.W-(walls.includes('right')?t:0)-edge;
+  const backBoundary=walls.includes('back')?(isCurvedWallType(S)?t/2:t):0;
   const edgeMinZ=backBoundary+edge,edgeMaxZ=S.D-edge;
   const minX=edgeMinX+footprint.w/2,maxX=edgeMaxX-footprint.w/2;
   const minZ=edgeMinZ+footprint.d/2,maxZ=edgeMaxZ-footprint.d/2;
@@ -1640,7 +1569,7 @@ function isCatalogPlacementValid(catalogId,x,z,rotationY=0,ignoreId=null,sizeOve
   const epsilon=.0001,shape=placementShape(size,x,z,rotationY);
   if(shape.corners.some(corner=>corner.x<limits.edgeMinX-epsilon||corner.x>limits.edgeMaxX+epsilon||
     corner.z<limits.edgeMinZ-epsilon||corner.z>limits.edgeMaxZ+epsilon))return false;
-  if(item.mount!=='ceiling'&&isCurvedWallType(S)&&typ().walls.includes('back')){
+  if(isCurvedWallType(S)&&typ().walls.includes('back')){
     const curve=wallCurveInfo(S),clearance=item.clearance??.05,probes=[];
     [-1,0,1].forEach(a=>[-1,0,1].forEach(b=>probes.push({
       x:shape.x+shape.axes[0].x*shape.half[0]*a+shape.axes[1].x*shape.half[1]*b,
@@ -1648,27 +1577,25 @@ function isCatalogPlacementValid(catalogId,x,z,rotationY=0,ignoreId=null,sizeOve
     })));
     if(curve&&probes.some(point=>point.z<curve.pointAtX(point.x).z+boothWallThickness(S)/2+clearance-epsilon))return false;
   }
-  if(item.mount!=='ceiling'&&hasStore()){
+  if(hasStore()){
     const G=storeGeom(boothWallThickness(S)),storeShape=placementShape({w:G.w,d:G.d},G.x+G.w/2,G.y+G.d/2,0);
     if(shapesOverlap(shape,storeShape,item.clearance??.05))return false;
   }
   const photoPlatform=photo360PlatformLayout(S);
-  if(item.mount!=='ceiling'&&photoPlatform){
+  if(photoPlatform){
     const platformShape=placementShape({w:photoPlatform.diameter,d:photoPlatform.diameter},photoPlatform.x,photoPlatform.z,0);
     if(shapesOverlap(shape,platformShape,item.clearance??.05))return false;
   }
   return !S.objects.some(other=>{
     if(other.id===ignoreId)return false;
     const otherItem=objectCatalogDef(other.catalogId),gap=Math.max(item.clearance??.05,otherItem?.clearance??.05);
-    if((item.mount==='ceiling')!==(otherItem?.mount==='ceiling'))return false;
     return shapesOverlap(shape,placementShape(other.size,other.position.x,other.position.z,other.rotationY||0),gap);
   });
 }
 function findCatalogPlacement(catalogId,rotationY=0,preferred=null,sizeOverride=null){
   const item=objectCatalogDef(catalogId),limits=item&&placementLimits(item,rotationY,sizeOverride||item.size);if(!item||!limits)return null;
-  const anchored=item.anchor==='back-right',backCenter=item.anchor==='back-center';
-  const defaultZ=backCenter?clampNumber((typ().walls.includes('back')?boothWallThickness(S):0)+limits.footprint.d/2,limits.minZ,limits.maxZ):
-    anchored?limits.minZ:Math.min(limits.maxZ,Math.max(limits.minZ,S.D-.55-limits.footprint.d/2));
+  const anchored=item.anchor==='back-right';
+  const defaultZ=anchored?limits.minZ:Math.min(limits.maxZ,Math.max(limits.minZ,S.D-.55-limits.footprint.d/2));
   const startX=placementRound(clampNumber(preferred?.x??(anchored?limits.maxX:S.W/2),limits.minX,limits.maxX));
   const startZ=placementRound(clampNumber(preferred?.z??defaultZ,limits.minZ,limits.maxZ));
   const seen=new Set(),maxRadius=Math.ceil(Math.max(S.W,S.D)/PLACEMENT_GRID)+3;
@@ -1853,7 +1780,6 @@ function plannedCatalogLayout(){
     for(const object of original){
       const item=objectCatalogDef(object.catalogId);if(!item){possible=false;break;}
       if(isEntranceFrameObject(object))normalizeEntranceFrameObject(object);
-      if(isDownlightBeamObject(object))normalizeDownlightBeamObject(object);
       const valid=isCatalogPlacementValid(object.catalogId,object.position.x,object.position.z,object.rotationY||0,null,object.size);
       const position=valid?{x:object.position.x,z:object.position.z}:findCatalogPlacement(object.catalogId,object.rotationY||0,object.position,object.size);
       if(!position){possible=false;break;}
@@ -1898,9 +1824,7 @@ function makeCatalogObject(catalogId,x,z){
   const object={id,type:item.type,catalogId:item.catalogId,locked:false,
     position:{x:Number.isFinite(x)?x:S.W/2,y:0,z:Number.isFinite(z)?z:S.D/2},
     rotationY:item.initialRotation||0,size:{w:item.size.w,d:item.size.d,h:item.size.h},unitPrice:item.unitPrice};
-  normalizeObjectAIRule(object,item);
   if(isEntranceFrameItem(item)){object.structure=entranceFrameDefaults(S);normalizeEntranceFrameObject(object);}
-  if(isDownlightBeamItem(item)){object.structure=downlightBeamDefaults(S);normalizeDownlightBeamObject(object);}
   return object;
 }
 function addCatalogObject(catalogId){
@@ -1944,7 +1868,6 @@ function updateEntranceFrameObject(id,key,value){
     obj.structure.color=(color[0]==='#'?color:'#'+color).toLowerCase();
   }else{
     const numeric=Number(value);if(!Number.isFinite(numeric))return;obj.structure[key]=numeric;
-    if(key==='height'&&Math.abs(numeric-S.H)>.001)obj.structure.wallAttached=false;
   }
   normalizeEntranceFrameObject(obj);const limits=placementLimits(item,0,obj.size);
   if(!limits){Object.assign(obj,previous);announceCatalog('ขนาดกรอบทางเข้าใหญ่เกินพื้นที่บูธ','error');sync();return;}
@@ -1981,61 +1904,6 @@ function bindEntranceFrameEditor(box,obj){
   if(pick)pick.onchange=()=>updateEntranceFrameObject(obj.id,'color',pick.value);
   if(hex)hex.onchange=()=>updateEntranceFrameObject(obj.id,'color',hex.value);
 }
-function updateDownlightBeamObject(id,key,value){
-  const obj=objectById(id),item=obj&&objectCatalogDef(obj.catalogId);if(!obj||!item||!isDownlightBeamObject(obj))return;
-  if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
-  const before=objectSnapshot(),previous={structure:{...obj.structure},size:{...obj.size},position:{...obj.position},rotationY:obj.rotationY};
-  if(key==='color'||key==='lightColor'){
-    const color=String(value||'').trim();if(!/^#?[0-9a-fA-F]{6}$/.test(color))return;
-    obj.structure[key]=(color[0]==='#'?color:'#'+color).toLowerCase();
-  }else{
-    const numeric=Number(value);if(!Number.isFinite(numeric))return;obj.structure[key]=numeric;
-  }
-  normalizeDownlightBeamObject(obj);const limits=placementLimits(item,obj.rotationY||0,obj.size);
-  if(!limits){obj.structure=previous.structure;obj.size=previous.size;announceCatalog('ขนาดคานใหญ่เกินพื้นที่บูธในทิศทางที่เลือก','error');sync();return;}
-  obj.position.x=+placementRound(clampNumber(obj.position.x,limits.minX,limits.maxX)).toFixed(3);
-  obj.position.z=+placementRound(clampNumber(obj.position.z,limits.minZ,limits.maxZ)).toFixed(3);
-  if(!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,obj.rotationY||0,obj.id,obj.size)){
-    const alternate=findCatalogPlacement(obj.catalogId,obj.rotationY||0,obj.position,obj.size);
-    if(!alternate){obj.structure=previous.structure;obj.size=previous.size;obj.position=previous.position;obj.rotationY=previous.rotationY;
-      announceCatalog('ปรับขนาดไม่ได้ เพราะคานชนกับคานอีกชิ้น','error');sync();return;}
-    obj.position.x=alternate.x;obj.position.z=alternate.z;
-  }
-  recordObjectHistory(before);objectEditor.selectedId=id;sync();
-}
-function attachDownlightBeamToBackWall(id){
-  const obj=objectById(id),item=obj&&objectCatalogDef(obj.catalogId);if(!obj||!item||!isDownlightBeamObject(obj))return;
-  if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
-  const before=objectSnapshot(),previous={structure:{...obj.structure},position:{...obj.position},rotationY:obj.rotationY};
-  obj.structure.wallAttached=true;obj.structure.height=S.H;obj.rotationY=0;obj.position.x=+placementRound(S.W/2).toFixed(3);normalizeDownlightBeamObject(obj);
-  if(!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,0,obj.id,obj.size)){
-    obj.structure=previous.structure;obj.position=previous.position;obj.rotationY=previous.rotationY;
-    announceCatalog('ชิดคานกับผนังหลังไม่ได้ เพราะตำแหน่งนี้มีคานอีกชิ้นอยู่','error');sync();return;
-  }
-  recordObjectHistory(before);objectEditor.selectedId=id;sync();announceCatalog('จัดคานชิดด้านหน้าผนังหลังและเสมอยอดผนังแล้ว','success');
-}
-function downlightBeamEditorMarkup(obj){
-  const cfg=normalizeDownlightBeamObject(obj).structure;
-  const row=(label,key,value,min,max,step,initial,unit='ม.')=>'<div class="structure-editor-row"><label>'+label+'</label><input type="range" min="'+min+'" max="'+max+'" step="'+step+'" value="'+value+'" data-beam-range="'+key+'">'+
-    '<input type="number" min="'+min+'" max="'+max+'" step="'+step+'" value="'+value+'" data-beam-input="'+key+'" data-reset-default="'+initial+'" aria-label="'+label+'"><span class="unit">'+unit+'</span></div>';
-  return '<div class="structure-editor" data-beam-editor="'+esc(obj.id)+'">'+
-    row('ความยาวคาน','length',cfg.length.toFixed(2),.5,Math.max(.5,S.W),.05,Math.max(.5,S.W).toFixed(2))+
-    row('ความลึกคาน','depth',cfg.depth.toFixed(2),.15,Math.max(.15,S.D),.05,'0.30')+
-    row('ความหนาคาน','thickness',cfg.thickness.toFixed(2),.05,.6,.05,'0.20')+
-    row('ระดับติดตั้ง','height',cfg.height.toFixed(2),Math.max(.5,cfg.thickness),Math.max(.5,S.H),.05,Math.max(.5,S.H).toFixed(2))+
-    row('จำนวนดาวน์ไลท์','lightCount',cfg.lightCount,1,12,1,'5','ดวง')+
-    '<button class="btn sm'+(cfg.wallAttached?' on':'')+'" type="button" data-beam-attach>ชิดด้านหน้าผนังหลัง · เสมอยอดผนัง</button>'+
-    '<div class="structure-editor-actions"><label>สีคาน<input type="color" value="'+cfg.color+'" data-beam-color="color"></label><label>สีแสง<input type="color" value="'+cfg.lightColor+'" data-beam-color="lightColor"></label></div>'+
-    '<div class="structure-editor-note">ค่าเริ่มต้นให้ขอบหลังคานชนผิวหน้าผนังหลัง และขอบบนคานเสมอยอดผนัง · ดาวน์ไลท์กระจายระยะเท่ากัน พร้อมเว้นหัว–ท้ายเท่ากัน · ลากเพื่อย้ายคานออกจากผนังได้ · Snap '+placementStepLabel()+'</div></div>';
-}
-function bindDownlightBeamEditor(box,obj){
-  box.querySelectorAll('[data-beam-range]').forEach(range=>{const key=range.dataset.beamRange,input=box.querySelector('[data-beam-input="'+key+'"]');
-    range.oninput=()=>{if(input)input.value=range.value;};range.onchange=()=>updateDownlightBeamObject(obj.id,key,range.value);});
-  box.querySelectorAll('[data-beam-input]').forEach(input=>{const key=input.dataset.beamInput,range=box.querySelector('[data-beam-range="'+key+'"]');
-    input.oninput=()=>{if(range&&input.value!=='')range.value=input.value;};input.onchange=()=>updateDownlightBeamObject(obj.id,key,input.value);});
-  box.querySelectorAll('[data-beam-color]').forEach(input=>input.onchange=()=>updateDownlightBeamObject(obj.id,input.dataset.beamColor,input.value));
-  const attach=box.querySelector('[data-beam-attach]');if(attach)attach.onclick=()=>attachDownlightBeamToBackWall(obj.id);
-}
 function rotateSelectedObject(){
   const obj=objectById(objectEditor.selectedId);if(!obj)return;
   if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
@@ -2043,7 +1911,7 @@ function rotateSelectedObject(){
   const rotationY=(obj.rotationY+45)%360,item=objectCatalogDef(obj.catalogId);
   if(!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,rotationY,obj.id,obj.size)){
     announceCatalog('หมุน'+item.name+'ไม่ได้ เพราะพื้นที่ไม่เพียงพอ','error');return;}
-  mutateObjects(()=>{obj.rotationY=rotationY;if(isDownlightBeamObject(obj))obj.structure.wallAttached=false;},obj.id);
+  mutateObjects(()=>{obj.rotationY=rotationY;},obj.id);
 }
 function duplicateSelectedObject(){
   const source=objectById(objectEditor.selectedId);if(!source)return;
@@ -2054,7 +1922,6 @@ function duplicateSelectedObject(){
   const copy=makeCatalogObject(source.catalogId,position.x,position.z);if(!copy)return;
   copy.position.y=source.position.y;copy.rotationY=source.rotationY;copy.size={...source.size};copy.unitPrice=source.unitPrice;
   if(source.structure)copy.structure={...source.structure};
-  if(source.ai)copy.ai=JSON.parse(JSON.stringify(source.ai));normalizeObjectAIRule(copy,item);
   mutateObjects(()=>S.objects.push(copy),copy.id);announceCatalog('ทำสำเนา'+item.name+'แล้ว','success');
 }
 function deleteSelectedObject(){
@@ -2081,7 +1948,7 @@ function redoObjectChange(){
 function syncObjectControls(){
   const obj=objectById(objectEditor.selectedId),item=obj&&objectCatalogDef(obj.catalogId),locked=objectLocked(obj),brandSelected=logoEditor.selected,box=document.getElementById('objectSelected');
   box.classList.toggle('on',!!obj||brandSelected);
-  box.classList.toggle('structure-active',!!obj&&(isEntranceFrameObject(obj)||isDownlightBeamObject(obj)));
+  box.classList.toggle('structure-active',!!obj&&isEntranceFrameObject(obj));
   const info=document.getElementById('placementGridInfo');
   if(obj){
     const name=item?.name||'อุปกรณ์กำหนดเอง',p=obj.position||{},snap=S.placementSnap===false?'วางอิสระ':'Snap 5 ซม.';
@@ -2090,10 +1957,9 @@ function syncObjectControls(){
       '<small>'+snap+' · ระยะจัดวาง '+placementStepLabel()+'</small>'+
       (locked?'<small class="object-lock-state">ล็อกอยู่ · กด Unlock ก่อนแก้ไขหรือย้ายตำแหน่ง</small>':'')+
       '<button class="btn sm object-inspector-lock" type="button" aria-label="'+(locked?'ปลดล็อก':'ล็อก')+' Asset ที่เลือก">'+(locked?'Unlock Asset':'Lock Asset')+'</button>'+
-      (isEntranceFrameObject(obj)?entranceFrameEditorMarkup(obj):isDownlightBeamObject(obj)?downlightBeamEditorMarkup(obj):'');
+      (isEntranceFrameObject(obj)?entranceFrameEditorMarkup(obj):'');
     const inspectorLock=box.querySelector('.object-inspector-lock');if(inspectorLock)inspectorLock.onclick=toggleSelectedObjectLock;
     if(isEntranceFrameObject(obj)){bindEntranceFrameEditor(box,obj);if(locked)box.querySelectorAll('.structure-editor input,.structure-editor button').forEach(control=>control.disabled=true);}
-    if(isDownlightBeamObject(obj)){bindDownlightBeamEditor(box,obj);if(locked)box.querySelectorAll('.structure-editor input,.structure-editor button').forEach(control=>control.disabled=true);}
     if(info)info.innerHTML='<b>'+esc(name)+(locked?' · ล็อก':'')+'</b><small>พิกัดกลางฐาน: X '+placementMeters(p.x)+' · Z '+placementMeters(p.z)+' ม. · หมุน '+Number(obj.rotationY||0).toFixed(0)+'°</small>';
   }else if(brandSelected){
     const location=S.logoMount==='floor'
@@ -2241,9 +2107,7 @@ function objectLayoutPrompt(){
     const d=record.distance_to_walls_m,s=record.size;
     const source=objects[record.index-1],frame=isEntranceFrameObject(source)?normalizeEntranceFrameObject(source).structure:null;
     const frameDetail=frame?' · เป็นโครงรูปตัว L เปิดโล่งใต้คาน: แผ่นคานบนกว้าง '+promptNumber(frame.pierWidth)+' ม. ยื่นจากผนังหลัง '+promptNumber(frame.projection)+' ม. หนา '+promptNumber(frame.thickness)+' ม.; เสาหน้ากว้าง '+promptNumber(frame.pierWidth)+' ม. สูง '+promptNumber(frame.height)+' ม. หนา '+promptNumber(frame.thickness)+' ม.; สี '+frame.color.toUpperCase()+'; ต้องเชื่อมกับผนังหลังและห้ามปิดช่องทางเข้า':'';
-    const beam=isDownlightBeamObject(source)?normalizeDownlightBeamObject(source).structure:null;
-    const beamDetail=beam?' · เป็นคานแขวนแนวนอน: ยาว '+promptNumber(beam.length)+' ม. × ลึก '+promptNumber(beam.depth)+' ม. × หนา '+promptNumber(beam.thickness)+' ม. · ระดับท้องคาน '+promptNumber(beam.height-beam.thickness)+' ม. · ฝังดาวน์ไลท์ '+beam.lightCount+' ดวง กระจายเท่ากันและส่องลงพื้น · สีคาน '+beam.color.toUpperCase()+' · สีแสง '+beam.lightColor.toUpperCase():'';
-    return'- ชิ้นที่ '+record.index+': '+record.name+' 1 ชิ้น · จุดอ้างอิงกลางฐาน X '+promptNumber(record.x)+' ม., Z '+promptNumber(record.z)+' ม. · ตำแหน่งสัมพัทธ์ X '+promptNumber(record.normalizedX*100,1)+'% / Z '+promptNumber(record.normalizedZ*100,1)+'% · ฐานสูงจากพื้น '+promptNumber(record.baseY)+' ม. · ขนาด กว้าง '+promptNumber(s.w)+' × ลึก '+promptNumber(s.d)+' × สูง '+promptNumber(s.h)+' ม. · หมุนแกน Y '+promptNumber(record.rotation)+'° · โซน '+record.zone+' · ระยะจากขอบ ซ้าย '+promptNumber(d.left)+' / ขวา '+promptNumber(d.right)+' / หลัง '+promptNumber(d.back)+' / ด้านหน้า '+promptNumber(d.front_open)+' ม.'+frameDetail+beamDetail;
+    return'- ชิ้นที่ '+record.index+': '+record.name+' 1 ชิ้น · จุดอ้างอิงกลางฐาน X '+promptNumber(record.x)+' ม., Z '+promptNumber(record.z)+' ม. · ตำแหน่งสัมพัทธ์ X '+promptNumber(record.normalizedX*100,1)+'% / Z '+promptNumber(record.normalizedZ*100,1)+'% · ฐานสูงจากพื้น '+promptNumber(record.baseY)+' ม. · ขนาด กว้าง '+promptNumber(s.w)+' × ลึก '+promptNumber(s.d)+' × สูง '+promptNumber(s.h)+' ม. · หมุนแกน Y '+promptNumber(record.rotation)+'° · โซน '+record.zone+' · ระยะจากขอบ ซ้าย '+promptNumber(d.left)+' / ขวา '+promptNumber(d.right)+' / หลัง '+promptNumber(d.back)+' / ด้านหน้า '+promptNumber(d.front_open)+' ม.'+frameDetail;
   }).join('\n');
   return header.concat('อุปกรณ์ที่ลูกค้าเลือกและตำแหน่งที่ต้องคงเดิม:',readable,
     'ข้อบังคับ: ห้ามเพิ่ม ลด ย้าย หรือหมุนอุปกรณ์ ห้ามเปลี่ยนขนาดและจำนวน ให้ยึดตำแหน่งและระยะจากผนังตามรายการนี้ ห้ามจัดวางใหม่ตามความสวยงามของภาพ').join('\n');
@@ -2674,7 +2538,7 @@ function build(){
     const group=el('div','catalog-group'),title=el('h5',null,name),grid=el('div','catalog-grid');
     OBJECT_CATALOG.filter(item=>category==='other'?!knownCategories.has(item.category):item.category===category).forEach(item=>{
       const b=el('button','catalog-item'),media=el('span','catalog-icon',item.icon),copy=el('span','catalog-copy',
-        '<b>'+item.name+'</b><small>'+(isEntranceFrameItem(item)?'เสา 1.00 ม. · ยื่น 2.40 ม. · สูง 2.40 ม.':isDownlightBeamItem(item)?'ยาวเต็มบูธ · 0.30 × 0.20 ม. · ไฟ 5 ดวง':item.size.w+' × '+item.size.d+' × '+item.size.h+' ม.')+'</small>');
+        '<b>'+item.name+'</b><small>'+(isEntranceFrameItem(item)?'เสา 1.00 ม. · ยื่น 2.40 ม. · สูง 2.40 ม.':item.size.w+' × '+item.size.d+' × '+item.size.h+' ม.')+'</small>');
       if(item.thumbUrl){const img=document.createElement('img');img.className='catalog-thumb';img.src=item.thumbUrl;
         img.alt='';img.loading='lazy';img.setAttribute('aria-hidden','true');img.onerror=()=>img.remove();media.appendChild(img);}
       b.type='button';b.dataset.catalogId=item.catalogId;b.setAttribute('aria-label','เพิ่ม'+item.name+'ลงในบูธ');
@@ -3020,7 +2884,6 @@ class ThreeBoothRenderer{
     this.THREE=THREE;
     this.modelLoader=new GLTFLoader();this.fixtureTemplates=new Map();this.fixtureLoads=new Map();this.fixtureErrors=new Map();
     this.furnitureTemplates=new Map();this.furnitureLoads=new Map();this.furnitureErrors=new Map();
-    this.downlightTemplate=null;this.downlightLoad=null;this.downlightError=null;
     this.floorImage=null;this.floorImagePromise=null;this.floorImagePromiseSource='';this.floorImageSourceKey='';this.floorImageError=false;
     this.seamlessFloorCanvases=new WeakMap();
     this.wallStickerImages=new Map();this.wallStickerLoads=new Map();this.wallStickerErrors=new Set();
@@ -3219,7 +3082,7 @@ class ThreeBoothRenderer{
     event.preventDefault();obj.position.x=+placementValue(point.x+drag.offsetX).toFixed(3);
     if(isEntranceFrameObject(obj)){
       const item=objectCatalogDef(obj.catalogId),limits=item&&placementLimits(item,0,obj.size);if(limits)obj.position.z=+placementRound(limits.minZ).toFixed(3);
-    }else{obj.position.z=+placementValue(point.z+drag.offsetZ).toFixed(3);if(isDownlightBeamObject(obj))obj.structure.wallAttached=false;}
+    }else obj.position.z=+placementValue(point.z+drag.offsetZ).toFixed(3);
     root.position.x=obj.position.x;root.position.z=obj.position.z;
     drag.moved=drag.moved||Math.hypot(obj.position.x-drag.startX,obj.position.z-drag.startZ)>.003;
     if(this.selectionHelper)this.selectionHelper.update();this.renderer.render(this.scene,this.camera);
@@ -3803,25 +3666,6 @@ class ThreeBoothRenderer{
     const template=this.furnitureTemplates.get(item.catalogId);if(template)return template.clone(true);
     this.requestFurnitureTemplate(item);return null;
   }
-  requestDownlightTemplate(){
-    if(this.downlightTemplate||this.downlightLoad||this.downlightError)return;
-    const T=this.THREE;
-    this.downlightLoad=this.modelLoader.loadAsync(DOWNLIGHT_MODEL_URL).then(gltf=>{
-      const model=gltf.scene,template=new T.Group();template.add(model);template.updateMatrixWorld(true);
-      let box=new T.Box3().setFromObject(template);if(box.isEmpty())throw new Error('Empty downlight model');
-      const size=box.getSize(new T.Vector3()),diameter=Math.max(size.x,size.z,.0001),scale=.12/diameter;
-      model.scale.setScalar(scale);template.updateMatrixWorld(true);box=new T.Box3().setFromObject(template);
-      const center=box.getCenter(new T.Vector3());model.position.x-=center.x;model.position.z-=center.z;model.position.y-=box.max.y;
-      template.updateMatrixWorld(true);template.traverse(part=>{part.userData.sharedAsset=true;if(part.isMesh){part.castShadow=true;part.receiveShadow=true;}});
-      this.downlightTemplate=template;return template;
-    }).catch(error=>{this.downlightError=error;return null;}).finally(()=>{
-      this.downlightLoad=null;if(this.downlightTemplate&&S.objects.some(isDownlightBeamObject)){this.currentKey='';this.update(BoothSpec);}
-    });
-  }
-  downlightModel(){
-    if(this.downlightTemplate)return this.downlightTemplate.clone(true);
-    this.requestDownlightTemplate();return null;
-  }
   fixtureMountTransform(point,spec,t,def){
     const surface=t+FIXTURE_WALL_GAP,normalSpan=point.w==='back'?spec.D:spec.W;
     const yaw=def?.wallRotations?.[point.w] ?? (point.w==='back'?0:point.w==='left'?Math.PI/2:-Math.PI/2);
@@ -3987,17 +3831,6 @@ class ThreeBoothRenderer{
       bx([cfg.pierWidth,cfg.thickness,cfg.projection],[0,cfg.height-cfg.thickness/2,0],cfg.color,{material:finish.clone(),name:'entrance-frame-canopy'});
       bx([cfg.pierWidth,Math.max(.05,cfg.height-cfg.thickness),cfg.thickness],[0,Math.max(.05,cfg.height-cfg.thickness)/2,cfg.projection/2-cfg.thickness/2],cfg.color,{material:finish.clone(),name:'entrance-frame-front-pier'});
       root.userData.structureType='entrance-frame';root.userData.structureConfig={...cfg};
-    }else if(isDownlightBeamObject(obj)){
-      const cfg=normalizeDownlightBeamObject(obj).structure,finish=new T.MeshStandardMaterial({color:cfg.color,roughness:.68,metalness:.01});
-      bx([cfg.length,cfg.thickness,cfg.depth],[0,cfg.height-cfg.thickness/2,0],cfg.color,{material:finish,name:'downlight-beam-body'});
-      const spacing=cfg.length/(cfg.lightCount+1),underside=cfg.height-cfg.thickness-.006;
-      for(let index=0;index<cfg.lightCount;index++){
-        const x=-cfg.length/2+spacing*(index+1),model=this.downlightModel();
-        if(model){model.position.set(x,underside,0);model.name='downlight-model';root.add(model);}
-        const light=new T.SpotLight(cfg.lightColor,42,Math.max(2,cfg.height*1.7),.52,.72,1.55);light.position.set(x,underside-.025,0);light.castShadow=false;light.name='downlight-light';
-        const target=new T.Object3D();target.position.set(x,0,Math.min(.35,cfg.depth));target.name='downlight-target';light.target=target;root.add(target,light);
-      }
-      root.userData.structureType='downlight-beam';root.userData.structureConfig={...cfg};
     }else if(obj.type==='counter'){
       bx([s.w,s.h-.08,s.d],[0,(s.h-.08)/2,0],base);
       bx([s.w+.08,.08,s.d+.06],[0,s.h-.04,0],light,{roughness:.42});
@@ -4676,7 +4509,6 @@ function syncLightModelStatus(){
 }
 
 function sync(){
-  normalizeAIRenderingSettings(S);
   if(isFixedBoothType(S.type)){S.W=6;S.D=3;S.H=2.4;}
   S.W=Math.max(1,Math.min(30,S.W||1));S.D=Math.max(1,Math.min(30,S.D||1));
   S.H=Math.max(2.4,Math.min(MAX_BOOTH_HEIGHT,S.H||2.4));
@@ -4696,8 +4528,7 @@ function sync(){
   normalizeFloorStickerSize(S);
   S.promptFidelity=promptFidelityValue(S.promptFidelity);
   if(typeof S.placementSnap!=='boolean')S.placementSnap=true;
-  if(!Array.isArray(S.objects))S.objects=[];
-  S.objects.forEach(object=>{normalizeObjectAIRule(object);if(isEntranceFrameObject(object))normalizeEntranceFrameObject(object,S);if(isDownlightBeamObject(object))normalizeDownlightBeamObject(object,S);});
+  S.objects.forEach(object=>{if(isEntranceFrameObject(object))normalizeEntranceFrameObject(object,S);});
   if(!Array.isArray(S.wallStickerFaces))S.wallStickerFaces=[];
   S.wallStickerFaces=S.wallStickerFaces.filter(face=>WALL_FACES.some(item=>item.k===face));
   WALL_FACES.forEach(({k})=>{const sticker=wallStickerFor(k);
@@ -5251,7 +5082,6 @@ document.getElementById('stHv').value=2.4;
 build();syncDims();sync();initGlobalNumericResets();loadMyAssets();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>render());
 window.getBoothSpec=()=>JSON.parse(serializeBoothSpec());
-window.getAIRenderingState=()=>JSON.parse(JSON.stringify(normalizeAIRenderingSettings(S)));
 window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispose();},{once:true});
 </script>
 </body>
