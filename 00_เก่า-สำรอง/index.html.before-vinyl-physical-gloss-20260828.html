@@ -135,11 +135,6 @@ select:focus{border-color:var(--acc)}
 .pat.on{border-color:var(--acc);box-shadow:0 0 0 2px rgba(224,168,60,.25)}
 .pat i{display:block;height:26px}
 .pat span{display:block;font-size:9.5px;color:var(--tx2);padding:3px 2px 4px}
-.upload-pat{position:relative;min-width:0}
-.upload-pat>.pat{width:100%}
-.upload-pat .pat-remove{position:absolute;top:-5px;right:-5px;z-index:2;width:18px;height:18px;border-radius:50%;
-  border:1px solid #59606b;background:#20252d;color:#fff;font-size:12px;line-height:16px;text-align:center;box-shadow:0 2px 7px rgba(0,0,0,.45)}
-.upload-pat .pat-remove:hover{background:#a93838;border-color:#d85b5b}
 .mini{display:flex;gap:7px;align-items:center;margin-top:8px}
 .mini .f{flex:1;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:6px 9px}
 .mini .f label{display:block;font-size:10px;color:var(--tx3)}
@@ -1138,13 +1133,12 @@ const RAISE=[{k:0,n:'ไม่ยกพื้น',s:'ค่าเริ่มต
   {k:10,n:'ยก 10 ซม.',s:'เดินสายไฟใต้พื้นได้'},{k:15,n:'ยก 15 ซม.',s:'เก็บงานระบบได้เยอะ'}];
 const CARPET_TEXTURE_URL='./assets/textures/carpet-grey-cloth.jpg?v=20260826';
 const VINYL_TEXTURE_URL='./assets/textures/vinyl-01.jpg?v=20260828';
-const VINYL_DARK_TEXTURE_URL='./assets/textures/vinyl-03.jpeg?v=20260828';
 const FLOORS=[{k:'carpet',n:'พรม',s:'พื้นผิวพรม + เลือกสีได้',rate:450},{k:'grass',n:'หญ้าเทียม',s:'เขียวสด',rate:600},
   {k:'tile',n:'กระเบื้องยาง',s:'เลือกลายได้',rate:700},{k:'sticker',n:'สติ๊กเกอร์พื้น',s:'พิมพ์กราฟิกแบรนด์',rate:520}];
 const CARPETS=[{k:'grey',n:'เทาเข้ม',c:'#4a4d52'},{k:'black',n:'ดำ',c:'#232529'},
   {k:'red',n:'แดง',c:'#8f2b2b'},{k:'navy',n:'น้ำเงิน',c:'#26406f'},{k:'green',n:'เขียว',c:'#2d5b3f'},
   {k:'light',n:'เทาอ่อน',c:'#8d939b'},{k:'cream',n:'ครีม',c:'#c9bfae'},{k:'brand',n:'ตามแบรนด์',c:null}];
-const TILES=[{k:'woodL',n:'ไม้อ่อน',c:'#ffffff',grain:1,texture:VINYL_TEXTURE_URL},{k:'woodD',n:'ไม้เข้ม',c:'#ffffff',grain:1,texture:VINYL_DARK_TEXTURE_URL},
+const TILES=[{k:'woodL',n:'ไม้อ่อน',c:'#ffffff',grain:1,texture:VINYL_TEXTURE_URL},{k:'woodD',n:'ไม้เข้ม',c:'#6f5137',grain:1},
   {k:'marble',n:'หินอ่อน',c:'#d8d6d1',grain:0},{k:'conc',n:'ลายปูน',c:'#8b8d90',grain:0}];
 const LOGOTYPES=[{k:'diecut',n:'ไดคัททำสีตามแบบ',s:'ตัวอักษร/โลโก้ตัดนูน ทาสีตามแบบ'},
   {k:'sticker',n:'ไดคัทติดสติ๊กเกอร์',s:'ตัดรูปทรงแล้วติดสติ๊กเกอร์ทับ'},
@@ -1174,22 +1168,11 @@ const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
   stSurf:'paint',stPaint:'wall',stFace:'front',doorOff:'start',logoScale:5,nameScale:5,
   lights:true,lightFixture:'clear100',lightCol:'white',lightWall:'back',lightWatts:100,lightAdj:0,
   raise:0,floor:'carpet',carpet:'grey',tile:'woodL',carpetTextureData:null,carpetTextureName:'',carpetTextureId:0,
-  tileTextureData:null,tileTextureName:'',tileTextureId:0,tileTextureMode:'builtin',tileTextureUploads:[],tileTextureActiveId:'',
+  tileTextureData:null,tileTextureName:'',tileTextureId:0,
   logoType:'diecut',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
   logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,wallRadius:3.5,
   placementSnap:true};
 const S=BoothSpec;
-const MAX_TILE_TEXTURE_UPLOADS=3;
-function tileTextureUploadsFor(spec=S){
-  const uploads=Array.isArray(spec.tileTextureUploads)?spec.tileTextureUploads.filter(item=>item&&item.data):[];
-  if(uploads.length)return uploads.slice(0,MAX_TILE_TEXTURE_UPLOADS);
-  return spec.tileTextureData?[{id:'legacy-upload',name:spec.tileTextureName||'ลายที่อัปโหลด',data:spec.tileTextureData}]:[];
-}
-function activeTileTexture(spec=S){
-  if(spec.tileTextureMode!=='custom')return null;
-  const uploads=tileTextureUploadsFor(spec);if(!uploads.length)return null;
-  return uploads.find(item=>item.id===spec.tileTextureActiveId)||uploads[0];
-}
 const FIXED_BOOTH_TYPES=new Set(['photo360']);
 const isFixedBoothType=type=>FIXED_BOOTH_TYPES.has(type);
 const PHOTO360_DEFAULT_RADIUS=3.5;
@@ -1619,9 +1602,8 @@ function boothGeometryPrompt(){
     return'- '+wallName(face)+': ยึดตามแนวขอบบูธในแบบ 3D โดยใช้ความหนา '+promptNumber(thickness)+' ม.';
   });
   const floorLabel=(()=>{try{return floorName();}catch(e){return S.floor||'พื้นตามแบบ';}})();
-  const activeTileUpload=activeTileTexture(S);
-  const uploadedFloorTexture=S.floor==='carpet'?S.carpetTextureData:S.floor==='tile'?activeTileUpload?.data:null;
-  const uploadedFloorTextureName=S.floor==='carpet'?S.carpetTextureName:S.floor==='tile'?activeTileUpload?.name||'':'';
+  const uploadedFloorTexture=S.floor==='carpet'?S.carpetTextureData:S.floor==='tile'?S.tileTextureData:null;
+  const uploadedFloorTextureName=S.floor==='carpet'?S.carpetTextureName:S.floor==='tile'?S.tileTextureName:'';
   const textureLabel=uploadedFloorTexture?'ใช้ Texture ที่ลูกค้าอัปโหลดชื่อ '+(uploadedFloorTextureName||'ไฟล์พื้น')+' ปูต่อเนื่องเต็มพื้นที่':'ใช้พื้นผิวมาตรฐานของโปรแกรม ปูต่อเนื่องเต็มพื้นที่';
   const innerStartX=walls.includes('left')?thickness:0,innerEndX=walls.includes('right')?Math.max(innerStartX,width-thickness):width;
   const innerStartZ=curve?curve.sagitta+thickness/2:(walls.includes('back')?thickness:0);
@@ -1964,8 +1946,6 @@ function floorColor(){
   return mix(S.primary,'#ffffff',.74);}
 function floorName(){const f=floorDef();
   if(f.k==='carpet')return'พรม '+CARPETS.find(c=>c.k===S.carpet).n;
-  const activeUpload=activeTileTexture(S);
-  if(f.k==='tile'&&activeUpload)return'กระเบื้องยาง ลายอัปโหลด '+(activeUpload.name||'ของลูกค้า');
   if(f.k==='tile')return'กระเบื้องยาง ลาย'+TILES.find(t=>t.k===S.tile).n;
   return f.n;}
 /* ห้องตั้งอยู่บนพื้นที่ยก จึงต้องหักความสูงพื้นออก ไม่งั้นยอดห้องโผล่พ้นผนัง */
@@ -2166,42 +2146,28 @@ function buildFloorSub(){
     const status=el('div','note');status.textContent=S.carpetTextureData?'ใช้รูป '+S.carpetTextureName:'ใช้พื้นผิวพรมมาตรฐานของโปรแกรม';textureBox.appendChild(status);
     box.appendChild(textureBox);
   }else if(S.floor==='tile'){
-    const uploads=tileTextureUploadsFor(S),activeUpload=activeTileTexture(S),customActive=!!activeUpload;
     const w=el('div','subrow','<h6>ลายกระเบื้องยาง</h6>'),g=el('div','pats');
     TILES.forEach(t=>{const preview=t.texture
         ?'background-color:'+t.c+';background-image:url(&quot;'+t.texture+'&quot;);background-size:cover;background-position:center'
         :'background:'+t.c;
-      const b=el('button','pat'+(!customActive&&S.tile===t.k?' on':''),'<i style="'+preview+'"></i><span>'+t.n+'</span>');
-      b.onclick=()=>{S.tile=t.k;S.tileTextureMode='builtin';sync();};g.appendChild(b);});
-    uploads.forEach((item,index)=>{
-      const itemBox=el('div','upload-pat'),selected=customActive&&activeUpload.id===item.id;
-      const custom=el('button','pat'+(selected?' on':''),'<i></i><span>อัปโหลด '+(index+1)+'</span>');custom.type='button';custom.title=item.name||'ลายที่อัปโหลด';
-      const preview=custom.querySelector('i');preview.style.backgroundImage='url("'+item.data+'")';preview.style.backgroundSize='cover';preview.style.backgroundPosition='center';
-      custom.onclick=()=>{S.tileTextureMode='custom';S.tileTextureActiveId=item.id;sync();};
-      const remove=el('button','pat-remove','×');remove.type='button';remove.title='ลบ '+(item.name||'ลายที่อัปโหลด');
-      remove.onclick=event=>{event.stopPropagation();const wasActive=S.tileTextureMode==='custom'&&activeTileTexture(S)?.id===item.id;
-        S.tileTextureUploads=tileTextureUploadsFor(S).filter(upload=>upload.id!==item.id);S.tileTextureData=null;S.tileTextureName='';
-        if(wasActive){S.tile='woodL';S.tileTextureMode='builtin';S.tileTextureActiveId='';}
-        S.tileTextureId=(S.tileTextureId||0)+1;sync();};
-      itemBox.append(custom,remove);g.appendChild(itemBox);});
+      const b=el('button','pat'+(S.tile===t.k?' on':''),'<i style="'+preview+'"></i><span>'+t.n+'</span>');
+      b.onclick=()=>{S.tile=t.k;sync();};g.appendChild(b);});
     w.appendChild(g);box.appendChild(w);
     const textureBox=el('div','subrow','<h6>พื้นผิวกระเบื้องยาง</h6>'),controls=el('div','mini');
-    const full=uploads.length>=MAX_TILE_TEXTURE_UPLOADS;
-    const choose=el('button','btn sm',full?'ครบ 3 ลายแล้ว':'อัปโหลดลายใหม่ ('+uploads.length+'/3)');choose.type='button';choose.disabled=full;
+    const choose=el('button','btn sm',S.tileTextureData?'เปลี่ยนลายพื้น':'อัปโหลดลายพื้น');choose.type='button';
     const input=document.createElement('input');input.type='file';input.accept='image/jpeg,image/png,image/webp';input.hidden=true;
     input.onchange=()=>{const file=input.files?.[0];if(!file)return;
       if(file.size>8*1024*1024){window.alert('รูปลายกระเบื้องยางมีขนาดใหญ่เกิน 8 MB กรุณาเลือกไฟล์ที่เล็กกว่านี้');input.value='';return;}
       const reader=new FileReader();reader.onload=()=>{if(typeof reader.result!=='string')return;
-        const current=tileTextureUploadsFor(S);if(current.length>=MAX_TILE_TEXTURE_UPLOADS)return;
-        const id='tile-upload-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);
-        S.tileTextureUploads=[...current,{id,name:file.name,data:reader.result}];S.tileTextureData=null;S.tileTextureName='';
-        S.tileTextureActiveId=id;S.tileTextureMode='custom';S.tileTextureId=(S.tileTextureId||0)+1;sync();};
+        S.tileTextureData=reader.result;S.tileTextureName=file.name;S.tileTextureId=(S.tileTextureId||0)+1;sync();};
       reader.readAsDataURL(file);};
     choose.onclick=()=>input.click();controls.append(choose,input);
+    if(S.tileTextureData){
+      const clear=el('button','btn sm','ใช้ลายพื้นฐาน');clear.type='button';
+      clear.onclick=()=>{S.tileTextureData=null;S.tileTextureName='';S.tileTextureId=(S.tileTextureId||0)+1;sync();};controls.appendChild(clear);}
     textureBox.appendChild(controls);
-    const status=el('div','note');status.textContent=customActive?'กำลังใช้รูป '+activeUpload.name+' · เก็บไว้ '+uploads.length+'/3 ลาย':
-      'กำลังใช้ลาย '+TILES.find(t=>t.k===S.tile).n+(uploads.length?' · มีลายอัปโหลด '+uploads.length+'/3 ลาย':'');
-    if(full)status.textContent+=' · ลบลายเดิมก่อนอัปโหลดเพิ่ม';
+    const status=el('div','note');status.textContent=S.tileTextureData?'ใช้รูป '+S.tileTextureName:
+      (S.tile==='woodL'?'ใช้ลายกระเบื้องยางพื้นฐาน Vinyl 01':'ใช้ลาย '+TILES.find(t=>t.k===S.tile).n+' ของโปรแกรม');
     textureBox.appendChild(status);box.appendChild(textureBox);
   }else if(S.floor==='sticker'){
     box.innerHTML='<div class="subrow"><h6>สติ๊กเกอร์พื้น</h6><div style="font-size:11px;color:var(--tx2)">'+
@@ -2468,8 +2434,7 @@ class ThreeBoothRenderer{
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
       spec.lightWall,spec.lightWatts,spec.lightAdj,spec.brand,logoKey,spec.logoType,spec.lockup,spec.logoPos,
-      spec.logoScale,spec.nameScale,spec.sideLogo,spec.sidePos,spec.wallRadius,spec.carpetTextureId||0,spec.tileTextureId||0,
-      spec.tileTextureMode||'builtin',spec.tileTextureActiveId||'',objects]);
+      spec.logoScale,spec.nameScale,spec.sideLogo,spec.sidePos,spec.wallRadius,spec.carpetTextureId||0,spec.tileTextureId||0,objects]);
   }
   update(spec){
     const key=this.visualKey(spec);if(key===this.currentKey)return;
@@ -2560,7 +2525,7 @@ class ThreeBoothRenderer{
     texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.repeat.set(Math.max(1,repeat[0]),Math.max(1,repeat[1]));
     texture.anisotropy=Math.min(4,this.renderer.capabilities.getMaxAnisotropy());return texture;
   }
-  surfaceMaterial(kind,base,accent,repeat=[1,1],imageSource=null,imageRotation=0,imageSeamless=false,physical=false){
+  surfaceMaterial(kind,base,accent,repeat=[1,1],imageSource=null,imageRotation=0,imageSeamless=false){
     const T=this.THREE,rough={paint:.82,laminate:.38,wood:.7,sticker:.48,carpet:1,grass:1,marble:.36,concrete:.94,tile:.68}[kind]??.78;
     const params={color:base,roughness:rough,metalness:kind==='laminate'?.04:0};
     if(kind!=='paint'){
@@ -2569,25 +2534,20 @@ class ThreeBoothRenderer{
       params.map=floorImage?this.floorTexture(floorImage,repeat,imageRotation,imageSeamless):this.patternTexture(kind,base,accent,repeat);
       if(kind==='sticker')params.emissive=new T.Color(accent).multiplyScalar(.025);
     }
-    return physical?new T.MeshPhysicalMaterial(params):new T.MeshStandardMaterial(params);
+    return new T.MeshStandardMaterial(params);
   }
   floorMaterial(spec){
     let kind=spec.floor;
     if(spec.floor==='tile')kind=spec.tile==='marble'?'marble':spec.tile==='conc'?'concrete':spec.tile.startsWith('wood')?'wood':'tile';
     const tileDef=TILES.find(item=>item.k===spec.tile);
-    const activeUpload=spec.floor==='tile'?activeTileTexture(spec):null;
     const imageSource=spec.floor==='carpet'?(spec.carpetTextureData||CARPET_TEXTURE_URL):
-      spec.floor==='tile'?(activeUpload?.data||tileDef?.texture||null):null;
+      spec.floor==='tile'?(spec.tileTextureData||tileDef?.texture||null):null;
     const materialBase=spec.floor==='tile'&&imageSource?'#ffffff':floorColor();
     const rotateTileImage=spec.floor==='tile'&&imageSource&&spec.W>=spec.D;
     const repeat=rotateTileImage?[Math.max(1,spec.D/1.2),Math.max(1,spec.W/1.2)]:
       [Math.max(1,spec.W/1.2),Math.max(1,spec.D/1.2)];
-    const isVinyl=spec.floor==='tile';
-    const material=this.surfaceMaterial(kind,materialBase,spec.secondary,repeat,imageSource,rotateTileImage?Math.PI/2:0,isVinyl&&!!imageSource,isVinyl);
-    if(isVinyl){
-      material.roughness=.35;material.metalness=0;
-      material.clearcoat=.25;material.clearcoatRoughness=.35;material.specularIntensity=.55;
-    }
+    const material=this.surfaceMaterial(kind,materialBase,spec.secondary,repeat,imageSource,rotateTileImage?Math.PI/2:0,spec.floor==='tile'&&!!imageSource);
+    if(spec.floor==='tile'){material.roughness=.60;material.metalness=0;}
     return material;
   }
   wallMaterial(spec,length,face){
