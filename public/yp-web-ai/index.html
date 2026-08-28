@@ -97,10 +97,10 @@ header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px
 .sw1:hover{transform:scale(1.06)}
 .sw1.on{box-shadow:0 0 0 2px var(--bg2),0 0 0 4px var(--acc)}
 .row{display:flex;align-items:center;gap:8px}
-#cPick,#cPick2{width:46px;height:34px;padding:3px;border-radius:9px;background:var(--bg2);border:1px solid var(--line);cursor:pointer}
-#cHex,#cHex2{flex:1;padding:8px 11px;border-radius:9px;background:var(--bg2);border:1px solid var(--line);
+#cPick,#cPick2,#logoBasePick,#logoColorPick{width:46px;height:34px;padding:3px;border-radius:9px;background:var(--bg2);border:1px solid var(--line);cursor:pointer}
+#cHex,#cHex2,#logoBaseHex,#logoColorHex{flex:1;min-width:0;padding:8px 11px;border-radius:9px;background:var(--bg2);border:1px solid var(--line);
   outline:none;font:500 12px Inter,sans-serif;text-transform:uppercase}
-#cHex:focus,#cHex2:focus{border-color:var(--acc)}
+#cHex:focus,#cHex2:focus,#logoBaseHex:focus,#logoColorHex:focus{border-color:var(--acc)}
 
 .dims{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .dim{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:9px 10px;text-align:center}
@@ -149,7 +149,7 @@ select:focus{border-color:var(--acc)}
   border:1px dashed #3a414c;border-radius:9px;background:#11151b;color:var(--tx3);font-size:10.5px;text-align:center}
 .floor-sticker-preview.has-image{border-style:solid}.floor-sticker-preview img{display:block;width:100%;height:128px;object-fit:contain;background:#eceeef}
 .floor-sticker-preview span{padding:14px}.floor-sticker-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
-.floor-sticker-size{display:grid;gap:8px;margin-top:10px}.floor-sticker-control{display:grid;grid-template-columns:68px minmax(90px,1fr) 64px 18px;align-items:center;gap:7px}
+.floor-sticker-size{display:grid;gap:8px;margin-top:10px}.floor-sticker-control{display:grid;grid-template-columns:68px minmax(90px,1fr) 64px 26px 18px;align-items:center;gap:7px}
 .floor-sticker-control label{font-size:10.5px;color:var(--tx2)}.floor-sticker-control input[type=range]{width:100%;min-width:0;accent-color:var(--acc);background:none;border:0;padding:0}
 .floor-sticker-control input[type=number]{width:100%;padding:6px 7px;border:1px solid var(--line);border-radius:7px;background:var(--bg2);color:var(--acc2);outline:none;font:600 12px Inter,sans-serif;text-align:right}
 .floor-sticker-control input[type=number]:focus{border-color:var(--acc)}.floor-sticker-control em{font-style:normal;color:var(--tx3);font-size:10px}
@@ -210,6 +210,11 @@ select:focus{border-color:var(--acc)}
 .nscale input[type=number]:focus{border-color:var(--acc);background:rgba(224,168,60,.07)}
 .nscale input[type=number]::-webkit-inner-spin-button,.nscale input[type=number]::-webkit-outer-spin-button{appearance:none;margin:0}
 .nscale input[type=number]{-moz-appearance:textfield}
+.scale-reset,.field-reset{flex:0 0 26px;width:26px;height:26px;padding:0;border:1px solid rgba(224,168,60,.5);border-radius:7px;
+  background:rgba(224,168,60,.08);color:var(--acc2);font:700 17px/1 Inter,sans-serif;cursor:pointer}
+.scale-reset:hover,.scale-reset:focus-visible,.field-reset:hover,.field-reset:focus-visible{background:rgba(224,168,60,.18);border-color:var(--acc);outline:none}
+.scale-reset[hidden],.field-reset[hidden]{display:none!important}
+.dim .field-reset,.mini .f .field-reset,.asset-field .field-reset{margin:4px auto 0}
 .swatch{width:18px;height:18px;border-radius:5px;border:1px solid rgba(255,255,255,.2)}
 .chip2{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--tx2);
   background:var(--bg3);border:1px solid var(--line);padding:5px 10px;border-radius:9px}
@@ -333,7 +338,7 @@ select:focus{border-color:var(--acc)}
 .prompt-fidelity-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
 .prompt-fidelity-head label{font-size:11px;color:var(--tx2)}
 .prompt-fidelity-head span{font-size:9.5px;color:var(--tx3);text-align:right}
-.prompt-fidelity-control{display:grid;grid-template-columns:minmax(0,1fr) 46px auto;align-items:center;gap:8px}
+.prompt-fidelity-control{display:grid;grid-template-columns:minmax(0,1fr) 46px 26px auto;align-items:center;gap:8px}
 .prompt-fidelity-control input[type=range]{width:100%;accent-color:var(--acc);background:none;border:none;padding:0}
 .prompt-fidelity-control input[type=number]{width:46px;min-width:46px;padding:4px 5px;border:1px solid var(--line);border-radius:6px;background:var(--bg2);color:var(--acc2);outline:none;font:600 12px Inter,sans-serif;text-align:center}
 .prompt-fidelity-control input[type=number]:focus{border-color:var(--acc);background:rgba(224,168,60,.07)}
@@ -353,7 +358,7 @@ select:focus{border-color:var(--acc)}
 .booth-page #oType{grid-template-columns:repeat(3,1fr)}
 .booth-page #oType .opt.off{display:none}
 .booth-curve-wrap{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:rgba(224,168,60,.045)}
-.booth-curve-field{display:grid;grid-template-columns:auto minmax(82px,1fr) 78px 20px;align-items:center;gap:7px}
+.booth-curve-field{display:grid;grid-template-columns:auto minmax(82px,1fr) 78px 26px 20px;align-items:center;gap:7px}
 .booth-curve-field label{font-size:11px;color:var(--tx2)}
 .booth-curve-field input[type=range]{width:100%;min-width:0;accent-color:var(--acc);background:none;border:0;padding:0}
 .booth-curve-field input[type=number]{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg2);color:var(--acc2);outline:none;font:600 13px Inter,sans-serif;text-align:right}
@@ -394,6 +399,13 @@ select:focus{border-color:var(--acc)}
 .logo-placement-card .nscale input[type=range]{flex:1;width:auto}
 .logo-placement-card .nscale input[type=number]{width:72px}
 .logo-placement-card [hidden]{display:none!important}
+.logo-advanced{margin-top:10px;border-top:1px solid var(--line)}
+.logo-advanced>summary{padding:11px 2px 2px;color:var(--tx2);font-size:11px;font-weight:600;cursor:pointer;list-style-position:inside}
+.logo-advanced[open]>summary{color:var(--acc2)}
+.logo-advanced-body{padding-top:4px}
+.logo-color-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.logo-color-field{min-width:0}.logo-color-field .lbl{margin-top:0}.logo-color-field .row{gap:6px}
+.logo-lockup-section[hidden]{display:none!important}
 .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
 .finish-page .finish-subhead{margin-bottom:8px}
 .lighting-page #oLightWatts{display:none}
@@ -477,7 +489,7 @@ select:focus{border-color:var(--acc)}
   .dock-label{font-size:8px}.panel-intro{padding-left:15px}.tool-page-body,.catalog-section{padding-left:15px;padding-right:15px}
   .asset-grid-options{grid-template-columns:1fr}.canvas-object-toolbar .tool-mode{display:none}.canvas-object-toolbar.brand-selected .tool-mode{display:flex}.canvas-object-toolbar .btn{padding:7px 8px}
   .catalog-grid{grid-template-columns:1fr}
-  .floor-sticker-control{grid-template-columns:62px minmax(70px,1fr) 58px 16px}
+  .floor-sticker-control{grid-template-columns:62px minmax(70px,1fr) 58px 26px 16px}
 }
 @media(max-width:360px){
   .object-actions.canvas-object-toolbar{max-width:none;overflow:visible}
@@ -581,9 +593,9 @@ select:focus{border-color:var(--acc)}
       <div class="asset-upload-card">
         <label class="asset-field"><span>ชื่ออุปกรณ์</span><input id="myAssetName" type="text" maxlength="80" placeholder="เช่น เคาน์เตอร์ของลูกค้า"></label>
         <div class="asset-size-grid" aria-label="ขนาดอ้างอิงของอุปกรณ์ (เมตร)">
-          <label class="asset-field"><span>กว้าง (ม.)</span><input id="myAssetW" type="number" min="0.0001" step="0.01" value="1.00"></label>
-          <label class="asset-field"><span>ลึก (ม.)</span><input id="myAssetD" type="number" min="0.0001" step="0.01" value="1.00"></label>
-          <label class="asset-field"><span>สูง (ม.)</span><input id="myAssetH" type="number" min="0.0001" step="0.01" value="1.00"></label>
+          <label class="asset-field"><span>กว้าง (ม.)</span><input id="myAssetW" type="number" min="0.0001" step="0.01" value="1.00" data-reset-default="1"></label>
+          <label class="asset-field"><span>ลึก (ม.)</span><input id="myAssetD" type="number" min="0.0001" step="0.01" value="1.00" data-reset-default="1"></label>
+          <label class="asset-field"><span>สูง (ม.)</span><input id="myAssetH" type="number" min="0.0001" step="0.01" value="1.00" data-reset-default="1"></label>
         </div>
         <input id="myAssetFile" type="file" accept=".glb,model/gltf-binary" hidden>
         <div class="asset-file-row"><button class="btn sm" type="button" id="myAssetChoose">เลือกไฟล์ .glb</button><span id="myAssetFileName">ยังไม่ได้เลือกไฟล์</span></div>
@@ -614,7 +626,7 @@ select:focus{border-color:var(--acc)}
           </div>
           <div class="prompt-fidelity-control">
             <input type="range" id="promptFidelityRange" min="0" max="10" step="1" value="0" aria-label="ระดับการคงรูปแบบบูธของ AI">
-            <input type="number" id="promptFidelityVal" min="0" max="10" step="1" value="0" inputmode="numeric" aria-label="ค่าระดับการคงรูปแบบบูธของ AI">
+            <input type="number" id="promptFidelityVal" min="0" max="10" step="1" value="0" inputmode="numeric" aria-label="ค่าระดับการคงรูปแบบบูธของ AI" data-reset-default="0">
             <em>/10</em>
           </div>
           <div class="prompt-fidelity-note" id="promptFidelityNote">รักษาแบบอ้างอิงอย่างเคร่งครัด และคงขนาดบูธเดิม</div>
@@ -678,9 +690,9 @@ select:focus{border-color:var(--acc)}
     <div class="g6" id="oPreset"></div>
     <label class="lbl">หรือกำหนดเอง</label>
     <div class="dims">
-      <div class="dim"><label>กว้าง</label><input type="number" id="dW" step="0.5" min="1" max="30"><span>ด้านติดทางเดิน (ม.)</span></div>
-      <div class="dim"><label>ลึก</label><input type="number" id="dD" step="0.5" min="1" max="30"><span>ด้านลึกเข้าไป (ม.)</span></div>
-      <div class="dim"><label>สูง</label><input type="number" id="dH" step="0.1" min="2.4" max="4.9"><span>สูงสุด 4.9 ม.</span></div>
+      <div class="dim"><label>กว้าง</label><input type="number" id="dW" step="0.5" min="1" max="30" data-reset-default="6"><span>ด้านติดทางเดิน (ม.)</span></div>
+      <div class="dim"><label>ลึก</label><input type="number" id="dD" step="0.5" min="1" max="30" data-reset-default="3"><span>ด้านลึกเข้าไป (ม.)</span></div>
+      <div class="dim"><label>สูง</label><input type="number" id="dH" step="0.1" min="2.4" max="4.9" data-reset-default="2.4"><span>สูงสุด 4.9 ม.</span></div>
     </div>
     <div class="areabar"><b id="areaTxt">—</b><div class="sp"></div><span id="areaHint"></span></div>
     <div class="diagram" id="dimDiagram"></div>
@@ -699,7 +711,7 @@ select:focus{border-color:var(--acc)}
       <div class="booth-curve-field">
         <label for="photo360RadiusRange">รัศมีผนังโค้ง R</label>
         <input id="photo360RadiusRange" type="range" min="3" max="100" step="0.01" value="3.50" aria-label="ปรับรัศมีผนังโค้ง R">
-        <input id="photo360Radius" type="number" min="3" max="100" step="0.01" value="3.50" inputmode="decimal" aria-label="ค่ารัศมีผนังโค้ง R">
+        <input id="photo360Radius" type="number" min="3" max="100" step="0.01" value="3.50" inputmode="decimal" aria-label="ค่ารัศมีผนังโค้ง R" data-reset-default="3.5">
         <span>ม.</span>
       </div>
       <button type="button" class="booth-curve-mobile-trigger" id="photo360RadiusMobileOpen" aria-haspopup="dialog" aria-controls="mPhoto360Radius">
@@ -714,14 +726,14 @@ select:focus{border-color:var(--acc)}
     <div class="sech"><h3>ขนาดห้องเก็บของ</h3><span class="hint">เลือกตามพื้นที่ใช้งาน</span></div>
     <div class="g3" id="oStSize"></div>
     <div id="stCustom" class="mini" style="display:none">
-      <div class="f" id="stWf"><label>กว้าง (ม.)</label><input type="number" id="stW" step="0.1" min="0.8" max="30"></div>
-      <div class="f"><label>ลึก (ม.)</label><input type="number" id="stD" step="0.1" min="0.8" max="30"></div>
+        <div class="f" id="stWf"><label>กว้าง (ม.)</label><input type="number" id="stW" step="0.1" min="0.8" max="30" data-reset-default="1.2"></div>
+        <div class="f"><label>ลึก (ม.)</label><input type="number" id="stD" step="0.1" min="0.8" max="30" data-reset-default="1.2"></div>
     </div>
     <div id="stBody" style="display:none">
       <label class="lbl">ความสูงห้อง</label>
       <div class="g2" id="oStH"></div>
       <div id="stHCustom" class="mini" style="display:none">
-        <div class="f"><label>ความสูง (ม.)</label><input type="number" id="stHv" step="0.1" min="1.8" max="4.9"></div>
+        <div class="f"><label>ความสูง (ม.)</label><input type="number" id="stHv" step="0.1" min="1.8" max="4.9" data-reset-default="2.4"></div>
       </div>
       <label class="lbl">ตำแหน่งห้อง</label>
       <div class="g3" id="oStPos"></div>
@@ -791,41 +803,51 @@ select:focus{border-color:var(--acc)}
     <label class="lbl">รูปแบบติดตั้งป้าย 3D</label>
     <div class="g2" id="oLogoMount"></div>
     <div class="logo-placement-card" id="logoPlacementCard">
-      <div class="nscale"><span>ความกว้างจริง</span>
-        <input type="range" id="logoWidthRange" min="0.3" max="4" step="0.05" value="2" aria-label="ความกว้างโลโก้จริง">
-        <input type="number" id="logoWidthInput" min="0.3" max="4" step="0.05" value="2" inputmode="decimal" aria-label="ค่าความกว้างโลโก้จริง"><b>ม.</b></div>
-      <div class="nscale"><span>ความหนา</span>
-        <input type="range" id="logoDepthRange" min="0.01" max="0.20" step="0.01" value="0.05" aria-label="ความหนาโลโก้">
-        <input type="number" id="logoDepthInput" min="0.01" max="0.20" step="0.01" value="0.05" inputmode="decimal" aria-label="ค่าความหนาโลโก้"><b>ม.</b></div>
+      <button class="btn logo-position-button" id="btnPositionLogo3D" type="button">จัดตำแหน่งใน 3D</button>
       <div id="logoWallControls">
         <label class="lbl">เลือกผนัง</label>
         <div class="g3" id="oLogoWall"></div>
-        <div class="nscale"><span>ตำแหน่งแนวนอน</span>
-          <input type="range" id="logoWallURange" min="0" max="6" step="0.05" value="3" aria-label="ตำแหน่งโลโก้ตามแนวผนัง">
-          <input type="number" id="logoWallUInput" min="0" max="6" step="0.05" value="3" inputmode="decimal" aria-label="ค่าตำแหน่งโลโก้ตามแนวผนัง"><b>ม.</b></div>
-        <div class="nscale"><span>ระดับกึ่งกลาง</span>
-          <input type="range" id="logoWallYRange" min="0" max="2.4" step="0.05" value="1.6" aria-label="ระดับกึ่งกลางโลโก้">
-          <input type="number" id="logoWallYInput" min="0" max="2.4" step="0.05" value="1.6" inputmode="decimal" aria-label="ค่าระดับกึ่งกลางโลโก้"><b>ม.</b></div>
       </div>
-      <div id="logoFloorControls" hidden>
-        <div class="nscale"><span>ตำแหน่งซ้าย–ขวา</span>
-          <input type="range" id="logoFloorXRange" min="0" max="6" step="0.05" value="3" aria-label="ตำแหน่งโลโก้ตั้งพื้นซ้ายขวา">
-          <input type="number" id="logoFloorXInput" min="0" max="6" step="0.05" value="3" inputmode="decimal" aria-label="ค่าตำแหน่งโลโก้ตั้งพื้นซ้ายขวา"><b>ม.</b></div>
-        <div class="nscale"><span>ตำแหน่งหน้า–หลัง</span>
-          <input type="range" id="logoFloorZRange" min="0" max="3" step="0.05" value="1.5" aria-label="ตำแหน่งโลโก้ตั้งพื้นหน้าหลัง">
-          <input type="number" id="logoFloorZInput" min="0" max="3" step="0.05" value="1.5" inputmode="decimal" aria-label="ค่าตำแหน่งโลโก้ตั้งพื้นหน้าหลัง"><b>ม.</b></div>
-        <label class="lbl">หมุนป้ายตั้งพื้น</label>
-        <div class="g4" id="oLogoFloorRotation"></div>
-      </div>
-      <button class="btn logo-position-button" id="btnPositionLogo3D" type="button">จัดตำแหน่งใน 3D</button>
+      <details class="logo-advanced" id="logoAdvancedDetails">
+        <summary>ตั้งค่าโลโก้และฐาน</summary>
+        <div class="logo-advanced-body">
+          <div id="logoFloorControls" hidden>
+            <div class="nscale"><span>ความหนาโลโก้</span>
+              <input type="range" id="logoDepthRange" min="0.01" max="0.20" step="0.01" value="0.05" aria-label="ปรับความหนาโลโก้">
+              <input type="number" id="logoDepthInput" min="0.01" max="0.20" step="0.01" value="0.05" inputmode="decimal" aria-label="ค่าความหนาโลโก้" data-reset-default="0.05"><b>ม.</b></div>
+            <div class="nscale"><span>ปรับขนาดความกว้าง</span>
+              <input type="range" id="logoBaseWidthRange" min="0.1" max="6" step="0.05" value="2" aria-label="ปรับความกว้างฐานไม้">
+              <input type="number" id="logoBaseWidthInput" min="0.1" max="6" step="0.05" value="2" inputmode="decimal" aria-label="ค่าความกว้างฐานไม้" data-reset-default="2"><b>ม.</b></div>
+            <div class="nscale"><span>ปรับขนาดความลึก</span>
+              <input type="range" id="logoBaseDepthRange" min="0.1" max="3" step="0.05" value="0.2" aria-label="ปรับความลึกฐานไม้">
+              <input type="number" id="logoBaseDepthInput" min="0.1" max="3" step="0.05" value="0.2" inputmode="decimal" aria-label="ค่าความลึกฐานไม้" data-reset-default="0.2"><b>ม.</b></div>
+            <label class="lbl">หมุนป้ายตั้งพื้น</label>
+            <div class="g4" id="oLogoFloorRotation"></div>
+            <div class="logo-color-grid">
+              <div class="logo-color-field">
+                <label class="lbl" for="logoBasePick">สีฐานไม้</label>
+                <div class="row">
+                  <input type="color" id="logoBasePick" value="#20252d" aria-label="เลือกสีฐานไม้ของโลโก้ตั้งพื้น">
+                  <input type="text" id="logoBaseHex" maxlength="7" value="#20252D" placeholder="#RRGGBB" aria-label="รหัสสีฐานไม้ของโลโก้ตั้งพื้น">
+                </div>
+              </div>
+              <div class="logo-color-field">
+                <label class="lbl" for="logoColorPick">สีโลโก้</label>
+                <div class="row">
+                  <input type="color" id="logoColorPick" value="#2e7d4f" aria-label="เลือกสีโลโก้สามมิติ">
+                  <input type="text" id="logoColorHex" maxlength="7" value="#2E7D4F" placeholder="#RRGGBB" aria-label="รหัสสีโลโก้สามมิติ">
+                </div>
+              </div>
+            </div>
+            <div class="note">ฐานสูงคงที่ 10 ซม. · เลือกสีฐานและสีชิ้นโลโก้ได้แยกกัน</div>
+          </div>
+        </div>
+      </details>
       <div class="note" id="logoPlacementNote"></div>
     </div>
-    <label class="lbl">เลย์เอาต์ — โลโก้กับชื่อเรียงกันยังไง</label>
-    <div id="oLockup" style="display:grid;gap:7px"></div>
-    <div id="logoQuickWallControls">
-      <label class="lbl">ตำแหน่งแนวนอนแบบเร็ว</label>
-      <div class="g3" id="oLogoPos"></div>
-      <div class="note">ใช้เลือกชิดซ้าย กึ่งกลาง หรือชิดขวาอย่างรวดเร็ว แล้วปรับละเอียดด้วยค่าตำแหน่งด้านบนได้</div>
+    <div class="logo-lockup-section" id="logoLockupSection">
+      <label class="lbl">เลย์เอาต์ — โลโก้กับชื่อเรียงกันยังไง</label>
+      <div id="oLockup" style="display:grid;gap:7px"></div>
     </div>
     <div id="sideWrap">
       <label class="lbl">ผนังด้านข้าง <span id="sideOnly" style="color:var(--warn)"></span></label>
@@ -894,7 +916,7 @@ select:focus{border-color:var(--acc)}
   </section>
 
   <div class="dock-update-bar" id="dockUpdateBar">
-    <button class="dock-update-button" id="dockUpdate" type="button">Update</button>
+    <button class="dock-update-button" id="dockUpdate" type="button">เสร็จสิ้น</button>
   </div>
 
 </div>
@@ -928,11 +950,14 @@ select:focus{border-color:var(--acc)}
       <img id="logoPrev" class="lg-prev" alt="ตัวอย่างโลโก้ที่อัปโหลด" style="display:none">
       <button class="btn sm" id="btnLogoCol" style="display:none">ใช้สีจากโลโก้เป็นสีหลัก</button>
       <div class="nscale"><span>ขนาดโลโก้</span>
-        <input type="range" id="lsRange" min="0" max="10" step="1" value="5" aria-label="ขนาดโลโก้">
-        <input type="number" id="lsVal" min="0" max="10" step="1" value="5" inputmode="numeric" aria-label="ค่าขนาดโลโก้"></div>
+        <input type="range" id="lsRange" min="0" max="200" step="1" value="25" aria-label="ขนาดโลโก้ ค่า 0 เท่ากับซ่อน">
+        <input type="number" id="lsVal" min="0" max="200" step="1" value="25" inputmode="numeric" aria-label="ค่าขนาดโลโก้ ค่า 0 เท่ากับซ่อน">
+        <button class="scale-reset" id="resetLogoScale" type="button" title="กลับเป็นค่าเริ่มต้น 25" aria-label="รีเซ็ตขนาดโลโก้เป็นค่าเริ่มต้น 25" hidden>↶</button></div>
       <div class="nscale"><span>ขนาดชื่อ</span>
-        <input type="range" id="nsRange" min="0" max="10" step="1" value="5" aria-label="ขนาดชื่อแบรนด์">
-        <input type="number" id="nsVal" min="0" max="10" step="1" value="5" inputmode="numeric" aria-label="ค่าขนาดชื่อแบรนด์"></div>
+        <input type="range" id="nsRange" min="0" max="200" step="1" value="25" aria-label="ขนาดชื่อแบรนด์ ค่า 0 เท่ากับซ่อน">
+        <input type="number" id="nsVal" min="0" max="200" step="1" value="25" inputmode="numeric" aria-label="ค่าขนาดชื่อแบรนด์ ค่า 0 เท่ากับซ่อน">
+        <button class="scale-reset" id="resetNameScale" type="button" title="กลับเป็นค่าเริ่มต้น 25" aria-label="รีเซ็ตขนาดชื่อแบรนด์เป็นค่าเริ่มต้น 25" hidden>↶</button></div>
+      <div class="note">0 = ซ่อน · 200 = กว้างสูงสุด 90% ของพื้นที่ติดตั้ง</div>
       <div class="sp"></div>
       <div class="chip2"><span class="swatch" id="sw1"></span><span class="swatch" id="sw2"></span><span id="pairName">—</span></div>
     </div>
@@ -992,7 +1017,7 @@ select:focus{border-color:var(--acc)}
     </div>
     <div class="radius-mobile-input">
       <label for="photo360RadiusMobileInput">กำหนดค่า R</label>
-      <input id="photo360RadiusMobileInput" type="number" min="3" max="100" step="0.01" value="3.50" inputmode="decimal">
+      <input id="photo360RadiusMobileInput" type="number" min="3" max="100" step="0.01" value="3.50" inputmode="decimal" data-reset-default="3.5" data-reset-range="photo360RadiusMobileRange">
       <span>ม.</span>
     </div>
     <div class="note" id="photo360RadiusMobileNote">เลื่อนเพื่อปรับความโค้ง ระบบจะอัปเดตภาพ 3D ทันที</div>
@@ -1244,15 +1269,15 @@ const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
     right:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0}},pair:'wood',pairTouched:false,
   W:6,D:3,H:2.4,type:'inline',cornerSide:'right',
   stSize:'none',stW:1.2,stD:1.2,stHmode:2.4,stHv:2.4,stPos:'right',stDoor:'left',stDoorType:'swing',doorTouched:false,
-  stSurf:'paint',stPaint:'wall',stFace:'front',doorOff:'start',logoScale:5,nameScale:5,
+  stSurf:'paint',stPaint:'wall',stFace:'front',doorOff:'start',logoScale:25,nameScale:25,
   lights:true,lightFixture:'clear100',lightCol:'white',lightWall:'back',lightWatts:100,lightAdj:0,
   raise:0,floor:'carpet',carpet:'grey',tile:'woodL',carpetTextureData:null,carpetTextureName:'',carpetTextureId:0,
   carpetTextureMode:'builtin',carpetTextureUploads:[],carpetTextureActiveId:'',
   tileTextureData:null,tileTextureName:'',tileTextureId:0,tileTextureMode:'builtin',tileTextureUploads:[],tileTextureActiveId:'',
-  floorStickerData:null,floorStickerName:'',floorStickerId:0,floorStickerAR:2,floorStickerW:2,floorStickerD:1,floorStickerLock:true,floorStickerRotation:0,
+  floorStickerData:null,floorStickerName:'',floorStickerId:0,floorStickerAR:2,floorStickerW:2,floorStickerD:1,floorStickerResetW:2,floorStickerResetD:1,floorStickerLock:true,floorStickerRotation:0,
   floorStickerMode:'single',floorStickerPatternSize:1.2,floorStickerOffsetX:0,floorStickerOffsetY:0,
   logoType:'diecut',logoShape:'cutout',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
-  logoMount:'wall',logoWall:'back',logoWidth:2,logoDepth:.05,logoWallU:3,logoWallY:1.6,
+  logoMount:'wall',logoWall:'back',logoWidth:2,logoDepth:.05,logoBaseWidth:0,logoBaseDepth:0,logoBaseColor:'#20252d',logoColor:'#2e7d4f',logoColorTouched:false,logoWallU:3,logoWallY:1.6,
   logoFloorX:3,logoFloorZ:1.5,logoFloorRotation:0,
   logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,wallRadius:3.5,
   placementSnap:true};
@@ -1309,13 +1334,14 @@ function setDefaultFloorStickerSize(aspect){
   let w=Math.min(S.W,2),d=w/S.floorStickerAR,maxD=Math.min(S.D,1.5);
   if(d>maxD){d=maxD;w=d*S.floorStickerAR;}
   S.floorStickerW=w;S.floorStickerD=d;normalizeFloorStickerSize(S);
+  S.floorStickerResetW=S.floorStickerW;S.floorStickerResetD=S.floorStickerD;
 }
 function setFloorStickerRotation(value){S.floorStickerRotation=((Math.round(Number(value)/90)*90)%360+360)%360;normalizeFloorStickerSize(S);}
 const WALL_STICKER_STEP=.05;
 const STICKER_MODES=[{k:'single',n:'ภาพเดียว'},{k:'cover',n:'เต็มพื้นที่'},{k:'repeat',n:'ต่อลาย'}];
 const stickerModeName=mode=>STICKER_MODES.find(item=>item.k===mode)?.n||'ภาพเดียว';
 const wallStickerRound=value=>Math.round(Number(value)/WALL_STICKER_STEP)*WALL_STICKER_STEP;
-function wallStickerDefault(){return{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0};}
+function wallStickerDefault(){return{data:null,name:'',id:0,ar:2,w:2,h:1,resetW:2,resetH:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0};}
 function wallStickerFor(face,spec=S){
   if(!spec.wallStickers||typeof spec.wallStickers!=='object')spec.wallStickers={};
   if(!spec.wallStickers[face]||typeof spec.wallStickers[face]!=='object')spec.wallStickers[face]=wallStickerDefault();
@@ -1349,6 +1375,7 @@ function setDefaultWallStickerSize(face,aspect){
   sticker.ar=Math.max(.01,Number(aspect)||1);sticker.lock=true;sticker.rotation=0;
   let w=Math.min(maxW,2),h=w/sticker.ar;if(h>Math.min(maxH,1.5)){h=Math.min(maxH,1.5);w=h*sticker.ar;}
   sticker.w=w;sticker.h=h;normalizeWallStickerSize(face);
+  sticker.resetW=sticker.w;sticker.resetH=sticker.h;
 }
 function setWallStickerRotation(face,value){const sticker=wallStickerFor(face);sticker.rotation=((Math.round(Number(value)/90)*90)%360+360)%360;normalizeWallStickerSize(face);}
 function wallStickerArea(face,spec=S){
@@ -1357,11 +1384,21 @@ function wallStickerArea(face,spec=S){
 const FIXED_BOOTH_TYPES=new Set(['photo360']);
 const isFixedBoothType=type=>FIXED_BOOTH_TYPES.has(type);
 const PHOTO360_DEFAULT_RADIUS=3.5;
-const logoScaleFactor=value=>{
-  const raw=Number(value),v=Math.max(0,Math.min(10,Number.isFinite(raw)?raw:5));
-  if(v===0)return 0;
-  return v<=5 ? .55+(v-1)*.1125 : 1+(v-5)*.16;
+const BRAND_SCALE_MAX=200,BRAND_SCALE_DEFAULT=25,BRAND_MAX_WIDTH_RATIO=.9;
+const brandScaleValue=value=>{
+  const raw=Number(value);return Math.max(0,Math.min(BRAND_SCALE_MAX,Number.isFinite(raw)?raw:BRAND_SCALE_DEFAULT));
 };
+/* ค่า 200 ต้องเท่ากับ 90% ของพื้นที่ติดตั้งจริง ส่วนค่าเริ่มต้น 25 ยังคงขนาดใกล้เคียงงานกว้าง 2 ม. */
+const brandScaleFraction=(value,availableWidth=6)=>{
+  const v=brandScaleValue(value);if(v===0)return 0;
+  const maxWidth=Math.max(.1,(Number(availableWidth)||6)*BRAND_MAX_WIDTH_RATIO);
+  const defaultFraction=Math.min(1,2/maxWidth);
+  return v<=BRAND_SCALE_DEFAULT
+    ?defaultFraction*(v/BRAND_SCALE_DEFAULT)
+    :defaultFraction+(1-defaultFraction)*((v-BRAND_SCALE_DEFAULT)/(BRAND_SCALE_MAX-BRAND_SCALE_DEFAULT));
+};
+const logoScaleFactor=(value,availableWidth=6)=>brandScaleFraction(value,availableWidth);
+const nameScaleFactor=(value,availableWidth=6)=>brandScaleFraction(value,availableWidth);
 const serializeBoothSpec=()=>JSON.stringify(BoothSpec);
 const objectEditor={selectedId:null,past:[],future:[],seq:0};
 const logoEditor={selected:false};
@@ -1381,8 +1418,32 @@ const placementMeters=value=>Number.isFinite(Number(value))?Number(value).toFixe
 const placementRound=value=>Math.round(value/PLACEMENT_GRID)*PLACEMENT_GRID;
 const placementValue=value=>S.placementSnap===false?Number(value):placementRound(value);
 const clampNumber=(value,min,max)=>Math.max(min,Math.min(max,value));
-const logoPhysicalHeight=(spec=S)=>Math.max(.15,(Number(spec.logoWidth)||2)/2);
 const logoWallLength=(spec=S)=>wallFaceLength(spec,spec.logoWall||'back');
+const brandSurfaceWidth=(spec=S)=>{
+  if(spec.logoMount==='floor')return spec.logoFloorRotation%180===90?spec.D:spec.W;
+  return logoWallLength(spec);
+};
+function brandPhysicalSize(spec=S){
+  const span=Math.max(.3,brandSurfaceWidth(spec)),maxWidth=span*BRAND_MAX_WIDTH_RATIO;
+  const logoFraction=logoScaleFactor(spec.logoScale,span),nameFraction=nameScaleFactor(spec.nameScale,span);
+  const logoWidth=maxWidth*logoFraction,nameWidth=maxWidth*nameFraction,showLogo=logoFraction>0,showName=nameFraction>0;
+  const sideBySide=showLogo&&showName&&spec.lockup!=='stack',gap=sideBySide?Math.min(.18,span*.03):0;
+  const rawWidth=sideBySide?logoWidth+nameWidth+gap:Math.max(logoWidth,nameWidth);
+  const width=Math.max(.05,Math.min(maxWidth,rawWidth));
+  const logoAR=Math.max(.35,Number(spec.logoAR)||2.2),logoHeight=Math.min(spec.H*.72,logoWidth/logoAR);
+  const chars=Math.max(2,String(spec.brand||'YOUR BRAND').length*.62),nameHeight=Math.min(spec.H*.3,nameWidth/chars);
+  const rawHeight=showLogo&&showName&&spec.lockup==='stack'?logoHeight+nameHeight+Math.min(.14,spec.H*.05):Math.max(logoHeight,nameHeight);
+  return{width,height:Math.max(.15,Math.min(spec.H*.9,rawHeight||.15)),span,maxWidth,logoWidth,nameWidth};
+}
+const logoPhysicalWidth=(spec=S)=>brandPhysicalSize(spec).width;
+const logoPhysicalHeight=(spec=S)=>brandPhysicalSize(spec).height;
+function logoBaseSize(spec=S){
+  const physical=brandPhysicalSize(spec),turned=Math.abs(Number(spec.logoFloorRotation)||0)%180===90;
+  const maxWidth=Math.max(.1,turned?Number(spec.D)||1:Number(spec.W)||1),maxDepth=Math.max(.1,turned?Number(spec.W)||1:Number(spec.D)||1);
+  const defaultWidth=clampNumber(physical.width,.1,maxWidth),defaultDepth=clampNumber(Math.max(.18,(Number(spec.logoDepth)||.05)+.14),.1,maxDepth);
+  const customWidth=Number(spec.logoBaseWidth),customDepth=Number(spec.logoBaseDepth);
+  return{width:clampNumber(customWidth>0?customWidth:defaultWidth,.1,maxWidth),depth:clampNumber(customDepth>0?customDepth:defaultDepth,.1,maxDepth),defaultWidth,defaultDepth,maxWidth,maxDepth};
+}
 function logoActiveWalls(spec=S){
   const base=TYPES.find(item=>item.k===spec.type),side=spec.type==='corner'?CORNER_SIDES.find(item=>item.k===spec.cornerSide):null,walls=side?.walls||base?.walls||[];
   return WALL_FACES.filter(face=>walls.includes(face.k));
@@ -1395,27 +1456,31 @@ function normalizeLogoPlacement(spec=S){
   const maxWidth=Math.max(.3,Math.min(4,spec.logoMount==='wall'?logoWallLength(spec):floorSpan));
   spec.logoWidth=placementRound(clampNumber(Number(spec.logoWidth)||2,.3,maxWidth));
   spec.logoDepth=Math.round(clampNumber(Number(spec.logoDepth)||.05,.01,.2)*100)/100;
-  const height=logoPhysicalHeight(spec),wallLength=logoWallLength(spec),halfW=Math.min(spec.logoWidth/2,wallLength/2);
+  spec.logoBaseWidth=Number(spec.logoBaseWidth)>0?placementRound(clampNumber(Number(spec.logoBaseWidth),.1,floorSpan)):0;
+  const floorDepthSpan=spec.logoFloorRotation%180===90?spec.W:spec.D;
+  spec.logoBaseDepth=Number(spec.logoBaseDepth)>0?placementRound(clampNumber(Number(spec.logoBaseDepth),.1,floorDepthSpan)):0;
+  const physical=brandPhysicalSize(spec),height=physical.height,width=physical.width,wallLength=logoWallLength(spec),halfW=Math.min(width/2,wallLength/2);
   spec.logoWallU=placementRound(clampNumber(Number(spec.logoWallU)||wallLength/2,halfW,Math.max(halfW,wallLength-halfW)));
+  const wallRatio=wallLength?spec.logoWallU/wallLength:.5;spec.logoPos=wallRatio<.34?'left':wallRatio>.66?'right':'center';
   spec.logoWallY=placementRound(clampNumber(Number(spec.logoWallY)||Math.max(height/2,spec.H-.3-height/2),height/2,Math.max(height/2,spec.H-height/2)));
-  const floorFootprint=footprintSize({w:spec.logoWidth,d:Math.max(.18,spec.logoDepth+.14),h:height},spec.logoFloorRotation),halfX=floorFootprint.w/2,halfZ=floorFootprint.d/2;
+  const base=logoBaseSize(spec),floorFootprint=footprintSize({w:Math.max(width,base.width),d:Math.max(spec.logoDepth,base.depth),h:height},spec.logoFloorRotation),halfX=floorFootprint.w/2,halfZ=floorFootprint.d/2;
   spec.logoFloorX=placementRound(clampNumber(Number(spec.logoFloorX)||spec.W/2,halfX,Math.max(halfX,spec.W-halfX)));
   spec.logoFloorZ=placementRound(clampNumber(Number(spec.logoFloorZ)||spec.D/2,halfZ,Math.max(halfZ,spec.D-halfZ)));
 }
 function setLogoFloorPosition(x,z,spec=S){
-  const height=logoPhysicalHeight(spec),footprint=footprintSize({w:spec.logoWidth,d:Math.max(.18,spec.logoDepth+.14),h:height},spec.logoFloorRotation);
+  const physical=brandPhysicalSize(spec),base=logoBaseSize(spec),footprint=footprintSize({w:Math.max(physical.width,base.width),d:Math.max(spec.logoDepth,base.depth),h:physical.height},spec.logoFloorRotation);
   const halfX=footprint.w/2,halfZ=footprint.d/2;
   spec.logoFloorX=+clampNumber(placementValue(x),halfX,Math.max(halfX,spec.W-halfX)).toFixed(3);
   spec.logoFloorZ=+clampNumber(placementValue(z),halfZ,Math.max(halfZ,spec.D-halfZ)).toFixed(3);
 }
 function setLogoWallPosition(u,y,spec=S){
-  const height=logoPhysicalHeight(spec),length=logoWallLength(spec),halfW=Math.min(spec.logoWidth/2,length/2),halfH=height/2;
+  const physical=brandPhysicalSize(spec),height=physical.height,length=logoWallLength(spec),halfW=Math.min(physical.width/2,length/2),halfH=height/2;
   spec.logoWallU=+clampNumber(placementValue(u),halfW,Math.max(halfW,length-halfW)).toFixed(3);
   spec.logoWallY=+clampNumber(placementValue(y),halfH,Math.max(halfH,spec.H-halfH)).toFixed(3);
 }
 function logoPlacementSummary(spec=S){
-  const size='กว้าง '+spec.logoWidth.toFixed(2)+' × สูง '+logoPhysicalHeight(spec).toFixed(2)+' × หนา '+spec.logoDepth.toFixed(2)+' ม.';
-  if(spec.logoMount==='floor')return 'ตั้งพื้น · '+size+' · พิกัด X '+spec.logoFloorX.toFixed(2)+' ม. / Z '+spec.logoFloorZ.toFixed(2)+' ม. · หมุน '+spec.logoFloorRotation+'° · ขอบล่างของงานต้องตั้งบนฐาน ไม่ลอยจากพื้น · Snap '+placementStepLabel();
+  const physical=brandPhysicalSize(spec),size='กว้าง '+physical.width.toFixed(2)+' × สูง '+physical.height.toFixed(2)+' × หนา '+spec.logoDepth.toFixed(2)+' ม.';
+  if(spec.logoMount==='floor'){const base=logoBaseSize(spec);return 'ตั้งพื้น · '+size+' · ฐาน '+base.width.toFixed(2)+' × '+base.depth.toFixed(2)+' ม. · สีฐาน '+String(spec.logoBaseColor||'#20252d').toUpperCase()+' · สีโลโก้ '+String(spec.logoColor||spec.primary||'#2e7d4f').toUpperCase()+' · พิกัด X '+spec.logoFloorX.toFixed(2)+' ม. / Z '+spec.logoFloorZ.toFixed(2)+' ม. · หมุน '+spec.logoFloorRotation+'° · ขอบล่างของงานต้องตั้งบนฐาน ไม่ลอยจากพื้น · Snap '+placementStepLabel();}
   const wall=WALL_FACES.find(face=>face.k===spec.logoWall)?.n||spec.logoWall;
   return 'ติด'+wall+' · '+size+' · กึ่งกลางตามแนวผนัง '+spec.logoWallU.toFixed(2)+' ม. · ระดับกึ่งกลางสูง '+spec.logoWallY.toFixed(2)+' ม. · Snap '+placementStepLabel();
 }
@@ -1943,7 +2008,6 @@ function buildDesignPrompt(){
   const logoType=LOGOTYPES.find(item=>item.k===S.logoType)?.n||S.logoType||'ไม่ระบุ';
   const logoShape=LOGOSHAPES.find(item=>item.k===S.logoShape)?.n||S.logoShape||'ไม่ระบุ';
   const lockup=LOCKUPS.find(item=>item.k===S.lockup)?.n||S.lockup||'ไม่ระบุ';
-  const logoPos=WALLPOS.find(item=>item.k===S.logoPos)?.n||S.logoPos||'ไม่ระบุ';
   const wallFaces=(boothType.walls||[]).map(face=>WALL_FACES.find(item=>item.k===face)?.n||face).join(', ')||'ไม่มี';
   const lights=S.lights?(()=>{
     const model=lightModelDef()?.n||S.lightFixture||'ไม่ระบุ';
@@ -1964,8 +2028,8 @@ function buildDesignPrompt(){
     'ผิวผนัง: '+wallFinishSummary(),
     boothGeometryPrompt(),
     ...(S.type==='photo360'?['แท่นยืนวงกลมสำหรับมุมถ่ายภาพ 360: เส้นผ่านศูนย์กลาง 1.00 ม. × สูง 0.10 ม. · อยู่กึ่งกลางด้านหน้าผนังโค้ง']:[]),
-    'โลโก้: '+logoType+' · รูปทรง '+logoShape+' · '+lockup+' · ขนาดภาพ '+S.logoScale+'/10 · '+logoPlacementSummary(S),
-    'ชื่อแบรนด์: '+(S.brand||'YOUR BRAND')+' · ขนาด '+S.nameScale+'/10',
+    'โลโก้: '+logoType+' · รูปทรง '+logoShape+' · '+lockup+' · ขนาดโลโก้ '+S.logoScale+'/'+BRAND_SCALE_MAX+' · '+logoPlacementSummary(S),
+    'ชื่อแบรนด์: '+(S.brand||'YOUR BRAND')+' · ขนาดชื่อ '+S.nameScale+'/'+BRAND_SCALE_MAX,
     'ห้องเก็บของ: '+store+(storeHeight?' · สูง '+storeHeight:''),
     'แสงสว่าง: '+lights,
     'อุปกรณ์ในบูธ: '+objectListLabel(),
@@ -2321,11 +2385,6 @@ function build(){
     '<div style="display:flex;align-items:center;gap:9px;justify-content:center">'+lockIcon(t.k)+
     '<div style="text-align:left"><b style="font-size:12px">'+t.n+'</b><small>'+t.s+'</small></div></div>');
     b.dataset.k=t.k;b.onclick=()=>{S.lockup=t.k;sync();};lp.appendChild(b);});
-  const wp=document.getElementById('oLogoPos');wp.innerHTML='';
-  WALLPOS.forEach(t=>{const b=el('button','opt',t.n);b.dataset.k=t.k;
-    b.onclick=()=>{S.logoPos=t.k;if(S.logoMount==='wall'){
-      const length=logoWallLength(S),half=Math.min(S.logoWidth/2,length/2);
-      S.logoWallU=t.k==='left'?half:t.k==='right'?length-half:length/2;}sync();};wp.appendChild(b);});
   document.getElementById('btnSide').onclick=()=>{
     if(S.type!=='corner'||S.logoMount!=='wall'||S.logoWall!=='back'||sideFreeLen(boothWallThickness(S))<.8)return; S.sideLogo=!S.sideLogo;sync();};
   const sp=document.getElementById('oSidePos');sp.innerHTML='';
@@ -2401,9 +2460,9 @@ function appendStickerDisplayControls(card,values,commit,limits={}){
     button.onclick=()=>{commit('mode',mode.k,true);sync();};modes.appendChild(button);});card.appendChild(modes);
   const controls=el('div','floor-sticker-size'),maxX=Math.max(.1,Number(limits.x)||1),maxY=Math.max(.1,Number(limits.y)||1);
   const live=(key,value)=>{commit(key,Number(value),true);if(threeRenderer)threeRenderer.currentKey='';render();updatePromptPreview();};
-  const row=(key,label,min,max,step)=>{const wrap=el('div','floor-sticker-control'),lab=el('label',null,label),range=document.createElement('input'),number=document.createElement('input');
+  const row=(key,label,min,max,step)=>{const wrap=el('div','floor-sticker-control'),lab=el('label',null,label),range=document.createElement('input'),number=document.createElement('input'),resetDefault=key==='patternSize'?1.2:0;
     range.type='range';range.min=String(min);range.max=String(max);range.step=String(step);range.value=values[key];range.setAttribute('aria-label',label);
-    number.type='number';number.min=String(min);number.max=String(max);number.step=String(step);number.inputMode='decimal';number.value=Number(values[key]).toFixed(2);number.setAttribute('aria-label','ค่า'+label);
+    number.type='number';number.min=String(min);number.max=String(max);number.step=String(step);number.inputMode='decimal';number.value=Number(values[key]).toFixed(2);number.dataset.resetDefault=String(resetDefault);number.setAttribute('aria-label','ค่า'+label);
     range.oninput=()=>{number.value=Number(range.value).toFixed(2);live(key,range.value);};range.onchange=()=>sync();number.onchange=()=>{commit(key,Number(number.value),true);sync();};
     wrap.append(lab,range,number,el('em',null,'ม.'));return wrap;};
   if(values.mode==='repeat')controls.appendChild(row('patternSize','ขนาดลาย',.1,Math.max(maxX,maxY)*2,.05));
@@ -2517,7 +2576,7 @@ function buildFloorSub(){
       const live=(axis,value)=>{setFloorStickerDimension(axis,value);refresh();render();document.getElementById('price').textContent='฿'+fmt(priceTotal());};
       const makeControl=(axis,label,max)=>{const row=el('div','floor-sticker-control'),lab=el('label',null,label);
         const range=document.createElement('input');range.type='range';range.min='.1';range.max=String(max);range.step=String(FLOOR_STICKER_STEP);range.value=axis==='w'?S.floorStickerW:S.floorStickerD;range.setAttribute('aria-label',label+'ของสติ๊กเกอร์พื้น');
-        const number=document.createElement('input');number.type='number';number.min='.1';number.max=String(max);number.step=String(FLOOR_STICKER_STEP);number.inputMode='decimal';number.value=Number(axis==='w'?S.floorStickerW:S.floorStickerD).toFixed(2);number.setAttribute('aria-label','ค่า'+label+'ของสติ๊กเกอร์พื้น');
+        const number=document.createElement('input');number.type='number';number.min='.1';number.max=String(max);number.step=String(FLOOR_STICKER_STEP);number.inputMode='decimal';number.value=Number(axis==='w'?S.floorStickerW:S.floorStickerD).toFixed(2);number.dataset.resetDefault=String(axis==='w'?(S.floorStickerResetW||2):(S.floorStickerResetD||1));number.setAttribute('aria-label','ค่า'+label+'ของสติ๊กเกอร์พื้น');
         range.oninput=()=>live(axis,range.value);range.onchange=()=>sync();number.onchange=()=>{setFloorStickerDimension(axis,number.value);sync();};
         row.append(lab,range,number,el('em',null,'ม.'));controls[axis]={range,number};return row;};
       sizeBox.append(makeControl('w','ความยาว',S.W),makeControl('d','ความลึก',S.D));card.appendChild(sizeBox);
@@ -2565,7 +2624,7 @@ function buildWallStickerSettings(){
       const live=(axis,value)=>{setWallStickerDimension(face,axis,value);wallStickerFor(face).id++;refresh();if(threeRenderer)threeRenderer.currentKey='';render();document.getElementById('price').textContent='฿'+fmt(priceTotal());updatePromptPreview();};
       const makeControl=(axis,label,max)=>{const row=el('div','floor-sticker-control'),lab=el('label',null,label);
         const range=document.createElement('input');range.type='range';range.min='.1';range.max=String(max);range.step=String(WALL_STICKER_STEP);range.value=axis==='w'?sticker.w:sticker.h;range.setAttribute('aria-label',label+'ของสติ๊กเกอร์'+faceDef.n);
-        const number=document.createElement('input');number.type='number';number.min='.1';number.max=String(max);number.step=String(WALL_STICKER_STEP);number.inputMode='decimal';number.value=Number(axis==='w'?sticker.w:sticker.h).toFixed(2);number.setAttribute('aria-label','ค่า'+label+'ของสติ๊กเกอร์'+faceDef.n);
+        const number=document.createElement('input');number.type='number';number.min='.1';number.max=String(max);number.step=String(WALL_STICKER_STEP);number.inputMode='decimal';number.value=Number(axis==='w'?sticker.w:sticker.h).toFixed(2);number.dataset.resetDefault=String(axis==='w'?(sticker.resetW||2):(sticker.resetH||1));number.setAttribute('aria-label','ค่า'+label+'ของสติ๊กเกอร์'+faceDef.n);
         range.oninput=()=>live(axis,range.value);range.onchange=()=>sync();number.onchange=()=>{setWallStickerDimension(face,axis,number.value);wallStickerFor(face).id++;sync();};
         row.append(lab,range,number,el('em',null,'ม.'));controls[axis]={range,number};return row;};
       sizeBox.append(makeControl('w','ความยาว',wallFaceLength(S,face)),makeControl('h','ความสูง',S.H));card.appendChild(sizeBox);
@@ -2911,7 +2970,7 @@ class ThreeBoothRenderer{
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),wallStickers,spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
       spec.lightWall,spec.lightWatts,spec.lightAdj,spec.brand,logoKey,spec.logoType,spec.logoShape,spec.lockup,spec.logoPos,
-      spec.logoScale,spec.nameScale,spec.logoMount,spec.logoWall,spec.logoWidth,spec.logoDepth,spec.logoWallU,spec.logoWallY,
+      spec.logoScale,spec.nameScale,spec.logoMount,spec.logoWall,spec.logoWidth,spec.logoDepth,spec.logoBaseWidth,spec.logoBaseDepth,spec.logoBaseColor,spec.logoColor,spec.logoWallU,spec.logoWallY,
       spec.logoFloorX,spec.logoFloorZ,spec.logoFloorRotation,spec.sideLogo,spec.sidePos,spec.wallRadius,spec.carpetTextureId||0,
       spec.carpetTextureMode||'builtin',spec.carpetTextureActiveId||'',spec.tileTextureId||0,
       spec.tileTextureMode||'builtin',spec.tileTextureActiveId||'',spec.floorStickerId||0,spec.floorStickerW,spec.floorStickerD,spec.floorStickerRotation||0,
@@ -3152,19 +3211,9 @@ class ThreeBoothRenderer{
         if(px<minX)minX=px;if(px>maxX)maxX=px;if(py<minY)minY=py;if(py>maxY)maxY=py;}
       return maxX<minX||maxY<minY?null:{minX,minY,maxX,maxY};
     };
-    const trimToOutput=()=>{
-      x.clearRect(0,0,c.width,c.height);
-      if(spec.logoShape==='panel'){x.drawImage(stage,0,0);return;}
-      const bounds=visibleBounds(sx,stage);if(!bounds){x.drawImage(stage,0,0);return;}
-      let{minX,minY,maxX,maxY}=bounds;
-      const pad=24;minX=Math.max(0,minX-pad);maxX=Math.min(stage.width,maxX+pad);minY=Math.max(0,minY-pad);maxY=Math.min(stage.height,maxY+pad);
-      let cropW=Math.max(1,maxX-minX),cropH=Math.max(1,maxY-minY),cx=(minX+maxX)/2,cy=(minY+maxY)/2;
-      if(cropW/cropH>2)cropH=cropW/2;else cropW=cropH*2;
-      let cropX=cx-cropW/2,cropY=cy-cropH/2;
-      if(cropX<0)cropX=0;if(cropY<0)cropY=0;if(cropX+cropW>stage.width)cropX=stage.width-cropW;if(cropY+cropH>stage.height)cropY=stage.height-cropH;
-      cropX=Math.max(0,cropX);cropY=Math.max(0,cropY);cropW=Math.min(cropW,stage.width-cropX);cropH=Math.min(cropH,stage.height-cropY);
-      x.drawImage(stage,cropX,cropY,cropW,cropH,0,0,c.width,c.height);
-    };
+    /* คงพื้นที่วาดเดิมไว้เสมอ เพื่อให้ขนาดโลโก้และขนาดชื่อปรับแยกจากกัน
+       การครอปตามขอบรวมจะทำให้การขยายชิ้นหนึ่งไปย่ออีกชิ้นโดยไม่ตั้งใจ */
+    const trimToOutput=()=>{x.clearRect(0,0,c.width,c.height);x.drawImage(stage,0,0);};
     const anchorFloorOutput=()=>{
       if(spec.logoMount!=='floor'||spec.logoShape!=='cutout')return;
       const bounds=visibleBounds(x,c);if(!bounds)return;
@@ -3187,24 +3236,51 @@ class ThreeBoothRenderer{
       const panel=spec.logoShape==='panel',panelColor=spec.logoType==='light'?'#fff8dc':spec.logoType==='sticker'?'#ffffff':bg;
       if(panel){sx.fillStyle=panelColor;sx.fillRect(0,0,stage.width,stage.height);}
       const dark=lum(panel?panelColor:bg)<.55;
-      const ink=dark?'#ffffff':shade(a.acc,.68),brand=(spec.brand||'YOUR BRAND').toUpperCase();
-      const logoScale=logoScaleFactor(spec.logoScale);
-      const logo=(rx,ry,rw,rh)=>{
-        if(logoScale<=0)return;
-        const sw=rw*logoScale,sh=rh*logoScale,dx=rx+(rw-sw)/2,dy=ry+(rh-sh)/2;
-        if(image){const ar=image.naturalWidth/image.naturalHeight;let w=sw,h=w/ar;if(h>sh){h=sh;w=h*ar;}
-          sx.drawImage(image,dx+(sw-w)/2,dy+(sh-h)/2,w,h);
-        }else{sx.strokeStyle=ink;sx.lineWidth=7;sx.setLineDash([18,12]);sx.strokeRect(dx,dy,sw,sh);sx.setLineDash([]);
-          sx.fillStyle=ink;sx.globalAlpha=.65;sx.font='700 48px Inter, sans-serif';sx.textAlign='center';sx.textBaseline='middle';sx.fillText('LOGO',dx+sw/2,dy+sh/2);sx.globalAlpha=1;}
+      const ink=dark?'#ffffff':shade(a.acc,.68),logoInk=spec.logoColor||spec.primary||'#2e7d4f',brand=(spec.brand||'YOUR BRAND').toUpperCase();
+      const availableWidth=brandSurfaceWidth(spec),logoScale=logoScaleFactor(spec.logoScale,availableWidth),nameScale=nameScaleFactor(spec.nameScale,availableWidth);
+      const logoMetrics=(rw,rh)=>{
+        if(logoScale<=0)return{w:0,h:0};
+        let w=rw*logoScale,h=rh*logoScale;
+        if(image){const ar=Math.max(.01,image.naturalWidth/image.naturalHeight);h=w/ar;if(h>rh*logoScale){h=rh*logoScale;w=h*ar;}}
+        return{w,h};
       };
-      const name=(rx,ry,rw,rh)=>{if(spec.nameScale<=0)return;sx.fillStyle=ink;sx.textAlign='center';sx.textBaseline='middle';
-        let fs=52+spec.nameScale*7;sx.font='700 '+fs+'px Inter, "Noto Sans Thai", sans-serif';while(fs>28&&sx.measureText(brand).width>rw){fs-=2;sx.font='700 '+fs+'px Inter, "Noto Sans Thai", sans-serif';}
-        sx.fillText(brand,rx+rw/2,ry+rh/2);};
-      if(logoScale<=0&&spec.nameScale>0)name(72,70,880,330);
-      else if(spec.nameScale<=0)logo(292,0,440,340);
-      else if(spec.lockup==='stack'){logo(352,0,320,230);name(92,246,840,150);}
-      else if(spec.lockup==='logoLeft'){logo(60,0,330,280);name(405,0,550,280);}
-      else{name(69,0,550,280);logo(634,0,330,280);}
+      const logo=(rx,ry,rw,rh,centerY=null,fixedSize=null)=>{
+        const size=fixedSize||logoMetrics(rw,rh);if(size.w<=0)return size;
+        const cx=rx+rw/2,cy=centerY==null?ry+rh/2:centerY,dx=cx-size.w/2,dy=cy-size.h/2;
+        if(image){const tint=document.createElement('canvas'),tw=Math.max(2,Math.ceil(size.w)),th=Math.max(2,Math.ceil(size.h));tint.width=tw;tint.height=th;
+          const tx=tint.getContext('2d');tx.drawImage(image,0,0,tw,th);tx.globalCompositeOperation='source-in';tx.fillStyle=logoInk;tx.fillRect(0,0,tw,th);sx.drawImage(tint,dx,dy,size.w,size.h);}
+        else{sx.strokeStyle=logoInk;sx.lineWidth=7;sx.setLineDash([18,12]);sx.strokeRect(dx,dy,size.w,size.h);sx.setLineDash([]);
+          sx.fillStyle=logoInk;sx.globalAlpha=.65;sx.font='700 '+Math.max(16,Math.min(48,size.h*.32))+'px Inter, sans-serif';sx.textAlign='center';sx.textBaseline='middle';sx.fillText('LOGO',cx,cy);sx.globalAlpha=1;}
+        return size;
+      };
+      const nameMetrics=(rw,rh)=>{if(nameScale<=0)return{fs:0,w:0,h:0};
+        sx.font='700 100px Inter, "Noto Sans Thai", sans-serif';const unit=Math.max(.01,sx.measureText(brand).width/100);
+        const fs=Math.max(1,Math.min(rh*.86,rw/unit)*nameScale);return{fs,w:fs*unit,h:fs};};
+      const name=(rx,ry,rw,rh,centerY=null,fixedSize=null)=>{const size=fixedSize||nameMetrics(rw,rh);if(size.fs<=0)return size;
+        sx.fillStyle=ink;sx.textAlign='center';sx.textBaseline='middle';sx.font='700 '+size.fs+'px Inter, "Noto Sans Thai", sans-serif';
+        sx.fillText(brand,rx+rw/2,centerY==null?ry+rh/2:centerY);return size;};
+      /* พื้นที่วาดกว้าง 90% ของผืนป้าย: ค่า 200 จึงเท่ากับ 90% ของผนัง/พื้นที่จริง */
+      if(logoScale<=0&&nameScale>0)name(51,96,922,320);
+      else if(nameScale<=0)logo(51,56,922,400);
+      else if(spec.lockup==='stack'){
+        const logoSize=logoMetrics(922,230),nameSize=nameMetrics(922,180);
+        const gap=Math.max(12,Math.min(30,(logoSize.h+nameSize.h)*.1)),total=logoSize.h+gap+nameSize.h,top=(stage.height-total)/2;
+        logo(51,0,922,230,top+logoSize.h/2);name(51,0,922,180,top+logoSize.h+gap+nameSize.h/2);
+      }
+      else{
+        const areaW=922,logoNatural=logoMetrics(areaW,340),nameNatural=nameMetrics(areaW,240);
+        const gapMeters=Math.min(.18,availableWidth*.03),gap=Math.max(12,Math.min(36,areaW*gapMeters/Math.max(.1,availableWidth)));
+        const fit=Math.min(1,(areaW-gap)/Math.max(1,logoNatural.w+nameNatural.w));
+        const logoSize={w:logoNatural.w*fit,h:logoNatural.h*fit},nameSize={fs:nameNatural.fs*fit,w:nameNatural.w*fit,h:nameNatural.h*fit};
+        const total=logoSize.w+gap+nameSize.w,centerY=stage.height/2;let cursor=(stage.width-total)/2;
+        if(spec.lockup==='logoLeft'){
+          logo(cursor,0,logoSize.w,logoSize.h,centerY,logoSize);cursor+=logoSize.w+gap;
+          name(cursor,0,nameSize.w,nameSize.h,centerY,nameSize);
+        }else{
+          name(cursor,0,nameSize.w,nameSize.h,centerY,nameSize);cursor+=nameSize.w+gap;
+          logo(cursor,0,logoSize.w,logoSize.h,centerY,logoSize);
+        }
+      }
       trimToOutput();anchorFloorOutput();captureVisibleBounds();
     };
     draw(null);texture=new T.CanvasTexture(c);texture.colorSpace=T.SRGBColorSpace;captureVisibleBounds();
@@ -3281,7 +3357,7 @@ class ThreeBoothRenderer{
   }
   brandLayerMaterials(spec,bg){
     const T=this.THREE,front=this.brandMaterial(spec,bg),edge=new T.MeshStandardMaterial({
-      color:new T.Color(spec.secondary||'#242a32'),alphaMap:front.map,transparent:true,alphaTest:.025,side:T.DoubleSide,
+      color:new T.Color(spec.logoColor||spec.primary||'#2e7d4f'),alphaMap:front.map,transparent:true,alphaTest:.025,side:T.DoubleSide,
       roughness:.68,metalness:.04});
     return{front,edge};
   }
@@ -3307,7 +3383,7 @@ class ThreeBoothRenderer{
     this.brandingHitTarget=proxy;return proxy;
   }
   addPlacedBranding(group,spec,t,floorY){
-    const T=this.THREE,width=Number(spec.logoWidth)||2,height=logoPhysicalHeight(spec),depth=Number(spec.logoDepth)||.05;
+    const T=this.THREE,physical=brandPhysicalSize(spec),width=spec.logoShape==='panel'?physical.width:brandSurfaceWidth(spec),height=width/2,depth=Number(spec.logoDepth)||.05;
     /* ซ้อนหน้าตัดทุกประมาณ 4 มม. ให้ด้านข้างอ่านเป็นมวลต่อเนื่อง โดยยังเบากว่าการหา contour ของ PNG แบบเรียลไทม์ */
     const layers=Math.max(3,Math.min(36,Math.ceil(depth/.004)+1)),a=palette();
     if(spec.logoMount==='floor'){
@@ -3318,7 +3394,7 @@ class ThreeBoothRenderer{
         const z=-depth/2+(depth*i/(layers-1)),front=i===layers-1;
         this.brandPlane(holder,spec,width,height,[0,height/2+.10,z],0,'#ffffff','brand-diecut-floor-layer-'+i,front?materials.front:materials.edge);
       }
-      const baseW=width,baseD=Math.max(.18,depth+.14),baseMat=new T.MeshStandardMaterial({color:'#20252d',roughness:.58,metalness:.08});
+      const baseSize=logoBaseSize(spec),baseW=baseSize.width,baseD=baseSize.depth,baseMat=new T.MeshStandardMaterial({color:spec.logoBaseColor||'#20252d',roughness:.58,metalness:.08});
       const base=new T.Mesh(new T.BoxGeometry(baseW,.10,baseD),baseMat);base.position.set(0,.05,0);base.name='brand-diecut-floor-base';base.castShadow=true;base.receiveShadow=true;holder.add(base);
       this.brandSelectionProxy(holder,spec,width,height,depth,materials,{position:[0,height/2+.10,0],rotationY:0});
       holder.traverse(part=>{part.userData.brandPlacement=true;});this.brandingRoot=holder;
@@ -3906,19 +3982,19 @@ function planSVG(){
   };
   S.objects.forEach(obj=>{g+=objectNode(obj);});
   {
-    const baseDepth=Math.max(.18,S.logoDepth+.14);let x,z,rotation,size;
+    const base=logoBaseSize(S),brandSize=brandPhysicalSize(S);let x,z,rotation,size;
     if(S.logoMount==='floor'){
-      x=S.logoFloorX;z=S.logoFloorZ;rotation=S.logoFloorRotation;size={w:S.logoWidth,d:baseDepth,h:logoPhysicalHeight(S)};
+      x=S.logoFloorX;z=S.logoFloorZ;rotation=S.logoFloorRotation;size={w:Math.max(brandSize.width,base.width),d:Math.max(S.logoDepth,base.depth),h:brandSize.height};
     }else if(S.logoWall==='back'&&curve){
       const fraction=clampNumber(S.logoWallU/Math.max(.001,curve.arcLength),0,1),angle=(fraction-.5)*curve.arcAngle;
       const centerX=curve.half+curve.radius*Math.sin(angle),point=curve.pointAtX(centerX,t/2+S.logoDepth/2);
-      x=point.x;z=point.z;rotation=point.rotationY*180/Math.PI;size={w:S.logoWidth,d:S.logoDepth,h:logoPhysicalHeight(S)};
+      x=point.x;z=point.z;rotation=point.rotationY*180/Math.PI;size={w:brandSize.width,d:S.logoDepth,h:brandSize.height};
     }else if(S.logoWall==='back'){
-      x=S.logoWallU;z=t+S.logoDepth/2;rotation=0;size={w:S.logoWidth,d:S.logoDepth,h:logoPhysicalHeight(S)};
+      x=S.logoWallU;z=t+S.logoDepth/2;rotation=0;size={w:brandSize.width,d:S.logoDepth,h:brandSize.height};
     }else if(S.logoWall==='left'){
-      x=t+S.logoDepth/2;z=S.logoWallU;rotation=90;size={w:S.logoWidth,d:S.logoDepth,h:logoPhysicalHeight(S)};
+      x=t+S.logoDepth/2;z=S.logoWallU;rotation=90;size={w:brandSize.width,d:S.logoDepth,h:brandSize.height};
     }else{
-      x=W-t-S.logoDepth/2;z=S.logoWallU;rotation=90;size={w:S.logoWidth,d:S.logoDepth,h:logoPhysicalHeight(S)};
+      x=W-t-S.logoDepth/2;z=S.logoWallU;rotation=90;size={w:brandSize.width,d:S.logoDepth,h:brandSize.height};
     }
     const shape=placementShape(size,x,z,rotation),ordered=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([aa,bb])=>P(
       shape.x+shape.axes[0].x*shape.half[0]*aa+shape.axes[1].x*shape.half[1]*bb,
@@ -4076,10 +4152,10 @@ function isoSVG(){
     const wallInk=inkOn(bg), nameCol=nameColOn(bg), FID=filtId||'silh';
     const AR=S.logo?S.logoAR:2.2;
     let out=`<g transform="${M}">`;
-    const logoScale=logoScaleFactor(S.logoScale);
+    const logoScale=logoScaleFactor(S.logoScale,fw);
     const drawLogo=(x,y,w,h)=>{
       if(logoScale<=0)return'';
-      const sw=w*logoScale,sh=h*logoScale,sx=x+(w-sw)/2,sy=y+(h-sh)/2;
+      const sw=w,sh=h,sx=x,sy=y;
       const padX=sw*.10,padY=sh*.16;
       let o='';
       if(S.logoShape==='panel'&&S.logoType==='light'){
@@ -4106,41 +4182,40 @@ function isoSVG(){
       letter-spacing="${(fs*.05).toFixed(3)}" opacity=".95">${esc(txtAll)}</text>`;
 
     const showLogo=logoScale>0,showName=S.nameScale>0;
-    const NS = S.nameScale<=5 ? 0.5+(S.nameScale-1)*0.125 : 1+(S.nameScale-5)*0.2;
-    const wAllow = Math.min(.95, .62*NS);
+    const NS=nameScaleFactor(S.nameScale,fw);
     const uw=Math.max(.2,unitTextW(txtAll));
     if(!showLogo&&showName){             /* โลโก้ = 0 → จัดชื่อให้อยู่กึ่งกลางพื้นที่ป้าย */
-      const fs=Math.min(fh*.11*NS,(fw*.9)/uw),tw=fs*uw,anchor=anchorFor(align,tw,fw);
+      const fs=Math.min(fh*.28,(fw*.9)/uw)*NS,tw=fs*uw,anchor=anchorFor(align,tw,fw);
       out+=drawName(anchor,vTop+fs,fs,'middle');
     }else if(!showName){                 /* ชื่อ = 0 → โชว์เฉพาะโลโก้ */
-      let lh=fh*.18,lw=lh*AR; const maxW=fw*.45;
-      if(lw>maxW){lw=maxW;lh=lw/AR;}
-      const anchor=anchorFor(align,lw*logoScale,fw);
-      out+=drawLogo(anchor-lw/2,vTop,lw,lh);
+      let lw=fw*.9,lh=lw/AR; const maxH=fh*.9;
+      if(lh>maxH){lh=maxH;lw=lh*AR;}
+      const sw=lw*logoScale,sh=lh*logoScale,anchor=anchorFor(align,sw,fw);
+      out+=drawLogo(anchor-sw/2,vTop,sw,sh);
     }else if(layout==='stack'){
-      let lh=fh*.16,lw=lh*AR; const maxW=fw*.42;
-      if(lw>maxW){lw=maxW;lh=lw/AR;}
-      const fs=Math.min(fh*.085*NS,(fw*wAllow)/uw);
+      let lw=fw*.9,lh=lw/AR; const maxH=fh*.55;
+      if(lh>maxH){lh=maxH;lw=lh*AR;}
+      const fs=Math.min(fh*.18,(fw*.9)/uw)*NS;
       const tw=fs*uw;
-      const bw=Math.max(lw*logoScale,tw), anchor=anchorFor(align,bw,fw);
-      out+=drawLogo(anchor-lw/2,vTop,lw,lh);
-      out+=drawName(anchor,vTop+lh*logoScale+Math.max(fs*1.05,lh*.26),fs,'middle');
+      const sw=lw*logoScale,sh=lh*logoScale,bw=Math.max(sw,tw), anchor=anchorFor(align,bw,fw);
+      out+=drawLogo(anchor-sw/2,vTop,sw,sh);
+      out+=drawName(anchor,vTop+sh+Math.max(fs*1.05,sh*.26),fs,'middle');
     }else{
-      let lh=fh*.15,lw=lh*AR; const maxW=fw*.28;
+      let lh=fh*.45,lw=lh*AR; const maxW=fw*.43;
       if(lw>maxW){lw=maxW;lh=lw/AR;}
       const gap=fw*.03;
-      const fs=Math.min(fh*.08*NS,Math.max(fh*.025,(fw*wAllow-lw*logoScale-gap)/uw));
-      const tw=fs*uw;
-      const bw=lw*logoScale+gap+tw, anchor=anchorFor(align,bw,fw), u0=anchor-bw/2;
-      const cy=vTop+lh*logoScale/2;
+      let fs=Math.min(fh*.2,(fw*.43)/uw)*NS,tw=fs*uw,logoW=lw*logoScale,total=logoW+gap+tw;
+      if(total>fw*.9){const fit=(fw*.9-gap)/Math.max(.001,logoW+tw);logoW*=fit;tw*=fit;fs*=fit;}
+      const bw=logoW+gap+tw, anchor=anchorFor(align,bw,fw), u0=anchor-bw/2;
+      const cy=vTop+lh/2;
       if(layout==='logoLeft'){
-        const logoX=u0+(lw*(1-logoScale))/2;
-        out+=drawLogo(logoX,vTop,lw,lh);
-        out+=drawName(u0+lw*logoScale+gap,cy+fs*.36,fs,'start');
+        const logoH=lw?lh*(logoW/lw):0;
+        out+=drawLogo(u0,vTop,logoW,logoH);
+        out+=drawName(u0+logoW+gap,cy+fs*.36,fs,'start');
       }else{
         out+=drawName(u0,cy+fs*.36,fs,'start');
-        const logoX=u0+tw+gap+(lw*(logoScale-1))/2;
-        out+=drawLogo(logoX,vTop,lw,lh);
+        const logoH=lw?lh*(logoW/lw):0;
+        out+=drawLogo(u0+tw+gap,vTop,logoW,logoH);
       }
     }
     return out+'</g>';
@@ -4160,7 +4235,7 @@ function isoSVG(){
     g+=lockup(M,curve?W:BS.e-BS.s,H,S.lockup,S.logoPos,BRAND_TOP_GAP_M,backWallColor,'silh');
   }
   if(S.logoMount==='floor'){
-    const rad=S.logoFloorRotation*Math.PI/180,dx=Math.cos(rad)*S.logoWidth/2,dz=-Math.sin(rad)*S.logoWidth/2,
+    const floorBrandWidth=Math.max(logoPhysicalWidth(S),logoBaseSize(S).width),rad=S.logoFloorRotation*Math.PI/180,dx=Math.cos(rad)*floorBrandWidth/2,dz=-Math.sin(rad)*floorBrandWidth/2,
       y0=z0+.10,y1=y0+logoPhysicalHeight(S),bl=P(S.logoFloorX-dx,S.logoFloorZ-dz,y0),br=P(S.logoFloorX+dx,S.logoFloorZ+dz,y0),
       tr=P(S.logoFloorX+dx,S.logoFloorZ+dz,y1),tl=P(S.logoFloorX-dx,S.logoFloorZ-dz,y1),center=P(S.logoFloorX,S.logoFloorZ,(y0+y1)/2);
     g+=`<polygon points="${[bl,br,tr,tl].map(point=>point[0].toFixed(1)+','+point[1].toFixed(1)).join(' ')}" fill="#f6f7f8" fill-opacity=".92"
@@ -4285,9 +4360,11 @@ function sync(){
   S.H=Math.max(2.4,Math.min(MAX_BOOTH_HEIGHT,S.H||2.4));
   if(S.type==='photo360')S.wallRadius=Math.max(wallCurveMinRadius(S),Math.min(100,Number(S.wallRadius)||PHOTO360_DEFAULT_RADIUS));
   if(!LOGOSHAPES.some(shape=>shape.k===S.logoShape))S.logoShape='cutout';
+  if(!/^#[0-9a-fA-F]{6}$/.test(String(S.logoBaseColor||'')))S.logoBaseColor='#20252d';
+  if(!/^#[0-9a-fA-F]{6}$/.test(String(S.logoColor||'')))S.logoColor=S.primary||'#2e7d4f';
   normalizeLogoPlacement(S);
-  S.logoScale=Math.max(0,Math.min(10,Number.isFinite(Number(S.logoScale))?Math.round(Number(S.logoScale)):5));
-  S.nameScale=Math.max(0,Math.min(10,Number.isFinite(Number(S.nameScale))?Math.round(Number(S.nameScale)):5));
+  S.logoScale=Math.max(0,Math.min(BRAND_SCALE_MAX,Number.isFinite(Number(S.logoScale))?Math.round(Number(S.logoScale)):BRAND_SCALE_DEFAULT));
+  S.nameScale=Math.max(0,Math.min(BRAND_SCALE_MAX,Number.isFinite(Number(S.nameScale))?Math.round(Number(S.nameScale)):BRAND_SCALE_DEFAULT));
   if(typeof S.floorStickerLock!=='boolean')S.floorStickerLock=true;
   S.floorStickerRotation=((Math.round((Number(S.floorStickerRotation)||0)/90)*90)%360+360)%360;
   if(!STICKER_MODES.some(item=>item.k===S.floorStickerMode))S.floorStickerMode='single';
@@ -4457,31 +4534,33 @@ function sync(){
   document.querySelectorAll('#oLogoMount .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.logoMount));
   document.getElementById('logoWallControls').hidden=S.logoMount!=='wall';
   document.getElementById('logoFloorControls').hidden=S.logoMount!=='floor';
-  document.getElementById('logoQuickWallControls').hidden=S.logoMount!=='wall';
+  const logoAdvancedDetails=document.getElementById('logoAdvancedDetails');logoAdvancedDetails.hidden=S.logoMount!=='floor';
+  if(S.logoMount!=='floor')logoAdvancedDetails.open=false;
+  document.getElementById('logoBasePick').value=S.logoBaseColor;
+  const logoBaseHex=document.getElementById('logoBaseHex');if(document.activeElement!==logoBaseHex)logoBaseHex.value=S.logoBaseColor.toUpperCase();
+  document.getElementById('logoColorPick').value=S.logoColor;
+  const logoColorHex=document.getElementById('logoColorHex');if(document.activeElement!==logoColorHex)logoColorHex.value=S.logoColor.toUpperCase();
   const setLogoPair=(rangeId,inputId,value,min,max)=>{const range=document.getElementById(rangeId),input=document.getElementById(inputId);
     [range,input].forEach(control=>{control.min=Number(min).toFixed(2);control.max=Number(max).toFixed(2);control.value=Number(value).toFixed(2);});};
-  const floorLogoSpan=S.logoFloorRotation%180===90?S.D:S.W;
-  const maxLogoWidth=Math.max(.3,Math.min(4,S.logoMount==='wall'?logoWallLength(S):floorLogoSpan)),logoHeight=logoPhysicalHeight(S);
-  setLogoPair('logoWidthRange','logoWidthInput',S.logoWidth,.3,maxLogoWidth);
+  const physicalBrand=brandPhysicalSize(S),logoHeight=physicalBrand.height,baseSize=logoBaseSize(S);
   setLogoPair('logoDepthRange','logoDepthInput',S.logoDepth,.01,.2);
-  const wallLength=logoWallLength(S),wallHalf=Math.min(S.logoWidth/2,wallLength/2);
-  setLogoPair('logoWallURange','logoWallUInput',S.logoWallU,wallHalf,Math.max(wallHalf,wallLength-wallHalf));
-  setLogoPair('logoWallYRange','logoWallYInput',S.logoWallY,logoHeight/2,Math.max(logoHeight/2,S.H-logoHeight/2));
-  const logoFloorFootprint=footprintSize({w:S.logoWidth,d:Math.max(.18,S.logoDepth+.14),h:logoHeight},S.logoFloorRotation),floorHalfX=logoFloorFootprint.w/2,floorHalfZ=logoFloorFootprint.d/2;
-  setLogoPair('logoFloorXRange','logoFloorXInput',S.logoFloorX,floorHalfX,Math.max(floorHalfX,S.W-floorHalfX));
-  setLogoPair('logoFloorZRange','logoFloorZInput',S.logoFloorZ,floorHalfZ,Math.max(floorHalfZ,S.D-floorHalfZ));
+  document.getElementById('logoBaseWidthInput').dataset.resetDefault=baseSize.defaultWidth.toFixed(2);
+  document.getElementById('logoBaseDepthInput').dataset.resetDefault=baseSize.defaultDepth.toFixed(2);
+  setLogoPair('logoBaseWidthRange','logoBaseWidthInput',baseSize.width,.1,baseSize.maxWidth);
+  setLogoPair('logoBaseDepthRange','logoBaseDepthInput',baseSize.depth,.1,baseSize.maxDepth);
   document.querySelectorAll('#oLogoWall .opt').forEach(b=>{const active=logoActiveWalls(S).some(face=>face.k===b.dataset.k);
     b.hidden=!active;b.disabled=!active;b.classList.toggle('on',active&&b.dataset.k===S.logoWall);});
   document.querySelectorAll('#oLogoFloorRotation .opt').forEach(b=>b.classList.toggle('on',+b.dataset.k===S.logoFloorRotation));
   document.getElementById('logoPlacementNote').textContent=S.logoMount==='wall'
-    ?'ป้ายกว้าง '+S.logoWidth.toFixed(2)+' ม. × สูง '+logoHeight.toFixed(2)+' ม. × หนา '+S.logoDepth.toFixed(2)+' ม. · จุดกึ่งกลางตามแนวผนัง '+S.logoWallU.toFixed(2)+' ม. · สูงจากพื้น '+S.logoWallY.toFixed(2)+' ม. · Snap '+placementStepLabel()+' · คลิกหรือแตะโลโก้ในภาพแล้วลากเพื่อย้าย'
-    :'ป้ายตั้งพื้นกว้าง '+S.logoWidth.toFixed(2)+' ม. × สูง '+logoHeight.toFixed(2)+' ม. × หนา '+S.logoDepth.toFixed(2)+' ม. · พิกัด X '+S.logoFloorX.toFixed(2)+' / Z '+S.logoFloorZ.toFixed(2)+' ม. · หมุน '+S.logoFloorRotation+'° · ยึดขอบล่างกับฐานอัตโนมัติ · Snap '+placementStepLabel()+' · คลิกหรือแตะโลโก้ในภาพแล้วลากเพื่อย้าย';
+    ?'ป้ายกว้าง '+physicalBrand.width.toFixed(2)+' ม. × สูง '+logoHeight.toFixed(2)+' ม. × หนา '+S.logoDepth.toFixed(2)+' ม. · จุดกึ่งกลางตามแนวผนัง '+S.logoWallU.toFixed(2)+' ม. · สูงจากพื้น '+S.logoWallY.toFixed(2)+' ม. · Snap '+placementStepLabel()+' · คลิกหรือแตะโลโก้ในภาพแล้วลากเพื่อย้าย'
+    :'ป้ายตั้งพื้นกว้าง '+physicalBrand.width.toFixed(2)+' ม. × สูง '+logoHeight.toFixed(2)+' ม. · ฐานกว้าง '+baseSize.width.toFixed(2)+' × ลึก '+baseSize.depth.toFixed(2)+' ม. · พิกัด X '+S.logoFloorX.toFixed(2)+' / Z '+S.logoFloorZ.toFixed(2)+' ม. · หมุน '+S.logoFloorRotation+'° · ยึดขอบล่างกับฐานอัตโนมัติ · Snap '+placementStepLabel()+' · คลิกหรือแตะโลโก้ในภาพแล้วลากเพื่อย้าย';
   const logoScaleRange=document.getElementById('lsRange');
   if(logoScaleRange){logoScaleRange.value=S.logoScale;document.getElementById('lsVal').value=S.logoScale;}
   const nameScaleRange=document.getElementById('nsRange');
   if(nameScaleRange){nameScaleRange.value=S.nameScale;document.getElementById('nsVal').value=S.nameScale;}
+  updateScaleResetButtons();
+  syncLogoLockupVisibility();
   document.querySelectorAll('#oLockup .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lockup));
-  document.querySelectorAll('#oLogoPos .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.logoPos));
   const isCorner=S.type==='corner';
   document.getElementById('sideOnly').textContent=isCorner?'':'— เฉพาะบูธหัวมุม (Corner)';
   const bs=document.getElementById('btnSide');
@@ -4532,6 +4611,7 @@ function sync(){
   document.getElementById('summaryCount').textContent=String(estimateLines.length);
   syncPromptFidelityControls();
   updatePromptPreview();
+  refreshGlobalNumericResets();
   render();
 }
 
@@ -4628,14 +4708,72 @@ document.addEventListener('pointerdown',event=>{
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!summaryPopover.hidden)closeHeaderSummary(true);});
 
 /* ================= inputs ================= */
+function numericResetRange(input){
+  const linkedId=input.dataset.resetRange;
+  if(linkedId)return document.getElementById(linkedId);
+  const group=input.closest('.nscale,.floor-sticker-control,.prompt-fidelity-control,.booth-curve-field');
+  return group?.querySelector('input[type="range"]')||null;
+}
+function numericResetChanged(input){
+  const current=Number(input.value),initial=Number(input.dataset.resetDefault),step=Math.abs(Number(input.step))||1;
+  return Number.isFinite(current)&&Number.isFinite(initial)&&Math.abs(current-initial)>Math.max(1e-7,step/1000);
+}
+function updateNumericResetButton(input){
+  const button=input._resetButton;if(!button)return;
+  const initial=input.dataset.resetDefault,fieldName=input.getAttribute('aria-label')||'ค่านี้';
+  button.title='กลับเป็นค่าเริ่มต้น '+initial;button.setAttribute('aria-label','รีเซ็ต'+fieldName+'เป็นค่าเริ่มต้น '+initial);
+  button.hidden=!numericResetChanged(input);
+}
+function installNumericReset(input){
+  if(!input||input.dataset.resetReady==='1'||!Number.isFinite(Number(input.dataset.resetDefault)))return;
+  if(input.id==='lsVal'||input.id==='nsVal'){input.dataset.resetReady='1';return;}
+  const button=document.createElement('button'),range=numericResetRange(input);
+  button.type='button';button.className='field-reset';button.textContent='↶';button.hidden=true;
+  input.insertAdjacentElement('afterend',button);input.dataset.resetReady='1';input._resetButton=button;
+  const update=()=>updateNumericResetButton(input);
+  input.addEventListener('input',update);input.addEventListener('change',update);
+  if(range){range.addEventListener('input',update);range.addEventListener('change',update);}
+  button.addEventListener('click',event=>{
+    event.preventDefault();event.stopPropagation();
+    const resetValue=input.dataset.resetDefault;
+    input.value=resetValue;if(range)range.value=resetValue;
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    input.dispatchEvent(new Event('change',{bubbles:true}));
+    update();
+  });
+  update();
+}
+function installGlobalNumericResets(root=document){
+  if(root.matches?.('input[type="number"][data-reset-default]'))installNumericReset(root);
+  root.querySelectorAll?.('input[type="number"][data-reset-default]').forEach(installNumericReset);
+}
+function refreshGlobalNumericResets(){
+  document.querySelectorAll('input[type="number"][data-reset-ready="1"]').forEach(updateNumericResetButton);
+}
+let numericResetObserver=null;
+function initGlobalNumericResets(){
+  installGlobalNumericResets(document);
+  if(typeof MutationObserver==='undefined')return;
+  numericResetObserver=new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{
+    if(node.nodeType===1)installGlobalNumericResets(node);
+  })));
+  numericResetObserver.observe(document.body,{childList:true,subtree:true});
+}
+function syncLogoLockupVisibility(){const section=document.getElementById('logoLockupSection');if(section)section.hidden=!(S.logoScale>0&&S.nameScale>0);}
+function updateScaleResetButtons(){
+  [['resetLogoScale','lsVal'],['resetNameScale','nsVal']].forEach(([buttonId,inputId])=>{
+    const button=document.getElementById(buttonId),input=document.getElementById(inputId);if(!button||!input)return;
+    const value=Number(input.value);button.hidden=!Number.isFinite(value)||value===BRAND_SCALE_DEFAULT;
+  });
+}
 document.getElementById('brand').oninput=e=>{S.brand=e.target.value;render();};
 document.getElementById('cPick').oninput=e=>setPrimary(e.target.value);
 document.getElementById('cHex').oninput=e=>{const v=e.target.value.trim();
   if(/^#?[0-9a-fA-F]{6}$/.test(v)){S.primary=v[0]==='#'?v:'#'+v;S.colTouched=true;sync();}};
 document.getElementById('nsRange').oninput=e=>{S.nameScale=+e.target.value;
-  document.getElementById('nsVal').value=S.nameScale;render();};
+  document.getElementById('nsVal').value=S.nameScale;syncLogoLockupVisibility();sync();};
 document.getElementById('lsRange').oninput=e=>{S.logoScale=+e.target.value;
-  document.getElementById('lsVal').value=S.logoScale;render();};
+  document.getElementById('lsVal').value=S.logoScale;syncLogoLockupVisibility();sync();};
 const commitScaleInput=(id,key,min,max)=>{
   const input=document.getElementById(id);if(!input)return;
   const commit=()=>{
@@ -4644,24 +4782,33 @@ const commitScaleInput=(id,key,min,max)=>{
     S[key]=Math.max(min,Math.min(max,Math.round(value)));
     sync();
   };
+  input.addEventListener('input',updateScaleResetButtons);
   input.addEventListener('change',commit);
   input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commit();input.blur();}});
 };
-commitScaleInput('lsVal','logoScale',0,10);
-commitScaleInput('nsVal','nameScale',0,10);
-const bindLogoPlacementPair=(rangeId,inputId,key)=>{
+commitScaleInput('lsVal','logoScale',0,BRAND_SCALE_MAX);
+commitScaleInput('nsVal','nameScale',0,BRAND_SCALE_MAX);
+document.getElementById('resetLogoScale').onclick=()=>{S.logoScale=BRAND_SCALE_DEFAULT;sync();};
+document.getElementById('resetNameScale').onclick=()=>{S.nameScale=BRAND_SCALE_DEFAULT;sync();};
+const bindLogoDimensionPair=(rangeId,inputId,key)=>{
   const range=document.getElementById(rangeId),input=document.getElementById(inputId);if(!range||!input)return;
-  range.oninput=()=>{const value=Number(range.value);if(Number.isFinite(value)){S[key]=value;sync();}};
-  const commit=()=>{const value=Number(input.value);if(Number.isFinite(value))S[key]=value;sync();};
+  const store=value=>{const numeric=Number(value),initial=Number(input.dataset.resetDefault),step=Math.abs(Number(input.step))||.05;
+    if(Number.isFinite(numeric))S[key]=Number.isFinite(initial)&&Math.abs(numeric-initial)<=step/100?0:numeric;};
+  range.oninput=()=>{store(range.value);sync();};
+  const commit=()=>{store(input.value);sync();};
   input.addEventListener('change',commit);input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();commit();input.blur();}});
 };
-[['logoWidthRange','logoWidthInput','logoWidth'],['logoDepthRange','logoDepthInput','logoDepth'],
- ['logoWallURange','logoWallUInput','logoWallU'],['logoWallYRange','logoWallYInput','logoWallY'],
- ['logoFloorXRange','logoFloorXInput','logoFloorX'],['logoFloorZRange','logoFloorZInput','logoFloorZ']]
-  .forEach(args=>bindLogoPlacementPair(...args));
+[['logoDepthRange','logoDepthInput','logoDepth'],['logoBaseWidthRange','logoBaseWidthInput','logoBaseWidth'],['logoBaseDepthRange','logoBaseDepthInput','logoBaseDepth']]
+  .forEach(args=>bindLogoDimensionPair(...args));
 document.getElementById('cPick2').oninput=e=>{S.secondary=e.target.value;S.secTouched=true;sync();};
 document.getElementById('cHex2').oninput=e=>{const v=e.target.value.trim();
   if(/^#?[0-9a-fA-F]{6}$/.test(v)){S.secondary=v[0]==='#'?v:'#'+v;S.secTouched=true;sync();}};
+document.getElementById('logoBasePick').oninput=e=>{S.logoBaseColor=e.target.value;sync();};
+document.getElementById('logoBaseHex').oninput=e=>{const v=e.target.value.trim();
+  if(/^#?[0-9a-fA-F]{6}$/.test(v)){S.logoBaseColor=(v[0]==='#'?v:'#'+v).toLowerCase();sync();}};
+document.getElementById('logoColorPick').oninput=e=>{S.logoColor=e.target.value;S.logoColorTouched=true;sync();};
+document.getElementById('logoColorHex').oninput=e=>{const v=e.target.value.trim();
+  if(/^#?[0-9a-fA-F]{6}$/.test(v)){S.logoColor=(v[0]==='#'?v:'#'+v).toLowerCase();S.logoColorTouched=true;sync();}};
 ['dW','dD','dH'].forEach((id,i)=>{document.getElementById(id).oninput=e=>{
   if(isFixedBoothType(S.type)){syncDims();return;}
   const v=parseFloat(e.target.value);if(isNaN(v))return;
@@ -4735,6 +4882,7 @@ fl.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
     im.onload=()=>{S.logoAcc=dominantColor(im);
       S.logoAR=(im.naturalWidth&&im.naturalHeight)?(im.naturalWidth/im.naturalHeight):2.2;
       S.logoHasTransparency=imageHasTransparency(im);
+      if(S.logoAcc&&!S.logoColorTouched)S.logoColor=S.logoAcc;
       const pv=document.getElementById('logoPrev');pv.src=r.result;pv.style.display='block';
       const bc=document.getElementById('btnLogoCol');bc.style.display=S.logoAcc?'block':'none';
       if(S.logoAcc)bc.style.borderColor=S.logoAcc;sync();};
@@ -4776,7 +4924,7 @@ document.querySelectorAll('.qi').forEach(i=>{i.style.cssText=
   'width:100%;padding:10px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);outline:none';});
 document.getElementById('stW').value=1.2;document.getElementById('stD').value=1.2;
 document.getElementById('stHv').value=2.4;
-build();syncDims();sync();loadMyAssets();
+build();syncDims();sync();initGlobalNumericResets();loadMyAssets();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>render());
 window.getBoothSpec=()=>JSON.parse(serializeBoothSpec());
 window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispose();},{once:true});
