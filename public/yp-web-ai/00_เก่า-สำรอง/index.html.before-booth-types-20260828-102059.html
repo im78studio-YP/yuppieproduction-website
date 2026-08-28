@@ -325,15 +325,6 @@ select:focus{border-color:var(--acc)}
 .booth-page #dimDiagram,.booth-page .legacy-height{display:none}
 .booth-page #oType{grid-template-columns:repeat(3,1fr)}
 .booth-page #oType .opt.off{display:none}
-.booth-curve-wrap{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:rgba(224,168,60,.045)}
-.booth-curve-field{display:grid;grid-template-columns:auto minmax(82px,1fr) 78px 20px;align-items:center;gap:7px}
-.booth-curve-field label{font-size:11px;color:var(--tx2)}
-.booth-curve-field input[type=range]{width:100%;min-width:0;accent-color:var(--acc);background:none;border:0;padding:0}
-.booth-curve-field input[type=number]{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg2);color:var(--acc2);outline:none;font:600 13px Inter,sans-serif;text-align:right}
-.booth-curve-field input[type=number]:focus{border-color:var(--acc);background:rgba(224,168,60,.07)}
-.booth-curve-field input[type=number]::-webkit-inner-spin-button,.booth-curve-field input[type=number]::-webkit-outer-spin-button{appearance:none;margin:0}
-.booth-curve-field input[type=number]{-moz-appearance:textfield}
-.booth-curve-field span{font-size:10px;color:var(--tx3)}
 .corner-side-wrap{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
 .corner-side-wrap .lbl{margin-bottom:6px}
 .signage-page .brandbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:0 0 15px;padding:0;
@@ -626,15 +617,6 @@ select:focus{border-color:var(--acc)}
     <div id="cornerSideWrap" class="corner-side-wrap" hidden>
       <label class="lbl">ตำแหน่งหัวมุม</label>
       <div class="g2" id="oCornerSide"></div>
-    </div>
-    <div id="photo360CurveWrap" class="booth-curve-wrap" hidden>
-      <div class="booth-curve-field">
-        <label for="photo360RadiusRange">รัศมีผนังโค้ง R</label>
-        <input id="photo360RadiusRange" type="range" min="3.01" max="100" step="0.01" value="10.00" aria-label="ปรับรัศมีผนังโค้ง R">
-        <input id="photo360Radius" type="number" min="3.01" max="100" step="0.01" value="10.00" inputmode="decimal" aria-label="ค่ารัศมีผนังโค้ง R">
-        <span>ม.</span>
-      </div>
-      <div class="note" id="photo360CurveNote">โค้งเว้าเข้าหาพื้นที่ถ่ายภาพ · ค่าต่ำสุดขึ้นกับครึ่งหนึ่งของความกว้างผนัง</div>
     </div>
     <div class="note" id="typeNote"></div>
   </div>
@@ -993,10 +975,6 @@ const TYPES=[
   note:'บูธหัวมุม ผนัง 2 ด้าน เปิดด้านหน้าและด้านขวา'},
  {k:'penin',n:'Peninsular',s:'เปิด 3 ด้าน',on:true,walls:['back'],
   note:'ผนังด้านหลังด้านเดียว เปิดหน้า ซ้าย ขวา · ความหนาผนัง 30 ซม. — พบบ่อยในบูธ 6×6 ขึ้นไป'},
- {k:'backdrop',n:'Photo Backdrop',s:'ผนังหลัง 1 ด้าน',on:true,walls:['back'],fixed:true,wallThickness:.3,
-  note:'พื้นที่ 6 × 3 × 2.4 ม. · ผนังด้านหลัง 1 ผนัง · ความหนาผนัง 30 ซม.'},
- {k:'photo360',n:'มุมถ่ายภาพ 360',s:'ผนังหลังโค้ง',on:true,walls:['back'],fixed:true,wallThickness:.3,curved:true,
-  note:'พื้นที่ 6 × 3 × 2.4 ม. · ผนังด้านหลังโค้ง · ความหนาผนัง 30 ซม. · กำหนดรัศมี R ได้'},
  {k:'island',n:'Island',s:'เปิด 4 ด้าน',on:false,walls:[],note:''},
  {k:'cross',n:'Cross-Aisle',s:'คร่อมทางเดิน',on:false,walls:[],note:''}];
 const CORNER_SIDES=[
@@ -1105,12 +1083,9 @@ const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
   lights:true,lightFixture:'clear100',lightCol:'white',lightWall:'back',lightWatts:100,lightAdj:0,
   raise:0,floor:'carpet',carpet:'grey',tile:'woodL',carpetTextureData:null,carpetTextureName:'',carpetTextureId:0,
   logoType:'diecut',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
-  logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,wallRadius:10,
+  logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,
   placementSnap:true};
 const S=BoothSpec;
-const FIXED_BOOTH_TYPES=new Set(['backdrop','photo360']);
-const isFixedBoothType=type=>FIXED_BOOTH_TYPES.has(type);
-const PHOTO360_DEFAULT_RADIUS=10;
 const logoScaleFactor=value=>{
   const v=Math.max(1,Math.min(10,Number(value)||5));
   return v<=5 ? .55+(v-1)*.1125 : 1+(v-5)*.16;
@@ -1157,8 +1132,7 @@ function shapesOverlap(a,b,gap=0){
 function placementLimits(item,rotationY=0){
   const footprint=footprintSize(item.size,rotationY),walls=typ().walls,edge=item.clearance??.05,t=boothWallThickness(S);
   const edgeMinX=(walls.includes('left')?t:0)+edge,edgeMaxX=S.W-(walls.includes('right')?t:0)-edge;
-  const backBoundary=walls.includes('back')?(isCurvedWallType(S)?t/2:t):0;
-  const edgeMinZ=backBoundary+edge,edgeMaxZ=S.D-edge;
+  const edgeMinZ=(walls.includes('back')?t:0)+edge,edgeMaxZ=S.D-edge;
   const minX=edgeMinX+footprint.w/2,maxX=edgeMaxX-footprint.w/2;
   const minZ=edgeMinZ+footprint.d/2,maxZ=edgeMaxZ-footprint.d/2;
   return minX<=maxX&&minZ<=maxZ?{minX,maxX,minZ,maxZ,edgeMinX,edgeMaxX,edgeMinZ,edgeMaxZ,footprint}:null;
@@ -1168,14 +1142,6 @@ function isCatalogPlacementValid(catalogId,x,z,rotationY=0,ignoreId=null){
   const epsilon=.0001,shape=placementShape(item.size,x,z,rotationY);
   if(shape.corners.some(corner=>corner.x<limits.edgeMinX-epsilon||corner.x>limits.edgeMaxX+epsilon||
     corner.z<limits.edgeMinZ-epsilon||corner.z>limits.edgeMaxZ+epsilon))return false;
-  if(isCurvedWallType(S)&&typ().walls.includes('back')){
-    const curve=wallCurveInfo(S),clearance=item.clearance??.05,probes=[];
-    [-1,0,1].forEach(a=>[-1,0,1].forEach(b=>probes.push({
-      x:shape.x+shape.axes[0].x*shape.half[0]*a+shape.axes[1].x*shape.half[1]*b,
-      z:shape.z+shape.axes[0].z*shape.half[0]*a+shape.axes[1].z*shape.half[1]*b
-    })));
-    if(curve&&probes.some(point=>point.z<curve.pointAtX(point.x).z+boothWallThickness(S)/2+clearance-epsilon))return false;
-  }
   if(hasStore()){
     const G=storeGeom(boothWallThickness(S)),storeShape=placementShape({w:G.w,d:G.d},G.x+G.w/2,G.y+G.d/2,0);
     if(shapesOverlap(shape,storeShape,item.clearance??.05))return false;
@@ -1502,13 +1468,12 @@ function promptObjectBounds(obj){
   return{minX:Math.min(...xs),maxX:Math.max(...xs),minZ:Math.min(...zs),maxZ:Math.max(...zs)};
 }
 function promptObjectWallDistances(obj){
-  const bounds=promptObjectBounds(obj),width=promptSafeNumber(S.W),depth=promptSafeNumber(S.D),thickness=promptWallThickness(),curve=wallCurveInfo(S);
+  const bounds=promptObjectBounds(obj),width=promptSafeNumber(S.W),depth=promptSafeNumber(S.D),thickness=promptWallThickness();
   const walls=typ()?.walls||[],leftBoundary=walls.includes('left')?thickness:0,rightBoundary=width-(walls.includes('right')?thickness:0),
-    backBoundary=walls.includes('back')?thickness:0,frontBoundary=depth,
-    curvedBackBoundary=curve?curve.pointAtX((bounds.minX+bounds.maxX)/2).z+thickness/2:backBoundary;
+    backBoundary=walls.includes('back')?thickness:0,frontBoundary=depth;
   return{
     left:Math.max(0,bounds.minX-leftBoundary),right:Math.max(0,rightBoundary-bounds.maxX),
-    back:Math.max(0,bounds.minZ-curvedBackBoundary),front:Math.max(0,frontBoundary-bounds.maxZ)
+    back:Math.max(0,bounds.minZ-backBoundary),front:Math.max(0,frontBoundary-bounds.maxZ)
   };
 }
 function promptObjectZone(obj){
@@ -1523,9 +1488,7 @@ function boothGeometryPrompt(){
   const boothType=typ()||{},width=promptSafeNumber(S.W),depth=promptSafeNumber(S.D),height=promptSafeNumber(S.H),thickness=promptWallThickness();
   const floorLevel=promptSafeNumber(S.raise)/100;
   const walls=boothType.walls||[],wallName=face=>WALL_FACES.find(item=>item.k===face)?.n||face;
-  const curve=wallCurveInfo(S);
   const wallSegments=walls.map(face=>{
-    if(face==='back'&&curve)return'- '+wallName(face)+': ผนังโค้งเว้าเข้าพื้นที่ถ่ายภาพ · รัศมี R '+promptNumber(curve.radius)+' ม. · ความยาวแนวโค้ง '+promptNumber(curve.arcLength)+' ม. · ความลึกโค้ง (sagitta) '+promptNumber(curve.sagitta)+' ม. · สูง '+promptNumber(height)+' ม. × หนา '+promptNumber(thickness)+' ม. · ปลายผนังอยู่ตามแนวกว้าง 0 ถึง '+promptNumber(width)+' ม.';
     if(face==='back')return'- '+wallName(face)+': ยาวตามแกน X '+promptNumber(width)+' ม. × สูง '+promptNumber(height)+' ม. × หนา '+promptNumber(thickness)+' ม. · อยู่ที่ Z=0 ถึง Z='+promptNumber(thickness)+' ม. และครอบคลุม X=0 ถึง X='+promptNumber(width)+' ม.';
     if(face==='left')return'- '+wallName(face)+': ยาวตามแกน Z '+promptNumber(depth)+' ม. × สูง '+promptNumber(height)+' ม. × หนา '+promptNumber(thickness)+' ม. · อยู่ที่ X=0 ถึง X='+promptNumber(thickness)+' ม. และครอบคลุม Z=0 ถึง Z='+promptNumber(depth)+' ม.';
     if(face==='right')return'- '+wallName(face)+': ยาวตามแกน Z '+promptNumber(depth)+' ม. × สูง '+promptNumber(height)+' ม. × หนา '+promptNumber(thickness)+' ม. · อยู่ที่ X='+promptNumber(Math.max(0,width-thickness))+' ถึง X='+promptNumber(width)+' ม. และครอบคลุม Z=0 ถึง Z='+promptNumber(depth)+' ม.';
@@ -1534,13 +1497,13 @@ function boothGeometryPrompt(){
   const floorLabel=(()=>{try{return floorName();}catch(e){return S.floor||'พื้นตามแบบ';}})();
   const textureLabel=S.carpetTextureData?'ใช้ Texture ที่ลูกค้าอัปโหลดชื่อ '+(S.carpetTextureName||'ไฟล์พื้น')+' ปูต่อเนื่องเต็มพื้นที่':'ใช้พื้นผิวมาตรฐานของโปรแกรม ปูต่อเนื่องเต็มพื้นที่';
   const innerStartX=walls.includes('left')?thickness:0,innerEndX=walls.includes('right')?Math.max(innerStartX,width-thickness):width;
-  const innerStartZ=curve?curve.sagitta+thickness/2:(walls.includes('back')?thickness:0);
+  const innerStartZ=walls.includes('back')?thickness:0;
   return[
     'ล็อกเรขาคณิตผนังและพื้น (ต้องรักษาตามแบบ 3D ห้าม AI วาดใหม่)',
     'ขอบเขตพื้นที่บูธจริง: กว้าง '+promptNumber(width)+' ม. × ลึก '+promptNumber(depth)+' ม. · จุดอ้างอิงมุมหลังซ้ายคือ X=0, Y=0, Z=0 · พื้นด้านบนอยู่ที่ Y='+promptNumber(floorLevel)+' ม.',
     'พื้น/พรมคือพื้นบูธชิ้นเดียวแบบสี่เหลี่ยมเต็มขนาด กว้าง '+promptNumber(width)+' ม. × ลึก '+promptNumber(depth)+' ม. · ขอบนอกอยู่ที่ X=0 ถึง X='+promptNumber(width)+' ม. และ Z=0 ถึง Z='+promptNumber(depth)+' ม. · '+floorLabel+' · '+textureLabel,
     'ขอบพื้นต้องเสมอกรอบพื้นที่บูธ ห้ามทำเป็นพรมผืนเล็กหรือพรมแยกชิ้น ห้ามล้นออกนอกกรอบ ห้ามมีขอบพรม/ฐานดำเพิ่ม และห้ามเว้นช่องระหว่างพรมกับผนัง',
-    'แนวพื้นที่ใช้งานที่มองเห็นภายในผนังอยู่ประมาณ X='+promptNumber(innerStartX)+' ถึง X='+promptNumber(innerEndX)+' ม. และ Z='+promptNumber(innerStartZ)+' ถึง Z='+promptNumber(depth)+' ม. '+(curve?'โดยแนวผนังหลังเปลี่ยนตามส่วนโค้งและระยะจริงตาม R':'')+' แต่ห้ามเปลี่ยนขนาดพื้นเต็ม W×D',
+    'แนวพื้นที่ใช้งานที่มองเห็นภายในผนังอยู่ประมาณ X='+promptNumber(innerStartX)+' ถึง X='+promptNumber(innerEndX)+' ม. และ Z='+promptNumber(innerStartZ)+' ถึง Z='+promptNumber(depth)+' ม. แต่ห้ามเปลี่ยนขนาดพื้นเต็ม W×D',
     'เมื่อตรวจจากมุมมองด้านบน มุมและขอบพรมต้องตรงกับกรอบบูธและแนวฐานผนังทุกด้านที่มีจริง โดยเฉพาะมุมผนังหลัง–ผนังซ้าย/ขวา · ให้ยึดผังด้านบนและตัวเลขนี้ก่อนมุมมอง perspective',
     'ผนังจริง '+(walls.length?walls.map(wallName).join(' + '):'ไม่มี')+' · ความหนาผนังทุกด้าน '+promptNumber(thickness)+' ม. · ผนังต้องตั้งฉากกับพื้นและเริ่มจากแนวขอบเดียวกับพื้น',
     wallSegments.length?'รายละเอียดแนวผนัง:\n'+wallSegments.join('\n'):'',
@@ -1921,15 +1884,15 @@ function build(){
 
   const oPre=document.getElementById('oPreset');oPre.innerHTML='';
   PRESETS.forEach(p=>{const b=el('button','opt',p.w+' × '+p.d+'<small>'+(p.w*p.d)+' ตร.ม.</small>');
-    b.dataset.k=p.w+'x'+p.d;b.onclick=()=>{if(isFixedBoothType(S.type))return;S.W=p.w;S.D=p.d;syncDims();sync();};oPre.appendChild(b);});
+    b.dataset.k=p.w+'x'+p.d;b.onclick=()=>{S.W=p.w;S.D=p.d;syncDims();sync();};oPre.appendChild(b);});
   const oH=document.getElementById('oHeight');oH.innerHTML='';
   HEIGHTS.forEach(h=>{const b=el('button','opt',h+' ม.');b.dataset.k=h;
-    b.onclick=()=>{if(isFixedBoothType(S.type))return;S.H=h;syncDims();sync();};oH.appendChild(b);});
+    b.onclick=()=>{S.H=h;syncDims();sync();};oH.appendChild(b);});
 
   const oT=document.getElementById('oType');oT.innerHTML='';
   TYPES.forEach(t=>{const b=el('button','opt'+(t.on?'':' off'),
     t.n+'<small>'+t.s+'</small>'+(t.on?'':'<span class="soon">ยังไม่เปิดในเฟสแรก</span>'));
-    b.dataset.k=t.k;b.onclick=()=>selectBoothType(t.k);oT.appendChild(b);});
+    b.dataset.k=t.k;b.onclick=()=>{if(!t.on)return;S.type=t.k;sync();};oT.appendChild(b);});
 
   const mk=(id,arr,set,f)=>{const box=document.getElementById(id);box.innerHTML='';
     arr.forEach(o=>{const b=el('button','opt',f?f(o):(o.n+(o.s?'<small>'+o.s+'</small>':'')));
@@ -2090,17 +2053,10 @@ function setPrimary(c){S.primary=c;S.colTouched=true;
   document.getElementById('cPick').value=c;document.getElementById('cHex').value=c.toUpperCase();sync();}
 function syncDims(){document.getElementById('dW').value=S.W;
   document.getElementById('dD').value=S.D;document.getElementById('dH').value=S.H;}
-function selectBoothType(type){
-  const selected=TYPES.find(item=>item.k===type);if(!selected||!selected.on)return;
-  S.type=type;
-  if(isFixedBoothType(type)){S.W=6;S.D=3;S.H=2.4;}
-  if(type==='photo360'&&!Number.isFinite(Number(S.wallRadius)))S.wallRadius=PHOTO360_DEFAULT_RADIUS;
-  syncDims();sync();
-}
 
 /* ================= ราคา (สมมติ) ================= */
-function wallRun(){const w=typ().walls,curve=wallCurveInfo(S);
-  return(w.indexOf('back')>=0?(curve?curve.arcLength:S.W):0)+(w.indexOf('left')>=0?S.D:0)+(w.indexOf('right')>=0?S.D:0);}
+function wallRun(){const w=typ().walls;
+  return(w.indexOf('back')>=0?S.W:0)+(w.indexOf('left')>=0?S.D:0)+(w.indexOf('right')>=0?S.D:0);}
 function priceLines(){
   const area=S.W*S.D,r=[],wa=wallRun()*S.H;
   if(wa)r.push(['ผนังบูธ '+wa.toFixed(1)+' ตร.ม.',wa*3200]);
@@ -2125,26 +2081,9 @@ const priceTotal=()=>priceLines().reduce((sum,row)=>sum+row[1],0);
 /* ================= Three.js renderer ================= */
 const THREE_VERSION='0.180.0';
 const BOOTH_WALL_THICKNESS=.1;
-/* Peninsular / Photo Backdrop / Photo 360 ใช้ผนังเดี่ยวแบบหนา 30 ซม.; รูปแบบอื่นคงผนังมาตรฐาน 10 ซม. */
+/* Peninsular ใช้ผนังเดี่ยวแบบหนา 30 ซม.; รูปแบบอื่นคงผนังมาตรฐาน 10 ซม. */
 const PENINSULAR_WALL_THICKNESS=.3;
-const boothWallThickness=spec=>isFixedBoothType(spec?.type)||spec?.type==='penin'?PENINSULAR_WALL_THICKNESS:BOOTH_WALL_THICKNESS;
-const wallCurveMinRadius=spec=>Math.max(3.01,(Number(spec?.W)||6)/2+.01);
-function wallCurveInfo(spec){
-  if(spec?.type!=='photo360')return null;
-  const width=Math.max(1,Number(spec.W)||6),half=width/2,minRadius=wallCurveMinRadius({...spec,W:width});
-  const radius=Math.max(minRadius,Math.min(100,Number(spec.wallRadius)||PHOTO360_DEFAULT_RADIUS));
-  const root=Math.sqrt(Math.max(.000001,radius*radius-half*half)),sagitta=radius-root;
-  const pointAt=(fraction,offset=0)=>{
-    const u=Math.max(0,Math.min(1,Number(fraction)||0)),x=width*u,dx=x-half;
-    const rise=Math.sqrt(Math.max(.000001,radius*radius-dx*dx)),z=radius-rise,slope=dx/Math.max(.000001,rise);
-    const tangentLength=Math.hypot(1,slope),tx=1/tangentLength,tz=slope/tangentLength;
-    const signedOffset=Number(offset)||0;
-    return{x:x+(-tz)*signedOffset,z:z+tx*signedOffset,centerX:x,centerZ:z,tangentX:tx,tangentZ:tz,normalX:-tz,normalZ:tx,rotationY:Math.atan2(-tz,tx)};
-  };
-  return{width,radius,half,root,sagitta,arcAngle:2*Math.asin(Math.min(1,half/radius)),arcLength:radius*2*Math.asin(Math.min(1,half/radius)),pointAt,
-    pointAtX:(x,offset=0)=>pointAt(Math.max(0,Math.min(1,Number(x)/width)),offset)};
-}
-const isCurvedWallType=spec=>spec?.type==='photo360';
+const boothWallThickness=spec=>spec?.type==='penin'?PENINSULAR_WALL_THICKNESS:BOOTH_WALL_THICKNESS;
 const FIXTURE_WALL_GAP=.001;
 const FIXTURE_LIGHT_INSET=.16;
 /* ลดจากยอดผนังเล็กน้อย เพื่อให้แผ่นฐานติดใต้คาน ไม่ฝังทะลุฝาครอบด้านบน */
@@ -2332,7 +2271,7 @@ class ThreeBoothRenderer{
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
       spec.lightWall,spec.lightWatts,spec.lightAdj,spec.brand,logoKey,spec.logoType,spec.lockup,spec.logoPos,
-      spec.logoScale,spec.nameScale,spec.sideLogo,spec.sidePos,spec.wallRadius,spec.carpetTextureId||0,objects]);
+       spec.logoScale,spec.nameScale,spec.sideLogo,spec.sidePos,spec.carpetTextureId||0,objects]);
   }
   update(spec){
     const key=this.visualKey(spec);if(key===this.currentKey)return;
@@ -2428,31 +2367,6 @@ class ThreeBoothRenderer{
   wallMaterial(spec,length,face){
     return this.surfaceMaterial(wallFinishKind(spec,face),palette().wall,spec.secondary,[Math.max(1,length/1.2),Math.max(1,spec.H/1.2)]);
   }
-  curvedWall(group,spec,t,floorY){
-    const info=wallCurveInfo(spec);if(!info)return null;
-    const T=this.THREE,segments=64,height=spec.H,positions=[],uvs=[],indices=[],rings=[];
-    const vertex=(point,y,u,v)=>{const index=positions.length/3;positions.push(point.x,y,point.z);uvs.push(u,v);return index;};
-    for(let i=0;i<=segments;i++){
-      const u=i/segments,front=info.pointAt(u,t/2),back=info.pointAt(u,-t/2);
-      rings.push({fb:vertex(front,floorY,u,0),ft:vertex(front,floorY+height,u,1),bb:vertex(back,floorY,u,0),bt:vertex(back,floorY+height,u,1)});
-    }
-    const quad=(a,b,c,d)=>indices.push(a,b,c,a,c,d);
-    for(let i=0;i<segments;i++){
-      const a=rings[i],b=rings[i+1];
-      quad(a.fb,b.fb,b.ft,a.ft);quad(b.bb,a.bb,a.bt,b.bt);quad(a.ft,b.ft,b.bt,a.bt);quad(b.fb,a.fb,a.bb,b.bb);
-    }
-    const first=rings[0],last=rings[rings.length-1];
-    quad(first.fb,first.ft,first.bt,first.bb);quad(last.fb,last.bb,last.bt,last.ft);
-    const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));
-    geometry.setAttribute('uv',new T.Float32BufferAttribute(uvs,2));geometry.setIndex(indices);geometry.computeVertexNormals();
-    const material=this.wallMaterial(spec,info.arcLength,'back');material.side=T.DoubleSide;
-    const mesh=new T.Mesh(geometry,material);mesh.name='booth-wall-back-curved';mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.wallCurveRadius=info.radius;group.add(mesh);
-    const edgePoints=[];
-    for(let i=0;i<=segments;i++){const p=info.pointAt(i/segments,t/2+.001);edgePoints.push(new T.Vector3(p.x,floorY+height+.002,p.z));}
-    const edgeGeometry=new T.BufferGeometry().setFromPoints(edgePoints),edgeMaterial=new T.LineBasicMaterial({color:0x111317,transparent:true,opacity:.38});
-    const edge=new T.Line(edgeGeometry,edgeMaterial);edge.name='booth-wall-back-curved-edge';edge.renderOrder=3;group.add(edge);
-    return{info,mesh};
-  }
   storageMaterial(spec,face){
     const a=palette(),selected=spec.stSurf==='sticker'&&(spec.stFace==='all'||spec.stFace===face||
       (face==='front'&&(spec.stFace==='front-left'||spec.stFace==='front-right'))||
@@ -2542,10 +2456,7 @@ class ThreeBoothRenderer{
         spec.stSurf==='sticker'?a.acc:stPaintColor(a),'brand-lockup-storage');
     }else if(typ().walls.includes('back')){
       const B=backFreeSpan(t),available=B.e-B.s,w=Math.min(3.8,available*.76),h=Math.min(w/2,spec.H*.42),ww=h*2;
-      if(isCurvedWallType(spec)){
-        const curve=wallCurveInfo(spec),u=available?((place(B.s,B.e,ww,spec.logoPos))/spec.W):.5,point=curve.pointAt(u,t/2+.012);
-        this.brandPlane(group,spec,ww,h,[point.x,brandCenterY(spec.H,h),point.z],point.rotationY,wallFaceColor(spec,'back',a),'brand-lockup-back-curved');
-      }else this.brandPlane(group,spec,ww,h,[place(B.s,B.e,ww,spec.logoPos),brandCenterY(spec.H,h),t+.012],0,wallFaceColor(spec,'back',a),'brand-lockup-back');
+      this.brandPlane(group,spec,ww,h,[place(B.s,B.e,ww,spec.logoPos),brandCenterY(spec.H,h),t+.012],0,wallFaceColor(spec,'back',a),'brand-lockup-back');
     }
     const sideWall=cornerWallKey();
     if(spec.type==='corner'&&spec.sideLogo&&typ().walls.includes(sideWall)){
@@ -2649,13 +2560,7 @@ class ThreeBoothRenderer{
     const yaw=def?.wallRotations?.[point.w] ?? (point.w==='back'?0:point.w==='left'?Math.PI/2:-Math.PI/2);
     const top=spec.H-(Number.isFinite(def?.topInset)?def.topInset:FIXTURE_TOP_INSET);
     /* local +Z ของโคม = ทิศยื่นเข้าในบูธ หลังหมุนด้วย yaw ของผนังนั้น */
-    if(point.w==='back'){
-      if(isCurvedWallType(spec)){
-        const curve=wallCurveInfo(spec),surfacePoint=curve.pointAt(point.u/spec.W,t/2+FIXTURE_WALL_GAP);
-        return{position:[surfacePoint.x,top,surfacePoint.z],rotationY:surfacePoint.rotationY,targetDepth:normalSpan*.55,inward:[surfacePoint.normalX,0,surfacePoint.normalZ]};
-      }
-      return{position:[point.u,top,surface],rotationY:yaw,targetDepth:normalSpan*.55-surface,inward:[0,0,1]};
-    }
+    if(point.w==='back')return{position:[point.u,top,surface],rotationY:yaw,targetDepth:normalSpan*.55-surface,inward:[0,0,1]};
     if(point.w==='left')return{position:[surface,top,point.u],rotationY:yaw,targetDepth:normalSpan*.55-surface,inward:[1,0,0]};
     return{position:[spec.W-surface,top,point.u],rotationY:yaw,targetDepth:normalSpan*.55-surface,inward:[-1,0,0]};
   }
@@ -2866,11 +2771,8 @@ class ThreeBoothRenderer{
     this.box(g,[spec.W,slabHeight,spec.D],[spec.W/2,slabCenterY,spec.D/2],floorColor(),
       {material:this.floorMaterial(spec),castShadow:false,name:'booth-floor'});
     const walls=typ().walls;
-    if(walls.includes('back')){
-      if(isCurvedWallType(spec))this.curvedWall(g,spec,t,floorY);
-      else this.box(g,[spec.W,spec.H,t],[spec.W/2,spec.H/2,t/2],a.wall,
-        {material:this.wallMaterial(spec,spec.W,'back'),name:'booth-wall-back'});
-    }
+    if(walls.includes('back'))this.box(g,[spec.W,spec.H,t],[spec.W/2,spec.H/2,t/2],a.wall,
+      {material:this.wallMaterial(spec,spec.W,'back'),name:'booth-wall-back'});
     if(walls.includes('left'))this.box(g,[t,spec.H,spec.D],[t/2,spec.H/2,spec.D/2],a.wall,
       {material:this.wallMaterial(spec,spec.D,'left'),name:'booth-wall-left'});
     if(walls.includes('right'))this.box(g,[t,spec.H,spec.D],[spec.W-t/2,spec.H/2,spec.D/2],a.wall,
@@ -2993,7 +2895,7 @@ function planSVG(){
   const sc=Math.min((VW-pad*2)/W,(VH-pad*2)/D);
   const ox=(VW-W*sc)/2,oy=(VH-D*sc)/2;
   const P=(x,y)=>[ox+x*sc,oy+y*sc];
-  const a=palette(),t=boothWallThickness(S),curve=wallCurveInfo(S);
+  const a=palette(),t=boothWallThickness(S);
   let g=`<defs><marker id="plan-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 8 4 L 0 8 z" fill="#f3c86b"/></marker></defs>
     <rect width="${VW}" height="${VH}" fill="#0a0b0e"/>`;
@@ -3002,17 +2904,10 @@ function planSVG(){
   const wall=(x,y,w,d)=>{const p=P(x,y);
     return `<rect x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" width="${(w*sc).toFixed(1)}"
       height="${(d*sc).toFixed(1)}" fill="${a.wall}" stroke="rgba(0,0,0,.45)" stroke-width=".8"/>`;};
-  const curvedBackWall=()=>{
-    if(!curve)return wall(0,0,W,t);
-    const front=[],back=[],segments=64;
-    for(let i=0;i<=segments;i++){const p=curve.pointAt(i/segments,t/2),q=P(p.x,p.z);front.push(q[0].toFixed(1)+','+q[1].toFixed(1));}
-    for(let i=segments;i>=0;i--){const p=curve.pointAt(i/segments,-t/2),q=P(p.x,p.z);back.push(q[0].toFixed(1)+','+q[1].toFixed(1));}
-    return `<polygon points="${front.concat(back).join(' ')}" fill="${a.wall}" stroke="rgba(0,0,0,.45)" stroke-width=".8"/>`;
-  };
   const wl=typ().walls;
   if(wl.indexOf('left')>=0)g+=wall(0,0,t,D);
   if(wl.indexOf('right')>=0)g+=wall(W-t,0,t,D);
-  if(wl.indexOf('back')>=0)g+=curvedBackWall();
+  if(wl.indexOf('back')>=0)g+=wall(0,0,W,t);
   if(hasStore()){const G=storeGeom(t),p=P(G.x,G.y);
     g+=`<rect x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" width="${(G.w*sc).toFixed(1)}"
       height="${(G.d*sc).toFixed(1)}" fill="${S.stSurf==='sticker'?a.acc:stPaintColor(a)}"
@@ -3093,13 +2988,10 @@ function bindPlanObjectInteractions(container){
 const C30=Math.cos(Math.PI/6),S30=.5;
 const isoRaw=(x,y,z)=>[(x-y)*C30,(x+y)*S30-z];
 function isoSVG(){
-  const W=S.W,D=S.D,H=S.H,a=palette(),VW=1000,VH=600,t=boothWallThickness(S),z0=S.raise/100,curve=wallCurveInfo(S);
+  const W=S.W,D=S.D,H=S.H,a=palette(),VW=1000,VH=600,t=boothWallThickness(S),z0=S.raise/100;
   const wl=typ().walls,solids=[];
   if(S.raise>0)solids.push({x:0,y:0,z:0,w:W,d:D,h:z0,col:shade(floorColor(),1.12),k:'platform'});
-  if(wl.indexOf('back')>=0){
-    if(curve)solids.push({curve,x:0,y:0,z:0,w:W,d:t,h:H,col:wallFaceColor(S,'back',a),k:'curved-wall',face:'back',pri:1});
-    else solids.push({x:0,y:0,z:0,w:W,d:t,h:H,col:wallFaceColor(S,'back',a),k:'wall',face:'back',pri:1});
-  }
+  if(wl.indexOf('back')>=0)solids.push({x:0,y:0,z:0,w:W,d:t,h:H,col:wallFaceColor(S,'back',a),k:'wall',face:'back',pri:1});
   if(wl.indexOf('left')>=0)solids.push({x:0,y:0,z:0,w:t,d:D,h:H,col:wallFaceColor(S,'left',a),k:'wall',face:'left'});
   if(wl.indexOf('right')>=0)solids.push({x:W-t,y:0,z:0,w:t,d:D,h:H,col:wallFaceColor(S,'right',a),k:'wall',face:'right',ghost:1});
   if(hasStore()){const G=storeGeom(t);
@@ -3111,11 +3003,7 @@ function isoSVG(){
     else solids.push({x:W-t-.18,y:L.u-.07,z:H,w:.18,d:.14,h:.09,col:'#33373c',k:'lamp'});});
 
   const pts=[];const push=(x,y,z)=>pts.push(isoRaw(x,y,z));
-  solids.forEach(s=>{
-    if(s.curve){for(let i=0;i<=64;i++){const u=i/64,front=s.curve.pointAt(u,t/2),back=s.curve.pointAt(u,-t/2);
-        push(front.x,front.z,0);push(front.x,front.z,H);push(back.x,back.z,0);push(back.x,back.z,H);}return;}
-    for(const X of[s.x,s.x+s.w])for(const Y of[s.y,s.y+s.d])for(const Z of[s.z,s.z+s.h])push(X,Y,Z);
-  });
+  solids.forEach(s=>{for(const X of[s.x,s.x+s.w])for(const Y of[s.y,s.y+s.d])for(const Z of[s.z,s.z+s.h])push(X,Y,Z);});
   [[0,0,0],[W,0,0],[0,D,0],[W,D,0],[0,0,H]].forEach(c=>push(c[0],c[1],c[2]));
   const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
   const mnx=Math.min.apply(null,xs),mxx=Math.max.apply(null,xs);
@@ -3152,7 +3040,7 @@ function isoSVG(){
     for(let i=.3;i<W;i+=.3){const p1=P(i,0,gz),p2=P(i,D,gz);
       g+=`<line x1="${p1[0].toFixed(1)}" y1="${p1[1].toFixed(1)}" x2="${p2[0].toFixed(1)}" y2="${p2[1].toFixed(1)}"
         stroke="#000" stroke-width=".7" opacity=".13"/>`;}}
-  solids.forEach(s=>{if(s.k==='platform'||s.ghost||s.curve)return;
+  solids.forEach(s=>{if(s.k==='platform'||s.ghost)return;
     g+=`<polygon points="${pp([[s.x+.08,s.y+.08,.006],[s.x+s.w+.22,s.y+.08,.006],[s.x+s.w+.22,s.y+s.d+.22,.006],[s.x+.08,s.y+s.d+.22,.006]])}"
       fill="#000" opacity=".3" filter="url(#sf)"/>`;});
 
@@ -3160,19 +3048,6 @@ function isoSVG(){
    งานจริงผนังหลังคือแผงเต็มความกว้างที่ตั้งก่อน แล้วผนังข้างมาชน */
   solids.sort((p,q)=>((p.x+p.y+p.z*.6)-(q.x+q.y+q.z*.6))||((p.pri||0)-(q.pri||0)));
   solids.forEach(s=>{
-    if(s.curve){
-      const frontTop=[],frontBottom=[],backTop=[],backBottom=[],segments=64;
-      for(let i=0;i<=segments;i++){
-        const u=i/segments,front=s.curve.pointAt(u,t/2),back=s.curve.pointAt(u,-t/2);
-        frontTop.push(P(front.x,front.z,s.h));frontBottom.push(P(front.x,front.z,s.z));
-        backTop.push(P(back.x,back.z,s.h));backBottom.push(P(back.x,back.z,s.z));
-      }
-      const cTop=shade(s.col,1.24),cFront=shade(s.col,.94),cBack=shade(s.col,.67),edge=' stroke="rgba(0,0,0,.3)" stroke-width=".7"';
-      g+=`<polygon points="${frontBottom.concat(frontTop.slice().reverse()).map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="${cFront}"${edge}/>`;
-      g+=`<polygon points="${frontTop.concat(backTop.slice().reverse()).map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="${cTop}"${edge}/>`;
-      g+=`<polygon points="${backBottom.concat(backTop.slice().reverse()).map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="${cBack}"${edge}/>`;
-      return;
-    }
     const top=s.z+s.h;let cT,cL,cR;
     if(s.k==='store'){
       const F=S.stFace,stick=S.stSurf==='sticker';
@@ -3278,10 +3153,9 @@ function isoSVG(){
     const M=`matrix(${(C30*sc).toFixed(3)},${(S30*sc).toFixed(3)},0,${sc.toFixed(3)},${o[0].toFixed(2)},${o[1].toFixed(2)})`;
     g+=lockup(M,stG.w,stG.h,S.lockup,S.logoPos,BRAND_TOP_GAP_M,storeFrontBg,'silh2');
   }else if(wl.indexOf('back')>=0){
-    const BS=backFreeSpan(t),point=curve?curve.pointAt(0,t/2+.012):{x:BS.s,z:t};
-    const o=P(curve?point.x:BS.s,curve?point.z:t,H);
+    const BS=backFreeSpan(t), o=P(BS.s,t,H);
     const M=`matrix(${(C30*sc).toFixed(3)},${(S30*sc).toFixed(3)},0,${sc.toFixed(3)},${o[0].toFixed(2)},${o[1].toFixed(2)})`;
-    g+=lockup(M,curve?W:BS.e-BS.s,H,S.lockup,S.logoPos,BRAND_TOP_GAP_M,backWallColor,'silh');
+    g+=lockup(M,BS.e-BS.s,H,S.lockup,S.logoPos,BRAND_TOP_GAP_M,backWallColor,'silh');
   }
 
   /* ---- โลโก้บนผนังด้านข้าง (เฉพาะบูธมุม) ---- */
@@ -3396,10 +3270,8 @@ function syncLightModelStatus(){
 }
 
 function sync(){
-  if(isFixedBoothType(S.type)){S.W=6;S.D=3;S.H=2.4;}
   S.W=Math.max(1,Math.min(30,S.W||1));S.D=Math.max(1,Math.min(30,S.D||1));
   S.H=Math.max(2.4,Math.min(MAX_BOOTH_HEIGHT,S.H||2.4));
-  if(S.type==='photo360')S.wallRadius=Math.max(wallCurveMinRadius(S),Math.min(100,Number(S.wallRadius)||PHOTO360_DEFAULT_RADIUS));
   S.logoScale=Math.max(1,Math.min(10,Number(S.logoScale)||5));
   S.nameScale=Math.max(0,Math.min(10,Number.isFinite(Number(S.nameScale))?Math.round(Number(S.nameScale)):5));
   S.promptFidelity=promptFidelityValue(S.promptFidelity);
@@ -3445,24 +3317,13 @@ function sync(){
   document.getElementById('dH').value=S.H;
   document.getElementById('areaTxt').textContent=(S.W*S.D).toFixed(1)+' ตร.ม.';
   document.getElementById('areaHint').textContent=
-    isFixedBoothType(S.type)?'ขนาดมาตรฐานของรูปแบบนี้ · แก้ไขไม่ได้':((S.W*S.D)>=54?'บูธใหญ่ — พื้นที่กลางบูธเว้นไว้วางสินค้าได้':'');
+    (S.W*S.D)>=54?'บูธใหญ่ — พื้นที่กลางบูธเว้นไว้วางสินค้าได้':'';
   document.getElementById('dimDiagram').innerHTML=dimDiagram();
 
   document.querySelectorAll('#oType .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.type));
   const cornerActive=S.type==='corner',cornerWrap=document.getElementById('cornerSideWrap');
   cornerWrap.hidden=!cornerActive;
   if(cornerActive)document.querySelectorAll('#oCornerSide .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.cornerSide));
-  const fixedType=isFixedBoothType(S.type);
-  ['dW','dD','dH'].forEach(id=>{const input=document.getElementById(id);if(input)input.disabled=fixedType;});
-  document.querySelectorAll('#oPreset .opt,#oHeight .opt').forEach(button=>button.disabled=fixedType);
-  const curveWrap=document.getElementById('photo360CurveWrap'),curveRange=document.getElementById('photo360RadiusRange'),curveInput=document.getElementById('photo360Radius'),curveNote=document.getElementById('photo360CurveNote');
-  if(curveWrap)curveWrap.hidden=S.type!=='photo360';
-  if(S.type==='photo360'){
-    const minRadius=wallCurveMinRadius(S).toFixed(2),radius=Number(S.wallRadius).toFixed(2);
-    if(curveRange){curveRange.min=minRadius;curveRange.value=radius;}
-    if(curveInput){curveInput.min=minRadius;curveInput.value=radius;}
-  }
-  if(curveNote&&S.type==='photo360'){const curve=wallCurveInfo(S);curveNote.textContent='โค้งเว้าเข้าหาพื้นที่ถ่ายภาพ · R ต่ำสุด '+wallCurveMinRadius(S).toFixed(2)+' ม. · ความลึกโค้ง '+curve.sagitta.toFixed(2)+' ม. · แนวโค้งยาว '+curve.arcLength.toFixed(2)+' ม.';}
   document.getElementById('typeNote').textContent=typ().note;
 
   document.querySelectorAll('#oStSize .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.stSize));
@@ -3568,8 +3429,7 @@ function sync(){
   const gg=hasStore()?storeGeom(boothWallThickness(S)):null;
   const rows=[['ธุรกิจ',cat().n],
     ['ขนาด','กว้าง '+S.W+' × ลึก '+S.D+' × สูง '+S.H+' ม.'],
-    ['รูปแบบบูธ',typ().n+' · ผนัง '+(typ().walls.length?typ().walls.length+' ด้าน':'ไม่มี')+
-      (S.type==='photo360'?' · รัศมี R '+Number(S.wallRadius).toFixed(2)+' ม.':'')],
+    ['รูปแบบบูธ',typ().n+' · ผนัง '+(typ().walls.length?typ().walls.length+' ด้าน':'ไม่มี')],
     ['สีหลัก (CI)',S.primary.toUpperCase()],['สีรอง',S.secondary.toUpperCase()],['คู่สีแนะนำ',pair().n],
     ['ห้องเก็บของ',gg?stChosenLabel()+' · สูง '+gg.h.toFixed(2).replace(/0$/,'')+' ม. · '+
       ST_POS.find(x=>x.k===S.stPos).n+' · '+ST_DOOR.find(x=>x.k===S.stDoor).n+' · '+
@@ -3701,20 +3561,11 @@ document.getElementById('cPick2').oninput=e=>{S.secondary=e.target.value;S.secTo
 document.getElementById('cHex2').oninput=e=>{const v=e.target.value.trim();
   if(/^#?[0-9a-fA-F]{6}$/.test(v)){S.secondary=v[0]==='#'?v:'#'+v;S.secTouched=true;sync();}};
 ['dW','dD','dH'].forEach((id,i)=>{document.getElementById(id).oninput=e=>{
-  if(isFixedBoothType(S.type)){syncDims();return;}
   const v=parseFloat(e.target.value);if(isNaN(v))return;
   if(i===0)S.W=v;if(i===1)S.D=v;if(i===2)S.H=v;sync();};});
 document.getElementById('stW').oninput=e=>{S.stW=parseFloat(e.target.value)||1.2;sync();};
 document.getElementById('stD').oninput=e=>{S.stD=parseFloat(e.target.value)||1.2;sync();};
 document.getElementById('stHv').oninput=e=>{S.stHv=parseFloat(e.target.value)||2.4;sync();};
-const setPhoto360Radius=value=>{const radius=parseFloat(value);if(Number.isFinite(radius))S.wallRadius=radius;sync();};
-document.getElementById('photo360RadiusRange').oninput=e=>setPhoto360Radius(e.target.value);
-const photo360RadiusInput=document.getElementById('photo360Radius');
-photo360RadiusInput.oninput=e=>{
-  const radius=parseFloat(e.target.value),min=wallCurveMinRadius(S);
-  if(Number.isFinite(radius)&&radius>=min&&radius<=100)setPhoto360Radius(radius);
-};
-photo360RadiusInput.onchange=e=>setPhoto360Radius(e.target.value);
 document.addEventListener('keydown',e=>{
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))return;
   const mod=e.ctrlKey||e.metaKey;
