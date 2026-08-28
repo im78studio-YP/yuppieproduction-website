@@ -515,7 +515,7 @@ select:focus{border-color:var(--acc)}
         <div class="note">เมื่อเลือกไฟล์ ระบบจะอ่านขนาดจริงให้อัตโนมัติเป็นเมตร (กว้าง × ลึก × สูง ตามมาตรฐาน GLB) แสดงรูปแบบ 0.00 ม. และยังแก้ไขเองได้ ไฟล์จะถูกเก็บไว้ในเบราว์เซอร์เครื่องนี้</div>
       </div>
       <div class="catalog-status" id="myAssetStatus" role="status" aria-live="polite"></div>
-      <div class="note">คอมพิวเตอร์ลากการ์ด My Asset ไปวางบนพื้นในพื้นที่บูธได้ ส่วนมือถือให้กด “เพิ่ม” ก่อน แล้วลากอุปกรณ์บนภาพ 3D เพื่อจัดตำแหน่ง ระบบจะสแนประยะ 5 ซม. และตรวจขอบเขต/การชนให้ก่อนวาง</div>
+      <div class="note">ลากการ์ด My Asset ไปวางบนพื้นในพื้นที่บูธเพื่อกำหนดตำแหน่งเอง ระบบจะสแนประยะ 5 ซม. และตรวจขอบเขต/การชนให้ก่อนวาง</div>
       <div class="my-asset-list" id="myAssetList"></div>
     </div>
   </div>
@@ -1280,7 +1280,7 @@ function renderMyAssetList(){
   if(!CUSTOM_ASSETS.length){list.innerHTML='<div class="my-asset-empty">ยังไม่มีไฟล์ใน My Asset<br>เลือกไฟล์ .glb ด้านบนเพื่อเพิ่มอุปกรณ์ของลูกค้า</div>';return;}
   CUSTOM_ASSETS.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).forEach(item=>{
     const card=el('div','my-asset-card'),icon=el('div','my-asset-icon','GLB'),info=el('div'),actions=el('div','my-asset-actions');
-    card.draggable=true;card.dataset.catalogId=item.catalogId;card.title='คอมพิวเตอร์: ลาก '+item.name+' ไปวางบนพื้นบูธ · มือถือ: กดเพิ่มแล้วลากอุปกรณ์บนภาพ';card.setAttribute('aria-label','ลาก '+item.name+' ไปวางในพื้นที่บูธ หรือกดเพิ่มแล้วลากบนภาพ 3D');
+    card.draggable=true;card.dataset.catalogId=item.catalogId;card.title='ลาก '+item.name+' ไปวางบนพื้นบูธ หรือกดเพิ่ม';card.setAttribute('aria-label','ลาก '+item.name+' ไปวางในพื้นที่บูธ');
     info.innerHTML='<b title="'+esc(item.name)+'">'+esc(item.name)+'</b><small>'+formatMyAssetDimension(item.size.w)+' × '+formatMyAssetDimension(item.size.d)+' × '+formatMyAssetDimension(item.size.h)+' ม. · GLB</small>';
     const add=el('button','btn sm','เพิ่ม');add.type='button';add.title='เพิ่ม '+item.name+' ลงในบูธ';add.onclick=()=>addCatalogObject(item.catalogId);
     const del=el('button','btn sm','ลบ');del.type='button';del.title='ลบ '+item.name+' จาก My Asset';del.onclick=()=>deleteMyAsset(item.catalogId);
@@ -2153,12 +2153,10 @@ class ThreeBoothRenderer{
     this.onObjectPointerDown=e=>this.beginObjectDrag(e);
     this.onObjectPointerMove=e=>this.moveObjectDrag(e);
     this.onObjectPointerUp=e=>this.finishObjectDrag(e);
-    this.onObjectLostPointerCapture=e=>this.finishObjectDrag(e);
-    this.renderer.domElement.addEventListener('pointerdown',this.onObjectPointerDown,true);
+    this.renderer.domElement.addEventListener('pointerdown',this.onObjectPointerDown);
     this.renderer.domElement.addEventListener('pointermove',this.onObjectPointerMove);
     this.renderer.domElement.addEventListener('pointerup',this.onObjectPointerUp);
     this.renderer.domElement.addEventListener('pointercancel',this.onObjectPointerUp);
-    this.renderer.domElement.addEventListener('lostpointercapture',this.onObjectLostPointerCapture);
 
     this.scene.add(new THREE.HemisphereLight(0xe9f0ff,0x242017,1.15));
     const key=new THREE.DirectionalLight(0xffffff,1.8);
@@ -2184,10 +2182,9 @@ class ThreeBoothRenderer{
   dispose(){
     this.active=false;if(this.raf)cancelAnimationFrame(this.raf);this.raf=0;
     const canvas=this.renderer.domElement;
-    canvas.removeEventListener('pointerdown',this.onObjectPointerDown,true);
+    canvas.removeEventListener('pointerdown',this.onObjectPointerDown);
     canvas.removeEventListener('pointermove',this.onObjectPointerMove);canvas.removeEventListener('pointerup',this.onObjectPointerUp);
     canvas.removeEventListener('pointercancel',this.onObjectPointerUp);
-    canvas.removeEventListener('lostpointercapture',this.onObjectLostPointerCapture);
     this.resizeObserver.disconnect();this.controls.dispose();
     this.scene.remove(this.boothGroup);disposeThreeObject(this.boothGroup);this.renderer.dispose();
     this.fixtureTemplates.forEach(template=>{template.traverse(o=>{if(o.userData)delete o.userData.sharedAsset;});disposeThreeObject(template);});
@@ -2229,14 +2226,13 @@ class ThreeBoothRenderer{
     announceCatalog('เพิ่ม'+item.name+'ลงในบูธแล้ว','success');return true;
   }
   beginObjectDrag(event){
-    if(!this.objectMeshes.size||event.isPrimary===false)return;
-    if(event.pointerType!=='touch'&&event.button!==0)return;
+    if(event.button!==0||event.pointerType==='touch'||!this.objectMeshes.size)return;
     this.setRayFromEvent(event);
     const hits=this.raycaster.intersectObjects(Array.from(this.objectMeshes.values()),true);
     if(!hits.length){selectObject(null);return;}
     const id=hits[0].object.userData.objectId,obj=objectById(id),root=this.objectMeshes.get(id),point=this.floorPoint(event);
     if(!obj||!root||!point)return;
-    event.preventDefault();event.stopImmediatePropagation();selectObject(id);this.controls.enableRotate=false;
+    event.preventDefault();event.stopPropagation();selectObject(id);this.controls.enableRotate=false;
     this.renderer.domElement.setPointerCapture(event.pointerId);
     this.pointerDrag={pointerId:event.pointerId,id,before:objectSnapshot(),startX:obj.position.x,startZ:obj.position.z,
       offsetX:root.position.x-point.x,offsetZ:root.position.z-point.z,moved:false};
