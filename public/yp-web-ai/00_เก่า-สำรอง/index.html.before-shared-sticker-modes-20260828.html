@@ -156,8 +156,6 @@ select:focus{border-color:var(--acc)}
 .floor-sticker-lock{display:flex;align-items:center;gap:7px;margin-top:10px;color:var(--tx2);font-size:10.5px}.floor-sticker-lock input{accent-color:var(--acc)}
 .floor-sticker-rotate{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.floor-sticker-rotate .btn{padding:7px 4px}
 .floor-sticker-rotate .btn.on{border-color:var(--acc);background:rgba(224,168,60,.12);color:var(--acc2)}
-.sticker-mode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.sticker-mode-grid .btn{padding:8px 4px;line-height:1.25}
-.sticker-mode-grid .btn.on{border-color:var(--acc);background:rgba(224,168,60,.12);color:var(--acc2)}
 .floor-sticker-meta{margin-top:8px;padding:7px 9px;border-radius:7px;background:rgba(224,168,60,.055);color:var(--tx3);font-size:10px;line-height:1.5}
 
 .card{background:var(--bg2);border:1px solid var(--line);border-radius:10px}
@@ -1189,9 +1187,9 @@ const WHITE='#f2f3f5';
    alias so the proven controls, rules, pricing, and SVG renderer keep one data path. */
 const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
   wallCol:'white',wallMat:'paint',wallStickerFaces:[],wallStickers:{
-    back:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0},
-    left:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0},
-    right:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0}},pair:'wood',pairTouched:false,
+    back:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0},
+    left:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0},
+    right:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0}},pair:'wood',pairTouched:false,
   W:6,D:3,H:2.4,type:'inline',cornerSide:'right',
   stSize:'none',stW:1.2,stD:1.2,stHmode:2.4,stHv:2.4,stPos:'right',stDoor:'left',stDoorType:'swing',doorTouched:false,
   stSurf:'paint',stPaint:'wall',stFace:'front',doorOff:'start',logoScale:5,nameScale:5,
@@ -1200,7 +1198,6 @@ const BoothSpec={version:1,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
   carpetTextureMode:'builtin',carpetTextureUploads:[],carpetTextureActiveId:'',
   tileTextureData:null,tileTextureName:'',tileTextureId:0,tileTextureMode:'builtin',tileTextureUploads:[],tileTextureActiveId:'',
   floorStickerData:null,floorStickerName:'',floorStickerId:0,floorStickerAR:2,floorStickerW:2,floorStickerD:1,floorStickerLock:true,floorStickerRotation:0,
-  floorStickerMode:'single',floorStickerPatternSize:1.2,floorStickerOffsetX:0,floorStickerOffsetY:0,
   logoType:'diecut',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
   logo:null,logoAcc:null,logoAR:2.2,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,wallRadius:3.5,
   placementSnap:true};
@@ -1258,12 +1255,14 @@ function setDefaultFloorStickerSize(aspect){
   if(d>maxD){d=maxD;w=d*S.floorStickerAR;}
   S.floorStickerW=w;S.floorStickerD=d;normalizeFloorStickerSize(S);
 }
-function setFloorStickerRotation(value){S.floorStickerRotation=((Math.round(Number(value)/90)*90)%360+360)%360;normalizeFloorStickerSize(S);}
+function setFloorStickerRotation(value){
+  const next=((Math.round(Number(value)/90)*90)%360+360)%360,previous=((Number(S.floorStickerRotation)||0)%360+360)%360;
+  if(Math.abs(previous%180)!==Math.abs(next%180)&&S.floorStickerLock!==false){const oldW=S.floorStickerW;S.floorStickerW=S.floorStickerD;S.floorStickerD=oldW;}
+  S.floorStickerRotation=next;normalizeFloorStickerSize(S);
+}
 const WALL_STICKER_STEP=.05;
-const STICKER_MODES=[{k:'single',n:'ภาพเดียว'},{k:'cover',n:'เต็มพื้นที่'},{k:'repeat',n:'ต่อลาย'}];
-const stickerModeName=mode=>STICKER_MODES.find(item=>item.k===mode)?.n||'ภาพเดียว';
 const wallStickerRound=value=>Math.round(Number(value)/WALL_STICKER_STEP)*WALL_STICKER_STEP;
-function wallStickerDefault(){return{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0};}
+function wallStickerDefault(){return{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0};}
 function wallStickerFor(face,spec=S){
   if(!spec.wallStickers||typeof spec.wallStickers!=='object')spec.wallStickers={};
   if(!spec.wallStickers[face]||typeof spec.wallStickers[face]!=='object')spec.wallStickers[face]=wallStickerDefault();
@@ -1298,7 +1297,11 @@ function setDefaultWallStickerSize(face,aspect){
   let w=Math.min(maxW,2),h=w/sticker.ar;if(h>Math.min(maxH,1.5)){h=Math.min(maxH,1.5);w=h*sticker.ar;}
   sticker.w=w;sticker.h=h;normalizeWallStickerSize(face);
 }
-function setWallStickerRotation(face,value){const sticker=wallStickerFor(face);sticker.rotation=((Math.round(Number(value)/90)*90)%360+360)%360;normalizeWallStickerSize(face);}
+function setWallStickerRotation(face,value){
+  const sticker=wallStickerFor(face),next=((Math.round(Number(value)/90)*90)%360+360)%360,previous=((Number(sticker.rotation)||0)%360+360)%360;
+  if(Math.abs(previous%180)!==Math.abs(next%180)&&sticker.lock!==false){const oldW=sticker.w;sticker.w=sticker.h;sticker.h=oldW;}
+  sticker.rotation=next;normalizeWallStickerSize(face);
+}
 function wallStickerArea(face,spec=S){
   const sticker=wallStickerFor(face,spec);return sticker.data?Math.max(0,Number(sticker.w)||0)*Math.max(0,Number(sticker.h)||0):0;
 }
@@ -1734,8 +1737,7 @@ function boothGeometryPrompt(){
     const sticker=wallStickerFor(face),name=wallName(face);if(!sticker.data)return'- สติ๊กเกอร์'+name+': เลือกผิวสติ๊กเกอร์แล้วแต่ยังไม่มีไฟล์ภาพ ห้ามสร้างกราฟิกขึ้นเอง';
     const widthM=Math.min(wallFaceLength(S,face),Math.max(.1,promptSafeNumber(sticker.w))),heightM=Math.min(height,Math.max(.1,promptSafeNumber(sticker.h)));
     const horizontal=face==='back'?'กึ่งกลางแนวผนัง/แกน X':'กึ่งกลางแนวลึก/แกน Z';
-    const display=sticker.mode==='repeat'?'ต่อลายโดยรักษาสัดส่วนเดิม · ขนาดลาย '+promptNumber(sticker.patternSize)+' ม.':sticker.mode==='cover'?'เต็มพื้นที่แบบรักษาสัดส่วนและตัดส่วนเกิน':'ภาพเดียวแบบรักษาสัดส่วน';
-    return'- สติ๊กเกอร์'+name+' ชื่อ '+(sticker.name||'ไฟล์กราฟิก')+': ขนาด '+promptNumber(widthM)+' × '+promptNumber(heightM)+' ม. · '+display+' · เลื่อนแนวนอน '+promptNumber(sticker.offsetX)+' ม. / แนวตั้ง '+promptNumber(sticker.offsetY)+' ม. · หมุนภาพ '+Number(sticker.rotation||0)+'° · วาง'+horizontal+'และกึ่งกลางแนวสูง Y · '+(face==='back'&&curve?'แนบโค้งตามผนัง R โดยรักษาความยาวภาพตามแนวโค้ง':'แนบระนาบเดียวกับผิวผนัง')+' · ห้ามบิดหรือยืดสัดส่วนภาพ และห้ามย้ายกรอบพื้นที่ติด';
+    return'- สติ๊กเกอร์'+name+' ชื่อ '+(sticker.name||'ไฟล์กราฟิก')+': ขนาด '+promptNumber(widthM)+' × '+promptNumber(heightM)+' ม. · หมุนภาพ '+Number(sticker.rotation||0)+'° · วาง'+horizontal+'และกึ่งกลางแนวสูง Y · '+(face==='back'&&curve?'แนบโค้งตามผนัง R โดยรักษาความยาวภาพตามแนวโค้ง':'แนบระนาบเดียวกับผิวผนัง')+' · ห้ามปูซ้ำ ห้ามขยายเต็มผนัง และห้ามย้ายตำแหน่ง';
   });
   const floorLabel=(()=>{try{return floorName();}catch(e){return S.floor||'พื้นตามแบบ';}})();
   const activeCarpetUpload=activeCarpetTexture(S);
@@ -1746,7 +1748,7 @@ function boothGeometryPrompt(){
     uploadedFloorTexture?'ใช้ Texture ที่ลูกค้าอัปโหลดชื่อ '+(uploadedFloorTextureName||'ไฟล์พื้น')+' ปูต่อเนื่องเต็มพื้นที่':'ใช้พื้นผิวมาตรฐานของโปรแกรม ปูต่อเนื่องเต็มพื้นที่';
   const stickerW=Math.min(width,Math.max(.1,promptSafeNumber(S.floorStickerW))),stickerD=Math.min(depth,Math.max(.1,promptSafeNumber(S.floorStickerD)));
   const stickerGraphic=S.floor==='sticker'?(S.floorStickerData?
-    'ภาพสติ๊กเกอร์พื้นชื่อ '+(S.floorStickerName||'ไฟล์กราฟิก')+' เป็นสี่เหลี่ยมขนาดยาวตามแกน X '+promptNumber(stickerW)+' ม. × ลึกตามแกน Z '+promptNumber(stickerD)+' ม. · วางกึ่งกลางพื้นที่ที่ X='+promptNumber((width-stickerW)/2)+' ถึง '+promptNumber((width+stickerW)/2)+' ม. และ Z='+promptNumber((depth-stickerD)/2)+' ถึง '+promptNumber((depth+stickerD)/2)+' ม. · รูปแบบ '+stickerModeName(S.floorStickerMode)+(S.floorStickerMode==='repeat'?' ขนาดลาย '+promptNumber(S.floorStickerPatternSize)+' ม.':'')+' · เลื่อน X '+promptNumber(S.floorStickerOffsetX)+' ม. / Z '+promptNumber(S.floorStickerOffsetY)+' ม. · หมุนภาพ '+Number(S.floorStickerRotation||0)+' องศา · ห้ามบิดหรือยืดสัดส่วนภาพ และห้ามย้ายกรอบพื้นที่ติดออกจากกึ่งกลาง':
+    'ภาพสติ๊กเกอร์พื้นชื่อ '+(S.floorStickerName||'ไฟล์กราฟิก')+' เป็นสี่เหลี่ยมขนาดยาวตามแกน X '+promptNumber(stickerW)+' ม. × ลึกตามแกน Z '+promptNumber(stickerD)+' ม. · วางกึ่งกลางพื้นที่ที่ X='+promptNumber((width-stickerW)/2)+' ถึง '+promptNumber((width+stickerW)/2)+' ม. และ Z='+promptNumber((depth-stickerD)/2)+' ถึง '+promptNumber((depth+stickerD)/2)+' ม. · หมุนภาพ '+Number(S.floorStickerRotation||0)+' องศา · ห้ามปูซ้ำ ห้ามขยายเต็มพื้น และห้ามย้ายออกจากกึ่งกลาง':
     'เลือกสติ๊กเกอร์พื้นแต่ยังไม่มีไฟล์ภาพ ห้ามสร้างกราฟิกพื้นขึ้นเอง') :'';
   const innerStartX=walls.includes('left')?thickness:0,innerEndX=walls.includes('right')?Math.max(innerStartX,width-thickness):width;
   const innerStartZ=curve?curve.sagitta+thickness/2:(walls.includes('back')?thickness:0);
@@ -2097,7 +2099,7 @@ function floorName(){const f=floorDef();
   const activeUpload=activeTileTexture(S);
   if(f.k==='tile'&&activeUpload)return'กระเบื้องยาง ลายอัปโหลด '+(activeUpload.name||'ของลูกค้า');
   if(f.k==='tile')return'กระเบื้องยาง ลาย'+TILES.find(t=>t.k===S.tile).n;
-  if(f.k==='sticker')return S.floorStickerData?'สติ๊กเกอร์พื้น '+(S.floorStickerName||'ภาพอัปโหลด')+' · '+Number(S.floorStickerW).toFixed(2)+' × '+Number(S.floorStickerD).toFixed(2)+' ม. · '+stickerModeName(S.floorStickerMode)+' · หมุน '+Number(S.floorStickerRotation||0)+'°':'สติ๊กเกอร์พื้น · รออัปโหลดภาพ';
+  if(f.k==='sticker')return S.floorStickerData?'สติ๊กเกอร์พื้น '+(S.floorStickerName||'ภาพอัปโหลด')+' · '+Number(S.floorStickerW).toFixed(2)+' × '+Number(S.floorStickerD).toFixed(2)+' ม. · หมุน '+Number(S.floorStickerRotation||0)+'°':'สติ๊กเกอร์พื้น · รออัปโหลดภาพ';
   return f.n;}
 /* ห้องตั้งอยู่บนพื้นที่ยก จึงต้องหักความสูงพื้นออก ไม่งั้นยอดห้องโผล่พ้นผนัง */
 const maxStH=()=>S.H-(S.raise/100);
@@ -2275,25 +2277,8 @@ function build(){
 }
 function wallStickerSummary(){
   const rows=activeWallStickerFaces().map(face=>{const def=WALL_FACES.find(item=>item.k===face),sticker=wallStickerFor(face);
-    return def.n+': '+(sticker.data?(Number(sticker.w).toFixed(2)+' × '+Number(sticker.h).toFixed(2)+' ม. · '+stickerModeName(sticker.mode)+' · หมุน '+Number(sticker.rotation||0)+'°'):'รออัปโหลดภาพ');});
+    return def.n+': '+(sticker.data?(Number(sticker.w).toFixed(2)+' × '+Number(sticker.h).toFixed(2)+' ม. · หมุน '+Number(sticker.rotation||0)+'°'):'รออัปโหลดภาพ');});
   return rows.join(' · ');
-}
-function appendStickerDisplayControls(card,values,commit,limits={}){
-  card.appendChild(el('div','lbl','รูปแบบการแสดงภาพ'));
-  const modes=el('div','sticker-mode-grid');STICKER_MODES.forEach(mode=>{const button=el('button','btn sm'+(values.mode===mode.k?' on':''),mode.n);button.type='button';
-    button.onclick=()=>{commit('mode',mode.k,true);sync();};modes.appendChild(button);});card.appendChild(modes);
-  const controls=el('div','floor-sticker-size'),maxX=Math.max(.1,Number(limits.x)||1),maxY=Math.max(.1,Number(limits.y)||1);
-  const live=(key,value)=>{commit(key,Number(value),true);if(threeRenderer)threeRenderer.currentKey='';render();updatePromptPreview();};
-  const row=(key,label,min,max,step)=>{const wrap=el('div','floor-sticker-control'),lab=el('label',null,label),range=document.createElement('input'),number=document.createElement('input');
-    range.type='range';range.min=String(min);range.max=String(max);range.step=String(step);range.value=values[key];range.setAttribute('aria-label',label);
-    number.type='number';number.min=String(min);number.max=String(max);number.step=String(step);number.inputMode='decimal';number.value=Number(values[key]).toFixed(2);number.setAttribute('aria-label','ค่า'+label);
-    range.oninput=()=>{number.value=Number(range.value).toFixed(2);live(key,range.value);};range.onchange=()=>sync();number.onchange=()=>{commit(key,Number(number.value),true);sync();};
-    wrap.append(lab,range,number,el('em',null,'ม.'));return wrap;};
-  if(values.mode==='repeat')controls.appendChild(row('patternSize','ขนาดลาย',.1,Math.max(maxX,maxY)*2,.05));
-  controls.append(row('offsetX',limits.xLabel||'เลื่อนแนวนอน',-maxX/2,maxX/2,.05),row('offsetY',limits.yLabel||'เลื่อนแนวตั้ง',-maxY/2,maxY/2,.05));
-  card.appendChild(controls);
-  card.appendChild(el('div','note',values.mode==='repeat'?'ขนาดลายใช้ค่าเดียวและรักษาสัดส่วนภาพเดิม จึงไม่ทำให้อิฐหรือแพตเทิร์นบิดเบี้ยว':
-    values.mode==='cover'?'ขยายภาพแบบรักษาสัดส่วนแล้วตัดส่วนเกินให้เต็มพื้นที่ โดยไม่ยืดภาพ':'แสดงภาพเดียวแบบรักษาสัดส่วนและวางกึ่งกลางพื้นที่'));
 }
 function buildFloorSub(){
   const box=document.getElementById('oFloorSub');box.innerHTML='';
@@ -2396,7 +2381,7 @@ function buildFloorSub(){
       const sizeBox=el('div','floor-sticker-size'),controls={};
       const refresh=()=>{if(!controls.w)return;controls.w.range.value=S.floorStickerW;controls.w.number.value=Number(S.floorStickerW).toFixed(2);
         controls.d.range.value=S.floorStickerD;controls.d.number.value=Number(S.floorStickerD).toFixed(2);
-        meta.textContent='วางกึ่งกลางพื้น · '+stickerModeName(S.floorStickerMode)+' · ขนาด '+Number(S.floorStickerW).toFixed(2)+' × '+Number(S.floorStickerD).toFixed(2)+' ม. · หมุน '+Number(S.floorStickerRotation||0)+'° · พื้นที่ '+floorStickerArea().toFixed(2)+' ตร.ม.';};
+        meta.textContent='วางกึ่งกลางพื้น · ขนาด '+Number(S.floorStickerW).toFixed(2)+' × '+Number(S.floorStickerD).toFixed(2)+' ม. · หมุน '+Number(S.floorStickerRotation||0)+'° · พื้นที่ '+floorStickerArea().toFixed(2)+' ตร.ม.';};
       const live=(axis,value)=>{setFloorStickerDimension(axis,value);refresh();render();document.getElementById('price').textContent='฿'+fmt(priceTotal());};
       const makeControl=(axis,label,max)=>{const row=el('div','floor-sticker-control'),lab=el('label',null,label);
         const range=document.createElement('input');range.type='range';range.min='.1';range.max=String(max);range.step=String(FLOOR_STICKER_STEP);range.value=axis==='w'?S.floorStickerW:S.floorStickerD;range.setAttribute('aria-label',label+'ของสติ๊กเกอร์พื้น');
@@ -2404,9 +2389,6 @@ function buildFloorSub(){
         range.oninput=()=>live(axis,range.value);range.onchange=()=>sync();number.onchange=()=>{setFloorStickerDimension(axis,number.value);sync();};
         row.append(lab,range,number,el('em',null,'ม.'));controls[axis]={range,number};return row;};
       sizeBox.append(makeControl('w','ความยาว',S.W),makeControl('d','ความลึก',S.D));card.appendChild(sizeBox);
-      appendStickerDisplayControls(card,{mode:S.floorStickerMode,patternSize:S.floorStickerPatternSize,offsetX:S.floorStickerOffsetX,offsetY:S.floorStickerOffsetY},
-        (key,value,touch)=>{const map={mode:'floorStickerMode',patternSize:'floorStickerPatternSize',offsetX:'floorStickerOffsetX',offsetY:'floorStickerOffsetY'};S[map[key]]=value;if(touch)S.floorStickerId=(S.floorStickerId||0)+1;},
-        {x:S.floorStickerW,y:S.floorStickerD,xLabel:'เลื่อนซ้าย–ขวา',yLabel:'เลื่อนหน้า–หลัง'});
       card.appendChild(el('div','lbl','หมุนภาพ'));
       const rotate=el('div','floor-sticker-rotate');[0,90,180,270].forEach(degree=>{const button=el('button','btn sm'+(Number(S.floorStickerRotation||0)===degree?' on':''),degree+'°');button.type='button';
         button.onclick=()=>{setFloorStickerRotation(degree);S.floorStickerId=(S.floorStickerId||0)+1;sync();};rotate.appendChild(button);});card.appendChild(rotate);
@@ -2444,7 +2426,7 @@ function buildWallStickerSettings(){
       const refresh=()=>{const current=wallStickerFor(face);if(!controls.w)return;
         controls.w.range.value=current.w;controls.w.number.value=Number(current.w).toFixed(2);
         controls.h.range.value=current.h;controls.h.number.value=Number(current.h).toFixed(2);
-        meta.textContent='วางกึ่งกลาง'+faceDef.n+' · '+stickerModeName(current.mode)+' · ขนาด '+Number(current.w).toFixed(2)+' × '+Number(current.h).toFixed(2)+' ม. · หมุน '+Number(current.rotation||0)+'° · พื้นที่ '+wallStickerArea(face).toFixed(2)+' ตร.ม.';};
+        meta.textContent='วางกึ่งกลาง'+faceDef.n+' · ขนาด '+Number(current.w).toFixed(2)+' × '+Number(current.h).toFixed(2)+' ม. · หมุน '+Number(current.rotation||0)+'° · พื้นที่ '+wallStickerArea(face).toFixed(2)+' ตร.ม.';};
       const live=(axis,value)=>{setWallStickerDimension(face,axis,value);wallStickerFor(face).id++;refresh();if(threeRenderer)threeRenderer.currentKey='';render();document.getElementById('price').textContent='฿'+fmt(priceTotal());updatePromptPreview();};
       const makeControl=(axis,label,max)=>{const row=el('div','floor-sticker-control'),lab=el('label',null,label);
         const range=document.createElement('input');range.type='range';range.min='.1';range.max=String(max);range.step=String(WALL_STICKER_STEP);range.value=axis==='w'?sticker.w:sticker.h;range.setAttribute('aria-label',label+'ของสติ๊กเกอร์'+faceDef.n);
@@ -2452,9 +2434,6 @@ function buildWallStickerSettings(){
         range.oninput=()=>live(axis,range.value);range.onchange=()=>sync();number.onchange=()=>{setWallStickerDimension(face,axis,number.value);wallStickerFor(face).id++;sync();};
         row.append(lab,range,number,el('em',null,'ม.'));controls[axis]={range,number};return row;};
       sizeBox.append(makeControl('w','ความยาว',wallFaceLength(S,face)),makeControl('h','ความสูง',S.H));card.appendChild(sizeBox);
-      appendStickerDisplayControls(card,{mode:sticker.mode,patternSize:sticker.patternSize,offsetX:sticker.offsetX,offsetY:sticker.offsetY},
-        (key,value,touch)=>{const target=wallStickerFor(face);target[key]=value;if(touch)target.id=(target.id||0)+1;},
-        {x:sticker.w,y:sticker.h,xLabel:'เลื่อนแนวนอน',yLabel:'เลื่อนแนวตั้ง'});
       card.appendChild(el('div','lbl','หมุนภาพ'));
       const rotate=el('div','floor-sticker-rotate');[0,90,180,270].forEach(degree=>{const button=el('button','btn sm'+(Number(sticker.rotation||0)===degree?' on':''),degree+'°');button.type='button';
         button.onclick=()=>{setWallStickerRotation(face,degree);wallStickerFor(face).id++;sync();};rotate.appendChild(button);});card.appendChild(rotate);
@@ -2726,8 +2705,7 @@ class ThreeBoothRenderer{
   }
   visualKey(spec){
     const logoKey=spec.logo?spec.logo.length+':'+spec.logo.slice(-32):'';
-    const wallStickers=WALL_FACES.map(({k})=>{const sticker=wallStickerFor(k,spec);return[k,sticker.id||0,sticker.w,sticker.h,sticker.rotation||0,
-      sticker.mode,sticker.patternSize,sticker.offsetX,sticker.offsetY,!!sticker.data];});
+    const wallStickers=WALL_FACES.map(({k})=>{const sticker=wallStickerFor(k,spec);return[k,sticker.id||0,sticker.w,sticker.h,sticker.rotation||0,!!sticker.data];});
     const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.position.x,o.position.y,o.position.z,o.rotationY,
       o.size.w,o.size.d,o.size.h,o.unitPrice]);
     return JSON.stringify([spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
@@ -2736,8 +2714,7 @@ class ThreeBoothRenderer{
       spec.lightWall,spec.lightWatts,spec.lightAdj,spec.brand,logoKey,spec.logoType,spec.lockup,spec.logoPos,
       spec.logoScale,spec.nameScale,spec.sideLogo,spec.sidePos,spec.wallRadius,spec.carpetTextureId||0,
       spec.carpetTextureMode||'builtin',spec.carpetTextureActiveId||'',spec.tileTextureId||0,
-      spec.tileTextureMode||'builtin',spec.tileTextureActiveId||'',spec.floorStickerId||0,spec.floorStickerW,spec.floorStickerD,spec.floorStickerRotation||0,
-      spec.floorStickerMode,spec.floorStickerPatternSize,spec.floorStickerOffsetX,spec.floorStickerOffsetY,objects]);
+      spec.tileTextureMode||'builtin',spec.tileTextureActiveId||'',spec.floorStickerId||0,spec.floorStickerW,spec.floorStickerD,spec.floorStickerRotation||0,objects]);
   }
   update(spec){
     const key=this.visualKey(spec);if(key===this.currentKey)return;
@@ -2790,26 +2767,11 @@ class ThreeBoothRenderer{
       image.onerror=()=>{this.wallStickerErrors.add(source);this.wallStickerLoads.delete(source);resolve(null);};image.src=source;});
     this.wallStickerLoads.set(source,load);return null;
   }
-  artworkTexture(image,frameW,frameH,settings={}){
-    const T=this.THREE,w=Math.max(.1,Number(frameW)||1),h=Math.max(.1,Number(frameH)||1),ratio=Math.max(.1,Math.min(10,w/h)),maxSide=1024;
-    const canvas=document.createElement('canvas');canvas.width=ratio>=1?maxSide:Math.max(128,Math.round(maxSide*ratio));canvas.height=ratio>=1?Math.max(128,Math.round(maxSide/ratio)):maxSide;
-    const ctx=canvas.getContext('2d'),iw=Math.max(1,image.naturalWidth||image.width||1),ih=Math.max(1,image.naturalHeight||image.height||1),rotation=Number(settings.rotation)||0;
-    const pxX=canvas.width/w,pxY=canvas.height/h,offsetX=(Number(settings.offsetX)||0)*pxX,offsetY=(Number(settings.offsetY)||0)*pxY,mode=STICKER_MODES.some(item=>item.k===settings.mode)?settings.mode:'single';
-    ctx.clearRect(0,0,canvas.width,canvas.height);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-    if(mode==='repeat'){
-      const tileW=Math.max(.05,Number(settings.patternSize)||1.2)*pxX,tileH=tileW/(iw/ih),pattern=ctx.createPattern(image,'repeat');
-      if(pattern){const matrix=new DOMMatrix().translate(canvas.width/2+offsetX,canvas.height/2+offsetY).rotate(rotation).scale(tileW/iw,tileH/ih).translate(-iw/2,-ih/2);
-        if(pattern.setTransform)pattern.setTransform(matrix);ctx.fillStyle=pattern;ctx.fillRect(0,0,canvas.width,canvas.height);}
-    }else{
-      const quarter=Math.abs(rotation%180)===90,rotW=quarter?ih:iw,rotH=quarter?iw:ih,scale=mode==='cover'?Math.max(canvas.width/rotW,canvas.height/rotH):Math.min(canvas.width/rotW,canvas.height/rotH);
-      ctx.save();ctx.translate(canvas.width/2+offsetX,canvas.height/2+offsetY);ctx.rotate(rotation*Math.PI/180);ctx.drawImage(image,-iw*scale/2,-ih*scale/2,iw*scale,ih*scale);ctx.restore();
-    }
-    const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.wrapS=texture.wrapT=T.ClampToEdgeWrapping;
-    texture.anisotropy=Math.min(8,this.renderer.capabilities.getMaxAnisotropy());texture.needsUpdate=true;return texture;
-  }
-  wallStickerMaterial(source,frameW,frameH,settings={}){
+  wallStickerMaterial(source,rotation=0){
     const image=this.wallStickerImageSource(source);if(!image)return null;
-    const T=this.THREE,texture=this.artworkTexture(image,frameW,frameH,settings);
+    const T=this.THREE,texture=new T.Texture(image);texture.colorSpace=T.SRGBColorSpace;texture.wrapS=texture.wrapT=T.ClampToEdgeWrapping;
+    texture.center.set(.5,.5);texture.rotation=T.MathUtils.degToRad(Number(rotation)||0);
+    texture.anisotropy=Math.min(8,this.renderer.capabilities.getMaxAnisotropy());texture.needsUpdate=true;
     return new T.MeshStandardMaterial({color:0xffffff,map:texture,roughness:.52,metalness:0,transparent:true,alphaTest:.015,side:T.DoubleSide});
   }
   seamlessFloorCanvas(image){
@@ -2898,8 +2860,7 @@ class ThreeBoothRenderer{
   addFloorSticker(group,spec,floorY){
     if(spec.floor!=='sticker'||!spec.floorStickerData)return null;
     const image=this.floorImageSource(spec.floorStickerData);if(!image)return null;
-    const T=this.THREE,texture=this.artworkTexture(image,spec.floorStickerW,spec.floorStickerD,{mode:spec.floorStickerMode,patternSize:spec.floorStickerPatternSize,
-      offsetX:spec.floorStickerOffsetX,offsetY:spec.floorStickerOffsetY,rotation:spec.floorStickerRotation}),material=new T.MeshStandardMaterial({
+    const T=this.THREE,texture=this.floorTexture(image,[1,1],T.MathUtils.degToRad(Number(spec.floorStickerRotation)||0)),material=new T.MeshStandardMaterial({
       color:0xffffff,map:texture,roughness:.58,metalness:0,transparent:true,alphaTest:.015,side:T.DoubleSide});
     const geometry=new T.PlaneGeometry(Math.max(.1,spec.floorStickerW),Math.max(.1,spec.floorStickerD));
     const mesh=new T.Mesh(geometry,material);mesh.rotation.x=-Math.PI/2;mesh.position.set(spec.W/2,floorY+.002,spec.D/2);
@@ -2909,7 +2870,7 @@ class ThreeBoothRenderer{
     return this.surfaceMaterial('paint',palette().wall,spec.secondary,[Math.max(1,length/1.2),Math.max(1,spec.H/1.2)]);
   }
   curvedWallSticker(group,spec,sticker,t,floorY){
-    const info=wallCurveInfo(spec),material=this.wallStickerMaterial(sticker.data,sticker.w,sticker.h,sticker);if(!info||!material)return null;
+    const info=wallCurveInfo(spec),material=this.wallStickerMaterial(sticker.data,sticker.rotation);if(!info||!material)return null;
     const T=this.THREE,arcWidth=Math.min(info.arcLength,Math.max(.1,Number(sticker.w)||.1)),height=Math.min(spec.H,Math.max(.1,Number(sticker.h)||.1));
     const halfAngle=Math.min(arcWidth/(2*info.radius),Math.max(.001,info.arcAngle/2-.002)),segments=Math.max(24,Math.min(96,Math.ceil(arcWidth*24)));
     const positions=[],uvs=[],indices=[],rings=[],bottom=floorY+(spec.H-height)/2,top=bottom+height;
@@ -2924,7 +2885,7 @@ class ThreeBoothRenderer{
     const walls=typ().walls;
     walls.forEach(face=>{if(wallFinishKind(spec,face)!=='sticker')return;const sticker=wallStickerFor(face,spec);if(!sticker.data)return;
       if(face==='back'&&isCurvedWallType(spec)){this.curvedWallSticker(group,spec,sticker,t,floorY);return;}
-      const material=this.wallStickerMaterial(sticker.data,sticker.w,sticker.h,sticker);if(!material)return;
+      const material=this.wallStickerMaterial(sticker.data,sticker.rotation);if(!material)return;
       const width=Math.min(wallFaceLength(spec,face),Math.max(.1,Number(sticker.w)||.1)),height=Math.min(spec.H,Math.max(.1,Number(sticker.h)||.1));
       const mesh=new this.THREE.Mesh(new this.THREE.PlaneGeometry(width,height),material);mesh.name='wall-sticker-'+face;mesh.castShadow=false;mesh.receiveShadow=true;mesh.renderOrder=2;
       if(face==='back'){mesh.position.set(spec.W/2,spec.H/2,t+.003);}
@@ -3548,15 +3509,10 @@ function planSVG(){
        fill="${floorColor()}" opacity=".35" stroke="#333a44" stroke-width="1"/>`;
   if(S.floor==='sticker'&&S.floorStickerData){
     const sw=Math.min(W,Math.max(.1,S.floorStickerW))*sc,sd=Math.min(D,Math.max(.1,S.floorStickerD))*sc;
-    const sx=ox+(W*sc-sw)/2,sy=oy+(D*sc-sd)/2,cx=sx+sw/2,cy=sy+sd/2,rotation=Number(S.floorStickerRotation||0),mode=S.floorStickerMode||'single';
-    const dx=(Number(S.floorStickerOffsetX)||0)*sc,dy=(Number(S.floorStickerOffsetY)||0)*sc;
-    let artwork='';
-    if(mode==='repeat'){
-      const pw=Math.max(.1,Number(S.floorStickerPatternSize)||1.2)*sc,ph=pw/Math.max(.01,Number(S.floorStickerAR)||1);
-      artwork=`<defs><pattern id="floor-sticker-pattern" patternUnits="userSpaceOnUse" x="${(cx+dx).toFixed(1)}" y="${(cy+dy).toFixed(1)}" width="${pw.toFixed(1)}" height="${ph.toFixed(1)}" patternTransform="rotate(${rotation} ${cx.toFixed(1)} ${cy.toFixed(1)})"><image href="${S.floorStickerData}" width="${pw.toFixed(1)}" height="${ph.toFixed(1)}" preserveAspectRatio="none"/></pattern></defs><rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sd.toFixed(1)}" fill="url(#floor-sticker-pattern)"/>`;
-    }else artwork=`<image href="${S.floorStickerData}" x="${(sx+dx).toFixed(1)}" y="${(sy+dy).toFixed(1)}" width="${sw.toFixed(1)}" height="${sd.toFixed(1)}" preserveAspectRatio="xMidYMid ${mode==='cover'?'slice':'meet'}" transform="rotate(${rotation} ${(cx+dx).toFixed(1)} ${(cy+dy).toFixed(1)})"/>`;
+    const sx=ox+(W*sc-sw)/2,sy=oy+(D*sc-sd)/2,cx=sx+sw/2,cy=sy+sd/2,rotation=Number(S.floorStickerRotation||0);
+    const quarter=Math.abs(rotation%180)===90,imageW=quarter?sd:sw,imageH=quarter?sw:sd,imageX=cx-imageW/2,imageY=cy-imageH/2;
     g+=`<defs><clipPath id="floor-sticker-clip"><rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sd.toFixed(1)}"/></clipPath></defs>
-      <g clip-path="url(#floor-sticker-clip)">${artwork}</g>
+      <g clip-path="url(#floor-sticker-clip)"><image href="${S.floorStickerData}" x="${imageX.toFixed(1)}" y="${imageY.toFixed(1)}" width="${imageW.toFixed(1)}" height="${imageH.toFixed(1)}" preserveAspectRatio="none" transform="rotate(${rotation} ${cx.toFixed(1)} ${cy.toFixed(1)})"/></g>
       <rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sd.toFixed(1)}" fill="none" stroke="#e0a83c" stroke-width="1"/>`;
   }
   const wall=(x,y,w,d)=>{const p=P(x,y);
@@ -3972,10 +3928,6 @@ function sync(){
   S.nameScale=Math.max(0,Math.min(10,Number.isFinite(Number(S.nameScale))?Math.round(Number(S.nameScale)):5));
   if(typeof S.floorStickerLock!=='boolean')S.floorStickerLock=true;
   S.floorStickerRotation=((Math.round((Number(S.floorStickerRotation)||0)/90)*90)%360+360)%360;
-  if(!STICKER_MODES.some(item=>item.k===S.floorStickerMode))S.floorStickerMode='single';
-  S.floorStickerPatternSize=clampNumber(Number(S.floorStickerPatternSize)||1.2,.1,Math.max(S.W,S.D)*2);
-  S.floorStickerOffsetX=clampNumber(Number(S.floorStickerOffsetX)||0,-S.W/2,S.W/2);
-  S.floorStickerOffsetY=clampNumber(Number(S.floorStickerOffsetY)||0,-S.D/2,S.D/2);
   normalizeFloorStickerSize(S);
   S.promptFidelity=promptFidelityValue(S.promptFidelity);
   if(typeof S.placementSnap!=='boolean')S.placementSnap=true;
@@ -3984,10 +3936,6 @@ function sync(){
   WALL_FACES.forEach(({k})=>{const sticker=wallStickerFor(k);
     if(typeof sticker.lock!=='boolean')sticker.lock=true;
     sticker.rotation=((Math.round((Number(sticker.rotation)||0)/90)*90)%360+360)%360;
-    if(!STICKER_MODES.some(item=>item.k===sticker.mode))sticker.mode='cover';
-    sticker.patternSize=clampNumber(Number(sticker.patternSize)||1.2,.1,Math.max(wallFaceLength(S,k),S.H)*2);
-    sticker.offsetX=clampNumber(Number(sticker.offsetX)||0,-wallFaceLength(S,k)/2,wallFaceLength(S,k)/2);
-    sticker.offsetY=clampNumber(Number(sticker.offsetY)||0,-S.H/2,S.H/2);
     normalizeWallStickerSize(k);});
   if(S.wallMat==='sticker'){
     S.wallStickerFaces=[...new Set([...S.wallStickerFaces,...typ().walls])];S.wallMat='paint';
