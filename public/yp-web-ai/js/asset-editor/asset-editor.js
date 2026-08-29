@@ -9,6 +9,18 @@ if(mount){
       </div>
       <div class="asset-editor-empty" data-ae-empty><b>เลือก Asset ในภาพ 3D ก่อน</b>เมื่อเลือกแล้ว สามารถปรับขนาด การวาง พื้นผิว และคำสั่งหลักได้จากเมนูนี้</div>
       <div class="asset-editor-body" data-ae-body hidden>
+        <section class="asset-editor-card asset-editor-selection-card">
+          <div class="asset-editor-selection-head"><h4>การเลือกและจัดกลุ่ม</h4><b data-ae-selection-count>เลือก 1 ชิ้น</b></div>
+          <button class="btn sm asset-editor-multi" data-ae-action="multi-select" type="button">เลือกหลายชิ้น</button>
+          <div class="asset-editor-note">คอมพิวเตอร์ใช้ Shift/Ctrl + คลิกได้ · มือถือเปิดโหมดนี้แล้วแตะ Asset ทีละชิ้น · สีทองคือชิ้นอ้างอิงหลัก</div>
+          <div class="asset-editor-subtitle">Align โดยยึดชิ้นอ้างอิงหลัก</div>
+          <div class="asset-editor-actions asset-editor-align">
+            <button class="btn sm" data-ae-align="horizontal" type="button">กึ่งกลางแนวนอน</button><button class="btn sm" data-ae-align="vertical" type="button">กึ่งกลางแนวตั้ง</button>
+            <button class="btn sm" data-ae-align="top" type="button">เสมอบน</button><button class="btn sm" data-ae-align="bottom" type="button">เสมอล่าง</button>
+            <button class="btn sm" data-ae-align="front" type="button">เสมอหน้า</button><button class="btn sm" data-ae-align="back" type="button">เสมอหลัง</button>
+          </div>
+          <div class="asset-editor-actions" style="margin-top:7px"><button class="btn sm" data-ae-action="group" type="button">Group</button><button class="btn sm" data-ae-action="ungroup" type="button">Ungroup</button></div>
+        </section>
         <section class="asset-editor-card">
           <h4>ข้อมูล Asset</h4>
           <input class="asset-editor-name" data-ae-name type="text" maxlength="60" aria-label="ชื่อ Asset">
@@ -66,8 +78,12 @@ if(mount){
   function syncEditor(){
     const api=bridge(),state=api?.getState?.()||{selection:null},selection=state.selection;
     $('[data-ae-empty]').hidden=!!selection;$('[data-ae-body]').hidden=!selection;
-    const badge=$('[data-ae-lock-state]');badge.textContent=selection?(selection.locked?'Locked':'พร้อมแก้ไข'):'ยังไม่เลือก';badge.classList.toggle('is-locked',!!selection?.locked);
+    const badge=$('[data-ae-lock-state]');badge.textContent=selection?(state.selectionCount>1?'เลือก '+state.selectionCount+' ชิ้น':(selection.locked?'Locked':'พร้อมแก้ไข')):'ยังไม่เลือก';badge.classList.toggle('is-locked',!!selection?.locked);
     if(!selection)return;
+    $('[data-ae-selection-count]').textContent='เลือก '+state.selectionCount+' ชิ้น';
+    const multi=$('[data-ae-action="multi-select"]');multi.classList.toggle('on',!!state.multiSelect);multi.textContent=state.multiSelect?'✓ กำลังเลือกหลายชิ้น':'เลือกหลายชิ้น';
+    $$('[data-ae-align]').forEach(button=>button.disabled=state.selectionCount<2);
+    $('[data-ae-action="group"]').disabled=!state.canGroup;$('[data-ae-action="ungroup"]').disabled=!state.canUngroup;
     const name=$('[data-ae-name]');if(document.activeElement!==name)name.value=selection.name||'';
     $('[data-ae-x]').textContent=format(selection.position.x);$('[data-ae-y]').textContent=format(selection.position.y);$('[data-ae-z]').textContent=format(selection.position.z);
     $$('[data-ae-size]').forEach(input=>{if(document.activeElement!==input)input.value=format(selection.size[input.dataset.aeSize]);});
@@ -91,6 +107,7 @@ if(mount){
     input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();commit();input.blur();}});
   });
   $$('[data-ae-move]').forEach(button=>button.addEventListener('click',()=>bridge()?.setMoveMode?.(button.dataset.aeMove)));
+  $$('[data-ae-align]').forEach(button=>button.addEventListener('click',()=>bridge()?.align?.(button.dataset.aeAlign)));
   $$('[data-ae-orientation]').forEach(button=>button.addEventListener('click',()=>bridge()?.setOrientation?.(button.dataset.aeOrientation)));
   $$('[data-ae-surface]').forEach(button=>button.addEventListener('click',()=>bridge()?.setAppearanceMode?.(button.dataset.aeSurface)));
   $('[data-ae-color]').addEventListener('change',event=>bridge()?.setColor?.(event.target.value));
@@ -99,6 +116,7 @@ if(mount){
     const commands={
       'reset-size':()=>api?.resetSize?.(),'details':()=>api?.openSettings?.(),'rotate':()=>api?.rotate?.(),'lock':()=>api?.toggleLock?.(),
       'flip-x':()=>api?.flip?.('x'),'flip-y':()=>api?.flip?.('y'),'duplicate':()=>api?.duplicate?.(),'delete':()=>api?.remove?.(),
+      'multi-select':()=>api?.toggleMultiSelect?.(),'group':()=>api?.group?.(),'ungroup':()=>api?.ungroup?.(),
       'undo':()=>api?.undo?.(),'redo':()=>api?.redo?.()
     };commands[action]?.();
   });

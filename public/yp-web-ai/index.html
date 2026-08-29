@@ -597,7 +597,7 @@ select:focus{border-color:var(--acc)}
 .release-actions{padding:14px 26px 24px}.release-actions .btn{width:100%}
 @media(max-width:480px){.release-top{padding:21px 20px 16px}.release-list{padding:15px 20px 3px}.release-actions{padding:13px 20px 20px}}
 </style>
-<link rel="stylesheet" href="css/asset-editor.css?v=20260829-2">
+<link rel="stylesheet" href="css/asset-editor.css?v=20260829-3">
 </head>
 <body>
 
@@ -1580,7 +1580,7 @@ const brandScaleFraction=(value,availableWidth=6)=>{
 const logoScaleFactor=(value,availableWidth=6)=>brandScaleFraction(value,availableWidth);
 const nameScaleFactor=(value,availableWidth=6)=>brandScaleFraction(value,availableWidth);
 const serializeBoothSpec=()=>JSON.stringify(BoothSpec);
-const objectEditor={selectedId:null,past:[],future:[],seq:0,moveMode:'smart'};
+const objectEditor={selectedId:null,selectedIds:[],multiSelect:false,past:[],future:[],seq:0,moveMode:'smart'};
 const logoEditor={selected:false};
 const LAYOUT_KEYS=['W','D','type','stSize','stW','stD','stPos'];
 let lastValidLayout=null;
@@ -1592,6 +1592,19 @@ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'
 const objectSnapshot=()=>JSON.stringify(S.objects);
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
 const objectLocked=obj=>obj?.locked===true;
+const selectedObjectIds=()=>{
+  const valid=[...new Set([...(objectEditor.selectedIds||[]),objectEditor.selectedId].filter(id=>objectById(id)))];
+  objectEditor.selectedIds=valid;
+  if(objectEditor.selectedId&&!valid.includes(objectEditor.selectedId))objectEditor.selectedId=valid.at(-1)||null;
+  return valid;
+};
+const selectedObjects=()=>selectedObjectIds().map(objectById).filter(Boolean);
+const groupObjectIds=groupId=>groupId?S.objects.filter(obj=>obj.groupId===groupId).map(obj=>obj.id):[];
+function setObjectSelection(ids=[],primaryId=null){
+  const valid=[...new Set(ids)].filter(id=>objectById(id));
+  objectEditor.selectedIds=valid;
+  objectEditor.selectedId=primaryId&&valid.includes(primaryId)?primaryId:(valid.at(-1)||null);
+}
 const objectCatalogDef=id=>allObjectCatalog().find(o=>o.catalogId===id)||null;
 function normalizeAIRenderingSettings(spec=S){
   const source=spec.aiRendering&&typeof spec.aiRendering==='object'?spec.aiRendering:{};
@@ -1765,7 +1778,7 @@ function buildGeometryManifest(spec=S){
         scale:manifestVector(obj.transform?.flipX?-1:1,obj.transform?.flipY?-1:1,1),mirror:{leftRight:obj.transform?.flipX===true,topBottom:obj.transform?.flipY===true}},
       capabilities:{...obj.capabilities},placement:{...obj.placement},attachment:manifestSceneAttachment(obj),collision:manifestSceneCollision(obj,item),
       ports:localScenePorts(obj).map(port=>({id:port.id,role:port.role,localPosition:manifestVector(port.position.x,port.position.y,port.position.z)})),
-      editorLocked:obj.locked===true,appearance:{color:obj.appearance?.color||null,textureName:obj.appearance?.textureName||null},
+      editorLocked:obj.locked===true,groupId:obj.groupId||null,appearance:{color:obj.appearance?.color||null,textureName:obj.appearance?.textureName||null},
       materialIntent:obj.appearance?.textureData?'asset-sticker: '+String(obj.appearance.textureName||'uploaded image'):(obj.appearance?.color||rule.materialIntent),
       semantics:{...JSON.parse(JSON.stringify(rule)),allowedChanges:rule.allowedChanges.filter(change=>!rule.geometryLocked||!['position','rotation','scale'].includes(change))},
       source:{kind:'BoothSpec',path:'objects['+index+']'}});
@@ -2517,7 +2530,7 @@ function recordObjectHistory(before){
 }
 function mutateObjects(change,selectedId){
   const before=objectSnapshot();change();recordObjectHistory(before);
-  if(selectedId!==undefined)objectEditor.selectedId=selectedId;
+  if(selectedId!==undefined)setObjectSelection(selectedId?[selectedId]:[],selectedId);
   sync();
 }
 function makeCatalogObject(catalogId,x,z){
@@ -2552,17 +2565,26 @@ function positionObjectToolbar(){
     x=clampNumber(viewCenter,pad+estimatedWidth/2,window.innerWidth-pad-estimatedWidth/2);
   toolbar.style.setProperty('--context-x',x+'px');toolbar.style.removeProperty('--context-y');toolbar.classList.remove('context-below');
 }
-function selectObject(id){
+function selectObject(id,options={}){
   logoEditor.selected=false;
-  objectEditor.selectedId=objectById(id)?id:null;
-  syncObjectControls();if(threeRenderer)threeRenderer.setSelected(objectEditor.selectedId);
+  const obj=objectById(id),additive=options.additive===true||options.toggle===true||objectEditor.multiSelect===true;
+  if(!obj)setObjectSelection([]);
+  else{
+    const unitIds=obj.groupId?groupObjectIds(obj.groupId):[obj.id];
+    if(additive){
+      const current=new Set(selectedObjectIds()),allSelected=unitIds.every(candidate=>current.has(candidate));
+      unitIds.forEach(candidate=>allSelected?current.delete(candidate):current.add(candidate));
+      setObjectSelection([...current],allSelected?(objectEditor.selectedId===id?[...current].at(-1):objectEditor.selectedId):id);
+    }else setObjectSelection(unitIds,id);
+  }
+  syncObjectControls();if(threeRenderer)threeRenderer.setSelectedObjects(selectedObjectIds(),objectEditor.selectedId);
   if(S.view==='plan')render();
 }
 function selectLogoPlacement(selected=true){
   logoEditor.selected=!!selected;
-  if(logoEditor.selected)objectEditor.selectedId=null;
+  if(logoEditor.selected)setObjectSelection([]);
   syncObjectControls();
-  if(threeRenderer){if(logoEditor.selected)threeRenderer.setBrandSelected(true);else threeRenderer.setSelected(objectEditor.selectedId);}
+  if(threeRenderer){if(logoEditor.selected)threeRenderer.setBrandSelected(true);else threeRenderer.setSelectedObjects(selectedObjectIds(),objectEditor.selectedId);}
   if(S.view==='plan')render();
 }
 function entranceFrameSide(obj){return Number(obj?.position?.x)<S.W/2?'left':'right';}
@@ -2837,6 +2859,48 @@ function deleteSelectedObject(){
   if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
   mutateObjects(()=>{S.objects=S.objects.filter(o=>o.id!==id);},null);
 }
+function toggleMultiObjectSelection(force){
+  objectEditor.multiSelect=typeof force==='boolean'?force:!objectEditor.multiSelect;
+  syncObjectControls();
+  announceCatalog(objectEditor.multiSelect?'เปิดเลือกหลายชิ้น · แตะ Asset เพื่อเพิ่มหรือลดจากชุดเลือก':'ปิดเลือกหลายชิ้น','success');
+}
+function selectedAlignmentBounds(obj){
+  const horizontal=promptObjectBounds(obj),size=sceneObjectOrientedSize(obj),base=Number(obj.position?.y)||0;
+  return{...horizontal,centerX:(horizontal.minX+horizontal.maxX)/2,centerZ:(horizontal.minZ+horizontal.maxZ)/2,
+    minY:base,maxY:base+(Number(size.h)||0),centerY:base+(Number(size.h)||0)/2};
+}
+function alignSelectedObjects(mode){
+  const objects=selectedObjects(),reference=objectById(objectEditor.selectedId);
+  if(objects.length<2||!reference)return announceCatalog('กรุณาเลือก Asset อย่างน้อย 2 ชิ้น','error');
+  if(objects.some(objectLocked))return announceCatalog('มี Asset ที่ล็อกอยู่ กรุณา Unlock ก่อนจัดแนว','error');
+  const ref=selectedAlignmentBounds(reference),before=objectSnapshot();
+  objects.filter(obj=>obj.id!==reference.id).forEach(obj=>{
+    const bounds=selectedAlignmentBounds(obj),position=obj.position;
+    if(mode==='horizontal')position.x=ref.centerX;
+    else if(mode==='vertical')position.y=ref.centerY-(bounds.maxY-bounds.minY)/2;
+    else if(mode==='top')position.y=ref.maxY-(bounds.maxY-bounds.minY);
+    else if(mode==='bottom')position.y=ref.minY;
+    else if(mode==='front')position.z+=(ref.maxZ-bounds.maxZ);
+    else if(mode==='back')position.z+=(ref.minZ-bounds.minZ);
+    position.x=+Number(position.x).toFixed(3);position.y=+Number(position.y).toFixed(3);position.z=+Number(position.z).toFixed(3);
+    if(sceneAttachmentActive(obj))obj.attachment=null;
+    normalizeSceneObjectModel(obj);
+  });
+  recordObjectHistory(before);sync();
+  const labels={horizontal:'กึ่งกลางแนวนอน',vertical:'กึ่งกลางแนวตั้ง',top:'เสมอบน',bottom:'เสมอล่าง',front:'เสมอหน้า',back:'เสมอหลัง'};
+  announceCatalog('จัดแนว '+labels[mode]+' โดยยึด '+selectedAssetName(reference)+' แล้ว','success');
+}
+function groupSelectedObjects(){
+  const objects=selectedObjects();if(objects.length<2)return announceCatalog('กรุณาเลือก Asset อย่างน้อย 2 ชิ้นเพื่อ Group','error');
+  const before=objectSnapshot(),groupId='group-'+Date.now().toString(36)+'-'+(++objectEditor.seq).toString(36);
+  objects.forEach(obj=>obj.groupId=groupId);recordObjectHistory(before);sync();announceCatalog('Group Asset '+objects.length+' ชิ้นแล้ว','success');
+}
+function ungroupSelectedObjects(){
+  const groupIds=[...new Set(selectedObjects().map(obj=>obj.groupId).filter(Boolean))];
+  if(!groupIds.length)return announceCatalog('Asset ที่เลือกยังไม่ได้ Group','error');
+  const before=objectSnapshot();S.objects.forEach(obj=>{if(groupIds.includes(obj.groupId))delete obj.groupId;});recordObjectHistory(before);sync();
+  announceCatalog('Ungroup Asset แล้ว','success');
+}
 function toggleSelectedObjectLock(){
   const obj=objectById(objectEditor.selectedId);if(!obj)return;
   const next=!objectLocked(obj),item=objectCatalogDef(obj.catalogId),before=objectSnapshot();
@@ -2845,7 +2909,7 @@ function toggleSelectedObjectLock(){
 }
 function setObjectMoveMode(mode){
   if(!['smart','plane','height','surface'].includes(mode))return;
-  objectEditor.moveMode=mode;syncObjectControls();if(threeRenderer)threeRenderer.setSelected(objectEditor.selectedId);
+  objectEditor.moveMode=mode;syncObjectControls();if(threeRenderer)threeRenderer.setSelectedObjects(selectedObjectIds(),objectEditor.selectedId);
   const advanced=document.getElementById('moveAdvanced');if(advanced)advanced.removeAttribute('open');
   const labels={smart:'Smart Move · ลากตัว Asset ที่ระดับเดิม หรือลาก Anchor ไปยังจุด/ผิวเป้าหมาย',plane:'ย้ายซ้าย–ขวาและหน้า–หลัง (X/Z)',height:'ยกหรือลดระดับ (Y)',surface:'ลากเข้าใกล้พื้นผิวเพื่อ Snap'};
   const status=document.getElementById('objectLayoutStatus');if(status)status.textContent=labels[mode];
@@ -2853,15 +2917,16 @@ function setObjectMoveMode(mode){
 function undoObjectChange(){
   if(!objectEditor.past.length)return;
   const selectedId=objectEditor.selectedId;objectEditor.future.push(objectSnapshot());S.objects=JSON.parse(objectEditor.past.pop());
-  objectEditor.selectedId=objectById(selectedId)?.id||S.objects.at(-1)?.id||null;sync();
+  setObjectSelection(selectedObjectIds().filter(id=>objectById(id)),objectById(selectedId)?.id||S.objects.at(-1)?.id||null);sync();
 }
 function redoObjectChange(){
   if(!objectEditor.future.length)return;
   const selectedId=objectEditor.selectedId;objectEditor.past.push(objectSnapshot());S.objects=JSON.parse(objectEditor.future.pop());
-  objectEditor.selectedId=objectById(selectedId)?.id||S.objects.at(-1)?.id||null;sync();
+  setObjectSelection(selectedObjectIds().filter(id=>objectById(id)),objectById(selectedId)?.id||S.objects.at(-1)?.id||null);sync();
 }
 function syncObjectControls(){
   const obj=objectById(objectEditor.selectedId),item=obj&&objectCatalogDef(obj.catalogId),locked=objectLocked(obj),brandSelected=logoEditor.selected,box=document.getElementById('objectSelected');
+  const selectionCount=selectedObjectIds().length;
   box.classList.toggle('on',!!obj||brandSelected);
   box.classList.toggle('structure-active',!!obj&&(isEntranceFrameObject(obj)||isDownlightBeamObject(obj)));
   const info=document.getElementById('placementGridInfo');
@@ -2870,7 +2935,7 @@ function syncObjectControls(){
       moveLabel={smart:'Smart Move',plane:'ย้ายพื้น X/Z',height:'ยก–ลด Y',surface:'Snap พื้นผิว'}[objectEditor.moveMode];
     const anchor=obj.placement?.anchorAttachment,anchorLabel=anchor?' · แม่เหล็ก '+esc(anchor.sourceAnchorId)+' → '+esc(anchor.targetId)+' / '+esc(anchor.targetAnchorId):'';
     const orientationLabel=ASSET_ORIENTATION_PRESETS[obj.orientation]?.label||'แนวนอน';
-    box.innerHTML='<b>'+esc(name)+'</b> · '+esc(orientationLabel)+' · หมุน Y '+Number(obj.rotationY||0).toFixed(0)+'°'+
+    box.innerHTML='<b>'+esc(name)+'</b> · '+esc(orientationLabel)+' · หมุน Y '+Number(obj.rotationY||0).toFixed(0)+'°'+(selectionCount>1?' · เลือก '+selectionCount+' ชิ้น':'')+
       '<small>จุดกึ่งกลางฐาน · X '+placementMeters(p.x)+' · Y '+placementMeters(p.y)+' · Z '+placementMeters(p.z)+' ม.</small>'+ 
       '<small>'+moveLabel+' · '+snap+' · ระยะจัดวาง '+placementStepLabel()+anchorLabel+'</small>'+
       (locked?'<small class="object-lock-state">ล็อกอยู่ · กด Unlock ก่อนแก้ไขหรือย้ายตำแหน่ง</small>':'')+
@@ -2914,6 +2979,7 @@ function syncObjectControls(){
   if(workspaceNode){workspaceNode.classList.toggle('logo-placement-active',brandSelected);workspaceNode.classList.toggle('has-object-selection',!!obj);}
   if(toolbar&&obj){normalizeSceneObjectModel(obj);toolbar.classList.toggle('flipped-x',obj.transform.flipX);toolbar.classList.toggle('flipped-y',obj.transform.flipY);}
   if(positionButton){positionButton.classList.toggle('on',brandSelected);positionButton.textContent=brandSelected?'✓ พร้อมลากโลโก้ใน 3D':'จัดตำแหน่งใน 3D';}
+  if(threeRenderer&&!logoEditor.selected)threeRenderer.setSelectedObjects(selectedObjectIds(),objectEditor.selectedId);
   window.dispatchEvent(new CustomEvent('yp:asset-editor-sync'));
 }
 function objectListLabel(){
@@ -3027,7 +3093,7 @@ function objectLayoutPrompt(){
       index:index+1,name,x,z,baseY,heightM,
       normalizedX:width?x/width:0,normalizedZ:depth?z/depth:0,
       size:{w:promptSafeNumber(size.w),d:promptSafeNumber(size.d),h:heightM},
-      rotation,rotationX,rotationZ,orientation:obj.orientation||'horizontal',orientedSize:oriented,zone:promptObjectZone(obj),attachment:obj.attachment?JSON.parse(JSON.stringify(obj.attachment)):null,
+      rotation,rotationX,rotationZ,orientation:obj.orientation||'horizontal',groupId:obj.groupId||null,orientedSize:oriented,zone:promptObjectZone(obj),attachment:obj.attachment?JSON.parse(JSON.stringify(obj.attachment)):null,
       placement:obj.placement?JSON.parse(JSON.stringify(obj.placement)):null,transform:obj.transform?JSON.parse(JSON.stringify(obj.transform)):null,
       appearance:obj.appearance?{color:obj.appearance.color||null,textureName:obj.appearance.textureName||null}:null,
       distance_to_walls_m:{left:distances.left,right:distances.right,back:distances.back,front_open:distances.front}
@@ -3046,8 +3112,9 @@ function objectLayoutPrompt(){
       ' ชน '+String(anchor.targetId||'target')+' / '+String(anchor.targetAnchorId||'anchor')+' ต้องรักษามุมหรือกึ่งกลางที่ชนกันนี้ไว้':'';
     const flipDetail=record.transform?.flipX||record.transform?.flipY?' · กลับด้าน '+[record.transform.flipX?'ซ้าย–ขวา':'',record.transform.flipY?'บน–ล่าง':''].filter(Boolean).join(' และ ')+' ตามแบบ':'';
     const appearanceDetail=record.appearance?.textureName?' · พื้นผิวใช้สติ๊กเกอร์ '+record.appearance.textureName:record.appearance?.color?' · สีพื้นผิว '+String(record.appearance.color).toUpperCase():'';
+    const groupDetail=record.groupId?' · อยู่ใน Group '+record.groupId+' ต้องรักษาระยะสัมพัทธ์กับสมาชิกกลุ่ม':'';
     const orientationLabel=ASSET_ORIENTATION_PRESETS[record.orientation]?.label||record.orientation,oriented=record.orientedSize;
-    return'- ชิ้นที่ '+record.index+': '+record.name+' 1 ชิ้น · จุดอ้างอิงกลางฐาน X '+promptNumber(record.x)+' ม., Z '+promptNumber(record.z)+' ม. · ตำแหน่งสัมพัทธ์ X '+promptNumber(record.normalizedX*100,1)+'% / Z '+promptNumber(record.normalizedZ*100,1)+'% · ฐานสูงจากพื้น '+promptNumber(record.baseY)+' ม. · ขนาดชิ้นงานเดิม กว้าง '+promptNumber(s.w)+' × ลึก '+promptNumber(s.d)+' × สูง '+promptNumber(s.h)+' ม. · แนววาง '+orientationLabel+' · หมุนแกน X/Y/Z '+promptNumber(record.rotationX)+'° / '+promptNumber(record.rotation)+'° / '+promptNumber(record.rotationZ)+'° · ขอบเขตหลังหมุน '+promptNumber(oriented.w)+' × '+promptNumber(oriented.d)+' × '+promptNumber(oriented.h)+' ม. · โซน '+record.zone+' · ระยะจากขอบ ซ้าย '+promptNumber(d.left)+' / ขวา '+promptNumber(d.right)+' / หลัง '+promptNumber(d.back)+' / ด้านหน้า '+promptNumber(d.front_open)+' ม.'+flipDetail+appearanceDetail+frameDetail+beamDetail+attachmentDetail+surfaceDetail+anchorDetail;
+    return'- ชิ้นที่ '+record.index+': '+record.name+' 1 ชิ้น · จุดอ้างอิงกลางฐาน X '+promptNumber(record.x)+' ม., Z '+promptNumber(record.z)+' ม. · ตำแหน่งสัมพัทธ์ X '+promptNumber(record.normalizedX*100,1)+'% / Z '+promptNumber(record.normalizedZ*100,1)+'% · ฐานสูงจากพื้น '+promptNumber(record.baseY)+' ม. · ขนาดชิ้นงานเดิม กว้าง '+promptNumber(s.w)+' × ลึก '+promptNumber(s.d)+' × สูง '+promptNumber(s.h)+' ม. · แนววาง '+orientationLabel+' · หมุนแกน X/Y/Z '+promptNumber(record.rotationX)+'° / '+promptNumber(record.rotation)+'° / '+promptNumber(record.rotationZ)+'° · ขอบเขตหลังหมุน '+promptNumber(oriented.w)+' × '+promptNumber(oriented.d)+' × '+promptNumber(oriented.h)+' ม. · โซน '+record.zone+' · ระยะจากขอบ ซ้าย '+promptNumber(d.left)+' / ขวา '+promptNumber(d.right)+' / หลัง '+promptNumber(d.back)+' / ด้านหน้า '+promptNumber(d.front_open)+' ม.'+groupDetail+flipDetail+appearanceDetail+frameDetail+beamDetail+attachmentDetail+surfaceDetail+anchorDetail;
   }).join('\n');
   return header.concat('อุปกรณ์ที่ลูกค้าเลือกและตำแหน่งที่ต้องคงเดิม:',readable,
     'ข้อบังคับ: ห้ามเพิ่ม ลด ย้าย หรือหมุนอุปกรณ์ ห้ามเปลี่ยนขนาดและจำนวน ให้ยึดตำแหน่งและระยะจากผนังตามรายการนี้ ห้ามจัดวางใหม่ตามความสวยงามของภาพ').join('\n');
@@ -3930,7 +3997,7 @@ class ThreeBoothRenderer{
     };
     this.controls.addEventListener('change',this.onControlsChange);
 
-    this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.pointerDrag=null;
+    this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.selectionHelpers=[];this.pointerDrag=null;
     this.anchorGuideGroup=null;this.snapPreviewGroup=null;this.hoveredAnchorMarker=null;this.activeAnchorMarker=null;
     this.raycaster=new THREE.Raycaster();this.pointer=new THREE.Vector2();
     this.anchorScreenPoint=new THREE.Vector3();
@@ -4315,8 +4382,13 @@ class ThreeBoothRenderer{
     const id=hit.object.userData.objectId,obj=objectById(id),root=this.objectMeshes.get(id),mode=objectEditor.moveMode,
       sourceAnchorId=String(hit.object.userData.snapAnchorId||'');
     if(!obj||!root)return;
-    event.preventDefault();event.stopImmediatePropagation();positionObjectToolbar(event.clientX,event.clientY);selectObject(id);
+    event.preventDefault();event.stopImmediatePropagation();positionObjectToolbar(event.clientX,event.clientY);
+    const additive=objectEditor.multiSelect||event.shiftKey||event.ctrlKey||event.metaKey;
+    selectObject(id,{additive});
+    if(additive)return;
     if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กด Unlock เพื่อแก้ไขตำแหน่ง','error');return;}
+    const memberIds=selectedObjectIds(),members=memberIds.map(objectById).filter(Boolean);
+    if(members.some(objectLocked)){announceCatalog('ใน Group มี Asset ที่ล็อกอยู่ กรุณา Unlock ก่อนย้าย','error');return;}
     const smartAnchor=mode==='smart'&&!!sourceAnchorId,
       point=mode==='plane'?this.floorPoint(event):mode==='smart'&&!smartAnchor?this.horizontalPoint(event,obj.position.y):hit.point;if(!point)return;
     if(mode==='height'||smartAnchor)this.prepareVerticalDrag(hit.point);
@@ -4326,7 +4398,7 @@ class ThreeBoothRenderer{
     if(smartAnchor)this.setActiveAnchorMarker(this.anchorGuideGroup?.children.find(marker=>marker.userData.snapAnchorId===sourceAnchorId)||null);
     this.renderer.domElement.setPointerCapture(event.pointerId);
     document.getElementById('objectToolbar')?.classList.add('context-dragging');
-    this.pointerDrag={kind:'asset',pointerId:event.pointerId,id,mode,before:objectSnapshot(),startX:obj.position.x,startY:Number(obj.position.y)||0,startZ:obj.position.z,
+    this.pointerDrag={kind:'asset',pointerId:event.pointerId,id,memberIds,memberStarts:Object.fromEntries(members.map(member=>[member.id,{x:Number(member.position.x)||0,y:Number(member.position.y)||0,z:Number(member.position.z)||0}])),mode,before:objectSnapshot(),startX:obj.position.x,startY:Number(obj.position.y)||0,startZ:obj.position.z,
       startClientY:event.clientY,
       offsetX:root.position.x-point.x,offsetY:root.position.y-point.y,offsetZ:root.position.z-point.z,
       grabOffset:hit.point.clone().sub(root.position),sourceAnchorId,sourceAnchorOffset,moved:false};
@@ -4389,6 +4461,17 @@ class ThreeBoothRenderer{
     if(drag.mode==='smart'&&drag.sourceAnchorId)this.setActiveAnchorSnapped(!!(anchorMatch||snapPreview));
     const distance=Math.hypot(next.x-drag.startX,next.y-drag.startY,next.z-drag.startZ);
     if(sceneAttachmentActive(obj)&&distance>.003)obj.attachment=null;
+    const delta={x:next.x-drag.startX,y:next.y-drag.startY,z:next.z-drag.startZ};
+    (drag.memberIds||[drag.id]).forEach(memberId=>{
+      const member=objectById(memberId),start=drag.memberStarts?.[memberId],memberRoot=this.objectMeshes.get(memberId);if(!member||!start||!memberRoot)return;
+      member.position.x=+(start.x+delta.x).toFixed(3);member.position.y=+(start.y+delta.y).toFixed(3);member.position.z=+(start.z+delta.z).toFixed(3);
+      if(sceneAttachmentActive(member)&&distance>.003)member.attachment=null;
+      normalizeSceneObjectModel(member);member.placement.mode=next.surface?'surface':'free';member.placement.surface=next.surface||'free';member.placement.targetId=next.targetId||null;
+      if(member.id===drag.id)member.placement.anchorAttachment=anchorMatch?{sourceAnchorId:anchorMatch.sourceAnchorId,targetId:anchorMatch.targetId,targetAnchorId:anchorMatch.targetAnchorId,kind:anchorMatch.kind}:null;
+      else member.placement.anchorAttachment=null;
+      if(isDownlightBeamObject(member)&&member.structure)member.structure.wallAttached=false;
+      this.applyCatalogObjectTransform(memberRoot,member,BoothSpec.raise/100);
+    });
     obj.position.x=next.x;obj.position.y=next.y;obj.position.z=next.z;
     normalizeSceneObjectModel(obj);obj.placement.mode=next.surface?'surface':'free';obj.placement.surface=next.surface||'free';
     obj.placement.targetId=next.targetId||null;
@@ -4397,7 +4480,7 @@ class ThreeBoothRenderer{
     if(isDownlightBeamObject(obj)&&obj.structure)obj.structure.wallAttached=false;
     this.applyCatalogObjectTransform(root,obj,BoothSpec.raise/100);
     drag.moved=drag.moved||distance>.003;
-    if(this.selectionHelper)this.selectionHelper.update();this.updateObjectAnchorGuides(obj.id);this.showMagneticSnapPreview(anchorMatch||snapPreview);this.renderer.render(this.scene,this.camera);
+    (this.selectionHelpers||[]).forEach(helper=>helper.update());this.updateObjectAnchorGuides(obj.id);this.showMagneticSnapPreview(anchorMatch||snapPreview);this.renderer.render(this.scene,this.camera);
   }
   finishObjectDrag(event){
     const drag=this.pointerDrag;if(!drag||drag.pointerId!==event.pointerId)return;
@@ -4408,12 +4491,12 @@ class ThreeBoothRenderer{
       return;
     }
     if(drag.moved){
-      const obj=objectById(drag.id),item=obj&&objectCatalogDef(obj.catalogId);
-      if(!obj||!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,obj.rotationY||0,obj.id,obj.size,ALLOW_ASSET_OVERLAP,obj)){
+      const obj=objectById(drag.id),item=obj&&objectCatalogDef(obj.catalogId),members=(drag.memberIds||[drag.id]).map(objectById).filter(Boolean),invalid=members.find(member=>
+        !isCatalogPlacementValid(member.catalogId,member.position.x,member.position.z,member.rotationY||0,member.id,member.size,ALLOW_ASSET_OVERLAP,member));
+      if(!obj||invalid){
         const storageCollision=obj&&item?storageRoomPlacementCollision(item,
           worldCollisionVolumes(item,obj.size,obj.position.x,obj.position.z,obj.rotationY||0,obj),obj,S):null;
-        const previous=JSON.parse(drag.before).find(item=>item.id===drag.id),index=S.objects.findIndex(item=>item.id===drag.id);
-        if(previous&&index>=0)S.objects[index]=previous;
+        S.objects=JSON.parse(drag.before);
         announceCatalog('ย้าย '+(item?.name||'วัตถุ')+' ไม่ได้ เพราะ'+(storageCollision?storageRoomCollisionLabel(storageCollision):'ชนโครงสร้างหลักหรือตำแหน่งไม่รองรับ'),'error');this.currentKey='';sync();return;
       }
       recordObjectHistory(drag.before);this.currentKey='';sync();announceCatalog((drag.mode==='smart'?'Smart Move ':drag.mode==='height'?'ปรับระดับ ':drag.mode==='surface'?'Snap ':'ย้าย ')+item.name+'แล้ว','success');
@@ -4426,7 +4509,7 @@ class ThreeBoothRenderer{
     const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.locked===true,o.position.x,o.position.y,o.position.z,o.rotationX,o.rotationY,o.rotationZ,o.orientation,
       o.size.w,o.size.d,o.size.h,o.unitPrice,o.structure?.projection,o.structure?.height,o.structure?.pierWidth,o.structure?.thickness,o.structure?.color,
       o.attachment?.targetId,o.attachment?.sourcePort,o.attachment?.targetPort,o.attachment?.status,o.transform?.flipX===true,o.transform?.flipY===true,
-      o.label||'',o.appearance?.color||'',o.appearance?.textureId||'']);
+      o.label||'',o.groupId||'',o.appearance?.color||'',o.appearance?.textureId||'']);
     return JSON.stringify([spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),wallStickers,spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
@@ -4440,10 +4523,10 @@ class ThreeBoothRenderer{
   update(spec){
     const key=this.visualKey(spec);if(key===this.currentKey)return;
     this.currentKey=key;this.buildId=(this.buildId||0)+1;this.scene.remove(this.boothGroup);disposeThreeObject(this.boothGroup);
-    this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.anchorGuideGroup=null;this.snapPreviewGroup=null;
+    this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.selectionHelpers=[];this.anchorGuideGroup=null;this.snapPreviewGroup=null;
     this.hoveredAnchorMarker=null;this.activeAnchorMarker=null;
     this.boothGroup=new this.THREE.Group();this.scene.add(this.boothGroup);this.buildBooth(spec);
-    if(logoEditor.selected)this.setBrandSelected(true);else this.setSelected(objectEditor.selectedId);
+    if(logoEditor.selected)this.setBrandSelected(true);else this.setSelectedObjects(selectedObjectIds(),objectEditor.selectedId);
     const span=Math.max(spec.W,spec.D,spec.H);
     this.controls.minDistance=Math.max(1.2,span*.34);this.controls.maxDistance=Math.max(8,span*4.8);
     this.camera.far=Math.max(80,span*15);this.camera.updateProjectionMatrix();
@@ -5269,23 +5352,30 @@ class ThreeBoothRenderer{
     platform.position.set(layout.x,floorY+layout.height/2,layout.z);platform.name='photo360-platform';
     platform.castShadow=true;platform.receiveShadow=true;group.add(platform);
   }
-  setSelected(id){
+  clearSelectionHelpers(){
+    (this.selectionHelpers||[]).forEach(helper=>{const parent=helper.parent;if(parent)parent.remove(helper);disposeThreeObject(helper);});
+    this.selectionHelpers=[];this.selectionHelper=null;
+  }
+  setSelected(id){this.setSelectedObjects(id?[id]:[],id);}
+  setSelectedObjects(ids=[],primaryId=null){
     this.clearMagneticSnapPreview();this.clearAnchorGuides();
-    if(this.selectionHelper){const parent=this.selectionHelper.parent;if(parent)parent.remove(this.selectionHelper);
-      disposeThreeObject(this.selectionHelper);this.selectionHelper=null;}
-    const root=this.objectMeshes.get(id);if(!root)return;
-    const obj=objectById(id);this.selectionHelper=new this.THREE.BoxHelper(root,objectLocked(obj)?0x8a919c:0xe0a83c);this.selectionHelper.name='object-selection';
-    this.selectionHelper.material.depthTest=false;this.selectionHelper.material.transparent=true;this.selectionHelper.material.opacity=.95;
-    this.selectionHelper.renderOrder=20;this.boothGroup.add(this.selectionHelper);this.buildObjectAnchorGuides(id);
+    this.clearSelectionHelpers();
+    [...new Set(ids)].forEach(id=>{
+      const root=this.objectMeshes.get(id);if(!root)return;const obj=objectById(id),primary=id===primaryId;
+      const helper=new this.THREE.BoxHelper(root,objectLocked(obj)?0x8a919c:(primary?0xe0a83c:0x67c7e8));helper.name=primary?'object-selection-primary':'object-selection-secondary';
+      helper.material.depthTest=false;helper.material.transparent=true;helper.material.opacity=primary ? .98 : .82;
+      helper.renderOrder=20;this.boothGroup.add(helper);this.selectionHelpers.push(helper);if(primary)this.selectionHelper=helper;
+    });
+    if(!this.selectionHelper)this.selectionHelper=this.selectionHelpers[0]||null;
+    if(primaryId)this.buildObjectAnchorGuides(primaryId);
   }
   setBrandSelected(selected){
     this.clearMagneticSnapPreview();this.clearAnchorGuides();
-    if(this.selectionHelper){const parent=this.selectionHelper.parent;if(parent)parent.remove(this.selectionHelper);
-      disposeThreeObject(this.selectionHelper);this.selectionHelper=null;}
+    this.clearSelectionHelpers();
     const target=this.brandingHitTarget||this.brandingRoot;if(!selected||!target)return;
     this.selectionHelper=new this.THREE.BoxHelper(target,0xe0a83c);this.selectionHelper.name='brand-selection';
     this.selectionHelper.material.depthTest=false;this.selectionHelper.material.transparent=true;this.selectionHelper.material.opacity=.95;
-    this.selectionHelper.renderOrder=20;this.boothGroup.add(this.selectionHelper);
+    this.selectionHelper.renderOrder=20;this.boothGroup.add(this.selectionHelper);this.selectionHelpers=[this.selectionHelper];
   }
   buildBooth(spec){
     const T=this.THREE,g=this.boothGroup,t=boothWallThickness(spec),floorY=spec.raise/100,a=palette();
@@ -5938,7 +6028,7 @@ function sync(){
   if(S.stHmode===0)S.stHv=Math.max(1.5,Math.min(MAX_BOOTH_HEIGHT,S.stHv||2.4));
   reconcileCatalogLayout();
   resolveSceneAttachments(S);
-  if(!objectById(objectEditor.selectedId))objectEditor.selectedId=null;
+  setObjectSelection(selectedObjectIds().filter(id=>objectById(id)),objectById(objectEditor.selectedId)?.id||null);
   syncObjectControls();
 
   document.querySelectorAll('#oCat .cat').forEach(b=>b.classList.toggle('on',b.dataset.k===S.cat));
@@ -6505,7 +6595,7 @@ window.getGeometryManifest=()=>JSON.parse(JSON.stringify(buildGeometryManifest(S
 window.exportCleanScreenshot=(options={})=>createCleanScreenshot(options);
 window.YPAssetEditorBridge={
   getState(){
-    const obj=objectById(objectEditor.selectedId);if(!obj)return{selection:null,moveMode:objectEditor.moveMode,canUndo:!!objectEditor.past.length,canRedo:!!objectEditor.future.length};
+    const ids=selectedObjectIds(),obj=objectById(objectEditor.selectedId);if(!obj)return{selection:null,selectedIds:[],selectionCount:0,multiSelect:objectEditor.multiSelect,moveMode:objectEditor.moveMode,canUndo:!!objectEditor.past.length,canRedo:!!objectEditor.future.length};
     const item=objectCatalogDef(obj.catalogId);normalizeSceneObjectModel(obj,item);
     return{
       selection:{
@@ -6517,19 +6607,21 @@ window.YPAssetEditorBridge={
         flipX:obj.transform?.flipX===true,flipY:obj.transform?.flipY===true,
         appearance:{mode:obj.appearance?.mode||'original',color:obj.appearance?.color||'#f5f5f5',hasSticker:!!obj.appearance?.textureData}
       },
-      moveMode:objectEditor.moveMode,canUndo:!!objectEditor.past.length,canRedo:!!objectEditor.future.length
+      selectedIds:ids,selectionCount:ids.length,multiSelect:objectEditor.multiSelect,canGroup:ids.length>1,
+      canUngroup:ids.some(id=>!!objectById(id)?.groupId),moveMode:objectEditor.moveMode,canUndo:!!objectEditor.past.length,canRedo:!!objectEditor.future.length
     };
   },
   setMoveMode:setObjectMoveMode,setName:updateSelectedObjectName,setSize(axis,value,keepRatio=true){const lock=document.getElementById('assetSizeLock');if(lock)lock.checked=keepRatio!==false;updateSelectedObjectSize(axis,value);},
   setAppearanceMode:updateSelectedObjectAppearanceMode,setColor:updateSelectedObjectColor,
   toggleLock:toggleSelectedObjectLock,rotate:rotateSelectedObject,setOrientation:setSelectedObjectOrientation,flip:flipSelectedObject,
   openSettings:openAssetSettings,resetSize:resetSelectedObjectSize,duplicate:duplicateSelectedObject,remove:deleteSelectedObject,
+  toggleMultiSelect:toggleMultiObjectSelection,align:alignSelectedObjects,group:groupSelectedObjects,ungroup:ungroupSelectedObjects,
   undo:undoObjectChange,redo:redoObjectChange
 };
 /* Validate the data-only manifest once during startup; later callers always receive a fresh snapshot. */
 buildGeometryManifest(S);
 window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispose();},{once:true});
 </script>
-<script type="module" src="js/asset-editor/asset-editor.js?v=20260829-2"></script>
+<script type="module" src="js/asset-editor/asset-editor.js?v=20260829-3"></script>
 </body>
 </html>
