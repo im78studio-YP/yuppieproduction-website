@@ -1462,6 +1462,7 @@ const BoothSpec={version:2,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
   logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,wallRadius:3.5,
   placementSnap:true,magneticSnap:true,aiRendering:defaultAIRenderingSettings()};
 const S=BoothSpec;
+const INITIAL_BOOTH_SPEC_JSON=JSON.stringify(BoothSpec);
 const MAX_CARPET_TEXTURE_UPLOADS=3;
 const MAX_TILE_TEXTURE_UPLOADS=3;
 function carpetTextureUploadsFor(spec=S){
@@ -1604,6 +1605,40 @@ function setObjectSelection(ids=[],primaryId=null){
   const valid=[...new Set(ids)].filter(id=>objectById(id));
   objectEditor.selectedIds=valid;
   objectEditor.selectedId=primaryId&&valid.includes(primaryId)?primaryId:(valid.at(-1)||null);
+}
+function resetBoothToInitialState(){
+  const confirmed=window.confirm('คืนค่าการออกแบบทั้งหมดให้เหมือนตอนเปิดเว็บครั้งแรก?\nAsset และการแก้ไขปัจจุบันทั้งหมดจะถูกล้าง');
+  if(!confirmed)return;
+
+  const initial=JSON.parse(INITIAL_BOOTH_SPEC_JSON);
+  Object.keys(S).forEach(key=>delete S[key]);
+  Object.assign(S,initial);
+
+  setObjectSelection([]);
+  objectEditor.multiSelect=false;
+  objectEditor.moveMode='smart';
+  objectEditor.past.length=0;
+  objectEditor.future.length=0;
+  objectEditor.seq=0;
+  logoEditor.selected=false;
+  lastValidLayout=null;
+
+  closeAssetSettings();
+  document.querySelectorAll('input[type="file"]').forEach(input=>{input.value='';});
+  const brandInput=document.getElementById('brand');
+  if(brandInput)brandInput.value=S.brand;
+  const catalogStatus=document.getElementById('objectLayoutStatus');
+  if(catalogStatus){catalogStatus.textContent='';catalogStatus.className='object-layout-status';}
+
+  if(threeRenderer){
+    threeRenderer.currentKey='';
+    threeRenderer.currentView='perspective';
+    threeRenderer.hasFramed=false;
+    threeRenderer.clearMagneticSnapPreview?.();
+  }
+  syncDims();
+  syncLayoutInputs();
+  sync();
 }
 const objectCatalogDef=id=>allObjectCatalog().find(o=>o.catalogId===id)||null;
 function normalizeAIRenderingSettings(spec=S){
@@ -3965,7 +4000,9 @@ class ThreeBoothRenderer{
       this.tools.appendChild(b);this.viewButtons.set(key,b);
     });
     const reset=el('button','reset','Reset');reset.type='button';
-    reset.onclick=()=>this.setCameraView('perspective');this.tools.appendChild(reset);
+    reset.title='คืนค่าการออกแบบทั้งหมดเหมือนตอนเปิดเว็บครั้งแรก';
+    reset.setAttribute('aria-label','คืนค่าการออกแบบทั้งหมด');
+    reset.onclick=resetBoothToInitialState;this.tools.appendChild(reset);
 
     const probe=document.createElement('canvas');
     if(!probe.getContext('webgl2')&&!probe.getContext('webgl'))throw new Error('WebGL unavailable');
