@@ -1110,12 +1110,12 @@ select:focus{border-color:var(--acc)}
     <section class="asset-settings-section">
       <h3>ขนาดจริง</h3>
       <div class="asset-settings-grid">
-        <div class="asset-settings-field"><label for="assetSizeW">กว้าง (ม.)</label><input id="assetSizeW" type="number" min="0.01" max="30" step="0.05" inputmode="decimal"></div>
-        <div class="asset-settings-field"><label for="assetSizeD">ลึก (ม.)</label><input id="assetSizeD" type="number" min="0.01" max="30" step="0.05" inputmode="decimal"></div>
-        <div class="asset-settings-field"><label for="assetSizeH">สูง (ม.)</label><input id="assetSizeH" type="number" min="0.01" max="50" step="0.05" inputmode="decimal"></div>
+        <div class="asset-settings-field"><label for="assetSizeW">กว้าง (ม.)</label><input id="assetSizeW" type="number" min="0.01" max="5" step="0.01" inputmode="decimal"></div>
+        <div class="asset-settings-field"><label for="assetSizeD">ลึก (ม.)</label><input id="assetSizeD" type="number" min="0.01" max="5" step="0.01" inputmode="decimal"></div>
+        <div class="asset-settings-field"><label for="assetSizeH">สูง (ม.)</label><input id="assetSizeH" type="number" min="0.01" max="5" step="0.01" inputmode="decimal"></div>
       </div>
       <label class="asset-settings-check"><input id="assetSizeLock" type="checkbox" checked> ล็อกสัดส่วนขณะปรับขนาด</label>
-      <div class="note">ปรับขนาด Asset และ My Asset (.glb) ได้จริงทั้ง 3 แกน โดยกำหนดความสูงเกินผนังบูธได้ สูงสุด 50 ม.</div>
+      <div class="note">ปรับขนาด Asset และ My Asset (.glb) ได้จริงทั้ง 3 แกน ตั้งแต่ 0.01–5.00 ม. และกำหนดความสูงเกินผนังบูธได้</div>
       <div class="asset-settings-actions"><button class="btn sm" id="assetResetSize" type="button">คืนขนาดเดิม</button></div>
     </section>
     <section class="asset-settings-section">
@@ -1773,7 +1773,12 @@ const isDownlightBeamItem=item=>item?.type==='downlightBeam'||item?.catalogId===
 const isDownlightBeamObject=obj=>obj?.type==='downlightBeam'||obj?.catalogId==='downlight-beam';
 const DOWNLIGHT_MODEL_URL='./assets/lights/Downlight_V1.glb';
 const SCENE_OBJECT_SCHEMA_VERSION=2;
-const MAX_ASSET_WIDTH=30,MAX_ASSET_DEPTH=30,MAX_ASSET_HEIGHT=50;
+const MIN_ASSET_DIMENSION=.01,MAX_ASSET_DIMENSION=5;
+const MAX_ASSET_WIDTH=MAX_ASSET_DIMENSION,MAX_ASSET_DEPTH=MAX_ASSET_DIMENSION,MAX_ASSET_HEIGHT=MAX_ASSET_DIMENSION;
+function assetDimensionValue(value,fallback=MIN_ASSET_DIMENSION){
+  const numeric=Number(value),resolved=Number.isFinite(numeric)?numeric:Number(fallback);
+  return+clampNumber(resolved,MIN_ASSET_DIMENSION,MAX_ASSET_DIMENSION).toFixed(2);
+}
 const SCENE_CAPABILITY_KEYS=Object.freeze(['floorPlaceable','wallMountable','ceilingMountable','free3DPlaceable','surfaceSnappable','attachable','resizable','rotatable','repeatable','styleable','compound']);
 const SCENE_COLLISION_LAYERS=Object.freeze(['structure','furniture','decoration','surface','optional-prop']);
 function defaultSceneCapabilities(item={}){
@@ -1829,12 +1834,12 @@ function entranceFrameDefaults(spec=S){
 function normalizeEntranceFrameObject(obj,spec=S){
   if(!isEntranceFrameObject(obj))return obj;
   const defaults=entranceFrameDefaults(spec),config=obj.structure&&typeof obj.structure==='object'?obj.structure:{};
-  const projection=placementRound(clampNumber(Number(config.projection)||defaults.projection,.5,Math.max(.5,Number(spec.D)||3)));
+  const projection=assetDimensionValue(config.projection,defaults.projection);
   /* The entrance frame is an independent Scene Asset.  Its default follows
      the booth wall, but customers may intentionally extend it above the wall. */
-  const height=placementRound(clampNumber(Number(config.height)||defaults.height,.5,MAX_ASSET_HEIGHT));
-  const pierWidth=placementRound(clampNumber(Number(config.pierWidth)||defaults.pierWidth,.3,Math.max(.3,Math.min(3,Number(spec.W)||6))));
-  const thickness=placementRound(clampNumber(Number(config.thickness)||defaults.thickness,.05,Math.min(.3,pierWidth*.8,height*.45)));
+  const height=assetDimensionValue(config.height,defaults.height);
+  const pierWidth=assetDimensionValue(config.pierWidth,defaults.pierWidth);
+  const thickness=assetDimensionValue(config.thickness,defaults.thickness);
   const color=/^#[0-9a-fA-F]{6}$/.test(String(config.color||''))?String(config.color).toLowerCase():defaults.color;
   obj.type='entranceFrame';obj.structure={projection,height,pierWidth,thickness,color};
   obj.size={w:pierWidth,d:projection,h:height};obj.unitPrice=Math.round(2*(pierWidth*height+pierWidth*projection)*3200);obj.rotationY=0;
@@ -1902,14 +1907,14 @@ function normalizeDownlightBeamObject(obj,spec=S){
   if(!isDownlightBeamObject(obj))return obj;
   const defaults=downlightBeamDefaults(spec),config=obj.structure&&typeof obj.structure==='object'?obj.structure:{};
   const length=placementRound(clampNumber(Number(config.length)||defaults.length,.5,Math.max(.5,Number(spec.W)||6)));
-  const depth=placementRound(clampNumber(Number(config.depth)||defaults.depth,.15,Math.max(.15,Number(spec.D)||3)));
-  const thickness=placementRound(clampNumber(Number(config.thickness)||defaults.thickness,.05,Math.min(.6,Math.max(.05,Number(spec.H)||2.4))));
-  let height=placementRound(clampNumber(Number(config.height)||defaults.height,Math.max(.5,thickness),Math.max(.5,Number(spec.H)||2.4)));
+  const depth=assetDimensionValue(config.depth,defaults.depth);
+  const thickness=assetDimensionValue(config.thickness,defaults.thickness);
+  let height=assetDimensionValue(config.height,defaults.height);
   const lightCount=Math.round(clampNumber(Number(config.lightCount)||defaults.lightCount,1,12));
   const color=/^#[0-9a-fA-F]{6}$/.test(String(config.color||''))?String(config.color).toLowerCase():defaults.color;
   const lightColor=/^#[0-9a-fA-F]{6}$/.test(String(config.lightColor||''))?String(config.lightColor).toLowerCase():defaults.lightColor;
   const wallAttached=config.wallAttached!==false;
-  if(wallAttached)height=placementRound(Math.max(.5,Number(spec.H)||2.4));
+  if(wallAttached)height=assetDimensionValue(spec.H,defaults.height);
   obj.type='downlightBeam';obj.structure={length,depth,thickness,height,lightCount,color,lightColor,wallAttached};
   obj.size={w:length,d:depth,h:height};obj.unitPrice=0;
   if(wallAttached&&Math.abs(Number(obj.rotationY)||0)%180<.001&&obj.position){
@@ -2545,17 +2550,17 @@ function updateEntranceFrameObject(id,key,value){
 function entranceFrameEditorMarkup(obj){
   const cfg=normalizeEntranceFrameObject(obj).structure,side=entranceFrameSide(obj),attachment=sceneAttachmentActive(obj)&&obj.attachment?.targetId==='storage-room'?obj.attachment:null,
     attachedLeft=attachment?.targetPort==='storage-left-front',attachedRight=attachment?.targetPort==='storage-right-front',row=(label,key,value,min,max,initial,disabled=false)=>
-    '<div class="structure-editor-row"><label>'+label+'</label><input type="range" min="'+min+'" max="'+max+'" step="0.05" value="'+value.toFixed(2)+'" data-frame-range="'+key+'"'+(disabled?' disabled':'')+'>'+
-    '<input type="number" min="'+min+'" max="'+max+'" step="0.05" value="'+value.toFixed(2)+'" data-frame-input="'+key+'" data-reset-default="'+initial+'" aria-label="'+label+'"'+(disabled?' disabled':'')+'><span class="unit">ม.</span></div>';
+    '<div class="structure-editor-row"><label>'+label+'</label><input type="range" min="'+min+'" max="'+max+'" step="0.01" value="'+value.toFixed(2)+'" data-frame-range="'+key+'"'+(disabled?' disabled':'')+'>'+
+    '<input type="number" min="'+min+'" max="'+max+'" step="0.01" value="'+value.toFixed(2)+'" data-frame-input="'+key+'" data-reset-default="'+initial+'" aria-label="'+label+'"'+(disabled?' disabled':'')+'><span class="unit">ม.</span></div>';
   return '<div class="structure-editor" data-frame-editor="'+esc(obj.id)+'">'+
     '<div class="structure-editor-actions"><button class="btn sm'+(side==='left'?' on':'')+'" type="button" data-frame-side="left">ชิดซ้าย</button><button class="btn sm'+(side==='right'?' on':'')+'" type="button" data-frame-side="right">ชิดขวา</button></div>'+
     '<label class="structure-editor-note">การเชื่อมโครงสร้าง</label><div class="structure-editor-actions"><button class="btn sm'+(!attachment?' on':'')+'" type="button" data-frame-attach="free">วางอิสระ</button>'+
     '<button class="btn sm'+(attachedLeft?' on':'')+'" type="button" data-frame-attach="storage-left"'+(!hasStore()?' disabled':'')+'>ต่อซ้ายของห้อง</button>'+
     '<button class="btn sm'+(attachedRight?' on':'')+'" type="button" data-frame-attach="storage-right"'+(!hasStore()?' disabled':'')+'>ต่อขวาของห้อง</button></div>'+
-    row('ระยะยื่น','projection',cfg.projection,.5,Math.max(.5,S.D),Math.min(2.4,S.D).toFixed(2),!!attachment)+
-    row('ความสูง','height',cfg.height,.5,MAX_ASSET_HEIGHT,Math.min(2.4,S.H).toFixed(2))+
-    row('ความกว้างเสา','pierWidth',cfg.pierWidth,.3,Math.max(.3,Math.min(3,S.W)),Math.min(1,S.W).toFixed(2))+
-    row('ความหนาโครง','thickness',cfg.thickness,.05,Math.min(.3,cfg.pierWidth*.8,cfg.height*.45),'0.15')+
+    row('ระยะยื่น','projection',cfg.projection,MIN_ASSET_DIMENSION,MAX_ASSET_DIMENSION,Math.min(2.4,S.D).toFixed(2),!!attachment)+
+    row('ความสูง','height',cfg.height,MIN_ASSET_DIMENSION,MAX_ASSET_DIMENSION,Math.min(2.4,S.H).toFixed(2))+
+    row('ความกว้างเสา','pierWidth',cfg.pierWidth,MIN_ASSET_DIMENSION,MAX_ASSET_DIMENSION,Math.min(1,S.W).toFixed(2))+
+    row('ความหนาโครง','thickness',cfg.thickness,MIN_ASSET_DIMENSION,MAX_ASSET_DIMENSION,'0.15')+
     '<label class="structure-editor-note">สีผิวโครงสร้าง</label><div class="structure-editor-color"><input type="color" value="'+cfg.color+'" data-frame-color><input type="text" maxlength="7" value="'+cfg.color.toUpperCase()+'" data-frame-hex aria-label="รหัสสีกรอบทางเข้า"></div>'+
     '<div class="structure-editor-note">'+sceneAttachmentLabel(attachment)+' · '+(attachment?'ระยะยื่นตามความลึกห้องอัตโนมัติ':'ลากบนภาพเพื่อเลื่อนซ้าย–ขวา')+' · Snap '+placementStepLabel()+' · พื้นที่ผิวประมาณ '+entranceFrameArea(obj).toFixed(2)+' ตร.ม.</div></div>';
 }
@@ -2609,9 +2614,9 @@ function downlightBeamEditorMarkup(obj){
     '<input type="number" min="'+min+'" max="'+max+'" step="'+step+'" value="'+value+'" data-beam-input="'+key+'" data-reset-default="'+initial+'" aria-label="'+label+'"><span class="unit">'+unit+'</span></div>';
   return '<div class="structure-editor" data-beam-editor="'+esc(obj.id)+'">'+
     row('ความยาวคาน','length',cfg.length.toFixed(2),.5,Math.max(.5,S.W),.05,Math.max(.5,S.W).toFixed(2))+
-    row('ความลึกคาน','depth',cfg.depth.toFixed(2),.15,Math.max(.15,S.D),.05,'0.30')+
-    row('ความหนาคาน','thickness',cfg.thickness.toFixed(2),.05,.6,.05,'0.20')+
-    row('ระดับติดตั้ง','height',cfg.height.toFixed(2),Math.max(.5,cfg.thickness),Math.max(.5,S.H),.05,Math.max(.5,S.H).toFixed(2))+
+    row('ความลึกคาน','depth',cfg.depth.toFixed(2),MIN_ASSET_DIMENSION,MAX_ASSET_DIMENSION,.01,'0.30')+
+    row('ความหนาคาน','thickness',cfg.thickness.toFixed(2),MIN_ASSET_DIMENSION,MAX_ASSET_DIMENSION,.01,'0.20')+
+    row('ระดับติดตั้ง','height',cfg.height.toFixed(2),MIN_ASSET_DIMENSION,MAX_ASSET_DIMENSION,.01,Math.min(MAX_ASSET_DIMENSION,Math.max(.01,S.H)).toFixed(2))+
     row('จำนวนดาวน์ไลท์','lightCount',cfg.lightCount,1,12,1,'5','ดวง')+
     '<button class="btn sm'+(cfg.wallAttached?' on':'')+'" type="button" data-beam-attach>ชิดด้านหน้าผนังหลัง · เสมอยอดผนัง</button>'+
     '<div class="structure-editor-actions"><label>สีคาน<input type="color" value="'+cfg.color+'" data-beam-color="color"></label><label>สีแสง<input type="color" value="'+cfg.lightColor+'" data-beam-color="lightColor"></label></div>'+
@@ -2667,10 +2672,10 @@ function updateSelectedObjectName(value){
 }
 function updateSelectedObjectSize(axis,value){
   const obj=objectById(objectEditor.selectedId);if(!obj||objectLocked(obj)||!['w','d','h'].includes(axis))return;
-  const maxSize={w:MAX_ASSET_WIDTH,d:MAX_ASSET_DEPTH,h:MAX_ASSET_HEIGHT},numeric=clampNumber(Number(value)||.01,.01,maxSize[axis]),
+  const maxSize={w:MAX_ASSET_WIDTH,d:MAX_ASSET_DEPTH,h:MAX_ASSET_HEIGHT},numeric=assetDimensionValue(value),
     before=objectSnapshot(),previous={...obj.size},previousStructure=isEntranceFrameObject(obj)?{...(obj.structure||{})}:null,
     locked=document.getElementById('assetSizeLock')?.checked!==false;
-  if(locked){const ratio=numeric/Math.max(.001,Number(obj.size[axis])||.001);['w','d','h'].forEach(key=>obj.size[key]=clampNumber((Number(obj.size[key])||.01)*ratio,.01,maxSize[key]));}
+  if(locked){const ratio=numeric/Math.max(MIN_ASSET_DIMENSION,Number(obj.size[axis])||MIN_ASSET_DIMENSION);['w','d','h'].forEach(key=>obj.size[key]=assetDimensionValue((Number(obj.size[key])||MIN_ASSET_DIMENSION)*ratio));}
   else obj.size[axis]=numeric;
   obj.size={w:+obj.size.w.toFixed(3),d:+obj.size.d.toFixed(3),h:+obj.size.h.toFixed(3)};
   /* Structural Assets rebuild obj.size from obj.structure during every sync.
@@ -2689,7 +2694,8 @@ function updateSelectedObjectSize(axis,value){
   recordObjectHistory(before);objectEditor.selectedId=obj.id;sync();syncAssetSettingsForm();
 }
 function resetSelectedObjectSize(){
-  const obj=objectById(objectEditor.selectedId);if(!obj||objectLocked(obj))return;normalizeSceneObjectModel(obj);const before=objectSnapshot(),original={...obj.originalSize};
+  const obj=objectById(objectEditor.selectedId);if(!obj||objectLocked(obj))return;normalizeSceneObjectModel(obj);const before=objectSnapshot(),original={
+    w:assetDimensionValue(obj.originalSize?.w),d:assetDimensionValue(obj.originalSize?.d),h:assetDimensionValue(obj.originalSize?.h)};
   if(isEntranceFrameObject(obj)){
     obj.structure={...(obj.structure||{}),pierWidth:original.w,projection:original.d,height:original.h};normalizeEntranceFrameObject(obj,S);
   }else obj.size=original;
