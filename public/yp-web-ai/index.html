@@ -641,7 +641,7 @@ select:focus{border-color:var(--acc)}
       <label class="grid-check"><input type="checkbox" id="magneticSnapEnabled" checked> แม่เหล็กมุม 15 ซม.</label>
     </div>
     <div class="placement-readout" id="placementGridInfo">Snap 5 ซม. · คลิก Asset เพื่อดูพิกัด</div>
-    <div class="note" style="margin-top:0">Smart Move: ลากตัว Asset เพื่อย้ายบนระดับเดิม · ลากจุด Anchor ไปชนมุม กึ่งกลาง หรือพื้นผิว เพื่อจัด X/Y/Z อัตโนมัติ · โหมดแยกแกนยังอยู่ใน “ปรับละเอียด”</div>
+    <div class="note" style="margin-top:0">Smart Move: ลากตัว Asset เพื่อย้ายบนระดับเดิม · ชี้ Point ให้ขยายเป็นสีแดง แล้วคลิกค้างเพื่อลาก · Point เปลี่ยนเป็นสีเขียวเมื่อ Snap สำเร็จและปล่อยเมาส์ได้ · โหมดแยกแกนยังอยู่ใน “ปรับละเอียด”</div>
   </div>
 
   <div class="asset-pane" id="catalogPane" data-asset-pane="catalog">
@@ -3735,8 +3735,9 @@ class ThreeBoothRenderer{
     this.controls.addEventListener('change',this.onControlsChange);
 
     this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.pointerDrag=null;
-    this.anchorGuideGroup=null;this.snapPreviewGroup=null;
+    this.anchorGuideGroup=null;this.snapPreviewGroup=null;this.hoveredAnchorMarker=null;this.activeAnchorMarker=null;
     this.raycaster=new THREE.Raycaster();this.pointer=new THREE.Vector2();
+    this.anchorScreenPoint=new THREE.Vector3();
     this.dragPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);this.dragPoint=new THREE.Vector3();
     this.verticalDragPlane=new THREE.Plane();this.verticalDragPoint=new THREE.Vector3();
     this.logoDragPlane=new THREE.Plane();this.logoDragPoint=new THREE.Vector3();
@@ -3744,11 +3745,13 @@ class ThreeBoothRenderer{
     this.onObjectPointerMove=e=>this.moveObjectDrag(e);
     this.onObjectPointerUp=e=>this.finishObjectDrag(e);
     this.onObjectLostPointerCapture=e=>this.finishObjectDrag(e);
+    this.onObjectPointerLeave=()=>{if(!this.pointerDrag)this.setHoveredAnchorMarker(null);};
     this.renderer.domElement.addEventListener('pointerdown',this.onObjectPointerDown,true);
     this.renderer.domElement.addEventListener('pointermove',this.onObjectPointerMove);
     this.renderer.domElement.addEventListener('pointerup',this.onObjectPointerUp);
     this.renderer.domElement.addEventListener('pointercancel',this.onObjectPointerUp);
     this.renderer.domElement.addEventListener('lostpointercapture',this.onObjectLostPointerCapture);
+    this.renderer.domElement.addEventListener('pointerleave',this.onObjectPointerLeave);
 
     this.scene.add(new THREE.HemisphereLight(0xe9f0ff,0x242017,1.15));
     const key=new THREE.DirectionalLight(0xffffff,1.8);
@@ -3778,6 +3781,7 @@ class ThreeBoothRenderer{
     canvas.removeEventListener('pointermove',this.onObjectPointerMove);canvas.removeEventListener('pointerup',this.onObjectPointerUp);
     canvas.removeEventListener('pointercancel',this.onObjectPointerUp);
     canvas.removeEventListener('lostpointercapture',this.onObjectLostPointerCapture);
+    canvas.removeEventListener('pointerleave',this.onObjectPointerLeave);
     this.resizeObserver.disconnect();this.controls.removeEventListener('change',this.onControlsChange);this.controls.dispose();
     this.scene.remove(this.boothGroup);disposeThreeObject(this.boothGroup);this.renderer.dispose();
     this.fixtureTemplates.forEach(template=>{template.traverse(o=>{if(o.userData)delete o.userData.sharedAsset;});disposeThreeObject(template);});
@@ -3969,8 +3973,60 @@ class ThreeBoothRenderer{
       previewFrom:source?{...source.position}:{x:obj.position.x,y:obj.position.y,z:obj.position.z},previewTo:{x:point.x,y:point.y-floorY,z:point.z}}};
   }
   clearAnchorGuides(){
+    this.hoveredAnchorMarker=null;this.activeAnchorMarker=null;
+    if(this.renderer?.domElement&&!this.pointerDrag)this.renderer.domElement.style.cursor='';
     if(!this.anchorGuideGroup)return;const parent=this.anchorGuideGroup.parent;if(parent)parent.remove(this.anchorGuideGroup);
     disposeThreeObject(this.anchorGuideGroup);this.anchorGuideGroup=null;
+  }
+  styleAnchorMarker(marker,state='idle'){
+    if(!marker?.material)return;
+    const baseColor=Number(marker.userData.anchorBaseColor)||0xffffff,active=state!=='idle';
+    marker.material.color.setHex(state==='snapped'?0x24d26f:active?0xff3b30:baseColor);
+    marker.material.opacity=state==='snapped'?1:(active ? .98 : (marker.userData.anchorBaseOpacity??.82));
+    marker.scale.setScalar(state==='snapped'?1.9:active?1.65:1);
+    marker.userData.anchorVisualState=state;
+  }
+  setHoveredAnchorMarker(marker){
+    if(this.pointerDrag)return;
+    if(this.hoveredAnchorMarker&&this.hoveredAnchorMarker!==marker)this.styleAnchorMarker(this.hoveredAnchorMarker,'idle');
+    this.hoveredAnchorMarker=marker||null;
+    if(marker)this.styleAnchorMarker(marker,'hover');
+    if(this.renderer?.domElement)this.renderer.domElement.style.cursor=marker?'grab':'';
+    if(this.active)this.renderer.render(this.scene,this.camera);
+  }
+  pickAnchorMarker(event){
+    if(objectEditor.moveMode!=='smart'||!this.anchorGuideGroup?.children?.length)return null;
+    const rect=this.renderer.domElement.getBoundingClientRect(),hitRadius=event.pointerType==='touch'?28:22;
+    if(!rect.width||!rect.height)return null;
+    let best=null,bestDistance=Infinity;
+    this.anchorGuideGroup.children.forEach(marker=>{
+      if(!marker.visible||!marker.userData?.anchorGuide||!marker.userData.snapAnchorId)return;
+      marker.getWorldPosition(this.anchorScreenPoint);this.anchorScreenPoint.project(this.camera);
+      if(this.anchorScreenPoint.z < -1||this.anchorScreenPoint.z > 1)return;
+      const x=rect.left+(this.anchorScreenPoint.x+1)*rect.width/2,y=rect.top+(1-this.anchorScreenPoint.y)*rect.height/2,
+        distance=Math.hypot(event.clientX-x,event.clientY-y);
+      if(distance<=hitRadius&&distance<bestDistance){best=marker;bestDistance=distance;}
+    });
+    return best;
+  }
+  updateAnchorHover(event){
+    if(this.pointerDrag||!this.anchorGuideGroup?.children?.length||event.pointerType==='touch')return;
+    this.setHoveredAnchorMarker(this.pickAnchorMarker(event));
+  }
+  setActiveAnchorMarker(marker){
+    if(this.hoveredAnchorMarker&&this.hoveredAnchorMarker!==marker)this.styleAnchorMarker(this.hoveredAnchorMarker,'idle');
+    this.hoveredAnchorMarker=null;this.activeAnchorMarker=marker||null;
+    if(marker)this.styleAnchorMarker(marker,'active');
+    if(this.renderer?.domElement)this.renderer.domElement.style.cursor=marker?'grabbing':'';
+    const status=document.getElementById('objectLayoutStatus');if(status&&marker)status.textContent='ล็อก Point แล้ว ลากไปยังจุด Snap';
+  }
+  setActiveAnchorSnapped(snapped){
+    if(!this.activeAnchorMarker)return;this.styleAnchorMarker(this.activeAnchorMarker,snapped?'snapped':'active');
+    const status=document.getElementById('objectLayoutStatus');if(status)status.textContent=snapped?'Snap สำเร็จ ปล่อยเมาส์ได้':'กำลังลาก Point ไปยังจุด Snap';
+  }
+  releaseActiveAnchorMarker(){
+    if(this.activeAnchorMarker)this.styleAnchorMarker(this.activeAnchorMarker,'idle');
+    this.activeAnchorMarker=null;if(this.renderer?.domElement)this.renderer.domElement.style.cursor='';
   }
   buildObjectAnchorGuides(id){
     this.clearAnchorGuides();const obj=objectById(id);if(!obj||objectLocked(obj)||S.magneticSnap===false||obj.placement?.anchorSnap===false||objectEditor.moveMode==='surface')return;
@@ -3982,7 +4038,8 @@ class ThreeBoothRenderer{
         material=new T.MeshBasicMaterial({color,transparent:true,opacity:anchor.level==='base'?.96:.7,depthTest:false});
       const marker=new T.Mesh(new T.SphereGeometry(radius,12,8),material);marker.name='object-anchor-'+anchor.id;
       marker.position.set(anchor.position.x,floorY+anchor.position.y,anchor.position.z);marker.renderOrder=28;
-      marker.userData.anchorGuide=true;marker.userData.objectId=id;marker.userData.snapAnchorId=anchor.id;group.add(marker);
+      marker.userData.anchorGuide=true;marker.userData.objectId=id;marker.userData.snapAnchorId=anchor.id;
+      marker.userData.anchorBaseColor=color;marker.userData.anchorBaseOpacity=anchor.level==='base'?.96:.7;group.add(marker);
     });
     this.anchorGuideGroup=group;this.boothGroup.add(group);
   }
@@ -4045,10 +4102,11 @@ class ThreeBoothRenderer{
     if((!this.objectMeshes.size&&!this.brandingHitTarget)||event.isPrimary===false)return;
     if(event.pointerType!=='touch'&&event.button!==0)return;
     this.setRayFromEvent(event);
+    const anchorMarker=this.pickAnchorMarker(event);
     const targets=Array.from(this.objectMeshes.values());if(this.brandingHitTarget)targets.push(this.brandingHitTarget);if(this.anchorGuideGroup)targets.push(this.anchorGuideGroup);
     const hits=this.raycaster.intersectObjects(targets,true);
-    if(!hits.length){selectObject(null);return;}
-    const hit=hits[0];
+    if(!anchorMarker&&!hits.length){selectObject(null);return;}
+    const hit=anchorMarker?{object:anchorMarker,point:anchorMarker.getWorldPosition(new this.THREE.Vector3())}:hits[0];
     if(hit.object.userData.brandPlacement){
       const face=BoothSpec.logoWall||'back',point=this.logoPoint(event,face),coords=this.logoCoordinates(point,face);if(!coords)return;
       event.preventDefault();event.stopImmediatePropagation();selectLogoPlacement(true);this.controls.enabled=false;
@@ -4069,6 +4127,7 @@ class ThreeBoothRenderer{
     const sourceAnchor=sourceAnchorId&&sceneObjectSnapAnchors(obj).find(anchor=>anchor.id===sourceAnchorId),
       sourceAnchorOffset=sourceAnchor?{x:sourceAnchor.position.x-obj.position.x,y:sourceAnchor.position.y-(Number(obj.position.y)||0),z:sourceAnchor.position.z-obj.position.z}:null;
     this.controls.enabled=false;
+    if(smartAnchor)this.setActiveAnchorMarker(this.anchorGuideGroup?.children.find(marker=>marker.userData.snapAnchorId===sourceAnchorId)||null);
     this.renderer.domElement.setPointerCapture(event.pointerId);
     document.getElementById('objectToolbar')?.classList.add('context-dragging');
     this.pointerDrag={kind:'asset',pointerId:event.pointerId,id,mode,before:objectSnapshot(),startX:obj.position.x,startY:Number(obj.position.y)||0,startZ:obj.position.z,
@@ -4077,7 +4136,7 @@ class ThreeBoothRenderer{
       grabOffset:hit.point.clone().sub(root.position),sourceAnchorId,sourceAnchorOffset,moved:false};
   }
   moveObjectDrag(event){
-    const drag=this.pointerDrag;if(!drag||drag.pointerId!==event.pointerId)return;
+    const drag=this.pointerDrag;if(!drag){this.updateAnchorHover(event);return;}if(drag.pointerId!==event.pointerId)return;
     if(drag.kind==='logo'){
       const point=this.logoPoint(event,drag.face),coords=this.logoCoordinates(point,drag.face);if(!coords)return;
       event.preventDefault();
@@ -4131,6 +4190,7 @@ class ThreeBoothRenderer{
     if(!next)return;
     if(!anchorMatch&&!next.surface){const magneticMode=drag.mode==='smart'?(drag.sourceAnchorId?'smart':'plane'):drag.mode;
       anchorMatch=magneticSnapPlacement(obj,next,magneticMode,drag.sourceAnchorId);if(anchorMatch)next={...next,...anchorMatch.position};}
+    if(drag.mode==='smart'&&drag.sourceAnchorId)this.setActiveAnchorSnapped(!!(anchorMatch||snapPreview));
     const distance=Math.hypot(next.x-drag.startX,next.y-drag.startY,next.z-drag.startZ);
     if(sceneAttachmentActive(obj)&&distance>.003)obj.attachment=null;
     obj.position.x=next.x;obj.position.y=next.y;obj.position.z=next.z;
@@ -4145,7 +4205,7 @@ class ThreeBoothRenderer{
   }
   finishObjectDrag(event){
     const drag=this.pointerDrag;if(!drag||drag.pointerId!==event.pointerId)return;
-    this.pointerDrag=null;this.controls.enabled=true;this.clearMagneticSnapPreview();document.getElementById('objectToolbar')?.classList.remove('context-dragging');
+    this.pointerDrag=null;this.controls.enabled=true;this.releaseActiveAnchorMarker();this.clearMagneticSnapPreview();document.getElementById('objectToolbar')?.classList.remove('context-dragging');
     if(this.renderer.domElement.hasPointerCapture(event.pointerId))this.renderer.domElement.releasePointerCapture(event.pointerId);
     if(drag.kind==='logo'){
       if(drag.moved){this.currentKey='';sync();const status=document.getElementById('objectLayoutStatus');if(status)status.textContent='ย้ายโลโก้แล้ว';}
@@ -4183,6 +4243,7 @@ class ThreeBoothRenderer{
     const key=this.visualKey(spec);if(key===this.currentKey)return;
     this.currentKey=key;this.buildId=(this.buildId||0)+1;this.scene.remove(this.boothGroup);disposeThreeObject(this.boothGroup);
     this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.anchorGuideGroup=null;this.snapPreviewGroup=null;
+    this.hoveredAnchorMarker=null;this.activeAnchorMarker=null;
     this.boothGroup=new this.THREE.Group();this.scene.add(this.boothGroup);this.buildBooth(spec);
     if(logoEditor.selected)this.setBrandSelected(true);else this.setSelected(objectEditor.selectedId);
     const span=Math.max(spec.W,spec.D,spec.H);

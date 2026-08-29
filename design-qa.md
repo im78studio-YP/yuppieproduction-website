@@ -37,6 +37,34 @@ passed
 
 ---
 
+# Design QA — Anchor Lock Move Feedback
+
+## Interaction contract
+
+- Hovering a visible Asset Point enlarges it and changes it to red before drag begins.
+- Pointer Assist uses a fixed screen-space capture radius around each Point: 22 px for mouse/pen and 28 px for touch, independent of camera distance.
+- The nearest Point inside that capture radius takes priority over the Asset surface, so an approximate click still locks the intended Point.
+- Click-hold on that Point uses it as the locked source anchor for Smart Move.
+- While a valid Magnetic Snap is active, the locked Point changes to green and the live status reads `Snap สำเร็จ ปล่อยเมาส์ได้`.
+- Releasing the pointer completes placement and returns the Point to its normal anchor color.
+
+## Verification evidence
+
+- Tested in the local preview at `http://127.0.0.1:4173/yp-web-ai/index.html` with a counter Asset.
+- Visual hover check: Point enlarged and rendered red; the 3D canvas cursor changed to `grab`.
+- Pointer Assist check: hovering 18 px outside the visible Point still selected the intended Point and showed the red hover state.
+- Priority check: a click-drag from the assisted area over the Asset surface moved the Asset by the Point rather than selecting the mesh surface.
+- Live drag check: the canvas cursor changed to `grabbing`, Magnetic Snap was acquired, and the status changed to `Snap สำเร็จ ปล่อยเมาส์ได้` before pointer release.
+- Post-release check: the Asset remained at the snapped position and the active Point returned to its normal visual state.
+- Browser console check: 0 errors or warnings.
+- Inline application JavaScript syntax check: passed.
+
+## Final result
+
+passed
+
+---
+
 # Design QA — My Asset GLB Resizing
 
 ## Source of truth
