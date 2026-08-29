@@ -37,6 +37,67 @@ passed
 
 ---
 
+# Design QA — Island Booth
+
+## Source visual truth
+
+- Reference: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-aa173f55-b47d-4597-aa6b-7a02cf078f21.png`
+- Source dimensions: 369 × 218 px.
+- Requested state: add `Island` as an enabled booth type with all four sides open while preserving the existing booth-type card system.
+
+## Implementation evidence
+
+- Browser-rendered full view: `artifacts/island-booth-full.png`.
+- Focused booth-type menu: `artifacts/island-booth-menu.png`.
+- Side-by-side source/implementation comparison: `artifacts/island-booth-comparison.png`.
+- Browser viewport and full screenshot: 1191 × 912 CSS px at device pixel ratio 1; no density normalization required.
+- Focused implementation crop: 401 × 245 px.
+- Tested state: `Island` selected at the default 6 × 3 × 2.4 m booth size.
+
+## Full-view comparison evidence
+
+- The new `Island — เปิด 4 ด้าน` card uses the same type scale, border, radius, spacing, and gold selected state as the existing booth-type cards.
+- The three-column grid now uses the formerly open slot on the second row without changing the existing cards or surrounding hierarchy.
+- The 3D scene shows the full floor footprint without perimeter booth walls.
+
+## Focused region comparison evidence
+
+- The side-by-side comparison shows the original five-card menu on the left and the extended six-card menu on the right.
+- Existing labels, card density, and visual tokens are preserved; the only intentional structural change is the added `Island` card and its explanatory note.
+
+## Required fidelity surfaces
+
+- Fonts and typography: existing Thai/English font family, weights, sizes, and line heights are unchanged.
+- Spacing and layout rhythm: card gaps and three-column grid alignment match the reference; no overflow or clipped controls were found.
+- Colors and visual tokens: dark surface, neutral border, muted helper text, and gold active state reuse existing tokens.
+- Image quality and asset fidelity: no raster or icon assets were introduced; the live 3D viewport remains sharp at density 1.
+- Copy and content: `Island`, `เปิด 4 ด้าน`, and the no-perimeter-wall explanation accurately describe the new behavior.
+
+## Interaction and regression verification
+
+- Selecting `Island` updates the active card, scene tag, floor-only geometry, and type note.
+- Geometry Manifest and Prompt report `Island`, no booth walls, and all four sides open.
+- Wall-mounted branding automatically switches to floor-standing mode, preventing a logo from appearing on a nonexistent back wall.
+- Wall-light mode switches off and cannot be re-enabled while Island has no booth walls.
+- Browser console check: 0 warnings and 0 errors.
+- Inline JavaScript syntax check and `git diff --check`: passed.
+
+## Findings
+
+- No actionable P0, P1, or P2 issues remain.
+
+## Comparison history
+
+- Initial reference had five active booth types and no Island option.
+- Implementation enabled the existing Island data model, added no-wall normalization, and corrected the Prompt's open-side list to include the back side.
+- Post-fix visual and interaction checks passed without additional visual changes.
+
+## Final result
+
+passed
+
+---
+
 # Regression QA — Asset Overlap, Above-Wall Height & Peninsular Storage Walls
 
 ## Reproduction
