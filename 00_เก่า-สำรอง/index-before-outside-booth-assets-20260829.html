@@ -462,27 +462,17 @@ select:focus{border-color:var(--acc)}
   width:max-content;max-width:calc(100% - 24px);align-items:center;grid-template-columns:none;gap:4px;margin:0;padding:6px;
   border:1px solid rgba(224,168,60,.38);border-radius:10px;background:rgba(9,11,15,.88);backdrop-filter:blur(12px);
   box-shadow:0 12px 28px rgba(0,0,0,.36)}
-.asset-tool-active #view.three-active+.object-actions.canvas-object-toolbar,
+.asset-panel-open #view.three-active+.object-actions.canvas-object-toolbar,
 .logo-placement-active #view.three-active+.object-actions.canvas-object-toolbar{display:flex}
 .canvas-object-toolbar .btn{min-height:36px;padding:7px 9px;font-size:10.5px;border-color:transparent;background:transparent;white-space:nowrap}
 .canvas-object-toolbar .btn:hover{border-color:var(--line);background:var(--bg4)}
 .canvas-object-toolbar .btn.danger{color:#ef9b82}
 .canvas-object-toolbar #btnLockObject.on{border-color:rgba(224,168,60,.62);background:rgba(224,168,60,.16);color:var(--acc2)}
-.canvas-object-toolbar .move-mode.on{border-color:rgba(224,168,60,.62);background:rgba(224,168,60,.16);color:var(--acc2)}
-.canvas-object-toolbar .move-advanced{position:relative}
-.canvas-object-toolbar .move-advanced>summary{list-style:none;display:flex;align-items:center;cursor:pointer;user-select:none}
-.canvas-object-toolbar .move-advanced>summary::-webkit-details-marker{display:none}
-.canvas-object-toolbar .move-advanced>summary.on,.canvas-object-toolbar .move-advanced[open]>summary{border-color:rgba(224,168,60,.5);color:var(--acc2)}
-.canvas-object-toolbar .move-advanced-menu{position:absolute;left:0;bottom:calc(100% + 9px);display:grid;gap:4px;min-width:160px;padding:6px;
-  border:1px solid rgba(224,168,60,.38);border-radius:9px;background:rgba(9,11,15,.97);box-shadow:0 12px 28px rgba(0,0,0,.42)}
-.canvas-object-toolbar .move-advanced-menu .btn{width:100%;justify-content:flex-start;text-align:left}
 .canvas-object-toolbar.locked-selected .tool-mode{background:rgba(138,145,156,.16);color:#cbd1da}
 .canvas-object-toolbar .tool-mode{display:flex;align-items:center;min-height:36px;padding:7px 10px;border-radius:7px;
   background:rgba(224,168,60,.14);color:var(--acc2);font-size:10.5px;font-weight:600;white-space:nowrap}
-.canvas-object-toolbar .brand-move-mode{display:none}
 .canvas-object-toolbar .tool-sep{width:1px;height:22px;margin:0 2px;background:var(--line)}
-.canvas-object-toolbar.brand-selected .btn,.canvas-object-toolbar.brand-selected .tool-sep,.canvas-object-toolbar.brand-selected .move-advanced{display:none}
-.canvas-object-toolbar.brand-selected .brand-move-mode{display:flex}
+.canvas-object-toolbar.brand-selected .btn,.canvas-object-toolbar.brand-selected .tool-sep{display:none}
 .logo-position-button{width:100%;margin-top:10px;border-color:rgba(224,168,60,.52);color:var(--acc2)}
 .logo-position-button.on{background:rgba(224,168,60,.16);box-shadow:0 0 0 1px rgba(224,168,60,.22) inset}
 
@@ -512,10 +502,6 @@ select:focus{border-color:var(--acc)}
   .dock-update-button{min-height:48px;font-size:14px}
   .vtop{overflow-x:auto}.tag{display:none}.brandbar{flex-wrap:wrap;overflow:visible}.brandbar input{min-width:180px}
   .object-actions.canvas-object-toolbar{position:static;left:auto;bottom:auto;transform:none;align-self:center;margin:-52px 8px 8px;overflow-x:auto;max-width:calc(100% - 16px)}
-  .object-actions.canvas-object-toolbar:has(.move-advanced[open]){overflow:visible}
-  .object-actions.canvas-object-toolbar:has(.move-advanced[open])>:not(.move-advanced){display:none}
-  .canvas-object-toolbar .move-advanced-menu{position:absolute;left:50%;right:auto;bottom:calc(100% + 10px);z-index:40;
-    width:min(calc(100vw - 84px),360px);transform:translateX(-50%);grid-template-columns:repeat(3,minmax(0,1fr));min-width:0}
   .selected-card .object-selected{display:block}
   .object-inspector-lock{display:inline-flex;flex:0 0 100%;justify-content:center;margin-top:8px}
   .booth-curve-field{display:none}.booth-curve-mobile-trigger{display:flex}
@@ -534,11 +520,9 @@ select:focus{border-color:var(--acc)}
   .floor-sticker-control{grid-template-columns:62px minmax(70px,1fr) 58px 26px 16px}
 }
 @media(max-width:360px){
-  .object-actions.canvas-object-toolbar{max-width:calc(100% - 12px);overflow-x:auto}
+  .object-actions.canvas-object-toolbar{max-width:none;overflow:visible}
   .canvas-object-toolbar .btn{width:38px;min-width:38px;padding:7px 4px;font-size:0}
   .canvas-object-toolbar .btn:before{font-size:15px}
-  #btnMoveSmart:before{content:'✥'}#btnMovePlane:before{content:'↔'}#btnMoveHeight:before{content:'↕'}#btnMoveSurface:before{content:'⌁'}
-  .move-advanced-summary{width:42px;min-width:42px;font-size:0}.move-advanced-summary:before{content:'⚙';font-size:14px}
   #btnRotateObject:before{content:'↻'}#btnDuplicateObject:before{content:'⧉'}#btnDeleteObject:before{content:'×'}
   #btnUndoObject:before{content:'↶'}#btnRedoObject:before{content:'↷'}
   .canvas-object-toolbar #btnLockObject{width:52px;min-width:52px;padding:7px 5px;font-size:9px}
@@ -619,10 +603,9 @@ select:focus{border-color:var(--acc)}
     <div class="asset-grid-head"><b>ช่วยจัดวาง Asset</b><span>Snap 5 ซม. · ไม่แสดงเส้นกริด</span></div>
     <div class="asset-grid-options">
       <label class="grid-check"><input type="checkbox" id="placementSnapEnabled" checked> Snap ทุก 5 ซม.</label>
-      <label class="grid-check"><input type="checkbox" id="magneticSnapEnabled" checked> แม่เหล็กมุม 15 ซม.</label>
     </div>
     <div class="placement-readout" id="placementGridInfo">Snap 5 ซม. · คลิก Asset เพื่อดูพิกัด</div>
-    <div class="note" style="margin-top:0">Smart Move: ลากตัว Asset เพื่อย้ายบนระดับเดิม · ลากจุด Anchor ไปชนมุม กึ่งกลาง หรือพื้นผิว เพื่อจัด X/Y/Z อัตโนมัติ · โหมดแยกแกนยังอยู่ใน “ปรับละเอียด”</div>
+    <div class="note" style="margin-top:0">ระบบใช้ระยะ 5 ซม. สำหรับจัดวางและตรวจขอบเขต โดยไม่วาดเส้นกริดบนพื้นที่ทำงาน · อนุญาตให้ Asset ซ้อนทับกันได้ แต่ยังห้ามออกนอกบูธหรือชนโครงสร้างหลัก</div>
   </div>
 
   <div class="asset-pane" id="catalogPane" data-asset-pane="catalog">
@@ -630,7 +613,7 @@ select:focus{border-color:var(--acc)}
       <div class="sech"><h3>คลังอุปกรณ์</h3><span class="hint">9 รายการ</span></div>
       <div class="catalog-groups" id="objectCatalog"></div>
       <div class="catalog-status" id="objectCatalogStatus" role="status" aria-live="polite"></div>
-      <div class="note">คลิกหรือแตะรายการเพื่อเพิ่มลงบูธ ระบบจะหาตำแหน่งเริ่มต้นให้อัตโนมัติ<br>เลือกวัตถุบนภาพ แล้วใช้แถบใต้ภาพเพื่อย้าย X/Z, ยก–ลด Y, Snap เข้าพื้นผิว, หมุน ทำสำเนา หรือลบ</div>
+      <div class="note">คลิกหรือแตะรายการเพื่อเพิ่มลงบูธ ระบบจะหาตำแหน่งว่างให้อัตโนมัติ<br>เลือกวัตถุบนภาพเพื่อย้าย หมุน ทำสำเนา หรือลบด้วยแถบเครื่องมือใต้ภาพ</div>
     </div>
   </div>
 
@@ -650,7 +633,7 @@ select:focus{border-color:var(--acc)}
         <div class="note">เมื่อเลือกไฟล์ ระบบจะอ่านขนาดจริงให้อัตโนมัติเป็นเมตร (กว้าง × ลึก × สูง ตามมาตรฐาน GLB) แสดงรูปแบบ 0.00 ม. และยังแก้ไขเองได้ ไฟล์จะถูกเก็บไว้ในเบราว์เซอร์เครื่องนี้</div>
       </div>
       <div class="catalog-status" id="myAssetStatus" role="status" aria-live="polite"></div>
-      <div class="note">คอมพิวเตอร์ลากการ์ด My Asset ไปวางบนพื้นในหรือนอกพื้นที่บูธได้ ส่วนมือถือให้กด “เพิ่ม” ก่อน แล้วลากอุปกรณ์บนภาพ 3D เพื่อจัดตำแหน่ง ระบบยังคงสแนประยะ 5 ซม. และตรวจการชนโครงสร้างหลัก</div>
+      <div class="note">คอมพิวเตอร์ลากการ์ด My Asset ไปวางบนพื้นในพื้นที่บูธได้ ส่วนมือถือให้กด “เพิ่ม” ก่อน แล้วลากอุปกรณ์บนภาพ 3D เพื่อจัดตำแหน่ง ระบบจะสแนประยะ 5 ซม. และตรวจขอบเขต/การชนให้ก่อนวาง</div>
       <div class="my-asset-list" id="myAssetList"></div>
     </div>
   </div>
@@ -998,16 +981,7 @@ select:focus{border-color:var(--acc)}
     </div>
     <div id="view" role="tabpanel" aria-label="พื้นที่ออกแบบบูธ"></div>
     <div class="object-actions canvas-object-toolbar" id="objectToolbar" role="toolbar" aria-label="เครื่องมือจัดวางวัตถุ">
-      <span class="tool-mode brand-move-mode" title="ลากโลโก้เพื่อย้ายตำแหน่ง">✥ ลากโลโก้เพื่อย้าย</span>
-      <button class="btn move-mode on" id="btnMoveSmart" type="button" title="ลากตัว Asset เพื่อย้ายระดับเดิม หรือลาก Anchor ไปชนจุดและพื้นผิว" aria-label="เปิด Smart Move">✥ Smart Move</button>
-      <details class="move-advanced" id="moveAdvanced">
-        <summary class="btn move-advanced-summary" title="เลือกโหมดปรับตำแหน่งแบบละเอียด">ปรับละเอียด</summary>
-        <div class="move-advanced-menu" role="group" aria-label="โหมดปรับตำแหน่งแบบละเอียด">
-          <button class="btn move-mode" id="btnMovePlane" type="button" title="ย้ายซ้าย–ขวาและหน้า–หลัง" aria-label="ย้าย Asset บนแกน X และ Z">↔ พื้น X/Z</button>
-          <button class="btn move-mode" id="btnMoveHeight" type="button" title="ยกหรือลดระดับ" aria-label="ยกหรือลด Asset บนแกน Y">↕ ยก Y</button>
-          <button class="btn move-mode" id="btnMoveSurface" type="button" title="ลากไป Snap กับพื้น ผนัง เพดาน โครงสร้าง หรือ Asset อื่น" aria-label="Snap Asset เข้ากับพื้นผิว">⌁ Snap ผิว</button>
-        </div>
-      </details>
+      <span class="tool-mode" title="ลากวัตถุบนพื้นเพื่อย้ายตำแหน่ง">✥ ย้าย</span>
       <button class="btn" id="btnLockObject" type="button" title="ล็อก Asset" aria-label="ล็อก Asset ที่เลือก">Lock</button>
       <button class="btn" id="btnRotateObject" type="button" title="หมุน 45 องศา" aria-label="หมุนวัตถุ 45 องศา">↻ หมุน 45°</button>
       <button class="btn" id="btnDuplicateObject" type="button" title="ทำสำเนา" aria-label="ทำสำเนาวัตถุ">⧉ สำเนา</button>
@@ -1383,7 +1357,7 @@ const BoothSpec={version:2,cat:'food',primary:'#2e7d4f',colTouched:false,seconda
   logoMount:'wall',logoWall:'back',logoWidth:2,logoDepth:.05,logoBaseWidth:0,logoBaseDepth:0,logoBaseColor:'#20252d',logoColor:'#2e7d4f',logoColorTouched:false,logoWallU:3,logoWallY:1.6,
   logoFloorX:3,logoFloorZ:1.5,logoFloorRotation:0,
   logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,wallRadius:3.5,
-  placementSnap:true,magneticSnap:true,aiRendering:defaultAIRenderingSettings()};
+  placementSnap:true,aiRendering:defaultAIRenderingSettings()};
 const S=BoothSpec;
 const MAX_CARPET_TEXTURE_UPLOADS=3;
 const MAX_TILE_TEXTURE_UPLOADS=3;
@@ -1503,7 +1477,7 @@ const brandScaleFraction=(value,availableWidth=6)=>{
 const logoScaleFactor=(value,availableWidth=6)=>brandScaleFraction(value,availableWidth);
 const nameScaleFactor=(value,availableWidth=6)=>brandScaleFraction(value,availableWidth);
 const serializeBoothSpec=()=>JSON.stringify(BoothSpec);
-const objectEditor={selectedId:null,past:[],future:[],seq:0,moveMode:'smart'};
+const objectEditor={selectedId:null,past:[],future:[],seq:0};
 const logoEditor={selected:false};
 const LAYOUT_KEYS=['W','D','type','stSize','stW','stD','stPos'];
 let lastValidLayout=null;
@@ -1698,7 +1672,6 @@ function buildGeometryManifest(spec=S){
     camera:currentCameraManifest(spec),permissions:{allowOptionalProps:ai.allowOptionalProps,optionalCategories:{...ai.optionalPermissions}},objects};
 }
 const PLACEMENT_GRID=.05;
-const MAGNETIC_SNAP_DISTANCE=.15;
 /* ทดลองเปิดการซ้อน Asset: ขอบบูธ ห้องเก็บของ และแท่น 360 ยังเป็นพื้นที่ห้ามวาง
    การวางอัตโนมัติยังค้นหาช่องว่างก่อน เพื่อลดการกอง Asset โดยไม่ตั้งใจ */
 const ALLOW_ASSET_OVERLAP=true;
@@ -1712,13 +1685,13 @@ const isEntranceFrameObject=obj=>obj?.type==='entranceFrame'||obj?.catalogId==='
 const isDownlightBeamItem=item=>item?.type==='downlightBeam'||item?.catalogId==='downlight-beam';
 const isDownlightBeamObject=obj=>obj?.type==='downlightBeam'||obj?.catalogId==='downlight-beam';
 const DOWNLIGHT_MODEL_URL='./assets/lights/Downlight_V1.glb';
-const SCENE_OBJECT_SCHEMA_VERSION=2;
-const SCENE_CAPABILITY_KEYS=Object.freeze(['floorPlaceable','wallMountable','ceilingMountable','free3DPlaceable','surfaceSnappable','attachable','resizable','rotatable','repeatable','styleable','compound']);
+const SCENE_OBJECT_SCHEMA_VERSION=1;
+const SCENE_CAPABILITY_KEYS=Object.freeze(['floorPlaceable','wallMountable','ceilingMountable','attachable','resizable','rotatable','repeatable','styleable','compound']);
 const SCENE_COLLISION_LAYERS=Object.freeze(['structure','furniture','decoration','surface','optional-prop']);
 function defaultSceneCapabilities(item={}){
-  const declared=Array.isArray(item.capabilities)?item.capabilities:null,source=[...(declared||[
-    item.mount==='ceiling'?'ceilingMountable':item.mount==='wall'?'wallMountable':'floorPlaceable','free3DPlaceable','surfaceSnappable',
-    item.category==='structure'?'resizable':'rotatable','styleable',item.category==='decor'?'repeatable':null]),'free3DPlaceable','surfaceSnappable'];
+  const declared=Array.isArray(item.capabilities)?item.capabilities:null,source=declared||[
+    item.mount==='ceiling'?'ceilingMountable':item.mount==='wall'?'wallMountable':'floorPlaceable',
+    item.category==='structure'?'resizable':'rotatable','styleable',item.category==='decor'?'repeatable':null];
   return Object.fromEntries(SCENE_CAPABILITY_KEYS.map(key=>[key,source.includes(key)]));
 }
 function normalizeSceneObjectModel(obj,item=objectCatalogDef(obj?.catalogId)){
@@ -1733,17 +1706,7 @@ function normalizeSceneObjectModel(obj,item=objectCatalogDef(obj?.catalogId)){
   collision.tolerance=clampNumber(Number(collision.tolerance)||.002,0,.05);obj.collision=collision;
   const placement=obj.placement&&typeof obj.placement==='object'?obj.placement:{};
   placement.mode=obj.attachment?.targetId?'attached':(placement.mode==='surface'?'surface':'free');
-  placement.surface=String(placement.surface||item?.mount||'floor');placement.snapGrid=PLACEMENT_GRID;
-  placement.axes=['x','y','z'];placement.snapSurfaces=['floor','wall','ceiling','structure','asset'];
-  if(typeof placement.surfaceSnap!=='boolean')placement.surfaceSnap=true;
-  if(typeof placement.anchorSnap!=='boolean')placement.anchorSnap=true;
-  placement.anchorSnapDistance=MAGNETIC_SNAP_DISTANCE;
-  if(placement.anchorAttachment&&typeof placement.anchorAttachment==='object'&&placement.anchorAttachment.targetId){
-    placement.anchorAttachment={sourceAnchorId:String(placement.anchorAttachment.sourceAnchorId||''),targetId:String(placement.anchorAttachment.targetId),
-      targetAnchorId:String(placement.anchorAttachment.targetAnchorId||''),kind:String(placement.anchorAttachment.kind||'corner')};
-  }else placement.anchorAttachment=null;
-  if(typeof placement.allowOutsideBooth!=='boolean')placement.allowOutsideBooth=item?.mount!=='ceiling'&&item?.mount!=='wall';
-  obj.placement=placement;
+  placement.surface=String(placement.surface||item?.mount||'floor');placement.snapGrid=PLACEMENT_GRID;obj.placement=placement;
   if(obj.attachment&&typeof obj.attachment==='object'&&obj.attachment.targetId){
     obj.attachment={targetId:String(obj.attachment.targetId),sourcePort:String(obj.attachment.sourcePort||''),targetPort:String(obj.attachment.targetPort||''),
       syncDimensions:Array.isArray(obj.attachment.syncDimensions)?[...new Set(obj.attachment.syncDimensions.filter(key=>['width','depth','height'].includes(key)))]:[],
@@ -1922,54 +1885,6 @@ function placementShape(size,x,z,rotationY=0){
     z:z+axes[0].z*half[0]*a+axes[1].z*half[1]*b})));
   return{x,z,axes,half,corners};
 }
-function snapAnchorOffsets(size={w:0,d:0,h:0}){
-  const w=Math.max(0,Number(size.w)||0),d=Math.max(0,Number(size.d)||0),h=Math.max(0,Number(size.h)||0),x=w/2,z=d/2;
-  const horizontal=[
-    ['back-left','corner',-x,-z],['back-right','corner',x,-z],['front-left','corner',-x,z],['front-right','corner',x,z],
-    ['back-center','edge',0,-z],['front-center','edge',0,z],['left-center','edge',-x,0],['right-center','edge',x,0],['center','center',0,0]
-  ];
-  return[...horizontal.map(([id,kind,lx,lz])=>({id:'base-'+id,kind,level:'base',x:lx,y:0,z:lz})),
-    ...horizontal.map(([id,kind,lx,lz])=>({id:'top-'+id,kind,level:'top',x:lx,y:h,z:lz}))];
-}
-function sceneObjectSnapAnchors(obj){
-  if(!obj?.position||!obj?.size)return[];
-  const angle=(Number(obj.rotationY)||0)*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle),p=obj.position;
-  return snapAnchorOffsets(obj.size).map(anchor=>({...anchor,targetId:String(obj.id),position:{
-    x:(Number(p.x)||0)+anchor.x*c+anchor.z*s,y:(Number(p.y)||0)+anchor.y,z:(Number(p.z)||0)-anchor.x*s+anchor.z*c}}));
-}
-function rectangularSnapAnchors(targetId,size,position={x:0,y:0,z:0},rotationY=0){
-  return sceneObjectSnapAnchors({id:targetId,size,position,rotationY});
-}
-function boothSnapAnchors(spec=S,ignoreId=''){
-  const anchors=rectangularSnapAnchors('booth-floor',{w:Number(spec.W)||0,d:Number(spec.D)||0,h:0},{x:(Number(spec.W)||0)/2,y:0,z:(Number(spec.D)||0)/2},0)
-    .filter(anchor=>anchor.level==='base');
-  if(hasStore()){
-    const G=storeGeom(boothWallThickness(spec));anchors.push(...rectangularSnapAnchors('storage-room',{w:G.w,d:G.d,h:G.h},{x:G.x+G.w/2,y:0,z:G.y+G.d/2},0));
-  }
-  const platform=photo360PlatformLayout(spec);if(platform)anchors.push(...rectangularSnapAnchors('photo360-platform',
-    {w:platform.diameter,d:platform.diameter,h:platform.height},{x:platform.x,y:0,z:platform.z},0));
-  (spec.objects||[]).forEach(other=>{if(other?.id&&other.id!==ignoreId)anchors.push(...sceneObjectSnapAnchors(other));});
-  return anchors;
-}
-function magneticSnapPlacement(obj,candidate,mode='plane',preferredSourceId='',spec=S){
-  if(spec.magneticSnap===false||obj?.placement?.anchorSnap===false||mode==='surface')return null;
-  const proxy={...obj,position:{...obj.position,...candidate}},threshold=Number(obj?.placement?.anchorSnapDistance)||MAGNETIC_SNAP_DISTANCE;
-  let sources=sceneObjectSnapAnchors(proxy);if(preferredSourceId)sources=sources.filter(anchor=>anchor.id===preferredSourceId);
-  const targets=boothSnapAnchors(spec,obj.id);let best=null;
-  sources.forEach(source=>targets.forEach(target=>{
-    if(source.kind!==target.kind)return;
-    const dx=target.position.x-source.position.x,dy=target.position.y-source.position.y,dz=target.position.z-source.position.z;
-    const planar=Math.hypot(dx,dz),distance=mode==='height'?Math.abs(dy):mode==='smart'?Math.hypot(dx,dy,dz):planar;
-    if(mode==='plane'&&Math.abs(dy)>.06)return;
-    if(mode==='height'&&planar>threshold)return;
-    if(distance>threshold||best&&distance>=best.distance)return;
-    best={distance,sourceAnchorId:source.id,targetId:target.targetId,targetAnchorId:target.id,kind:source.kind,
-      position:{x:mode==='height'?candidate.x:candidate.x+dx,y:mode==='height'||mode==='smart'?candidate.y+dy:candidate.y,z:mode==='height'?candidate.z:candidate.z+dz},
-      previewFrom:{...source.position},previewTo:{...target.position}};
-  }));
-  if(best){best.position.x=+best.position.x.toFixed(3);best.position.y=+best.position.y.toFixed(3);best.position.z=+best.position.z.toFixed(3);}
-  return best;
-}
 function shapesOverlap(a,b,gap=0){
   return [...a.axes,...b.axes].every(axis=>{
     const distance=Math.abs((b.x-a.x)*axis.x+(b.z-a.z)*axis.z);
@@ -2007,31 +1922,6 @@ function collisionVolumesOverlap(a,b,gap=0){
   const vertical=a.minY<b.maxY-.0001&&b.minY<a.maxY-.0001;
   return vertical&&shapesOverlap(a.shape,b.shape,gap);
 }
-function snapVerticalElevation(obj,value,spec=S){
-  const floorY=Number(spec.raise||0)/100,minY=-floorY,maxY=Math.max(10,(Number(spec.H)||2.4)*3),threshold=.11;
-  let y=clampNumber(Number(value)||0,minY,maxY),surface=null,targetId=null;
-  if(obj?.placement?.surfaceSnap===false)return{y,surface,targetId};
-  const shape=placementShape(obj.size,obj.position.x,obj.position.z,obj.rotationY||0),candidates=[{y:0,surface:'floor',targetId:'booth-floor'}];
-  if(hasStore()){
-    const G=storeGeom(boothWallThickness(spec)),storeShape=placementShape({w:G.w,d:G.d},G.x+G.w/2,G.y+G.d/2,0);
-    if(shapesOverlap(shape,storeShape,-.001))candidates.push({y:G.h,surface:'top',targetId:'storage-room'});
-  }
-  const platform=photo360PlatformLayout(spec);if(platform){
-    const platformShape=placementShape({w:platform.diameter,d:platform.diameter},platform.x,platform.z,0);
-    if(shapesOverlap(shape,platformShape,-.001))candidates.push({y:platform.height,surface:'top',targetId:'photo360-platform'});
-  }
-  (spec.objects||[]).forEach(other=>{
-    if(other.id===obj.id)return;const otherShape=placementShape(other.size,other.position.x,other.position.z,other.rotationY||0);
-    if(shapesOverlap(shape,otherShape,-.001))candidates.push({y:(Number(other.position?.y)||0)+(Number(other.size?.h)||0),surface:'top',targetId:other.id});
-  });
-  const nearest=candidates.map(candidate=>({...candidate,distance:Math.abs(candidate.y-y)})).sort((a,b)=>a.distance-b.distance)[0];
-  if(nearest&&nearest.distance<=threshold){y=nearest.y;surface=nearest.surface;targetId=nearest.targetId;}
-  return{y:+(surface?y:placementValue(y)).toFixed(3),surface,targetId};
-}
-function sceneObjectAllowsOutsideBooth(item,obj=null){
-  if(typeof obj?.placement?.allowOutsideBooth==='boolean')return obj.placement.allowOutsideBooth;
-  return item?.mount!=='ceiling'&&item?.mount!=='wall';
-}
 function placementLimits(item,rotationY=0,sizeOverride=null){
   const footprint=footprintSize(sizeOverride||item.size,rotationY),walls=typ().walls,edge=item.clearance??.05,t=boothWallThickness(S),ceiling=item.mount==='ceiling';
   const edgeMinX=ceiling?edge:(walls.includes('left')?t:0)+edge,edgeMaxX=ceiling?S.W-edge:S.W-(walls.includes('right')?t:0)-edge;
@@ -2042,34 +1932,27 @@ function placementLimits(item,rotationY=0,sizeOverride=null){
   return minX<=maxX&&minZ<=maxZ?{minX,maxX,minZ,maxZ,edgeMinX,edgeMaxX,edgeMinZ,edgeMaxZ,footprint}:null;
 }
 function isCatalogPlacementValid(catalogId,x,z,rotationY=0,ignoreId=null,sizeOverride=null,allowOverlap=ALLOW_ASSET_OVERLAP,objectOverride=null){
-  const item=objectCatalogDef(catalogId),size=sizeOverride||item?.size,limits=item&&placementLimits(item,rotationY,size),allowOutside=sceneObjectAllowsOutsideBooth(item,objectOverride);
-  if(!item||!size||(!limits&&!allowOutside))return false;
+  const item=objectCatalogDef(catalogId),size=sizeOverride||item?.size,limits=item&&placementLimits(item,rotationY,size);if(!item||!limits||!size)return false;
   const epsilon=.0001,shape=placementShape(size,x,z,rotationY),volumes=worldCollisionVolumes(item,size,x,z,rotationY,objectOverride);
-  if(!allowOutside&&shape.corners.some(corner=>corner.x<limits.edgeMinX-epsilon||corner.x>limits.edgeMaxX+epsilon||
+  if(shape.corners.some(corner=>corner.x<limits.edgeMinX-epsilon||corner.x>limits.edgeMaxX+epsilon||
     corner.z<limits.edgeMinZ-epsilon||corner.z>limits.edgeMaxZ+epsilon))return false;
-  if(item.mount!=='ceiling'&&isCurvedWallType(S)&&typ().walls.includes('back')&&volumes.some(volume=>volume.minY<S.H&&volume.maxY>0)){
-    const curve=wallCurveInfo(S),surfaceContact=objectOverride?.placement?.mode==='surface'&&String(objectOverride.placement.targetId||'').includes('booth-wall-back-curved'),
-      clearance=surfaceContact?-(objectOverride.collision?.tolerance||.002):(item.clearance??.05),probes=[];
+  if(item.mount!=='ceiling'&&isCurvedWallType(S)&&typ().walls.includes('back')){
+    const curve=wallCurveInfo(S),clearance=item.clearance??.05,probes=[];
     [-1,0,1].forEach(a=>[-1,0,1].forEach(b=>probes.push({
       x:shape.x+shape.axes[0].x*shape.half[0]*a+shape.axes[1].x*shape.half[1]*b,
       z:shape.z+shape.axes[0].z*shape.half[0]*a+shape.axes[1].z*shape.half[1]*b
     })));
-    const overlapsBoothWidth=shape.corners.some(point=>point.x>=-epsilon&&point.x<=S.W+epsilon)||
-      (shape.x>=-epsilon&&shape.x<=S.W+epsilon);
-    if(curve&&overlapsBoothWidth&&probes.some(point=>point.x>=-epsilon&&point.x<=S.W+epsilon&&
-      point.z<curve.pointAtX(point.x).z+boothWallThickness(S)/2+clearance-epsilon))return false;
+    if(curve&&probes.some(point=>point.z<curve.pointAtX(point.x).z+boothWallThickness(S)/2+clearance-epsilon))return false;
   }
   if(item.mount!=='ceiling'&&hasStore()){
     const G=storeGeom(boothWallThickness(S)),storeVolume={shape:placementShape({w:G.w,d:G.d},G.x+G.w/2,G.y+G.d/2,0),minY:0,maxY:G.h};
-    const attached=objectOverride?.attachment?.targetId==='storage-room'||(objectOverride?.placement?.mode==='surface'&&objectOverride.placement.targetId==='storage-room'),
-      gap=attached?-(objectOverride.collision?.tolerance||.002):(item.clearance??.05);
+    const attached=objectOverride?.attachment?.targetId==='storage-room',gap=attached?-(objectOverride.collision?.tolerance||.002):(item.clearance??.05);
     if(volumes.some(volume=>collisionVolumesOverlap(volume,storeVolume,gap)))return false;
   }
   const photoPlatform=photo360PlatformLayout(S);
   if(item.mount!=='ceiling'&&photoPlatform){
     const platformVolume={shape:placementShape({w:photoPlatform.diameter,d:photoPlatform.diameter},photoPlatform.x,photoPlatform.z,0),minY:0,maxY:photoPlatform.height};
-    const onPlatform=objectOverride?.placement?.mode==='surface'&&objectOverride.placement.targetId==='photo360-platform';
-    if(volumes.some(volume=>collisionVolumesOverlap(volume,platformVolume,onPlatform?-(objectOverride.collision?.tolerance||.002):(item.clearance??.05))))return false;
+    if(volumes.some(volume=>collisionVolumesOverlap(volume,platformVolume,item.clearance??.05)))return false;
   }
   if(allowOverlap)return true;
   return !S.objects.some(other=>{
@@ -2210,7 +2093,7 @@ function renderMyAssetList(){
   if(!CUSTOM_ASSETS.length){list.innerHTML='<div class="my-asset-empty">ยังไม่มีไฟล์ใน My Asset<br>เลือกไฟล์ .glb ด้านบนเพื่อเพิ่มอุปกรณ์ของลูกค้า</div>';return;}
   CUSTOM_ASSETS.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).forEach(item=>{
     const card=el('div','my-asset-card'),icon=el('div','my-asset-icon','GLB'),info=el('div'),actions=el('div','my-asset-actions');
-    card.draggable=true;card.dataset.catalogId=item.catalogId;card.title='คอมพิวเตอร์: ลาก '+item.name+' ไปวางบนพื้นในหรือนอกบูธ · มือถือ: กดเพิ่มแล้วลากอุปกรณ์บนภาพ';card.setAttribute('aria-label','ลาก '+item.name+' ไปวางบนพื้นในหรือนอกบูธ หรือกดเพิ่มแล้วลากบนภาพ 3D');
+    card.draggable=true;card.dataset.catalogId=item.catalogId;card.title='คอมพิวเตอร์: ลาก '+item.name+' ไปวางบนพื้นบูธ · มือถือ: กดเพิ่มแล้วลากอุปกรณ์บนภาพ';card.setAttribute('aria-label','ลาก '+item.name+' ไปวางในพื้นที่บูธ หรือกดเพิ่มแล้วลากบนภาพ 3D');
     info.innerHTML='<b title="'+esc(item.name)+'">'+esc(item.name)+'</b><small>'+formatMyAssetDimension(item.size.w)+' × '+formatMyAssetDimension(item.size.d)+' × '+formatMyAssetDimension(item.size.h)+' ม. · GLB</small>';
     const add=el('button','btn sm','เพิ่ม');add.type='button';add.title='เพิ่ม '+item.name+' ลงในบูธ';add.onclick=()=>addCatalogObject(item.catalogId);
     const del=el('button','btn sm','ลบ');del.type='button';del.title='ลบ '+item.name+' จาก My Asset';del.onclick=()=>deleteMyAsset(item.catalogId);
@@ -2385,15 +2268,13 @@ function updateEntranceFrameObject(id,key,value){
     if(key==='height'&&Math.abs(numeric-S.H)>.001)obj.structure.wallAttached=false;
   }
   normalizeEntranceFrameObject(obj);const limits=placementLimits(item,0,obj.size);
-  if(!limits&&!sceneObjectAllowsOutsideBooth(item,obj)){Object.assign(obj,previous);announceCatalog('ขนาดกรอบทางเข้าใหญ่เกินพื้นที่บูธ','error');sync();return;}
-  if(limits){
-    obj.position.z=+placementRound(limits.minZ).toFixed(3);
-    if(!sceneObjectAllowsOutsideBooth(item,obj))obj.position.x=+placementRound(clampNumber(obj.position.x,limits.minX,limits.maxX)).toFixed(3);
-  }
+  if(!limits){Object.assign(obj,previous);announceCatalog('ขนาดกรอบทางเข้าใหญ่เกินพื้นที่บูธ','error');sync();return;}
+  obj.position.z=+placementRound(limits.minZ).toFixed(3);
+  obj.position.x=+placementRound(clampNumber(obj.position.x,limits.minX,limits.maxX)).toFixed(3);
   if(!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,0,obj.id,obj.size,ALLOW_ASSET_OVERLAP,obj)){
     const alternate=findCatalogPlacement(obj.catalogId,0,obj.position,obj.size);
     if(!alternate){obj.structure=previous.structure;obj.size=previous.size;obj.position=previous.position;obj.rotationY=previous.rotationY;
-      announceCatalog('ปรับขนาดไม่ได้ เพราะชนโครงสร้างหลักหรือตำแหน่งไม่รองรับ','error');sync();return;}
+      announceCatalog('ปรับขนาดไม่ได้ เพราะเกินขอบเขตหรือชนโครงสร้างหลัก','error');sync();return;}
     obj.position.x=alternate.x;obj.position.z=alternate.z;
   }
   recordObjectHistory(before);objectEditor.selectedId=id;sync();
@@ -2515,13 +2396,6 @@ function toggleSelectedObjectLock(){
   obj.locked=next;recordObjectHistory(before);objectEditor.selectedId=obj.id;sync();
   announceCatalog((next?'ล็อก ':'ปลดล็อก ')+(item?.name||'Asset')+'แล้ว','success');
 }
-function setObjectMoveMode(mode){
-  if(!['smart','plane','height','surface'].includes(mode))return;
-  objectEditor.moveMode=mode;syncObjectControls();if(threeRenderer)threeRenderer.setSelected(objectEditor.selectedId);
-  const advanced=document.getElementById('moveAdvanced');if(advanced)advanced.removeAttribute('open');
-  const labels={smart:'Smart Move · ลากตัว Asset ที่ระดับเดิม หรือลาก Anchor ไปยังจุด/ผิวเป้าหมาย',plane:'ย้ายซ้าย–ขวาและหน้า–หลัง (X/Z)',height:'ยกหรือลดระดับ (Y)',surface:'ลากเข้าใกล้พื้นผิวเพื่อ Snap'};
-  const status=document.getElementById('objectLayoutStatus');if(status)status.textContent=labels[mode];
-}
 function undoObjectChange(){
   if(!objectEditor.past.length)return;
   objectEditor.future.push(objectSnapshot());S.objects=JSON.parse(objectEditor.past.pop());
@@ -2538,19 +2412,17 @@ function syncObjectControls(){
   box.classList.toggle('structure-active',!!obj&&(isEntranceFrameObject(obj)||isDownlightBeamObject(obj)));
   const info=document.getElementById('placementGridInfo');
   if(obj){
-    const name=item?.name||'อุปกรณ์กำหนดเอง',p=obj.position||{},snap=S.placementSnap===false?'วางอิสระ':'Snap 5 ซม.',
-      moveLabel={smart:'Smart Move',plane:'ย้ายพื้น X/Z',height:'ยก–ลด Y',surface:'Snap พื้นผิว'}[objectEditor.moveMode];
-    const anchor=obj.placement?.anchorAttachment,anchorLabel=anchor?' · แม่เหล็ก '+esc(anchor.sourceAnchorId)+' → '+esc(anchor.targetId)+' / '+esc(anchor.targetAnchorId):'';
+    const name=item?.name||'อุปกรณ์กำหนดเอง',p=obj.position||{},snap=S.placementSnap===false?'วางอิสระ':'Snap 5 ซม.';
     box.innerHTML='<b>'+esc(name)+'</b> · หมุน '+Number(obj.rotationY||0).toFixed(0)+'°'+
       '<small>จุดกึ่งกลางฐาน · X '+placementMeters(p.x)+' · Y '+placementMeters(p.y)+' · Z '+placementMeters(p.z)+' ม.</small>'+ 
-      '<small>'+moveLabel+' · '+snap+' · ระยะจัดวาง '+placementStepLabel()+anchorLabel+'</small>'+
+      '<small>'+snap+' · ระยะจัดวาง '+placementStepLabel()+'</small>'+
       (locked?'<small class="object-lock-state">ล็อกอยู่ · กด Unlock ก่อนแก้ไขหรือย้ายตำแหน่ง</small>':'')+
       '<button class="btn sm object-inspector-lock" type="button" aria-label="'+(locked?'ปลดล็อก':'ล็อก')+' Asset ที่เลือก">'+(locked?'Unlock Asset':'Lock Asset')+'</button>'+
       (isEntranceFrameObject(obj)?entranceFrameEditorMarkup(obj):isDownlightBeamObject(obj)?downlightBeamEditorMarkup(obj):'');
     const inspectorLock=box.querySelector('.object-inspector-lock');if(inspectorLock)inspectorLock.onclick=toggleSelectedObjectLock;
     if(isEntranceFrameObject(obj)){bindEntranceFrameEditor(box,obj);if(locked)box.querySelectorAll('.structure-editor input,.structure-editor button').forEach(control=>control.disabled=true);}
     if(isDownlightBeamObject(obj)){bindDownlightBeamEditor(box,obj);if(locked)box.querySelectorAll('.structure-editor input,.structure-editor button').forEach(control=>control.disabled=true);}
-    if(info)info.innerHTML='<b>'+esc(name)+(locked?' · ล็อก':'')+'</b><small>พิกัดกลางฐาน: X '+placementMeters(p.x)+' · Y '+placementMeters(p.y)+' · Z '+placementMeters(p.z)+' ม. · '+moveLabel+'</small>';
+    if(info)info.innerHTML='<b>'+esc(name)+(locked?' · ล็อก':'')+'</b><small>พิกัดกลางฐาน: X '+placementMeters(p.x)+' · Z '+placementMeters(p.z)+' ม. · หมุน '+Number(obj.rotationY||0).toFixed(0)+'°</small>';
   }else if(brandSelected){
     const location=S.logoMount==='floor'
       ?'พิกัด X '+placementMeters(S.logoFloorX)+' · Z '+placementMeters(S.logoFloorZ)+' ม.'
@@ -2572,14 +2444,10 @@ function syncObjectControls(){
   document.getElementById('btnUndoObject').disabled=!objectEditor.past.length;
   document.getElementById('btnRedoObject').disabled=!objectEditor.future.length;
   const snapToggle=document.getElementById('placementSnapEnabled');if(snapToggle)snapToggle.checked=S.placementSnap!==false;
-  const magneticToggle=document.getElementById('magneticSnapEnabled');if(magneticToggle)magneticToggle.checked=S.magneticSnap!==false;
   const count=document.getElementById('dockCount');if(count)count.textContent=S.objects.length?String(S.objects.length):'';
   const toolbar=document.getElementById('objectToolbar'),workspaceNode=document.getElementById('workspace'),positionButton=document.getElementById('btnPositionLogo3D');
-  if(toolbar){toolbar.classList.toggle('brand-selected',brandSelected);toolbar.classList.toggle('locked-selected',!!obj&&locked);}
-  const moveButtons={smart:'btnMoveSmart',plane:'btnMovePlane',height:'btnMoveHeight',surface:'btnMoveSurface'};
-  Object.entries(moveButtons).forEach(([mode,id])=>{const button=document.getElementById(id);if(!button)return;
-    button.disabled=!obj||locked;button.classList.toggle('on',objectEditor.moveMode===mode);button.setAttribute('aria-pressed',String(objectEditor.moveMode===mode));});
-  const advanced=document.getElementById('moveAdvanced'),advancedSummary=advanced?.querySelector('summary');if(advancedSummary)advancedSummary.classList.toggle('on',objectEditor.moveMode!=='smart');
+  if(toolbar){toolbar.classList.toggle('brand-selected',brandSelected);toolbar.classList.toggle('locked-selected',!!obj&&locked);
+    const mode=toolbar.querySelector('.tool-mode');if(mode)mode.textContent=brandSelected?'✥ ลากโลโก้เพื่อย้าย':locked?'ล็อกแล้ว':'✥ ย้าย';}
   if(workspaceNode)workspaceNode.classList.toggle('logo-placement-active',brandSelected);
   if(positionButton){positionButton.classList.toggle('on',brandSelected);positionButton.textContent=brandSelected?'✓ พร้อมลากโลโก้ใน 3D':'จัดตำแหน่งใน 3D';}
 }
@@ -2694,7 +2562,6 @@ function objectLayoutPrompt(){
       normalizedX:width?x/width:0,normalizedZ:depth?z/depth:0,
       size:{w:promptSafeNumber(size.w),d:promptSafeNumber(size.d),h:heightM},
       rotation,zone:promptObjectZone(obj),attachment:obj.attachment?JSON.parse(JSON.stringify(obj.attachment)):null,
-      placement:obj.placement?JSON.parse(JSON.stringify(obj.placement)):null,
       distance_to_walls_m:{left:distances.left,right:distances.right,back:distances.back,front_open:distances.front}
     };
   });
@@ -2705,11 +2572,7 @@ function objectLayoutPrompt(){
     const beam=isDownlightBeamObject(source)?normalizeDownlightBeamObject(source).structure:null;
     const beamDetail=beam?' · เป็นคานแขวนแนวนอน: ยาว '+promptNumber(beam.length)+' ม. × ลึก '+promptNumber(beam.depth)+' ม. × หนา '+promptNumber(beam.thickness)+' ม. · ระดับท้องคาน '+promptNumber(beam.height-beam.thickness)+' ม. · ฝังดาวน์ไลท์ '+beam.lightCount+' ดวง กระจายเท่ากันและส่องลงพื้น · สีคาน '+beam.color.toUpperCase()+' · สีแสง '+beam.lightColor.toUpperCase():'';
     const attachmentDetail=record.attachment?' · ความสัมพันธ์โครงสร้าง: '+sceneAttachmentLabel(record.attachment)+' และต้องรักษารอยต่อกับชิ้นเป้าหมายให้ตรงกัน':'';
-    const surfaceDetail=record.placement?.mode==='surface'?' · Snap อยู่กับพื้นผิว '+String(record.placement.surface||'surface')+
-      ' ของ '+String(record.placement.targetId||'ชิ้นส่วนบูธ')+' ต้องรักษาการสัมผัสและระดับ Y นี้ไว้':'';
-    const anchor=record.placement?.anchorAttachment,anchorDetail=anchor?' · จุดยึดแม่เหล็ก '+String(anchor.sourceAnchorId||'anchor')+
-      ' ชน '+String(anchor.targetId||'target')+' / '+String(anchor.targetAnchorId||'anchor')+' ต้องรักษามุมหรือกึ่งกลางที่ชนกันนี้ไว้':'';
-    return'- ชิ้นที่ '+record.index+': '+record.name+' 1 ชิ้น · จุดอ้างอิงกลางฐาน X '+promptNumber(record.x)+' ม., Z '+promptNumber(record.z)+' ม. · ตำแหน่งสัมพัทธ์ X '+promptNumber(record.normalizedX*100,1)+'% / Z '+promptNumber(record.normalizedZ*100,1)+'% · ฐานสูงจากพื้น '+promptNumber(record.baseY)+' ม. · ขนาด กว้าง '+promptNumber(s.w)+' × ลึก '+promptNumber(s.d)+' × สูง '+promptNumber(s.h)+' ม. · หมุนแกน Y '+promptNumber(record.rotation)+'° · โซน '+record.zone+' · ระยะจากขอบ ซ้าย '+promptNumber(d.left)+' / ขวา '+promptNumber(d.right)+' / หลัง '+promptNumber(d.back)+' / ด้านหน้า '+promptNumber(d.front_open)+' ม.'+frameDetail+beamDetail+attachmentDetail+surfaceDetail+anchorDetail;
+    return'- ชิ้นที่ '+record.index+': '+record.name+' 1 ชิ้น · จุดอ้างอิงกลางฐาน X '+promptNumber(record.x)+' ม., Z '+promptNumber(record.z)+' ม. · ตำแหน่งสัมพัทธ์ X '+promptNumber(record.normalizedX*100,1)+'% / Z '+promptNumber(record.normalizedZ*100,1)+'% · ฐานสูงจากพื้น '+promptNumber(record.baseY)+' ม. · ขนาด กว้าง '+promptNumber(s.w)+' × ลึก '+promptNumber(s.d)+' × สูง '+promptNumber(s.h)+' ม. · หมุนแกน Y '+promptNumber(record.rotation)+'° · โซน '+record.zone+' · ระยะจากขอบ ซ้าย '+promptNumber(d.left)+' / ขวา '+promptNumber(d.right)+' / หลัง '+promptNumber(d.back)+' / ด้านหน้า '+promptNumber(d.front_open)+' ม.'+frameDetail+beamDetail+attachmentDetail;
   }).join('\n');
   return header.concat('อุปกรณ์ที่ลูกค้าเลือกและตำแหน่งที่ต้องคงเดิม:',readable,
     'ข้อบังคับ: ห้ามเพิ่ม ลด ย้าย หรือหมุนอุปกรณ์ ห้ามเปลี่ยนขนาดและจำนวน ให้ยึดตำแหน่งและระยะจากผนังตามรายการนี้ ห้ามจัดวางใหม่ตามความสวยงามของภาพ').join('\n');
@@ -3185,10 +3048,6 @@ function build(){
   });
   document.getElementById('btnUndoObject').onclick=undoObjectChange;
   document.getElementById('btnRedoObject').onclick=redoObjectChange;
-  document.getElementById('btnMoveSmart').onclick=()=>setObjectMoveMode('smart');
-  document.getElementById('btnMovePlane').onclick=()=>setObjectMoveMode('plane');
-  document.getElementById('btnMoveHeight').onclick=()=>setObjectMoveMode('height');
-  document.getElementById('btnMoveSurface').onclick=()=>setObjectMoveMode('surface');
   document.getElementById('btnLockObject').onclick=toggleSelectedObjectLock;
   document.getElementById('btnRotateObject').onclick=rotateSelectedObject;
   document.getElementById('btnDuplicateObject').onclick=duplicateSelectedObject;
@@ -3572,10 +3431,8 @@ class ThreeBoothRenderer{
     this.controls.addEventListener('change',this.onControlsChange);
 
     this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.pointerDrag=null;
-    this.anchorGuideGroup=null;this.snapPreviewGroup=null;
     this.raycaster=new THREE.Raycaster();this.pointer=new THREE.Vector2();
     this.dragPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);this.dragPoint=new THREE.Vector3();
-    this.verticalDragPlane=new THREE.Plane();this.verticalDragPoint=new THREE.Vector3();
     this.logoDragPlane=new THREE.Plane();this.logoDragPoint=new THREE.Vector3();
     this.onObjectPointerDown=e=>this.beginObjectDrag(e);
     this.onObjectPointerMove=e=>this.moveObjectDrag(e);
@@ -3695,7 +3552,6 @@ class ThreeBoothRenderer{
     this.boothGroup.traverse(object=>{
       const name=object.name||'';
       if(name==='scene-ground'||name==='object-selection'||name==='brand-selection'||name==='brand-selection-proxy'||
-        name==='object-anchor-guides'||name==='magnetic-snap-preview'||
         name==='booth-wall-back-curved-edge'||name.startsWith('booth-dimension-')){
         hidden.push([object,object.visible]);object.visible=false;
       }
@@ -3733,115 +3589,6 @@ class ThreeBoothRenderer{
     this.setRayFromEvent(event);this.dragPlane.constant=-(BoothSpec.raise/100);
     return this.raycaster.ray.intersectPlane(this.dragPlane,this.dragPoint);
   }
-  horizontalPoint(event,elevation=0){
-    this.setRayFromEvent(event);this.dragPlane.constant=-((BoothSpec.raise/100)+(Number(elevation)||0));
-    return this.raycaster.ray.intersectPlane(this.dragPlane,this.dragPoint);
-  }
-  prepareVerticalDrag(hitPoint){
-    const normal=new this.THREE.Vector3();this.camera.getWorldDirection(normal);normal.y=0;
-    if(normal.lengthSq()<.0001)normal.set(0,0,1);else normal.normalize();
-    this.verticalDragPlane.setFromNormalAndCoplanarPoint(normal,hitPoint);return this.verticalDragPlane;
-  }
-  verticalPoint(event){
-    this.setRayFromEvent(event);return this.raycaster.ray.intersectPlane(this.verticalDragPlane,this.verticalDragPoint);
-  }
-  surfaceSnapTargets(selectedRoot){
-    const targets=[],ignoredName=/^(object-selection|brand-|spotlight|booth-dimension-|floor-sticker-|wall-sticker-)/;
-    this.boothGroup.traverse(node=>{
-      if(!node.isMesh||!node.visible||node===this.selectionHelper||node.userData?.brandPlacement||node.userData?.anchorGuide)return;
-      let parent=node,insideSelected=false;while(parent){if(parent===selectedRoot){insideSelected=true;break;}parent=parent.parent;}
-      if(insideSelected||ignoredName.test(String(node.name||'')))return;targets.push(node);
-    });
-    return targets;
-  }
-  surfacePlacement(event,obj,root,drag){
-    this.setRayFromEvent(event);const hit=this.raycaster.intersectObjects(this.surfaceSnapTargets(root),false)[0];
-    if(!hit||!hit.face)return null;
-    const normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize(),floorY=BoothSpec.raise/100;
-    const footprint=footprintSize(obj.size,obj.rotationY||0),grab=drag.grabOffset;
-    let x=hit.point.x-grab.x,y=hit.point.y-floorY-grab.y,z=hit.point.z-grab.z,surface='structure',verticalSurface=false;
-    if(Math.abs(normal.y)>=.58){
-      verticalSurface=true;
-      if(normal.y>0){y=hit.point.y-floorY;surface=hit.object.name==='booth-floor'?'floor':'top';}
-      else{y=hit.point.y-floorY-(Number(obj.size?.h)||0);surface='ceiling';}
-    }else{
-      const radius=Math.abs(normal.x)*footprint.w/2+Math.abs(normal.z)*footprint.d/2;
-      x=hit.point.x+normal.x*radius;z=hit.point.z+normal.z*radius;surface='wall';
-    }
-    y=clampNumber(y,-floorY,Math.max(10,BoothSpec.H*3));
-    const targetObjectId=hit.object.userData?.objectId;
-    const targetId=targetObjectId||(String(hit.object.name||'').startsWith('storage-')?'storage-room':String(hit.object.name||'surface'));
-    return{x:+(verticalSurface?placementValue(x):x).toFixed(3),y:+(verticalSurface?y:placementValue(y)).toFixed(3),
-      z:+(verticalSurface?placementValue(z):z).toFixed(3),surface,targetId};
-  }
-  screenAnchorSnap(event,obj,drag){
-    if(!drag.sourceAnchorId||S.magneticSnap===false||obj.placement?.anchorSnap===false)return null;
-    const source=sceneObjectSnapAnchors(obj).find(anchor=>anchor.id===drag.sourceAnchorId);if(!source)return null;
-    const T=this.THREE,rect=this.renderer.domElement.getBoundingClientRect(),floorY=BoothSpec.raise/100,
-      threshold=event.pointerType==='touch'?36:24,offset=drag.sourceAnchorOffset||{x:0,y:0,z:0};let best=null;
-    boothSnapAnchors(S,obj.id).forEach(target=>{
-      if(target.kind!==source.kind)return;
-      const projected=new T.Vector3(target.position.x,floorY+target.position.y,target.position.z).project(this.camera);
-      if(projected.z < -1||projected.z > 1)return;
-      const clientX=rect.left+(projected.x+1)*rect.width/2,clientY=rect.top+(1-projected.y)*rect.height/2,
-        distance=Math.hypot(event.clientX-clientX,event.clientY-clientY);
-      if(distance>threshold||best&&distance>=best.distance)return;
-      best={distance,sourceAnchorId:source.id,targetId:target.targetId,targetAnchorId:target.id,kind:source.kind,
-        position:{x:+(target.position.x-offset.x).toFixed(3),y:+(target.position.y-offset.y).toFixed(3),z:+(target.position.z-offset.z).toFixed(3)},
-        previewFrom:{...source.position},previewTo:{...target.position}};
-    });
-    return best;
-  }
-  smartSurfacePlacement(event,obj,root,drag){
-    if(!drag.sourceAnchorId||obj.placement?.surfaceSnap===false)return null;
-    this.setRayFromEvent(event);const hit=this.raycaster.intersectObjects(this.surfaceSnapTargets(root),false)[0];if(!hit||!hit.face)return null;
-    const normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize(),floorY=BoothSpec.raise/100,
-      offset=drag.sourceAnchorOffset||{x:0,y:0,z:0},point=hit.point.clone();
-    if(hit.object.name==='scene-ground')point.y=floorY;
-    let surface='structure';if(Math.abs(normal.y)>=.58)surface=normal.y>0?(hit.object.name==='booth-floor'||hit.object.name==='scene-ground'?'floor':'top'):'ceiling';else surface='wall';
-    const targetObjectId=hit.object.userData?.objectId,targetId=targetObjectId||(String(hit.object.name||'').startsWith('storage-')?'storage-room':String(hit.object.name||'surface')),
-      position={x:+(point.x-offset.x).toFixed(3),y:+clampNumber(point.y-floorY-offset.y,-floorY,Math.max(10,BoothSpec.H*3)).toFixed(3),z:+(point.z-offset.z).toFixed(3)},
-      source=sceneObjectSnapAnchors(obj).find(anchor=>anchor.id===drag.sourceAnchorId);
-    return{...position,surface,targetId,preview:{sourceAnchorId:drag.sourceAnchorId,targetId,targetAnchorId:'surface-point',kind:'surface',
-      previewFrom:source?{...source.position}:{x:obj.position.x,y:obj.position.y,z:obj.position.z},previewTo:{x:point.x,y:point.y-floorY,z:point.z}}};
-  }
-  clearAnchorGuides(){
-    if(!this.anchorGuideGroup)return;const parent=this.anchorGuideGroup.parent;if(parent)parent.remove(this.anchorGuideGroup);
-    disposeThreeObject(this.anchorGuideGroup);this.anchorGuideGroup=null;
-  }
-  buildObjectAnchorGuides(id){
-    this.clearAnchorGuides();const obj=objectById(id);if(!obj||objectLocked(obj)||S.magneticSnap===false||obj.placement?.anchorSnap===false||objectEditor.moveMode==='surface')return;
-    const T=this.THREE,group=new T.Group();group.name='object-anchor-guides';group.renderOrder=28;
-    const radius=clampNumber(Math.max(S.W,S.D,S.H)*.008,.035,.065),floorY=BoothSpec.raise/100;
-    sceneObjectSnapAnchors(obj).filter(anchor=>objectEditor.moveMode==='smart'?true:objectEditor.moveMode==='plane'?anchor.level==='base':
-      objectEditor.moveMode==='height'?(anchor.kind==='corner'||anchor.kind==='center'):false).forEach(anchor=>{
-      const color=anchor.kind==='corner'?0xf0b53a:anchor.kind==='edge'?0x62b9ff:0xffffff,
-        material=new T.MeshBasicMaterial({color,transparent:true,opacity:anchor.level==='base'?.96:.7,depthTest:false});
-      const marker=new T.Mesh(new T.SphereGeometry(radius,12,8),material);marker.name='object-anchor-'+anchor.id;
-      marker.position.set(anchor.position.x,floorY+anchor.position.y,anchor.position.z);marker.renderOrder=28;
-      marker.userData.anchorGuide=true;marker.userData.objectId=id;marker.userData.snapAnchorId=anchor.id;group.add(marker);
-    });
-    this.anchorGuideGroup=group;this.boothGroup.add(group);
-  }
-  updateObjectAnchorGuides(id){
-    if(!this.anchorGuideGroup)return;const obj=objectById(id),floorY=BoothSpec.raise/100;if(!obj)return;
-    const anchors=new Map(sceneObjectSnapAnchors(obj).map(anchor=>[anchor.id,anchor]));
-    this.anchorGuideGroup.children.forEach(marker=>{const anchor=anchors.get(marker.userData.snapAnchorId);if(anchor)marker.position.set(anchor.position.x,floorY+anchor.position.y,anchor.position.z);});
-  }
-  clearMagneticSnapPreview(){
-    if(!this.snapPreviewGroup)return;const parent=this.snapPreviewGroup.parent;if(parent)parent.remove(this.snapPreviewGroup);
-    disposeThreeObject(this.snapPreviewGroup);this.snapPreviewGroup=null;
-  }
-  showMagneticSnapPreview(match){
-    this.clearMagneticSnapPreview();if(!match)return;
-    const T=this.THREE,group=new T.Group(),floorY=BoothSpec.raise/100,from=new T.Vector3(match.previewFrom.x,floorY+match.previewFrom.y,match.previewFrom.z),
-      to=new T.Vector3(match.previewTo.x,floorY+match.previewTo.y,match.previewTo.z),color=0x46d79a;
-    group.name='magnetic-snap-preview';group.userData.anchorGuide=true;
-    const marker=new T.Mesh(new T.SphereGeometry(.075,16,10),new T.MeshBasicMaterial({color,transparent:true,opacity:.9,depthTest:false}));
-    marker.position.copy(to);marker.renderOrder=30;marker.userData.anchorGuide=true;group.add(marker);
-    const line=new T.Line(new T.BufferGeometry().setFromPoints([from,to]),new T.LineBasicMaterial({color,transparent:true,opacity:.95,depthTest:false}));
-    line.renderOrder=30;line.userData.anchorGuide=true;group.add(line);this.snapPreviewGroup=group;this.boothGroup.add(group);
-  }
   logoPoint(event,face=BoothSpec.logoWall){
     if(BoothSpec.logoMount==='floor')return this.floorPoint(event);
     this.setRayFromEvent(event);
@@ -3868,11 +3615,11 @@ class ThreeBoothRenderer{
   addCatalogObjectAtDrop(catalogId,event){
     const item=objectCatalogDef(catalogId);if(!item)return false;
     if(item.backWallOnly&&(!typ().walls.includes('back')||isCurvedWallType(BoothSpec))){announceCatalog('กรอบทางเข้ารองรับเฉพาะผนังหลังแบบตรง','error');return false;}
-    const point=this.floorPoint(event);if(!point){announceCatalog('ไม่พบระนาบสำหรับวาง'+item.name,'error');return false;}
+    const point=this.floorPoint(event);if(!point){announceCatalog('วาง'+item.name+'ได้เฉพาะบนพื้นบูธ','error');return false;}
     const rotationY=item.initialRotation||0;
     const x=+placementValue(point.x).toFixed(3),z=+placementValue(point.z).toFixed(3);
     if(!isCatalogPlacementValid(catalogId,x,z,rotationY)){
-      announceCatalog('วาง'+item.name+'ไม่ได้ เพราะชนโครงสร้างหลักหรือตำแหน่งไม่รองรับ','error');return false;
+      announceCatalog('วาง'+item.name+'ไม่ได้ เพราะตำแหน่งอยู่นอกพื้นที่หรือชนโครงสร้างหลัก','error');return false;
     }
     const obj=makeCatalogObject(catalogId,x,z);if(!obj)return false;
     mutateObjects(()=>S.objects.push(obj),obj.id);
@@ -3882,7 +3629,7 @@ class ThreeBoothRenderer{
     if((!this.objectMeshes.size&&!this.brandingHitTarget)||event.isPrimary===false)return;
     if(event.pointerType!=='touch'&&event.button!==0)return;
     this.setRayFromEvent(event);
-    const targets=Array.from(this.objectMeshes.values());if(this.brandingHitTarget)targets.push(this.brandingHitTarget);if(this.anchorGuideGroup)targets.push(this.anchorGuideGroup);
+    const targets=Array.from(this.objectMeshes.values());if(this.brandingHitTarget)targets.push(this.brandingHitTarget);
     const hits=this.raycaster.intersectObjects(targets,true);
     if(!hits.length){selectObject(null);return;}
     const hit=hits[0];
@@ -3895,22 +3642,14 @@ class ThreeBoothRenderer{
         offsetV:(BoothSpec.logoMount==='floor'?BoothSpec.logoFloorZ:BoothSpec.logoWallY)-coords.v,moved:false};
       return;
     }
-    const id=hit.object.userData.objectId,obj=objectById(id),root=this.objectMeshes.get(id),mode=objectEditor.moveMode,
-      sourceAnchorId=String(hit.object.userData.snapAnchorId||'');
-    if(!obj||!root)return;
+    const id=hit.object.userData.objectId,obj=objectById(id),root=this.objectMeshes.get(id),point=this.floorPoint(event);
+    if(!obj||!root||!point)return;
     event.preventDefault();event.stopImmediatePropagation();selectObject(id);
     if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กด Unlock เพื่อแก้ไขตำแหน่ง','error');return;}
-    const smartAnchor=mode==='smart'&&!!sourceAnchorId,
-      point=mode==='plane'?this.floorPoint(event):mode==='smart'&&!smartAnchor?this.horizontalPoint(event,obj.position.y):hit.point;if(!point)return;
-    if(mode==='height'||smartAnchor)this.prepareVerticalDrag(hit.point);
-    const sourceAnchor=sourceAnchorId&&sceneObjectSnapAnchors(obj).find(anchor=>anchor.id===sourceAnchorId),
-      sourceAnchorOffset=sourceAnchor?{x:sourceAnchor.position.x-obj.position.x,y:sourceAnchor.position.y-(Number(obj.position.y)||0),z:sourceAnchor.position.z-obj.position.z}:null;
     this.controls.enabled=false;
     this.renderer.domElement.setPointerCapture(event.pointerId);
-    this.pointerDrag={kind:'asset',pointerId:event.pointerId,id,mode,before:objectSnapshot(),startX:obj.position.x,startY:Number(obj.position.y)||0,startZ:obj.position.z,
-      startClientY:event.clientY,
-      offsetX:root.position.x-point.x,offsetY:root.position.y-point.y,offsetZ:root.position.z-point.z,
-      grabOffset:hit.point.clone().sub(root.position),sourceAnchorId,sourceAnchorOffset,moved:false};
+    this.pointerDrag={kind:'asset',pointerId:event.pointerId,id,before:objectSnapshot(),startX:obj.position.x,startZ:obj.position.z,
+      offsetX:root.position.x-point.x,offsetZ:root.position.z-point.z,moved:false};
   }
   moveObjectDrag(event){
     const drag=this.pointerDrag;if(!drag||drag.pointerId!==event.pointerId)return;
@@ -3935,53 +3674,20 @@ class ThreeBoothRenderer{
       }
       if(this.selectionHelper)this.selectionHelper.update();syncObjectControls();this.renderer.render(this.scene,this.camera);return;
     }
-    const obj=objectById(drag.id),root=this.objectMeshes.get(drag.id);if(!obj||!root||objectLocked(obj))return;
-    event.preventDefault();let next=null,anchorMatch=null,snapPreview=null;
-    if(drag.mode==='smart'){
-      if(drag.sourceAnchorId){
-        anchorMatch=this.screenAnchorSnap(event,obj,drag);
-        if(anchorMatch)next={...anchorMatch.position,surface:null,targetId:null};
-        else{
-          const surfaceSnap=this.smartSurfacePlacement(event,obj,root,drag);
-          if(surfaceSnap){next=surfaceSnap;snapPreview=surfaceSnap.preview;}
-          else{
-            const point=this.verticalPoint(event);if(point)next={x:+(point.x+drag.offsetX).toFixed(3),
-              y:+clampNumber(point.y+drag.offsetY-(BoothSpec.raise/100),-(BoothSpec.raise/100),Math.max(10,BoothSpec.H*3)).toFixed(3),
-              z:+(point.z+drag.offsetZ).toFixed(3),surface:null,targetId:null};
-          }
-        }
-      }else{
-        const point=this.horizontalPoint(event,drag.startY);if(point)next={x:+placementValue(point.x+drag.offsetX).toFixed(3),y:drag.startY,
-          z:+placementValue(point.z+drag.offsetZ).toFixed(3),surface:null,targetId:null};
-      }
-    }else if(drag.mode==='surface')next=this.surfacePlacement(event,obj,root,drag);
-    else if(drag.mode==='height'){
-      const point=this.verticalPoint(event),rect=this.renderer.domElement.getBoundingClientRect(),fallback=drag.startY+
-        (drag.startClientY-event.clientY)*(Math.max(3,BoothSpec.H)/Math.max(180,rect.height*.65));
-      const snapped=snapVerticalElevation(obj,point?point.y+drag.offsetY-(BoothSpec.raise/100):fallback);
-      next={x:obj.position.x,y:snapped.y,z:obj.position.z,surface:snapped.surface,targetId:snapped.targetId};
-    }else{
-      const point=this.floorPoint(event);if(point)next={x:+placementValue(point.x+drag.offsetX).toFixed(3),y:Number(obj.position.y)||0,
-        z:+placementValue(point.z+drag.offsetZ).toFixed(3),surface:null,targetId:null};
-    }
-    if(!next)return;
-    if(!anchorMatch&&!next.surface){const magneticMode=drag.mode==='smart'?(drag.sourceAnchorId?'smart':'plane'):drag.mode;
-      anchorMatch=magneticSnapPlacement(obj,next,magneticMode,drag.sourceAnchorId);if(anchorMatch)next={...next,...anchorMatch.position};}
-    const distance=Math.hypot(next.x-drag.startX,next.y-drag.startY,next.z-drag.startZ);
-    if(sceneAttachmentActive(obj)&&distance>.003)obj.attachment=null;
-    obj.position.x=next.x;obj.position.y=next.y;obj.position.z=next.z;
-    normalizeSceneObjectModel(obj);obj.placement.mode=next.surface?'surface':'free';obj.placement.surface=next.surface||'free';
-    obj.placement.targetId=next.targetId||null;
-    obj.placement.anchorAttachment=anchorMatch?{sourceAnchorId:anchorMatch.sourceAnchorId,targetId:anchorMatch.targetId,
-      targetAnchorId:anchorMatch.targetAnchorId,kind:anchorMatch.kind}:null;
-    if(isDownlightBeamObject(obj)&&obj.structure)obj.structure.wallAttached=false;
-    root.position.set(obj.position.x,(BoothSpec.raise/100)+obj.position.y,obj.position.z);
-    drag.moved=drag.moved||distance>.003;
-    if(this.selectionHelper)this.selectionHelper.update();this.updateObjectAnchorGuides(obj.id);this.showMagneticSnapPreview(anchorMatch||snapPreview);this.renderer.render(this.scene,this.camera);
+    const obj=objectById(drag.id),root=this.objectMeshes.get(drag.id),point=this.floorPoint(event);if(!obj||!root||!point||objectLocked(obj))return;
+    event.preventDefault();const nextX=+placementValue(point.x+drag.offsetX).toFixed(3),nextZ=+placementValue(point.z+drag.offsetZ).toFixed(3);
+    if(sceneAttachmentActive(obj)&&Math.hypot(nextX-drag.startX,nextZ-drag.startZ)>.003){obj.attachment=null;normalizeSceneObjectModel(obj);}
+    obj.position.x=nextX;
+    if(isEntranceFrameObject(obj)){
+      const item=objectCatalogDef(obj.catalogId),limits=item&&placementLimits(item,0,obj.size);if(limits)obj.position.z=+placementRound(limits.minZ).toFixed(3);
+    }else{obj.position.z=nextZ;if(isDownlightBeamObject(obj))obj.structure.wallAttached=false;}
+    root.position.x=obj.position.x;root.position.z=obj.position.z;
+    drag.moved=drag.moved||Math.hypot(obj.position.x-drag.startX,obj.position.z-drag.startZ)>.003;
+    if(this.selectionHelper)this.selectionHelper.update();this.renderer.render(this.scene,this.camera);
   }
   finishObjectDrag(event){
     const drag=this.pointerDrag;if(!drag||drag.pointerId!==event.pointerId)return;
-    this.pointerDrag=null;this.controls.enabled=true;this.clearMagneticSnapPreview();
+    this.pointerDrag=null;this.controls.enabled=true;
     if(this.renderer.domElement.hasPointerCapture(event.pointerId))this.renderer.domElement.releasePointerCapture(event.pointerId);
     if(drag.kind==='logo'){
       if(drag.moved){this.currentKey='';sync();const status=document.getElementById('objectLayoutStatus');if(status)status.textContent='ย้ายโลโก้แล้ว';}
@@ -3990,11 +3696,10 @@ class ThreeBoothRenderer{
     if(drag.moved){
       const obj=objectById(drag.id),item=obj&&objectCatalogDef(obj.catalogId);
       if(!obj||!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,obj.rotationY||0,obj.id,obj.size,ALLOW_ASSET_OVERLAP,obj)){
-        const previous=JSON.parse(drag.before).find(item=>item.id===drag.id),index=S.objects.findIndex(item=>item.id===drag.id);
-        if(previous&&index>=0)S.objects[index]=previous;
-        announceCatalog('ย้าย'+(item?.name||'วัตถุ')+'ไม่ได้ เพราะชนโครงสร้างหลักหรือตำแหน่งไม่รองรับ','error');this.currentKey='';sync();return;
+        if(obj){obj.position.x=drag.startX;obj.position.z=drag.startZ;}
+        announceCatalog('ย้าย'+(item?.name||'วัตถุ')+'ไม่ได้ เพราะอยู่นอกขอบเขตหรือชนโครงสร้างหลัก','error');this.currentKey='';sync();return;
       }
-      recordObjectHistory(drag.before);this.currentKey='';sync();announceCatalog((drag.mode==='smart'?'Smart Move ':drag.mode==='height'?'ปรับระดับ ':drag.mode==='surface'?'Snap ':'ย้าย ')+item.name+'แล้ว','success');
+      recordObjectHistory(drag.before);this.currentKey='';sync();announceCatalog('ย้าย'+item.name+'แล้ว','success');
     }
   }
   visualKey(spec){
@@ -4017,7 +3722,7 @@ class ThreeBoothRenderer{
   update(spec){
     const key=this.visualKey(spec);if(key===this.currentKey)return;
     this.currentKey=key;this.buildId=(this.buildId||0)+1;this.scene.remove(this.boothGroup);disposeThreeObject(this.boothGroup);
-    this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.anchorGuideGroup=null;this.snapPreviewGroup=null;
+    this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;
     this.boothGroup=new this.THREE.Group();this.scene.add(this.boothGroup);this.buildBooth(spec);
     if(logoEditor.selected)this.setBrandSelected(true);else this.setSelected(objectEditor.selectedId);
     const span=Math.max(spec.W,spec.D,spec.H);
@@ -4811,16 +4516,14 @@ class ThreeBoothRenderer{
     platform.castShadow=true;platform.receiveShadow=true;group.add(platform);
   }
   setSelected(id){
-    this.clearMagneticSnapPreview();this.clearAnchorGuides();
     if(this.selectionHelper){const parent=this.selectionHelper.parent;if(parent)parent.remove(this.selectionHelper);
       disposeThreeObject(this.selectionHelper);this.selectionHelper=null;}
     const root=this.objectMeshes.get(id);if(!root)return;
     const obj=objectById(id);this.selectionHelper=new this.THREE.BoxHelper(root,objectLocked(obj)?0x8a919c:0xe0a83c);this.selectionHelper.name='object-selection';
     this.selectionHelper.material.depthTest=false;this.selectionHelper.material.transparent=true;this.selectionHelper.material.opacity=.95;
-    this.selectionHelper.renderOrder=20;this.boothGroup.add(this.selectionHelper);this.buildObjectAnchorGuides(id);
+    this.selectionHelper.renderOrder=20;this.boothGroup.add(this.selectionHelper);
   }
   setBrandSelected(selected){
-    this.clearMagneticSnapPreview();this.clearAnchorGuides();
     if(this.selectionHelper){const parent=this.selectionHelper.parent;if(parent)parent.remove(this.selectionHelper);
       disposeThreeObject(this.selectionHelper);this.selectionHelper=null;}
     const target=this.brandingHitTarget||this.brandingRoot;if(!selected||!target)return;
@@ -5455,7 +5158,6 @@ function sync(){
   normalizeFloorStickerSize(S);
   S.promptFidelity=promptFidelityValue(S.promptFidelity);
   if(typeof S.placementSnap!=='boolean')S.placementSnap=true;
-  if(typeof S.magneticSnap!=='boolean')S.magneticSnap=true;
   if(!Array.isArray(S.objects))S.objects=[];
   S.objects.forEach(object=>{normalizeObjectAIRule(object);if(isEntranceFrameObject(object))normalizeEntranceFrameObject(object,S);if(isDownlightBeamObject(object))normalizeDownlightBeamObject(object,S);normalizeSceneObjectModel(object);});
   resolveSceneAttachments(S);
@@ -5730,7 +5432,6 @@ document.querySelectorAll('.dock-tool').forEach(b=>{
 function showDockPage(page,source){
   workspace.classList.remove('dock-collapsed');
   workspace.classList.toggle('asset-panel-open',page==='catalog');
-  workspace.classList.toggle('asset-tool-active',page==='catalog');
   dockPanel.setAttribute('aria-hidden','false');
   document.querySelectorAll('.dock-page').forEach(p=>{
     const active=p.dataset.dockPage===page;p.classList.toggle('on',active);p.setAttribute('aria-hidden',String(!active));
@@ -5761,11 +5462,6 @@ if(promptFidelityInput){
 }
 const placementSnapInput=document.getElementById('placementSnapEnabled');
 if(placementSnapInput)placementSnapInput.onchange=e=>{S.placementSnap=!!e.target.checked;sync();};
-const magneticSnapInput=document.getElementById('magneticSnapEnabled');
-if(magneticSnapInput)magneticSnapInput.onchange=e=>{
-  S.magneticSnap=!!e.target.checked;if(!S.magneticSnap)(S.objects||[]).forEach(obj=>{if(obj.placement)obj.placement.anchorAttachment=null;});
-  if(threeRenderer){threeRenderer.currentKey='';threeRenderer.clearMagneticSnapPreview();}sync();
-};
 function closeDockPanel(returnFocus=true){
   workspace.classList.remove('asset-panel-open');
   workspace.classList.add('dock-collapsed');
