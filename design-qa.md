@@ -37,6 +37,65 @@ passed
 
 ---
 
+# Regression QA — Asset Overlap, Above-Wall Height & Peninsular Storage Walls
+
+## Reproduction
+
+- Adding the same Asset twice used a placement search that forced non-overlap, so the second object moved to another grid point.
+- Editing height with proportional scaling also changed the footprint; the collision guard could reject the whole edit even though Asset height is allowed above the booth wall.
+- Storage-room panels reused the Peninsular back-wall thickness, rendering interior room walls at 0.30 m instead of the normal 0.10 m.
+
+## Fixed behavior
+
+- New and duplicated Assets use the global overlap policy and may intentionally occupy the same X/Z position.
+- Height edits are accepted up to the existing 50 m Asset limit, including when proportional lock changes W/D.
+- Peninsular booth back wall remains 0.30 m; only generated storage-room panels use 0.10 m.
+- Geometry Manifest records the storage-room wall thickness as 0.10 m.
+- Entrance-frame height uses the shared 50 m Asset ceiling instead of the booth-wall height; its initial value still follows the wall.
+- The Inspector and Asset Settings modal now update the same `structure.height` source of truth, including proportional edits and reset-to-original.
+
+## Verification
+
+- Browser test: added two counters consecutively; Prompt data reported both at X 3.00 m / Z 2.15 m.
+- Browser test: changed a counter from 1.00 m to 3.50 m high in a 2.40 m booth with proportional lock enabled; the Scene retained 3.50 m.
+- Browser test: Inspector changed an entrance frame from 2.40 m to 3.50 m and retained it after switching panels.
+- Browser test: Asset Settings changed the same entrance frame to 4.20 m with proportional lock; closing and reopening retained 4.20 m, and reset restored 1.00 × 2.40 × 2.40 m.
+- Local preview reloaded with zero console errors.
+- `git diff --check`: passed.
+
+---
+
+# Regression QA — Front-of-Booth Asset Staging
+
+## Reproduction
+
+- The catalogue `เพิ่ม` action called the automatic in-booth placement search.
+- A large My Asset such as `S_Beam 01` could not fit the booth footprint, so the UI reported `พื้นที่ไม่เพียงพอ` and did not create the object.
+
+## Fixed behavior
+
+- Clicking `เพิ่ม` in either the built-in catalogue or My Asset always creates the Asset outside the front edge of the booth.
+- The first staged Asset starts from the booth's left edge; each later staged Asset is placed to the right of the previous front-staged Asset with a 0.25 m gap.
+- Every staged Asset is marked as free placement and allowed outside the booth, including structural and uploaded GLB Assets.
+- Explicit desktop drag-and-drop still uses the exact floor point selected by the user and is not changed by staging.
+
+## Verification
+
+- Browser test in a 6 × 3 m booth: the first 1.20 × 0.60 m counter was staged at X 0.60 / Z 3.55 m.
+- Browser test: the second counter was staged at X 2.05 / Z 3.55 m, preserving the 0.25 m gap between footprints.
+- Browser test: My Asset `S_Beam 01` (5.40 × 1.64 × 0.20 m) was created without the former insufficient-space error at X 5.60 / Z 4.05 m; its back footprint begins at Z 3.23 m, outside the 3.00 m booth depth.
+- Browser test: the structural downlight beam also remained free-standing in the front staging row at X 11.55 / Z 3.40 m.
+- The direct 3D drop handler remains unchanged and still uses the user's selected floor point.
+- Browser console check: 0 errors or warnings.
+- Inline application JavaScript syntax check: passed.
+- `git diff --check`: passed.
+
+## Final result
+
+passed
+
+---
+
 # Design QA — Anchor Lock Move Feedback
 
 ## Interaction contract
