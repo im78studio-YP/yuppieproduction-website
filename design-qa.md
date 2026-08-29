@@ -34,3 +34,87 @@
 ## Final result
 
 passed
+
+---
+
+# Design QA — Asset Toolbar Bottom Placement
+
+## Source visual truth
+
+- Reference: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-4201b163-a20c-4ef2-bbb5-80aacea4ca51.png`
+- Source dimensions: 1143 × 681 px.
+- Requested state: an Asset is selected while the Asset catalog is open; the floating menu must not cover the selected object.
+
+## Implementation evidence
+
+- Browser-rendered screenshot: `00_เก่า-สำรอง/asset-toolbar-bottom-qa.png`
+- Side-by-side comparison: `00_เก่า-สำรอง/asset-toolbar-bottom-comparison.png`
+- Desktop viewport and implementation pixels: 1280 × 720 CSS px at browser density 1.
+- Mobile responsive check: 390 × 844 CSS px.
+- Normalization: both desktop images were padded without distortion to a common 1280 px panel width in the comparison image.
+
+## Full-view comparison evidence
+
+- The reference menu obscures the selected Asset and its geometry helpers in the middle of the 3D canvas.
+- The implementation anchors the toolbar 16 px from the viewport bottom and centers it to the visible 3D area, keeping the Asset unobstructed.
+- The desktop toolbar remains within the 3D pane rather than centering across the right settings panel.
+- On mobile, the existing bottom bar remains 10 px above the viewport edge and horizontally scrollable.
+
+## Focused region comparison
+
+- A separate crop was not required because the affected toolbar, selected Asset, viewport edge, and right panel are all clearly visible in the full-view comparison.
+
+## Required fidelity surfaces
+
+- Fonts and typography: unchanged from the existing toolbar.
+- Spacing and layout rhythm: bottom spacing is consistent at 16 px desktop and 10 px mobile; no viewport overflow detected.
+- Colors and visual tokens: existing dark surface, gold selection state, borders, and shadows remain unchanged.
+- Image quality and asset fidelity: 3D Asset rendering and selection helpers are unchanged and remain visible.
+- Copy and content: all existing commands and labels are preserved.
+
+## Findings
+
+- No actionable P0, P1, or P2 issues remain.
+- Browser console check: 0 errors.
+- Inline JavaScript syntax check: passed.
+
+## Comparison history
+
+1. Earlier reference state: toolbar followed the click point and covered the selected Asset.
+2. Fix: replaced pointer-relative placement with viewport-bottom placement centered on the live 3D view bounds.
+3. Post-fix evidence: `asset-toolbar-bottom-comparison.png` shows the selected object unobstructed; desktop and mobile geometry checks confirm correct bottom offsets.
+
+## Final result
+
+passed
+
+---
+
+# Design QA — Asset Context Menu & Settings
+
+## Source of truth
+
+- Interaction reference: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-11add6d1-dc90-490e-9f73-2fa1d5f8d08b.png`
+- Existing YP_WEB_ONLINE dark/gold visual system in `public/yp-web-ai/index.html`
+- Requested behavior: show controls whenever an Asset is clicked, add left–right/top–bottom Flip, and expose per-Asset size and surface settings.
+
+## Implementation evidence
+
+- Desktop screenshot: `00_เก่า-สำรอง/asset-context-menu-qa.png`
+- Side-by-side comparison: `00_เก่า-สำรอง/asset-context-menu-comparison.png`
+- Mobile breakpoint tested at 390 × 844; desktop tested at the normal 1280 × 720 viewport.
+
+## Comparison and findings
+
+- Preserved the existing compact dark toolbar, gold selected state, type scale, borders, and selected-object helpers.
+- Desktop menu moves near the clicked Asset and clamps to the viewport; it dims during drag and returns after release.
+- Mobile retains a fixed, horizontally scrollable bottom control bar so touch users do not lose the selected Asset actions.
+- Added Flip left–right and top–bottom while keeping the selected Asset on the same base elevation.
+- Added a desktop side sheet and mobile bottom sheet for custom name, proportional or independent dimensions, color, and uploaded sticker.
+- Settings are stored on the selected Scene object, included in Undo/Redo snapshots, 3D rendering, Prompt data, and Geometry Manifest.
+- Empty-scene click clears the selection and hides the contextual controls.
+- Inline JavaScript syntax and desktop/mobile UI flows were re-tested after the final CSS pass.
+
+## Final result
+
+passed
