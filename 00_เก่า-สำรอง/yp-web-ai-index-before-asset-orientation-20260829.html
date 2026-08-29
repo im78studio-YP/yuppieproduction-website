@@ -597,7 +597,7 @@ select:focus{border-color:var(--acc)}
 .release-actions{padding:14px 26px 24px}.release-actions .btn{width:100%}
 @media(max-width:480px){.release-top{padding:21px 20px 16px}.release-list{padding:15px 20px 3px}.release-actions{padding:13px 20px 20px}}
 </style>
-<link rel="stylesheet" href="css/asset-editor.css?v=20260829-2">
+<link rel="stylesheet" href="css/asset-editor.css?v=20260829">
 </head>
 <body>
 
@@ -1760,8 +1760,7 @@ function buildGeometryManifest(spec=S){
     const item=objectCatalogDef(obj.catalogId),size=obj.size||item?.size||{},position=obj.position||{},rule=normalizeObjectAIRule(obj,item);normalizeSceneObjectModel(obj,item);
     push({id:String(obj.id||'asset-'+(index+1)),type:String(obj.type||item?.type||'asset'),name:obj.label||item?.name||String(obj.catalogId||'Asset'),parentId:'booth-root',
       catalogId:obj.catalogId||null,geometry:{kind:isEntranceFrameObject(obj)?'entrance-frame':isDownlightBeamObject(obj)?'downlight-beam':'catalog-object',structure:obj.structure?JSON.parse(JSON.stringify(obj.structure)):null},
-      dimensions:manifestSize(size.w,size.d,size.h),orientedBounds:(()=>{const oriented=sceneObjectOrientedSize(obj);return manifestSize(oriented.w,oriented.d,oriented.h);})(),
-      transform:{position:manifestVector(position.x,floorY+(Number(position.y)||0),position.z),rotationDeg:manifestVector(obj.rotationX,obj.rotationY,obj.rotationZ),orientation:obj.orientation,
+      dimensions:manifestSize(size.w,size.d,size.h),transform:{position:manifestVector(position.x,floorY+(Number(position.y)||0),position.z),rotationDeg:manifestVector(0,obj.rotationY,0),
         scale:manifestVector(obj.transform?.flipX?-1:1,obj.transform?.flipY?-1:1,1),mirror:{leftRight:obj.transform?.flipX===true,topBottom:obj.transform?.flipY===true}},
       capabilities:{...obj.capabilities},placement:{...obj.placement},attachment:manifestSceneAttachment(obj),collision:manifestSceneCollision(obj,item),
       ports:localScenePorts(obj).map(port=>({id:port.id,role:port.role,localPosition:manifestVector(port.position.x,port.position.y,port.position.z)})),
@@ -1804,32 +1803,6 @@ const SCENE_CAPABILITY_KEYS=Object.freeze(['floorPlaceable','wallMountable','cei
 const SCENE_COLLISION_LAYERS=Object.freeze(['structure','furniture','decoration','surface','optional-prop']);
 const SCENE_PLACEMENT_TARGETS=Object.freeze(['floor','wall','ceiling','storage-room','structure','asset','free']);
 const SCENE_APPEARANCE_MODES=Object.freeze(['original','tint','solid']);
-const ASSET_ORIENTATION_PRESETS=Object.freeze({
-  horizontal:{label:'แนวนอน',rotationX:0,rotationZ:0},
-  upright:{label:'แนวตั้ง',rotationX:0,rotationZ:90},
-  'side-left':{label:'ตะแคงซ้าย',rotationX:-90,rotationZ:0},
-  'side-right':{label:'ตะแคงขวา',rotationX:90,rotationZ:0}
-});
-function normalizeAssetOrientation(obj){
-  if(!obj||typeof obj!=='object')return'horizontal';
-  const mode=ASSET_ORIENTATION_PRESETS[obj.orientation]?obj.orientation:'horizontal',preset=ASSET_ORIENTATION_PRESETS[mode];
-  obj.orientation=mode;obj.rotationX=Number.isFinite(Number(obj.rotationX))?Number(obj.rotationX):preset.rotationX;
-  obj.rotationZ=Number.isFinite(Number(obj.rotationZ))?Number(obj.rotationZ):preset.rotationZ;
-  return mode;
-}
-function sceneObjectOrientedSize(obj,sizeOverride=null){
-  const size=sizeOverride||obj?.size||{w:0,d:0,h:0},w=Math.max(0,Number(size.w)||0),d=Math.max(0,Number(size.d)||0),h=Math.max(0,Number(size.h)||0),
-    mode=normalizeAssetOrientation(obj||{});
-  if(mode==='upright')return{w:h,d,h:w};
-  if(mode==='side-left'||mode==='side-right')return{w,d:h,h:d};
-  return{w,d,h};
-}
-function sceneObjectOrientationLift(obj){
-  const size=obj?.size||{},mode=normalizeAssetOrientation(obj||{});
-  if(mode==='upright')return Math.max(0,Number(size.w)||0)/2;
-  if(mode==='side-left'||mode==='side-right')return Math.max(0,Number(size.d)||0)/2;
-  return obj?.transform?.flipY===true?Math.max(0,Number(size.h)||0):0;
-}
 function defaultScenePlacementPolicy(item={}){
   const source=item.placementPolicy&&typeof item.placementPolicy==='object'?item.placementPolicy:{};
   const preferred=String(source.preferredTarget||(item.backWallOnly?'back-wall':item.mount==='ceiling'?'ceiling':item.mount==='wall'?'wall':'floor'));
@@ -1845,7 +1818,6 @@ function defaultSceneCapabilities(item={}){
 }
 function normalizeSceneObjectModel(obj,item=objectCatalogDef(obj?.catalogId)){
   if(!obj||typeof obj!=='object')return null;
-  normalizeAssetOrientation(obj);
   obj.sceneSchemaVersion=SCENE_OBJECT_SCHEMA_VERSION;
   const defaults=defaultSceneCapabilities(item),declared=obj.capabilities&&typeof obj.capabilities==='object'?obj.capabilities:{};
   obj.capabilities=Object.fromEntries(SCENE_CAPABILITY_KEYS.map(key=>[key,typeof declared[key]==='boolean'?declared[key]:defaults[key]]));
@@ -2080,8 +2052,8 @@ function snapAnchorOffsets(size={w:0,d:0,h:0}){
 }
 function sceneObjectSnapAnchors(obj){
   if(!obj?.position||!obj?.size)return[];
-  const angle=(Number(obj.rotationY)||0)*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle),p=obj.position,size=sceneObjectOrientedSize(obj);
-  return snapAnchorOffsets(size).map(anchor=>({...anchor,targetId:String(obj.id),position:{
+  const angle=(Number(obj.rotationY)||0)*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle),p=obj.position;
+  return snapAnchorOffsets(obj.size).map(anchor=>({...anchor,targetId:String(obj.id),position:{
     x:(Number(p.x)||0)+anchor.x*c+anchor.z*s,y:(Number(p.y)||0)+anchor.y,z:(Number(p.z)||0)-anchor.x*s+anchor.z*c}}));
 }
 function rectangularSnapAnchors(targetId,size,position={x:0,y:0,z:0},rotationY=0){
@@ -2138,8 +2110,8 @@ function sceneCollisionShapeDefinitions(obj,item=objectCatalogDef(obj?.catalogId
       {id:'front-pier',type:'box',size:{w:cfg.pierWidth,d:cfg.thickness,h:pierHeight},offset:{x:0,y:pierHeight/2,z:cfg.projection/2-cfg.thickness/2}}
     ];
   }
-  const oriented=sceneObjectOrientedSize(obj,size);
-  return[{id:'body',type:'box',size:{w:oriented.w,d:oriented.d,h:oriented.h},offset:{x:0,y:oriented.h/2,z:0}}];
+  return[{id:'body',type:'box',size:{w:Number(size.w)||0,d:Number(size.d)||0,h:Number(size.h)||0},
+    offset:{x:0,y:(Number(size.h)||0)/2,z:0}}];
 }
 function worldCollisionVolumes(item,size,x,z,rotationY=0,obj=null){
   const proxy=obj||{catalogId:item?.catalogId,type:item?.type,size,position:{x,y:0,z},rotationY},baseY=Number(proxy.position?.y)||0;
@@ -2209,7 +2181,7 @@ function snapVerticalElevation(obj,value,spec=S){
   const floorY=Number(spec.raise||0)/100,minY=-floorY,maxY=Math.max(10,(Number(spec.H)||2.4)*3),threshold=.11;
   let y=clampNumber(Number(value)||0,minY,maxY),surface=null,targetId=null;
   if(obj?.placement?.surfaceSnap===false)return{y,surface,targetId};
-  const oriented=sceneObjectOrientedSize(obj),shape=placementShape(oriented,obj.position.x,obj.position.z,obj.rotationY||0),candidates=[{y:0,surface:'floor',targetId:'booth-floor'}];
+  const shape=placementShape(obj.size,obj.position.x,obj.position.z,obj.rotationY||0),candidates=[{y:0,surface:'floor',targetId:'booth-floor'}];
   if(hasStore()){
     const G=storeGeom(boothWallThickness(spec)),storeShape=placementShape({w:G.w,d:G.d},G.x+G.w/2,G.y+G.d/2,0);
     if(shapesOverlap(shape,storeShape,-.001))candidates.push({y:G.h,surface:'top',targetId:'storage-room'});
@@ -2219,8 +2191,8 @@ function snapVerticalElevation(obj,value,spec=S){
     if(shapesOverlap(shape,platformShape,-.001))candidates.push({y:platform.height,surface:'top',targetId:'photo360-platform'});
   }
   (spec.objects||[]).forEach(other=>{
-    if(other.id===obj.id)return;const otherSize=sceneObjectOrientedSize(other),otherShape=placementShape(otherSize,other.position.x,other.position.z,other.rotationY||0);
-    if(shapesOverlap(shape,otherShape,-.001))candidates.push({y:(Number(other.position?.y)||0)+otherSize.h,surface:'top',targetId:other.id});
+    if(other.id===obj.id)return;const otherShape=placementShape(other.size,other.position.x,other.position.z,other.rotationY||0);
+    if(shapesOverlap(shape,otherShape,-.001))candidates.push({y:(Number(other.position?.y)||0)+(Number(other.size?.h)||0),surface:'top',targetId:other.id});
   });
   const nearest=candidates.map(candidate=>({...candidate,distance:Math.abs(candidate.y-y)})).sort((a,b)=>a.distance-b.distance)[0];
   if(nearest&&nearest.distance<=threshold){y=nearest.y;surface=nearest.surface;targetId=nearest.targetId;}
@@ -2241,10 +2213,9 @@ function placementLimits(item,rotationY=0,sizeOverride=null){
   return minX<=maxX&&minZ<=maxZ?{minX,maxX,minZ,maxZ,edgeMinX,edgeMaxX,edgeMinZ,edgeMaxZ,footprint}:null;
 }
 function isCatalogPlacementValid(catalogId,x,z,rotationY=0,ignoreId=null,sizeOverride=null,allowOverlap=ALLOW_ASSET_OVERLAP,objectOverride=null){
-  const item=objectCatalogDef(catalogId),sourceSize=sizeOverride||item?.size,size=objectOverride?sceneObjectOrientedSize(objectOverride,sourceSize):sourceSize,
-    limits=item&&placementLimits(item,rotationY,size),allowOutside=sceneObjectAllowsOutsideBooth(item,objectOverride);
+  const item=objectCatalogDef(catalogId),size=sizeOverride||item?.size,limits=item&&placementLimits(item,rotationY,size),allowOutside=sceneObjectAllowsOutsideBooth(item,objectOverride);
   if(!item||!size||(!limits&&!allowOutside))return false;
-  const epsilon=.0001,shape=placementShape(size,x,z,rotationY),volumes=worldCollisionVolumes(item,sourceSize,x,z,rotationY,objectOverride);
+  const epsilon=.0001,shape=placementShape(size,x,z,rotationY),volumes=worldCollisionVolumes(item,size,x,z,rotationY,objectOverride);
   if(!allowOutside&&shape.corners.some(corner=>corner.x<limits.edgeMinX-epsilon||corner.x>limits.edgeMaxX+epsilon||
     corner.z<limits.edgeMinZ-epsilon||corner.z>limits.edgeMaxZ+epsilon))return false;
   if(item.mount!=='ceiling'&&isCurvedWallType(S)&&typ().walls.includes('back')&&volumes.some(volume=>volume.minY<S.H&&volume.maxY>0)){
@@ -2525,7 +2496,7 @@ function makeCatalogObject(catalogId,x,z){
   const id='obj-'+Date.now().toString(36)+'-'+(++objectEditor.seq).toString(36);
   const object={id,type:item.type,catalogId:item.catalogId,locked:false,
     position:{x:Number.isFinite(x)?x:S.W/2,y:0,z:Number.isFinite(z)?z:S.D/2},
-    rotationX:0,rotationY:item.initialRotation||0,rotationZ:0,orientation:'horizontal',size:{w:item.size.w,d:item.size.d,h:item.size.h},unitPrice:item.unitPrice};
+    rotationY:item.initialRotation||0,size:{w:item.size.w,d:item.size.d,h:item.size.h},unitPrice:item.unitPrice};
   normalizeObjectAIRule(object,item);
   if(isEntranceFrameItem(item)){object.structure=entranceFrameDefaults(S);normalizeEntranceFrameObject(object);}
   if(isDownlightBeamItem(item)){object.structure=downlightBeamDefaults(S);normalizeDownlightBeamObject(object);}
@@ -2712,20 +2683,6 @@ function rotateSelectedObject(){
     announceCatalog('หมุน'+item.name+'ไม่ได้ เพราะพื้นที่ไม่เพียงพอ','error');return;}
   mutateObjects(()=>{obj.rotationY=rotationY;if(isDownlightBeamObject(obj))obj.structure.wallAttached=false;},obj.id);
 }
-function setSelectedObjectOrientation(mode){
-  const obj=objectById(objectEditor.selectedId),preset=ASSET_ORIENTATION_PRESETS[mode];if(!obj||!preset)return;
-  normalizeSceneObjectModel(obj);if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
-  if(obj.capabilities?.rotatable===false){announceCatalog('Asset โครงสร้างชิ้นนี้ไม่รองรับการเปลี่ยนแนววาง','error');return;}
-  if(obj.orientation===mode&&Number(obj.rotationX)===preset.rotationX&&Number(obj.rotationZ)===preset.rotationZ)return;
-  const before=objectSnapshot(),previous={orientation:obj.orientation,rotationX:obj.rotationX,rotationZ:obj.rotationZ,placement:JSON.parse(JSON.stringify(obj.placement||{}))};
-  obj.orientation=mode;obj.rotationX=preset.rotationX;obj.rotationZ=preset.rotationZ;
-  if(obj.placement){obj.placement.mode='free';obj.placement.surface='free';obj.placement.targetId=null;obj.placement.anchorAttachment=null;}
-  if(!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,obj.rotationY||0,obj.id,obj.size,ALLOW_ASSET_OVERLAP,obj)){
-    obj.orientation=previous.orientation;obj.rotationX=previous.rotationX;obj.rotationZ=previous.rotationZ;obj.placement=previous.placement;
-    announceCatalog('เปลี่ยนแนววางไม่ได้ เพราะชนโครงสร้างหลักหรือตำแหน่งไม่รองรับ','error');return;
-  }
-  recordObjectHistory(before);objectEditor.selectedId=obj.id;sync();announceCatalog('เปลี่ยน '+selectedAssetName(obj)+' เป็น'+preset.label+'แล้ว','success');
-}
 function flipSelectedObject(axis){
   const obj=objectById(objectEditor.selectedId);if(!obj||!['x','y'].includes(axis))return;
   if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
@@ -2820,11 +2777,10 @@ function duplicateSelectedObject(){
   const source=objectById(objectEditor.selectedId);if(!source)return;
   if(objectLocked(source)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
   const item=objectCatalogDef(source.catalogId),position=findCatalogPlacement(source.catalogId,source.rotationY,
-    {x:source.position.x+.4,z:source.position.z+.4},sceneObjectOrientedSize(source));
+    {x:source.position.x+.4,z:source.position.z+.4},source.size);
   if(!position){announceCatalog('พื้นที่ไม่เพียงพอสำหรับทำสำเนา'+item.name,'error');return;}
   const copy=makeCatalogObject(source.catalogId,position.x,position.z);if(!copy)return;
-  copy.position.y=source.position.y;copy.rotationX=source.rotationX;copy.rotationY=source.rotationY;copy.rotationZ=source.rotationZ;copy.orientation=source.orientation;
-  copy.size={...source.size};copy.unitPrice=source.unitPrice;
+  copy.position.y=source.position.y;copy.rotationY=source.rotationY;copy.size={...source.size};copy.unitPrice=source.unitPrice;
   if(source.structure)copy.structure={...source.structure};
   if(source.transform)copy.transform={...source.transform};if(source.appearance)copy.appearance={...source.appearance};copy.label=source.label||'';copy.originalSize={...(source.originalSize||source.size)};
   if(source.capabilities)copy.capabilities={...source.capabilities};if(source.collision)copy.collision={...source.collision};
@@ -2869,8 +2825,7 @@ function syncObjectControls(){
     const name=selectedAssetName(obj),p=obj.position||{},snap=S.placementSnap===false?'วางอิสระ':'Snap 5 ซม.',
       moveLabel={smart:'Smart Move',plane:'ย้ายพื้น X/Z',height:'ยก–ลด Y',surface:'Snap พื้นผิว'}[objectEditor.moveMode];
     const anchor=obj.placement?.anchorAttachment,anchorLabel=anchor?' · แม่เหล็ก '+esc(anchor.sourceAnchorId)+' → '+esc(anchor.targetId)+' / '+esc(anchor.targetAnchorId):'';
-    const orientationLabel=ASSET_ORIENTATION_PRESETS[obj.orientation]?.label||'แนวนอน';
-    box.innerHTML='<b>'+esc(name)+'</b> · '+esc(orientationLabel)+' · หมุน Y '+Number(obj.rotationY||0).toFixed(0)+'°'+
+    box.innerHTML='<b>'+esc(name)+'</b> · หมุน '+Number(obj.rotationY||0).toFixed(0)+'°'+
       '<small>จุดกึ่งกลางฐาน · X '+placementMeters(p.x)+' · Y '+placementMeters(p.y)+' · Z '+placementMeters(p.z)+' ม.</small>'+ 
       '<small>'+moveLabel+' · '+snap+' · ระยะจัดวาง '+placementStepLabel()+anchorLabel+'</small>'+
       (locked?'<small class="object-lock-state">ล็อกอยู่ · กด Unlock ก่อนแก้ไขหรือย้ายตำแหน่ง</small>':'')+
@@ -2929,7 +2884,7 @@ function promptWallThickness(){
   try{return promptSafeNumber(boothWallThickness(S));}catch(e){return 0;}
 }
 function promptObjectShape(obj){
-  const position=obj?.position||{},size=sceneObjectOrientedSize(obj),rotation=promptSafeNumber(obj?.rotationY);
+  const position=obj?.position||{},size=obj?.size||{},rotation=promptSafeNumber(obj?.rotationY);
   return placementShape({w:promptSafeNumber(size.w),d:promptSafeNumber(size.d)},
     promptSafeNumber(position.x),promptSafeNumber(position.z),rotation);
 }
@@ -3021,13 +2976,13 @@ function objectLayoutPrompt(){
   if(!objects.length)return header.concat('อุปกรณ์ที่ลูกค้าเลือก: ไม่มี','ห้ามเพิ่มอุปกรณ์หรือองค์ประกอบอื่นที่ไม่มีในแบบ').join('\n');
   const records=objects.map((obj,index)=>{
     const item=objectCatalogDef(obj.catalogId),position=obj.position||{},size=obj.size||item?.size||{},distances=promptObjectWallDistances(obj);
-    const name=obj.label||item?.name||'อุปกรณ์กำหนดเอง',rotation=promptSafeNumber(obj.rotationY),rotationX=promptSafeNumber(obj.rotationX),rotationZ=promptSafeNumber(obj.rotationZ),x=promptSafeNumber(position.x),z=promptSafeNumber(position.z);
-    const baseY=promptSafeNumber(position.y),heightM=promptSafeNumber(size.h),oriented=sceneObjectOrientedSize(obj,size);
+    const name=obj.label||item?.name||'อุปกรณ์กำหนดเอง',rotation=promptSafeNumber(obj.rotationY),x=promptSafeNumber(position.x),z=promptSafeNumber(position.z);
+    const baseY=promptSafeNumber(position.y),heightM=promptSafeNumber(size.h);
     normalizeSceneObjectModel(obj,item);return{
       index:index+1,name,x,z,baseY,heightM,
       normalizedX:width?x/width:0,normalizedZ:depth?z/depth:0,
       size:{w:promptSafeNumber(size.w),d:promptSafeNumber(size.d),h:heightM},
-      rotation,rotationX,rotationZ,orientation:obj.orientation||'horizontal',orientedSize:oriented,zone:promptObjectZone(obj),attachment:obj.attachment?JSON.parse(JSON.stringify(obj.attachment)):null,
+      rotation,zone:promptObjectZone(obj),attachment:obj.attachment?JSON.parse(JSON.stringify(obj.attachment)):null,
       placement:obj.placement?JSON.parse(JSON.stringify(obj.placement)):null,transform:obj.transform?JSON.parse(JSON.stringify(obj.transform)):null,
       appearance:obj.appearance?{color:obj.appearance.color||null,textureName:obj.appearance.textureName||null}:null,
       distance_to_walls_m:{left:distances.left,right:distances.right,back:distances.back,front_open:distances.front}
@@ -3046,8 +3001,7 @@ function objectLayoutPrompt(){
       ' ชน '+String(anchor.targetId||'target')+' / '+String(anchor.targetAnchorId||'anchor')+' ต้องรักษามุมหรือกึ่งกลางที่ชนกันนี้ไว้':'';
     const flipDetail=record.transform?.flipX||record.transform?.flipY?' · กลับด้าน '+[record.transform.flipX?'ซ้าย–ขวา':'',record.transform.flipY?'บน–ล่าง':''].filter(Boolean).join(' และ ')+' ตามแบบ':'';
     const appearanceDetail=record.appearance?.textureName?' · พื้นผิวใช้สติ๊กเกอร์ '+record.appearance.textureName:record.appearance?.color?' · สีพื้นผิว '+String(record.appearance.color).toUpperCase():'';
-    const orientationLabel=ASSET_ORIENTATION_PRESETS[record.orientation]?.label||record.orientation,oriented=record.orientedSize;
-    return'- ชิ้นที่ '+record.index+': '+record.name+' 1 ชิ้น · จุดอ้างอิงกลางฐาน X '+promptNumber(record.x)+' ม., Z '+promptNumber(record.z)+' ม. · ตำแหน่งสัมพัทธ์ X '+promptNumber(record.normalizedX*100,1)+'% / Z '+promptNumber(record.normalizedZ*100,1)+'% · ฐานสูงจากพื้น '+promptNumber(record.baseY)+' ม. · ขนาดชิ้นงานเดิม กว้าง '+promptNumber(s.w)+' × ลึก '+promptNumber(s.d)+' × สูง '+promptNumber(s.h)+' ม. · แนววาง '+orientationLabel+' · หมุนแกน X/Y/Z '+promptNumber(record.rotationX)+'° / '+promptNumber(record.rotation)+'° / '+promptNumber(record.rotationZ)+'° · ขอบเขตหลังหมุน '+promptNumber(oriented.w)+' × '+promptNumber(oriented.d)+' × '+promptNumber(oriented.h)+' ม. · โซน '+record.zone+' · ระยะจากขอบ ซ้าย '+promptNumber(d.left)+' / ขวา '+promptNumber(d.right)+' / หลัง '+promptNumber(d.back)+' / ด้านหน้า '+promptNumber(d.front_open)+' ม.'+flipDetail+appearanceDetail+frameDetail+beamDetail+attachmentDetail+surfaceDetail+anchorDetail;
+    return'- ชิ้นที่ '+record.index+': '+record.name+' 1 ชิ้น · จุดอ้างอิงกลางฐาน X '+promptNumber(record.x)+' ม., Z '+promptNumber(record.z)+' ม. · ตำแหน่งสัมพัทธ์ X '+promptNumber(record.normalizedX*100,1)+'% / Z '+promptNumber(record.normalizedZ*100,1)+'% · ฐานสูงจากพื้น '+promptNumber(record.baseY)+' ม. · ขนาด กว้าง '+promptNumber(s.w)+' × ลึก '+promptNumber(s.d)+' × สูง '+promptNumber(s.h)+' ม. · หมุนแกน Y '+promptNumber(record.rotation)+'° · โซน '+record.zone+' · ระยะจากขอบ ซ้าย '+promptNumber(d.left)+' / ขวา '+promptNumber(d.right)+' / หลัง '+promptNumber(d.back)+' / ด้านหน้า '+promptNumber(d.front_open)+' ม.'+flipDetail+appearanceDetail+frameDetail+beamDetail+attachmentDetail+surfaceDetail+anchorDetail;
   }).join('\n');
   return header.concat('อุปกรณ์ที่ลูกค้าเลือกและตำแหน่งที่ต้องคงเดิม:',readable,
     'ข้อบังคับ: ห้ามเพิ่ม ลด ย้าย หรือหมุนอุปกรณ์ ห้ามเปลี่ยนขนาดและจำนวน ให้ยึดตำแหน่งและระยะจากผนังตามรายการนี้ ห้ามจัดวางใหม่ตามความสวยงามของภาพ').join('\n');
@@ -4120,13 +4074,13 @@ class ThreeBoothRenderer{
   surfacePlacement(event,obj,root,drag){
     this.setRayFromEvent(event);const hit=this.raycaster.intersectObjects(this.surfaceSnapTargets(root),false)[0];
     if(!hit||!hit.face)return null;
-    const normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize(),floorY=BoothSpec.raise/100,oriented=sceneObjectOrientedSize(obj);
-    const footprint=footprintSize(oriented,obj.rotationY||0),grab=drag.grabOffset;
+    const normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize(),floorY=BoothSpec.raise/100;
+    const footprint=footprintSize(obj.size,obj.rotationY||0),grab=drag.grabOffset;
     let x=hit.point.x-grab.x,y=hit.point.y-floorY-grab.y,z=hit.point.z-grab.z,surface='structure',verticalSurface=false;
     if(Math.abs(normal.y)>=.58){
       verticalSurface=true;
       if(normal.y>0){y=hit.point.y-floorY;surface=hit.object.name==='booth-floor'?'floor':'top';}
-      else{y=hit.point.y-floorY-oriented.h;surface='ceiling';}
+      else{y=hit.point.y-floorY-(Number(obj.size?.h)||0);surface='ceiling';}
     }else{
       const radius=Math.abs(normal.x)*footprint.w/2+Math.abs(normal.z)*footprint.d/2;
       x=hit.point.x+normal.x*radius;z=hit.point.z+normal.z*radius;surface='wall';
@@ -4395,7 +4349,7 @@ class ThreeBoothRenderer{
     obj.placement.anchorAttachment=anchorMatch?{sourceAnchorId:anchorMatch.sourceAnchorId,targetId:anchorMatch.targetId,
       targetAnchorId:anchorMatch.targetAnchorId,kind:anchorMatch.kind}:null;
     if(isDownlightBeamObject(obj)&&obj.structure)obj.structure.wallAttached=false;
-    this.applyCatalogObjectTransform(root,obj,BoothSpec.raise/100);
+    root.position.set(obj.position.x,(BoothSpec.raise/100)+obj.position.y+(obj.transform?.flipY?(Number(obj.size?.h)||0):0),obj.position.z);
     drag.moved=drag.moved||distance>.003;
     if(this.selectionHelper)this.selectionHelper.update();this.updateObjectAnchorGuides(obj.id);this.showMagneticSnapPreview(anchorMatch||snapPreview);this.renderer.render(this.scene,this.camera);
   }
@@ -4423,7 +4377,7 @@ class ThreeBoothRenderer{
     const logoKey=spec.logo?spec.logo.length+':'+spec.logo.slice(-32):'';
     const wallStickers=WALL_FACES.map(({k})=>{const sticker=wallStickerFor(k,spec);return[k,sticker.id||0,sticker.w,sticker.h,sticker.rotation||0,
       sticker.mode,sticker.patternSize,sticker.offsetX,sticker.offsetY,!!sticker.data];});
-    const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.locked===true,o.position.x,o.position.y,o.position.z,o.rotationX,o.rotationY,o.rotationZ,o.orientation,
+    const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.locked===true,o.position.x,o.position.y,o.position.z,o.rotationY,
       o.size.w,o.size.d,o.size.h,o.unitPrice,o.structure?.projection,o.structure?.height,o.structure?.pierWidth,o.structure?.thickness,o.structure?.color,
       o.attachment?.targetId,o.attachment?.sourcePort,o.attachment?.targetPort,o.attachment?.status,o.transform?.flipX===true,o.transform?.flipY===true,
       o.label||'',o.appearance?.color||'',o.appearance?.textureId||'']);
@@ -5250,15 +5204,11 @@ class ThreeBoothRenderer{
   }
   addCatalogObjects(group,spec,floorY){
     spec.objects.forEach(obj=>{
-      normalizeSceneObjectModel(obj);const root=this.buildCatalogObject(obj);this.applyCatalogObjectTransform(root,obj,floorY);
+      normalizeSceneObjectModel(obj);const root=this.buildCatalogObject(obj),flipY=obj.transform.flipY===true;
+      root.position.set(obj.position.x,floorY+(obj.position.y||0)+(flipY?(Number(obj.size?.h)||0):0),obj.position.z);
+      root.rotation.y=this.THREE.MathUtils.degToRad(obj.rotationY||0);root.scale.set(obj.transform.flipX?-1:1,flipY?-1:1,1);
       group.add(root);this.objectMeshes.set(obj.id,root);
     });
-  }
-  applyCatalogObjectTransform(root,obj,floorY=0){
-    const T=this.THREE,heading=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),T.MathUtils.degToRad(Number(obj.rotationY)||0)),
-      local=new T.Quaternion().setFromEuler(new T.Euler(T.MathUtils.degToRad(Number(obj.rotationX)||0),0,T.MathUtils.degToRad(Number(obj.rotationZ)||0),'XYZ'));
-    root.position.set(Number(obj.position?.x)||0,Number(floorY)+(Number(obj.position?.y)||0)+sceneObjectOrientationLift(obj),Number(obj.position?.z)||0);
-    root.quaternion.copy(heading).multiply(local);root.scale.set(obj.transform?.flipX?-1:1,obj.transform?.flipY?-1:1,1);
   }
   addPhoto360Platform(group,spec,floorY){
     const layout=photo360PlatformLayout(spec);if(!layout)return;
@@ -6510,8 +6460,7 @@ window.YPAssetEditorBridge={
     return{
       selection:{
         id:obj.id,catalogId:obj.catalogId,name:selectedAssetName(obj),type:obj.type||item?.type||'asset',customAsset:item?.customAsset===true,
-        locked:objectLocked(obj),canOrient:obj.capabilities?.rotatable!==false,orientation:obj.orientation||'horizontal',
-        rotationX:Number(obj.rotationX)||0,rotationY:Number(obj.rotationY)||0,rotationZ:Number(obj.rotationZ)||0,
+        locked:objectLocked(obj),rotationY:Number(obj.rotationY)||0,
         size:{w:Number(obj.size?.w)||0,d:Number(obj.size?.d)||0,h:Number(obj.size?.h)||0},
         position:{x:Number(obj.position?.x)||0,y:Number(obj.position?.y)||0,z:Number(obj.position?.z)||0},
         flipX:obj.transform?.flipX===true,flipY:obj.transform?.flipY===true,
@@ -6522,7 +6471,7 @@ window.YPAssetEditorBridge={
   },
   setMoveMode:setObjectMoveMode,setName:updateSelectedObjectName,setSize(axis,value,keepRatio=true){const lock=document.getElementById('assetSizeLock');if(lock)lock.checked=keepRatio!==false;updateSelectedObjectSize(axis,value);},
   setAppearanceMode:updateSelectedObjectAppearanceMode,setColor:updateSelectedObjectColor,
-  toggleLock:toggleSelectedObjectLock,rotate:rotateSelectedObject,setOrientation:setSelectedObjectOrientation,flip:flipSelectedObject,
+  toggleLock:toggleSelectedObjectLock,rotate:rotateSelectedObject,flip:flipSelectedObject,
   openSettings:openAssetSettings,resetSize:resetSelectedObjectSize,duplicate:duplicateSelectedObject,remove:deleteSelectedObject,
   undo:undoObjectChange,redo:redoObjectChange
 };
@@ -6530,6 +6479,6 @@ window.YPAssetEditorBridge={
 buildGeometryManifest(S);
 window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispose();},{once:true});
 </script>
-<script type="module" src="js/asset-editor/asset-editor.js?v=20260829-2"></script>
+<script type="module" src="js/asset-editor/asset-editor.js?v=20260829"></script>
 </body>
 </html>
