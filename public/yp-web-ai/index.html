@@ -649,7 +649,7 @@ select:focus{border-color:var(--acc)}
       <div class="sech"><h3>คลังอุปกรณ์</h3><span class="hint">9 รายการ</span></div>
       <div class="catalog-groups" id="objectCatalog"></div>
       <div class="catalog-status" id="objectCatalogStatus" role="status" aria-live="polite"></div>
-      <div class="note">คลิกหรือแตะรายการเพื่อเพิ่มลงบูธ ระบบจะหาตำแหน่งเริ่มต้นให้อัตโนมัติ<br>คลิก Asset ในภาพเพื่อเปิดเมนูใกล้วัตถุ แล้วใช้ Smart Move, Flip, ตั้งค่าขนาด/พื้นผิว, ทำสำเนา หรือลบ</div>
+      <div class="note">คลิกหรือแตะรายการเพื่อเพิ่มลงบูธ ระบบจะหาตำแหน่งเริ่มต้นให้อัตโนมัติ<br>คลิก Asset ในภาพเพื่อเปิดเมนูด้านล่าง แล้วใช้ Smart Move, Flip, ตั้งค่าขนาด/พื้นผิว, ทำสำเนา หรือลบ</div>
     </div>
   </div>
 
@@ -1112,9 +1112,10 @@ select:focus{border-color:var(--acc)}
       <div class="asset-settings-grid">
         <div class="asset-settings-field"><label for="assetSizeW">กว้าง (ม.)</label><input id="assetSizeW" type="number" min="0.01" max="30" step="0.05" inputmode="decimal"></div>
         <div class="asset-settings-field"><label for="assetSizeD">ลึก (ม.)</label><input id="assetSizeD" type="number" min="0.01" max="30" step="0.05" inputmode="decimal"></div>
-        <div class="asset-settings-field"><label for="assetSizeH">สูง (ม.)</label><input id="assetSizeH" type="number" min="0.01" max="15" step="0.05" inputmode="decimal"></div>
+        <div class="asset-settings-field"><label for="assetSizeH">สูง (ม.)</label><input id="assetSizeH" type="number" min="0.01" max="50" step="0.05" inputmode="decimal"></div>
       </div>
       <label class="asset-settings-check"><input id="assetSizeLock" type="checkbox" checked> ล็อกสัดส่วนขณะปรับขนาด</label>
+      <div class="note">ปรับขนาด Asset และ My Asset (.glb) ได้จริงทั้ง 3 แกน โดยกำหนดความสูงเกินผนังบูธได้ สูงสุด 50 ม.</div>
       <div class="asset-settings-actions"><button class="btn sm" id="assetResetSize" type="button">คืนขนาดเดิม</button></div>
     </section>
     <section class="asset-settings-section">
@@ -1771,6 +1772,7 @@ const isDownlightBeamItem=item=>item?.type==='downlightBeam'||item?.catalogId===
 const isDownlightBeamObject=obj=>obj?.type==='downlightBeam'||obj?.catalogId==='downlight-beam';
 const DOWNLIGHT_MODEL_URL='./assets/lights/Downlight_V1.glb';
 const SCENE_OBJECT_SCHEMA_VERSION=2;
+const MAX_ASSET_WIDTH=30,MAX_ASSET_DEPTH=30,MAX_ASSET_HEIGHT=50;
 const SCENE_CAPABILITY_KEYS=Object.freeze(['floorPlaceable','wallMountable','ceilingMountable','free3DPlaceable','surfaceSnappable','attachable','resizable','rotatable','repeatable','styleable','compound']);
 const SCENE_COLLISION_LAYERS=Object.freeze(['structure','furniture','decoration','surface','optional-prop']);
 function defaultSceneCapabilities(item={}){
@@ -2245,7 +2247,8 @@ function normalizeMyAsset(record){
   const size=record?.size||{};
   const w=Number(size.w)>0?Number(size.w):1,d=Number(size.d)>0?Number(size.d):1,h=Number(size.h)>0?Number(size.h):1;
   return furnitureItem({catalogId:record.id,category:'my',type:'custom',name:record.name||'My Asset',icon:'GLB',size:{w,d,h},unitPrice:0,color:'#8d939b',
-    modelUrl:'custom',customAsset:true,file:record.file,createdAt:record.createdAt||0});
+    modelUrl:'custom',customAsset:true,file:record.file,createdAt:record.createdAt||0,
+    capabilities:['floorPlaceable','free3DPlaceable','surfaceSnappable','resizable','rotatable','styleable']});
 }
 function setAssetDropState(active){
   const view=document.getElementById('view');if(view)view.classList.toggle('asset-drop-target',Boolean(active));
@@ -2599,11 +2602,15 @@ function updateSelectedObjectName(value){
 }
 function updateSelectedObjectSize(axis,value){
   const obj=objectById(objectEditor.selectedId);if(!obj||objectLocked(obj)||!['w','d','h'].includes(axis))return;
-  const numeric=clampNumber(Number(value)||.01,.01,axis==='h'?15:30),before=objectSnapshot(),previous={...obj.size},locked=document.getElementById('assetSizeLock')?.checked!==false;
-  if(locked){const ratio=numeric/Math.max(.001,Number(obj.size[axis])||.001);['w','d','h'].forEach(key=>obj.size[key]=clampNumber((Number(obj.size[key])||.01)*ratio,.01,key==='h'?15:30));}
+  const maxSize={w:MAX_ASSET_WIDTH,d:MAX_ASSET_DEPTH,h:MAX_ASSET_HEIGHT},numeric=clampNumber(Number(value)||.01,.01,maxSize[axis]),
+    before=objectSnapshot(),previous={...obj.size},locked=document.getElementById('assetSizeLock')?.checked!==false;
+  if(locked){const ratio=numeric/Math.max(.001,Number(obj.size[axis])||.001);['w','d','h'].forEach(key=>obj.size[key]=clampNumber((Number(obj.size[key])||.01)*ratio,.01,maxSize[key]));}
   else obj.size[axis]=numeric;
   obj.size={w:+obj.size.w.toFixed(3),d:+obj.size.d.toFixed(3),h:+obj.size.h.toFixed(3)};
-  if(!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,obj.rotationY||0,obj.id,obj.size,ALLOW_ASSET_OVERLAP,obj)){
+  /* Increasing height alone must not be limited by booth-wall height.  Width
+     and depth edits still run through the normal structure collision checks. */
+  const footprintChanged=Math.abs(obj.size.w-previous.w)>.0001||Math.abs(obj.size.d-previous.d)>.0001;
+  if(footprintChanged&&!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,obj.rotationY||0,obj.id,obj.size,ALLOW_ASSET_OVERLAP,obj)){
     obj.size=previous;announceCatalog('ขนาดนี้ชนโครงสร้างหลักหรือตำแหน่งไม่รองรับ','error');syncAssetSettingsForm();return;
   }
   recordObjectHistory(before);objectEditor.selectedId=obj.id;sync();syncAssetSettingsForm();
@@ -4901,7 +4908,16 @@ class ThreeBoothRenderer{
   buildCatalogObject(obj){
     const T=this.THREE,item=objectCatalogDef(obj.catalogId),s=obj.size,root=new T.Group(),accent=palette().acc;
     const furniture=this.furnitureModel(item);
-    if(furniture){root.add(furniture);root.name='catalog-object-'+obj.type;
+    if(furniture){
+      /* GLB templates are normalized once when loaded.  Apply the object's
+         current dimensions to the clone so the settings panel changes the
+         rendered model as well as its selection/collision envelope. */
+      const source=Array.isArray(furniture.userData?.size)?furniture.userData.size:null;
+      if(source&&source.length===3&&source.every(value=>Number(value)>.0001)){
+        const base=furniture.scale.clone();
+        furniture.scale.set(base.x*(Number(s.w)||source[0])/source[0],base.y*(Number(s.h)||source[1])/source[1],base.z*(Number(s.d)||source[2])/source[2]);
+      }
+      root.add(furniture);root.name='catalog-object-'+obj.type;
       root.traverse(part=>{part.userData.objectId=obj.id;});this.applyCatalogAppearance(root,obj);return root;}
     const base=(item&&item.color)||'#8a919c',dark='#2c3037',light='#e5e3dc';
     const bx=(size,pos,color=base,options={})=>this.box(root,size,pos,color,options);

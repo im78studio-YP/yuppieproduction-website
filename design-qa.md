@@ -37,6 +37,35 @@ passed
 
 ---
 
+# Design QA — My Asset GLB Resizing
+
+## Source of truth
+
+- Issue reference: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-dce561d8-a49f-42ac-9fec-b901b7fa13d8.png`
+- Requested behavior: My Asset `.glb` dimensions must resize the rendered model, and Asset height must be allowed above the booth-wall height.
+
+## Implementation evidence
+
+- Asset settings height field now accepts `0.01–50.00 m`; booth height is no longer used as an Asset-height ceiling.
+- Height-only edits retain the existing footprint and bypass wall-height collision rejection; width/depth changes retain structure-collision validation.
+- Uploaded GLB catalogue entries explicitly expose the `resizable` capability.
+- Every cloned GLB model is scaled from its loaded template bounds to the selected Scene object's current width, height, and depth.
+- The settings helper text makes the above-wall limit discoverable without changing the existing dark/gold modal hierarchy.
+
+## Verification
+
+- Reloaded the local app at `http://127.0.0.1:4173/yp-web-ai/index.html`.
+- Verified the live settings field reports `max="50"` and accepts `3.50 m` for a `2.40 m` booth.
+- Verified the updated menu copy and bottom-toolbar guidance are present.
+- Inline application JavaScript syntax check: passed.
+- Browser console warnings/errors: 0.
+
+## Final result
+
+passed
+
+---
+
 # Design QA — Asset Toolbar Bottom Placement
 
 ## Source visual truth
