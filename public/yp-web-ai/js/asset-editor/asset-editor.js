@@ -12,7 +12,7 @@ if(mount){
         <section class="asset-editor-card asset-editor-selection-card">
           <div class="asset-editor-selection-head"><h4>การเลือกและจัดกลุ่ม</h4><b data-ae-selection-count>เลือก 1 ชิ้น</b></div>
           <button class="btn sm asset-editor-multi" data-ae-action="multi-select" type="button">เลือกหลายชิ้น</button>
-          <div class="asset-editor-note">คอมพิวเตอร์ใช้ Shift/Ctrl + คลิกได้ · มือถือเปิดโหมดนี้แล้วแตะ Asset ทีละชิ้น · สีทองคือชิ้นอ้างอิงหลัก</div>
+          <div class="asset-editor-note">คอมพิวเตอร์ใช้ Shift/Ctrl + คลิกได้ · มือถือเปิดโหมดนี้แล้วแตะ Asset ทีละชิ้น · สีชมพูคือชิ้นอ้างอิงหลัก</div>
           <div class="asset-editor-subtitle">Align โดยยึดชิ้นอ้างอิงหลัก</div>
           <div class="asset-editor-actions asset-editor-align">
             <button class="btn sm" data-ae-align="horizontal" type="button">กึ่งกลางแนวนอน</button><button class="btn sm" data-ae-align="vertical" type="button">กึ่งกลางแนวตั้ง</button>

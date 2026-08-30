@@ -5,7 +5,7 @@
 .asset-editor-kicker{color:var(--acc2);font:700 10px Inter,sans-serif;letter-spacing:1.2px;text-transform:uppercase}
 .asset-editor-head h3{margin:3px 0 0;font-size:15px}
 .asset-editor-badge{flex:0 0 auto;padding:5px 8px;border:1px solid var(--line);border-radius:999px;color:var(--tx3);font-size:9.5px}
-.asset-editor-badge.is-locked{border-color:rgba(224,168,60,.55);background:rgba(224,168,60,.1);color:var(--acc2)}
+.asset-editor-badge.is-locked{border-color:rgba(var(--acc-rgb),.55);background:rgba(var(--acc-rgb),.1);color:var(--acc2)}
 .asset-editor-empty{padding:24px 15px;border:1px dashed var(--line);border-radius:10px;background:var(--bg2);text-align:center;color:var(--tx3);font-size:11px;line-height:1.65}
 .asset-editor-empty b{display:block;margin-bottom:4px;color:var(--tx);font-size:13px}
 .asset-editor-body{display:grid;gap:10px}
@@ -16,7 +16,7 @@
 .asset-editor-align{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 .asset-editor-subtitle{margin:10px 0 6px;color:var(--tx2);font-size:9.5px}.asset-editor-subtitle:first-of-type{margin-top:0}
 .asset-editor-name{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg3);color:var(--tx);font-size:12px;outline:none}
-.asset-editor-name:focus,.asset-editor-field input:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(224,168,60,.12)}
+.asset-editor-name:focus,.asset-editor-field input:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(var(--acc-rgb),.12)}
 .asset-editor-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
 .asset-editor-meta span{padding:7px 6px;border:1px solid var(--line);border-radius:7px;color:var(--tx3);font-size:9.5px;text-align:center}
 .asset-editor-meta b{display:block;margin-top:2px;color:var(--tx);font:600 10.5px Inter,sans-serif}
@@ -28,7 +28,7 @@
 .asset-editor-actions.compact{grid-template-columns:repeat(3,minmax(0,1fr))}
 .asset-editor-actions.orientation{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:7px}
 .asset-editor-actions .btn{min-width:0;padding:8px 6px;font-size:10px;white-space:normal}
-.asset-editor-actions .btn.on{border-color:var(--acc);background:rgba(224,168,60,.12);color:var(--acc2)}
+.asset-editor-actions .btn.on{border-color:var(--acc);background:rgba(var(--acc-rgb),.12);color:var(--acc2)}
 .asset-editor-actions .btn.danger{color:#f29a82}
 .asset-editor-color{display:grid;grid-template-columns:44px 1fr;gap:7px;margin-top:8px}
 .asset-editor-color input[type=color]{width:44px;height:34px;padding:3px;border:1px solid var(--line);border-radius:7px;background:var(--bg3)}
