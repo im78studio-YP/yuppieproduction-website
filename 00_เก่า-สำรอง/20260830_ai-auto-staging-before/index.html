@@ -351,18 +351,6 @@ select:focus{border-color:var(--acc)}
 .prompt-style-field label{font-size:11px;color:var(--tx2)}
 .prompt-style-field select{min-height:39px;border-color:rgba(var(--acc-rgb),.32);background:var(--bg2);color:var(--tx)}
 .prompt-style-note{color:var(--tx3);font-size:9.5px;line-height:1.5}
-.prompt-staging{display:grid;gap:10px;margin-bottom:10px;padding:11px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.02)}
-.prompt-staging-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.prompt-staging-head h4{margin:0;color:var(--tx2);font-size:11px}.prompt-staging-head span{color:var(--tx3);font-size:9.5px;text-align:right}
-.prompt-staging-segment{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-.prompt-staging-choice{min-height:38px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);color:var(--tx2);font:600 11px Inter,"Noto Sans Thai",sans-serif;cursor:pointer}
-.prompt-staging-choice[aria-checked=true]{border-color:var(--acc);background:rgba(var(--acc-rgb),.13);color:var(--acc2);box-shadow:inset 0 0 0 1px rgba(var(--acc-rgb),.14)}
-.prompt-staging-density{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px}.prompt-staging-density label{font-size:10px;color:var(--tx2)}
-.prompt-staging-density select{min-height:37px;background:var(--bg2);color:var(--tx);border-color:var(--line)}
-.prompt-staging-permissions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-.prompt-staging-check{display:flex;align-items:center;gap:7px;min-height:36px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--bg2);color:var(--tx2);font-size:10.5px;line-height:1.3}
-.prompt-staging-check input{width:15px;height:15px;flex:none;accent-color:var(--acc)}
-.prompt-staging.is-disabled .prompt-staging-density,.prompt-staging.is-disabled .prompt-staging-permissions{opacity:.45}.prompt-staging-note{color:var(--tx3);font-size:9.5px;line-height:1.5}
 .prompt-textarea{display:block;width:100%;min-height:350px;resize:vertical;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#0c1015;color:var(--tx);font:11px/1.65 Inter,"Noto Sans Thai",sans-serif;white-space:pre-wrap;outline:none}
 .prompt-textarea:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(var(--acc-rgb),.12)}
 .prompt-fidelity{margin-top:10px;padding:10px 11px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.02)}
@@ -782,38 +770,18 @@ select:focus{border-color:var(--acc)}
           </select>
           <div class="prompt-style-note" id="promptRenderStyleNote">เส้นสายเรียบง่าย พื้นที่โปร่ง โทนร่วมสมัย และวัสดุที่ดูสะอาด</div>
         </div>
-        <div class="prompt-staging" id="promptStagingControl">
-          <div class="prompt-staging-head"><h4>เติมบรรยากาศอัตโนมัติ</h4><span>AI Suggested · ไม่รวมใน BOQ</span></div>
-          <div class="prompt-staging-segment" role="radiogroup" aria-label="เปิดหรือปิดการเติมบรรยากาศอัตโนมัติ">
-            <button class="prompt-staging-choice" type="button" data-staging-enabled="true" role="radio" aria-checked="true">เปิด <small>· ค่าเริ่มต้น</small></button>
-            <button class="prompt-staging-choice" type="button" data-staging-enabled="false" role="radio" aria-checked="false">ปิด <small>· เฉพาะแบบ 3D</small></button>
-          </div>
-          <div class="prompt-staging-density">
-            <label for="promptStagingDensity">ระดับองค์ประกอบ</label>
-            <select id="promptStagingDensity" aria-label="ระดับองค์ประกอบ Auto-Staging">
-              <option value="low">น้อย</option><option value="medium" selected>ปานกลาง — ค่าเริ่มต้น</option><option value="high">มาก</option>
-            </select>
-          </div>
-          <div class="prompt-staging-permissions" aria-label="หมวดองค์ประกอบที่ AI เพิ่มได้">
-            <label class="prompt-staging-check"><input type="checkbox" id="promptStagingFurniture" checked>เฟอร์นิเจอร์</label>
-            <label class="prompt-staging-check"><input type="checkbox" id="promptStagingProducts" checked>สินค้า</label>
-            <label class="prompt-staging-check"><input type="checkbox" id="promptStagingPeople" checked>คน</label>
-            <label class="prompt-staging-check"><input type="checkbox" id="promptStagingDecor" checked>ของตกแต่งและต้นไม้</label>
-          </div>
-          <div class="prompt-staging-note">องค์ประกอบที่ AI เติมเป็นเพียง Render Staging ไม่ใช่อุปกรณ์ที่ลูกค้ายืนยัน สโคปผลิต หรือ Geometry ของแบบ</div>
-        </div>
         <textarea id="designPrompt" class="prompt-textarea" readonly spellcheck="false" aria-label="PROMPT จากแบบปัจจุบัน"></textarea>
         <div class="prompt-fidelity" id="promptFidelityControl">
           <div class="prompt-fidelity-head">
-            <label for="promptFidelityRange">ระดับอิสระของการจัดฉาก</label>
-            <span>Geometry ล็อก 10/10 · ปรับเฉพาะ Staging</span>
+            <label for="promptFidelityRange">ระดับการคงรูปแบบบูธ</label>
+            <span>0 = เหมือนแบบเดิม · 10 = อิสระขึ้น</span>
           </div>
           <div class="prompt-fidelity-control">
-            <input type="range" id="promptFidelityRange" min="0" max="10" step="1" value="6" aria-label="ระดับอิสระของการจัดฉาก AI">
-            <input type="number" id="promptFidelityVal" min="0" max="10" step="1" value="6" inputmode="numeric" aria-label="ค่าระดับอิสระของการจัดฉาก AI" data-reset-default="6">
+            <input type="range" id="promptFidelityRange" min="0" max="10" step="1" value="0" aria-label="ระดับการคงรูปแบบบูธของ AI">
+            <input type="number" id="promptFidelityVal" min="0" max="10" step="1" value="0" inputmode="numeric" aria-label="ค่าระดับการคงรูปแบบบูธของ AI" data-reset-default="0">
             <em>/10</em>
           </div>
-          <div class="prompt-fidelity-note" id="promptFidelityNote">เติมองค์ประกอบในระดับสมดุล โดยไม่เปลี่ยน Geometry ที่ล็อกไว้</div>
+          <div class="prompt-fidelity-note" id="promptFidelityNote">รักษาแบบอ้างอิงอย่างเคร่งครัด และคงขนาดบูธเดิม</div>
         </div>
         <div class="prompt-actions">
           <button class="btn pri sm" type="button" id="promptCopy">คัดลอก PROMPT</button>
@@ -1439,7 +1407,6 @@ select:focus{border-color:var(--acc)}
   </div>
 </div>
 <script src="js/quick-setup.js?v=20260830-1"></script>
-<script src="js/ai-staging.js?v=20260830-1"></script>
 <script>
 /* ================= ข้อมูล ================= */
 const CATGROUPS=[
@@ -1635,10 +1602,10 @@ const WHITE='#f2f3f5';
 /* ================= state ================= */
 /* BoothSpec is the serializable single source of truth. S remains as a compatibility
    alias so the proven controls, rules, pricing, and SVG renderer keep one data path. */
-const AI_RENDER_SCHEMA_VERSION=2;
+const AI_RENDER_SCHEMA_VERSION=1;
 const AI_LOCK_LEVELS=Object.freeze(['LOCKED','STYLEABLE','OPTIONAL']);
 const AI_ALLOWED_CHANGES=Object.freeze(['material','color','finish','graphic','lighting','reflection','atmosphere','add','remove','position','rotation','scale']);
-const AI_OPTIONAL_CATEGORIES=Object.freeze(['furniture','products','plants','people','decor','props']);
+const AI_OPTIONAL_CATEGORIES=Object.freeze(['products','plants','people','props']);
 const AI_RENDER_STYLE_DEFAULT='modern-minimalist';
 const AI_RENDER_STYLES=Object.freeze([
   {key:'modern-minimalist',th:'สไตล์มินิมอลร่วมสมัย',en:'Modern Minimalist',prompt:'ใช้เส้นสายเรียบง่าย พื้นที่โปร่ง โทนสีร่วมสมัย วัสดุสะอาด และรายละเอียดเท่าที่จำเป็น'},
@@ -1652,15 +1619,12 @@ const AI_RENDER_STYLES=Object.freeze([
   {key:'surreal-dreamy',th:'สไตล์แฟนตาซี เหนือจริง',en:'Surrealism / Dreamy Fantasy',prompt:'ใช้บรรยากาศเหนือจริง รูปทรงและแสงที่ชวนฝัน สีสันมีมิติ และรายละเอียดแฟนตาซีโดยไม่เปลี่ยน Geometry หลัก'}
 ]);
 const aiRenderStyle=value=>AI_RENDER_STYLES.find(style=>style.key===value)||AI_RENDER_STYLES[0];
-const defaultAIStagingSettings=()=>globalThis.YPAIStaging?.normalizeAIStaging({})||{
-  enabled:true,density:'medium',allowFurniture:true,allowProducts:true,allowPeople:true,allowDecor:true,allowPlants:true,
-  allowNewPermanentStructures:false,statusLabel:'AI Suggested / Render Staging',suggestions:[]};
 function defaultAIRenderingSettings(){
-  return{schemaVersion:AI_RENDER_SCHEMA_VERSION,allowOptionalProps:true,
-    optionalPermissions:{furniture:true,products:true,plants:true,people:true,decor:true,props:true},
+  return{schemaVersion:AI_RENDER_SCHEMA_VERSION,allowOptionalProps:false,
+    optionalPermissions:{products:false,plants:false,people:false,props:false},
     renderStyle:AI_RENDER_STYLE_DEFAULT,camera:null,preview:null};
 }
-const BoothSpec={version:3,cat:'food',customBusinessCategory:'',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
+const BoothSpec={version:2,cat:'food',customBusinessCategory:'',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
   wallCol:'white',wallMat:'paint',wallStickerFaces:[],wallStickers:{
     back:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0},
     left:{data:null,name:'',id:0,ar:2,w:2,h:1,lock:true,rotation:0,mode:'cover',patternSize:1.2,offsetX:0,offsetY:0},
@@ -1677,8 +1641,8 @@ const BoothSpec={version:3,cat:'food',customBusinessCategory:'',primary:'#2e7d4f
   logoType:'diecut',logoShape:'cutout',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
   logoMount:'wall',logoWall:'back',logoWidth:2,logoDepth:.05,logoBaseWidth:0,logoBaseDepth:0,logoBaseColor:'#20252d',logoColor:'#2e7d4f',logoColorTouched:false,logoWallU:3,logoWallY:1.6,
   logoFloorX:3,logoFloorZ:1.5,logoFloorRotation:0,
-  logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,brand:'',view:'three',photo:null,objects:[],promptFidelity:6,wallRadius:3.5,
-  placementSnap:true,magneticSnap:true,geometryFidelity:10,stagingFreedom:6,aiStaging:defaultAIStagingSettings(),aiRendering:defaultAIRenderingSettings()};
+  logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,brand:'',view:'three',photo:null,objects:[],promptFidelity:0,wallRadius:3.5,
+  placementSnap:true,magneticSnap:true,aiRendering:defaultAIRenderingSettings()};
 const S=BoothSpec;
 const INITIAL_BOOTH_SPEC_JSON=JSON.stringify(BoothSpec);
 const MAX_CARPET_TEXTURE_UPLOADS=3;
@@ -1859,38 +1823,24 @@ function resetBoothToInitialState(){
   sync();
 }
 const objectCatalogDef=id=>allObjectCatalog().find(o=>o.catalogId===id)||null;
-function normalizeAIStagingSettings(spec=S){
-  const api=globalThis.YPAIStaging;
-  spec.aiStaging=api?.normalizeAIStaging(spec.aiStaging)||defaultAIStagingSettings();
-  const freedom=api?.normalizeAIRenderFreedom({geometryFidelity:spec.geometryFidelity,stagingFreedom:spec.stagingFreedom})||{
-    geometryFidelity:10,stagingFreedom:6};
-  spec.geometryFidelity=freedom.geometryFidelity;
-  spec.stagingFreedom=freedom.stagingFreedom;
-  /* promptFidelity is kept as a legacy serialized alias; geometry fidelity is no longer reduced by this control. */
-  spec.promptFidelity=freedom.stagingFreedom;
-  spec.version=Math.max(3,Number(spec.version)||1);
-  return spec.aiStaging;
-}
 function normalizeAIRenderingSettings(spec=S){
-  const staging=normalizeAIStagingSettings(spec);
   const source=spec.aiRendering&&typeof spec.aiRendering==='object'?spec.aiRendering:{};
+  const permissions=source.optionalPermissions&&typeof source.optionalPermissions==='object'?source.optionalPermissions:{};
   source.schemaVersion=AI_RENDER_SCHEMA_VERSION;
-  source.allowOptionalProps=staging.enabled;
-  source.optionalPermissions={furniture:staging.enabled&&staging.allowFurniture,products:staging.enabled&&staging.allowProducts,
-    plants:staging.enabled&&staging.allowPlants,people:staging.enabled&&staging.allowPeople,
-    decor:staging.enabled&&staging.allowDecor,props:staging.enabled&&staging.allowDecor};
+  source.allowOptionalProps=source.allowOptionalProps===true;
+  source.optionalPermissions=Object.fromEntries(AI_OPTIONAL_CATEGORIES.map(key=>[key,permissions[key]===true]));
   source.renderStyle=aiRenderStyle(source.renderStyle).key;
   source.camera=source.camera&&typeof source.camera==='object'?source.camera:null;
   source.preview=source.preview&&typeof source.preview==='object'?source.preview:null;
-  spec.aiRendering=source;return source;
+  spec.aiRendering=source;spec.version=Math.max(2,Number(spec.version)||1);return source;
 }
 function defaultObjectAIRule(item){
-  /* Every object in BoothSpec.objects was explicitly selected by the customer.
-     Auto-Staging suggestions live in aiStaging.suggestions and never weaken this lock. */
-  return{lockLevel:'LOCKED',geometryLocked:true,styleable:true,
-    presenceRequired:true,optionalCategory:null,
+  const optional=item?.category==='decor',structure=item?.category==='structure';
+  return{lockLevel:optional?'OPTIONAL':'LOCKED',geometryLocked:!optional,styleable:true,
+    presenceRequired:!optional,optionalCategory:optional?'plants':null,
     materialIntent:item?.color||'follow-current-scene',
-    allowedChanges:['material','color','finish','reflection']};
+    allowedChanges:optional?['material','color','finish','add','remove','position','rotation','scale']:
+      structure?['material','color','finish','lighting','reflection']:['material','color','finish','reflection']};
 }
 function normalizeObjectAIRule(obj,item=objectCatalogDef(obj?.catalogId)){
   if(!obj||typeof obj!=='object')return null;
@@ -2048,21 +1998,14 @@ function buildGeometryManifest(spec=S){
       editorLocked:obj.locked===true,groupId:obj.groupId||null,appearance:{color:obj.appearance?.color||null,textureName:obj.appearance?.textureName||null},
       materialIntent:obj.appearance?.textureData?'asset-sticker: '+String(obj.appearance.textureName||'uploaded image'):(obj.appearance?.color||rule.materialIntent),
       semantics:{...JSON.parse(JSON.stringify(rule)),allowedChanges:rule.allowedChanges.filter(change=>!rule.geometryLocked||!['position','rotation','scale'].includes(change))},
-      classification:{status:'Customer Selected / Confirmed Geometry',confirmed:true,countsAsSelectedAsset:true,includedInBOQ:true,includedInProductionScope:true,includedInConfirmedGeometry:true},
       source:{kind:'BoothSpec',path:'objects['+index+']'}});
   });
-  const ai=normalizeAIRenderingSettings(spec),staging=normalizeAIStagingSettings(spec);
+  const ai=normalizeAIRenderingSettings(spec);
   return{schemaVersion:AI_RENDER_SCHEMA_VERSION,coordinateSystem:{origin:'back-left-floor',handedness:'right-handed',unit:'m',
       axes:{x:'left-to-right',y:'floor-to-up',z:'back-to-front'}},
     booth:{id:'booth-root',type:typeDef.k,name:typeDef.n||typeDef.k,dimensions:manifestSize(spec.W,spec.D,spec.H),floorElevation:manifestNumber(floorY),
       wallThickness:manifestNumber(thickness),walls:[...walls],openFaces:['back','left','right','front'].filter(face=>face==='front'||!walls.includes(face))},
-    camera:currentCameraManifest(spec),permissions:{allowOptionalProps:ai.allowOptionalProps,optionalCategories:{...ai.optionalPermissions},
-      aiStaging:{enabled:staging.enabled,density:staging.density,allowFurniture:staging.allowFurniture,allowProducts:staging.allowProducts,
-        allowPeople:staging.allowPeople,allowDecor:staging.allowDecor,allowPlants:staging.allowPlants,allowNewPermanentStructures:false,
-        geometryFidelity:spec.geometryFidelity,stagingFreedom:spec.stagingFreedom},
-      stagingClassification:{status:staging.statusLabel,requiresUserConfirmation:true,countsAsSelectedAsset:false,includedInBOQ:false,
-        includedInProductionScope:false,includedInConfirmedGeometry:false}},
-    renderStaging:{status:staging.statusLabel,suggestions:JSON.parse(JSON.stringify(staging.suggestions||[]))},objects};
+    camera:currentCameraManifest(spec),permissions:{allowOptionalProps:ai.allowOptionalProps,optionalCategories:{...ai.optionalPermissions}},objects};
 }
 const PLACEMENT_GRID=.05;
 const MAGNETIC_SNAP_DISTANCE=.15;
@@ -3358,8 +3301,7 @@ function objectLayoutPrompt(){
     'ด้านเปิดและทางเดิน: '+(openFaces.length?openFaces.join(', ')+' และด้านหน้า':'ด้านหน้าเท่านั้น')
   ];
   if(boothType.note)header.push('รายละเอียดรูปแบบบูธ: '+boothType.note);
-  if(!objects.length)return header.concat('อุปกรณ์ที่ลูกค้าเลือกและต้องคงตำแหน่ง: ไม่มี',
-    'หมายเหตุ: ไม่มีอุปกรณ์ที่ลูกค้าเลือกไม่ได้หมายความว่าต้องสร้างบูธเปล่า การเติมองค์ประกอบประกอบภาพให้ใช้กฎ AI AUTO-STAGING แยกต่างหาก').join('\n');
+  if(!objects.length)return header.concat('อุปกรณ์ที่ลูกค้าเลือก: ไม่มี','ห้ามเพิ่มอุปกรณ์หรือองค์ประกอบอื่นที่ไม่มีในแบบ').join('\n');
   const records=objects.map((obj,index)=>{
     const item=objectCatalogDef(obj.catalogId),position=obj.position||{},size=obj.size||item?.size||{},distances=promptObjectWallDistances(obj);
     const name=obj.label||item?.name||'อุปกรณ์กำหนดเอง',rotation=promptSafeNumber(obj.rotationY),rotationX=promptSafeNumber(obj.rotationX),rotationZ=promptSafeNumber(obj.rotationZ),x=promptSafeNumber(position.x),z=promptSafeNumber(position.z);
@@ -3392,20 +3334,20 @@ function objectLayoutPrompt(){
     return'- ชิ้นที่ '+record.index+': '+record.name+' 1 ชิ้น · จุดอ้างอิงกลางฐาน X '+promptNumber(record.x)+' ม., Z '+promptNumber(record.z)+' ม. · ตำแหน่งสัมพัทธ์ X '+promptNumber(record.normalizedX*100,1)+'% / Z '+promptNumber(record.normalizedZ*100,1)+'% · ฐานสูงจากพื้น '+promptNumber(record.baseY)+' ม. · ขนาดชิ้นงานเดิม กว้าง '+promptNumber(s.w)+' × ลึก '+promptNumber(s.d)+' × สูง '+promptNumber(s.h)+' ม. · แนววาง '+orientationLabel+' · หมุนแกน X/Y/Z '+promptNumber(record.rotationX)+'° / '+promptNumber(record.rotation)+'° / '+promptNumber(record.rotationZ)+'° · ขอบเขตหลังหมุน '+promptNumber(oriented.w)+' × '+promptNumber(oriented.d)+' × '+promptNumber(oriented.h)+' ม. · โซน '+record.zone+' · ระยะจากขอบ ซ้าย '+promptNumber(d.left)+' / ขวา '+promptNumber(d.right)+' / หลัง '+promptNumber(d.back)+' / ด้านหน้า '+promptNumber(d.front_open)+' ม.'+groupDetail+flipDetail+appearanceDetail+frameDetail+beamDetail+attachmentDetail+surfaceDetail+anchorDetail;
   }).join('\n');
   return header.concat('อุปกรณ์ที่ลูกค้าเลือกและตำแหน่งที่ต้องคงเดิม:',readable,
-    'ข้อบังคับสำหรับอุปกรณ์ที่ลูกค้าเลือก: ห้ามเพิ่ม ลด ย้าย หรือหมุน ห้ามเปลี่ยนขนาดและจำนวน ให้ยึดตำแหน่งและระยะจากผนังตามรายการนี้ ส่วน AI AUTO-STAGING เติมได้เฉพาะองค์ประกอบใหม่ที่ไม่ชนหรือซ้อนกับรายการเหล่านี้').join('\n');
+    'ข้อบังคับ: ห้ามเพิ่ม ลด ย้าย หรือหมุนอุปกรณ์ ห้ามเปลี่ยนขนาดและจำนวน ให้ยึดตำแหน่งและระยะจากผนังตามรายการนี้ ห้ามจัดวางใหม่ตามความสวยงามของภาพ').join('\n');
 }
 const PROMPT_FIDELITY_MIN=0,PROMPT_FIDELITY_MAX=10;
-function promptFidelityValue(value=S.stagingFreedom){
+function promptFidelityValue(value=S.promptFidelity){
   const numeric=Number(value);
-  return Number.isFinite(numeric)?clampNumber(Math.round(numeric),PROMPT_FIDELITY_MIN,PROMPT_FIDELITY_MAX):6;
+  return Number.isFinite(numeric)?clampNumber(Math.round(numeric),PROMPT_FIDELITY_MIN,PROMPT_FIDELITY_MAX):PROMPT_FIDELITY_MIN;
 }
-function promptFidelityGuidance(value=S.stagingFreedom){
+function promptFidelityGuidance(value=S.promptFidelity){
   const level=promptFidelityValue(value);
-  if(level===0)return'ไม่เติมองค์ประกอบเกินกว่าหมวดที่เลือก และเว้นพื้นที่ว่างให้มากที่สุด';
-  if(level<=3)return'เติมองค์ประกอบเพียงเล็กน้อย เน้นความโล่งและการใช้งานที่จำเป็น';
-  if(level<=6)return'เติมองค์ประกอบในระดับสมดุล โดยไม่เปลี่ยน Geometry ที่ล็อกไว้';
-  if(level<=8)return'เพิ่มรายละเอียดการจัดฉากได้มากขึ้น แต่ยังต้องไม่ชนอุปกรณ์เดิมหรือกีดขวางทางเดิน';
-  return'จัดฉากได้เต็มขึ้นภายในหมวดที่อนุญาต โดย Geometry 3D ยังคงล็อกที่ 10/10';
+  if(level===0)return'รักษาแบบอ้างอิงอย่างเคร่งครัด: ห้ามเปลี่ยนผัง ตำแหน่ง องค์ประกอบ และสัดส่วนหลักของบูธ รวมถึงแนวผนังและขอบเขตพื้น/พรม';
+  if(level<=2)return'รักษาผังและองค์ประกอบหลักตามแบบ อนุญาตให้ปรับรายละเอียดเล็กน้อยเท่านั้น';
+  if(level<=5)return'ปรับบรรยากาศและรายละเอียดได้พอประมาณ แต่ต้องคงผัง ขนาด และองค์ประกอบหลักตามแบบ';
+  if(level<=8)return'ปรับสไตล์ วัสดุ แสง และรายละเอียดได้ค่อนข้างอิสระ แต่ต้องคงโครงสร้างและภาพรวมบูธเดิม';
+  return'ปรับสไตล์ วัสดุ แสง และรายละเอียดได้อิสระขึ้น แต่ภาพรวมบูธยังต้องคล้ายแบบเดิม';
 }
 function syncPromptFidelityControls(){
   const value=promptFidelityValue();
@@ -3417,7 +3359,7 @@ function syncPromptFidelityControls(){
 function setPromptFidelity(value){
   const numeric=Number(value);
   if(!Number.isFinite(numeric)){syncPromptFidelityControls();return false;}
-  S.stagingFreedom=promptFidelityValue(numeric);S.promptFidelity=S.stagingFreedom;
+  S.promptFidelity=promptFidelityValue(numeric);
   syncPromptFidelityControls();updatePromptPreview();return true;
 }
 function syncPromptRenderStyleControls(){
@@ -3428,27 +3370,6 @@ function syncPromptRenderStyleControls(){
 function setPromptRenderStyle(value){
   const state=normalizeAIRenderingSettings(S),style=aiRenderStyle(value);
   state.renderStyle=style.key;syncPromptRenderStyleControls();updatePromptPreview();return style;
-}
-function syncPromptStagingControls(){
-  const state=normalizeAIStagingSettings(S),container=document.getElementById('promptStagingControl');
-  if(container)container.classList.toggle('is-disabled',!state.enabled);
-  document.querySelectorAll('[data-staging-enabled]').forEach(button=>button.setAttribute('aria-checked',String((button.dataset.stagingEnabled==='true')===state.enabled)));
-  const density=document.getElementById('promptStagingDensity');if(density){density.value=state.density;density.disabled=!state.enabled;}
-  const controls={promptStagingFurniture:state.allowFurniture,promptStagingProducts:state.allowProducts,promptStagingPeople:state.allowPeople,
-    promptStagingDecor:state.allowDecor&&state.allowPlants};
-  Object.entries(controls).forEach(([id,checked])=>{const input=document.getElementById(id);if(input){input.checked=checked;input.disabled=!state.enabled;}});
-}
-function setPromptStagingEnabled(enabled){
-  normalizeAIStagingSettings(S).enabled=enabled===true;normalizeAIRenderingSettings(S);syncPromptStagingControls();updatePromptPreview();
-}
-function setPromptStagingDensity(value){
-  const state=normalizeAIStagingSettings(S);state.density=['low','medium','high'].includes(value)?value:'medium';syncPromptStagingControls();updatePromptPreview();
-}
-function setPromptStagingPermission(key,value){
-  const state=normalizeAIStagingSettings(S),enabled=value===true;
-  if(key==='decorPlants'){state.allowDecor=enabled;state.allowPlants=enabled;}
-  else if(['allowFurniture','allowProducts','allowPeople'].includes(key))state[key]=enabled;
-  normalizeAIRenderingSettings(S);syncPromptStagingControls();updatePromptPreview();
 }
 function businessCategoryLabel(spec=S){
   const category=ALLCATS.find(item=>item.k===spec.cat),custom=String(spec.customBusinessCategory||'').trim();
@@ -3462,8 +3383,7 @@ function businessCategoryPromptLines(spec=S){
 function buildDesignPrompt(){
   const boothType=typ()||{};
   const business=businessCategoryLabel(S);
-  const stagingFreedom=promptFidelityValue();
-  const staging=normalizeAIStagingSettings(S);
+  const promptFidelity=promptFidelityValue();
   const renderStyle=aiRenderStyle(normalizeAIRenderingSettings(S).renderStyle);
   const floor=(()=>{try{return floorName();}catch(e){return S.floor||'ไม่ระบุ';}})();
   const logoType=LOGOTYPES.find(item=>item.k===S.logoType)?.n||S.logoType||'ไม่ระบุ';
@@ -3479,20 +3399,14 @@ function buildDesignPrompt(){
   })():'ไม่มี';
   const store=hasStore()?stChosenLabel():'ไม่มี';
   const storeHeight=hasStore()?(()=>{try{return storeGeom(boothWallThickness(S)).h.toFixed(2)+' ม.';}catch(e){return'';}})():'';
-  const categorySuggestions=businessCategoryPromptLines(S);
-  const autoStagingLines=globalThis.YPAIStaging?.buildAutoStagingPromptLines({settings:staging,selectedAssetCount:S.objects.length,
-    business,brandColor:S.primary,renderStyle:renderStyle.th+' ('+renderStyle.en+')',categorySuggestions,
-    geometryFidelity:S.geometryFidelity,stagingFreedom})||[];
   return[
     'สร้างภาพเรนเดอร์ 3D ของบูธแสดงสินค้าแบบสมจริง',
     'ประเภทธุรกิจ: '+business,
+    ...businessCategoryPromptLines(S),
     'สีแบรนด์หลัก: '+String(S.primary||'#2E7D4F').toUpperCase()+' · ใช้เป็นสีหลักขององค์ประกอบ กราฟิก และจุดเน้นของบูธ',
     'สีแบรนด์รอง: '+String(S.secondary||'ไม่ระบุ').toUpperCase()+' · ใช้เสริมโดยไม่กลบสีหลัก',
     'สไตล์การออกแบบและเรนเดอร์: '+renderStyle.th+' ('+renderStyle.en+')',
     'แนวทางสไตล์: '+renderStyle.prompt,
-    '',
-    'LAYER A — LOCKED 3D GEOMETRY',
-    'Geometry Fidelity: '+S.geometryFidelity+'/10 · ใช้ Screenshot และข้อมูลจากระบบ 3D เป็น Geometry Reference แบบบังคับ',
     'รูปแบบบูธ: '+(boothType.n||S.type||'ไม่ระบุ'),
     'ขนาดบูธ (ต้องคงที่): กว้าง '+S.W+' ม. × ลึก '+S.D+' ม. × สูง '+S.H+' ม. — ห้าม AI เปลี่ยนแปลง',
     'ผนังที่ใช้งาน: '+wallFaces,
@@ -3506,19 +3420,16 @@ function buildDesignPrompt(){
         'ชื่อแบรนด์: '+(S.brand||'YOUR BRAND')+' · ขนาดชื่อ '+S.nameScale+'/'+BRAND_SCALE_MAX]),
     'ห้องเก็บของ: '+store+(storeHeight?' · สูง '+storeHeight:''),
     'แสงสว่าง: '+lights,
-    'อุปกรณ์ที่ลูกค้าเลือกและต้องคงตำแหน่ง: '+objectListLabel(),
+    'อุปกรณ์ในบูธ: '+objectListLabel(),
     objectLayoutPrompt(),
-    'ข้อกำหนด LOCKED: ต้องคงขนาดพื้นที่ พื้น ระดับพื้น ผนัง ห้องเก็บของ โลโก้ ป้ายแบรนด์ และพิกัด/ขนาด/การหมุนของอุปกรณ์ที่ลูกค้าเลือกตามแบบเดิมทั้งหมด',
-    'ห้ามเพิ่มหรือเปลี่ยนโครงสร้างถาวรที่ไม่มีในแบบ แต่อนุญาตให้เพิ่มเฟอร์นิเจอร์ลอยตัว สินค้า คน พร็อพ และของตกแต่งที่เหมาะกับหมวดธุรกิจ เพื่อทำให้ภาพสมบูรณ์และสื่อถึงการใช้งานจริงตามกฎ LAYER B',
-    '',
-    ...autoStagingLines,
-    '',
+    'ระดับการคงรูปแบบบูธ: '+promptFidelity+'/10',
+    promptFidelityGuidance(promptFidelity),
+    'ข้อกำหนดคงที่: ไม่ว่าระดับความอิสระใด ต้องคงขนาดบูธ ผังผนัง จำนวน ตำแหน่ง ขนาด และการหมุนของอุปกรณ์ตามแบบเดิม',
     'มุมมอง: perspective ระดับสายตา เน้นสัดส่วนจริง วัสดุ เงา และแสงสมจริง'
   ].join('\n');
 }
 function updatePromptPreview(){
   syncPromptRenderStyleControls();
-  syncPromptStagingControls();
   const field=document.getElementById('designPrompt');
   if(field)field.value=buildDesignPrompt();
 }
@@ -6323,7 +6234,7 @@ function sync(){
   S.floorStickerOffsetX=clampNumber(Number(S.floorStickerOffsetX)||0,-S.W/2,S.W/2);
   S.floorStickerOffsetY=clampNumber(Number(S.floorStickerOffsetY)||0,-S.D/2,S.D/2);
   normalizeFloorStickerSize(S);
-  S.stagingFreedom=promptFidelityValue(S.stagingFreedom);S.promptFidelity=S.stagingFreedom;
+  S.promptFidelity=promptFidelityValue(S.promptFidelity);
   if(typeof S.placementSnap!=='boolean')S.placementSnap=true;
   if(typeof S.magneticSnap!=='boolean')S.magneticSnap=true;
   if(!Array.isArray(S.objects))S.objects=[];
@@ -6634,11 +6545,6 @@ const promptCleanScreenshotButton=document.getElementById('promptCleanScreenshot
 if(promptCleanScreenshotButton)promptCleanScreenshotButton.onclick=downloadCleanScreenshot;
 const promptRenderStyleSelect=document.getElementById('promptRenderStyle');
 if(promptRenderStyleSelect)promptRenderStyleSelect.onchange=e=>setPromptRenderStyle(e.target.value);
-document.querySelectorAll('[data-staging-enabled]').forEach(button=>button.onclick=()=>setPromptStagingEnabled(button.dataset.stagingEnabled==='true'));
-const promptStagingDensity=document.getElementById('promptStagingDensity');
-if(promptStagingDensity)promptStagingDensity.onchange=e=>setPromptStagingDensity(e.target.value);
-const stagingPermissionInputs={promptStagingFurniture:'allowFurniture',promptStagingProducts:'allowProducts',promptStagingPeople:'allowPeople',promptStagingDecor:'decorPlants'};
-Object.entries(stagingPermissionInputs).forEach(([id,key])=>{const input=document.getElementById(id);if(input)input.onchange=e=>setPromptStagingPermission(key,e.target.checked);});
 const promptFidelityRange=document.getElementById('promptFidelityRange');
 const promptFidelityInput=document.getElementById('promptFidelityVal');
 if(promptFidelityRange)promptFidelityRange.oninput=e=>setPromptFidelity(e.target.value);
@@ -7061,8 +6967,7 @@ build();syncDims();sync();initGlobalNumericResets();loadMyAssets();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>render());
 window.addEventListener('resize',positionObjectToolbar,{passive:true});
 window.getBoothSpec=()=>JSON.parse(serializeBoothSpec());
-window.getAIRenderingState=()=>JSON.parse(JSON.stringify({...normalizeAIRenderingSettings(S),aiStaging:normalizeAIStagingSettings(S),
-  geometryFidelity:S.geometryFidelity,stagingFreedom:S.stagingFreedom}));
+window.getAIRenderingState=()=>JSON.parse(JSON.stringify(normalizeAIRenderingSettings(S)));
 window.getCameraManifest=()=>currentCameraManifest(S);
 window.getGeometryManifest=()=>JSON.parse(JSON.stringify(buildGeometryManifest(S)));
 window.exportCleanScreenshot=(options={})=>createCleanScreenshot(options);

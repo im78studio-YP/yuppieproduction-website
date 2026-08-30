@@ -129,31 +129,7 @@ The Prompt will be natural language and will not embed the raw Manifest. It will
 3. Rendering-quality instructions — PBR, GI, AO, contact shadows, reflections, exhibition lighting, buildability
 4. Negative constraints — no geometry changes, no missing objects, no unapproved props, no editor overlays
 
-The existing 0–10 control is defined as `stagingFreedom` only. Geometry and camera constraints remain locked through `geometryFidelity = 10` at every value.
-
-### Locked Geometry and Auto-Staging layers
-
-The natural Prompt is split into two independent layers:
-
-- `LAYER A — LOCKED 3D GEOMETRY` contains booth dimensions, floor, walls, storage room, brand-sign geometry, every customer-selected Asset, transforms, attachments, and camera constraints.
-- `LAYER B — AI AUTO-STAGING` contains only render-time floating furniture, generic products, people, decor, plants, lighting, and exhibition atmosphere allowed by `BoothSpec.aiStaging`.
-
-`BoothSpec.objects` always represents customer-selected confirmed Geometry. Render-time suggestions are stored separately in `BoothSpec.aiStaging.suggestions` with status `AI Suggested / Render Staging`. Unconfirmed suggestions explicitly set `countsAsSelectedAsset`, `includedInBOQ`, `includedInProductionScope`, and `includedInConfirmedGeometry` to `false`.
-
-Default state:
-
-```text
-aiStaging.enabled = true
-aiStaging.density = "medium"
-aiStaging.allowFurniture = true
-aiStaging.allowProducts = true
-aiStaging.allowPeople = true
-aiStaging.allowDecor = true
-aiStaging.allowPlants = true
-aiStaging.allowNewPermanentStructures = false
-geometryFidelity = 10
-stagingFreedom = 6
-```
+The existing 0–10 control will be redefined as style creativity only. Geometry and camera constraints will remain unchanged at every value.
 
 ## 8. Planned Preview
 
@@ -218,6 +194,6 @@ Before Generate, the user will see:
 1. Completed — Requirements, Data Flow, schema, and migration
 2. Completed — Geometry Manifest and camera serialization
 3. Completed — Clean Screenshot export
-4. Completed — AI Auto-Staging permission controls and two-layer Prompt Builder
+4. AI permission controls and structured Prompt Builder
 5. Render-package Preview and QA
 6. Future AI provider integration after separate approval
