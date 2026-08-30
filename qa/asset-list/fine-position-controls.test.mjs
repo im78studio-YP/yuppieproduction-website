@@ -9,6 +9,7 @@ test('Fine Position แทนเมนูโหมดลากเดิมด้
     assert.ok(html.includes(`data-fine-axis="${axis}" data-fine-delta="-0.05"`));
     assert.ok(html.includes(`data-fine-axis="${axis}" data-fine-delta="0.05"`));
     assert.ok(html.includes(`id="finePosition${axis.toUpperCase()}"`));
+    assert.match(html,new RegExp(`id="finePosition${axis.toUpperCase()}" type="text" inputmode="decimal"`));
   }
   for(const oldId of ['btnMovePlane','btnMoveHeight','btnMoveSurface'])assert.ok(!html.includes(`id="${oldId}"`));
 });
@@ -17,7 +18,8 @@ test('Fine Position ใช้ระยะ 5 ซม. สะสมและ Select
   assert.match(html,/const FINE_POSITION_STEP=\.05/);
   assert.match(html,/delta=direction\*FINE_POSITION_STEP/);
   assert.match(html,/function fineMoveSelectedObjects\(axis,delta\)[\s\S]*const objects=selectedObjects\(\)/);
-  assert.doesNotMatch(html,/finePositionSelectionState/);
+  assert.match(html,/function finePositionSelectionKey\(objects=selectedObjects\(\)\)/);
+  assert.doesNotMatch(html,/finePositionSelectionState|assetListSelectionState/);
 });
 
 test('Fine Position รองรับ Lock, Bounding Box และ History',()=>{
@@ -29,8 +31,33 @@ test('Fine Position รองรับ Lock, Bounding Box และ History',()=
   assert.match(html,/const before=objectSnapshot\(\)[\s\S]*recordObjectHistory\(before\);sync\(\)/);
 });
 
-test('Fine Position แสดงพิกัด real-time สองตำแหน่งและไม่เปลี่ยน Smart Move',()=>{
-  assert.match(html,/Number\(primary\.position\?\.\[axis\]\|\|0\)\.toFixed\(2\)\+' ม\.'/);
+test('Fine Position ใช้ Draft และยืนยัน Absolute เฉพาะเมื่อกด Enter',()=>{
+  assert.match(html,/const finePositionDraft=/);
+  assert.match(html,/function parseFinePositionDraft\(value\)[\s\S]*replace\(\/,\/g,'\.'\)/);
+  assert.match(html,/function commitFinePositionInput\(axis\)/);
+  assert.match(html,/input\.oninput=.*finePositionDraft\.dirty\.add\(axis\)/);
+  assert.match(html,/event\.key==='Enter'[\s\S]*commitFinePositionInput\(axis\)/);
+  assert.match(html,/event\.key==='Escape'[\s\S]*cancelFinePositionDraft\(axis\)/);
+  assert.match(html,/input\.onblur=.*cancelFinePositionDraft\(axis\)/);
+});
+
+test('Fine Position แสดงสองตำแหน่ง แยกหน่วย และปิด Absolute เมื่อเลือกหลายชิ้น',()=>{
+  assert.match(html,/Number\(primary\.position\?\.\[axis\]\|\|0\)\.toFixed\(2\)/);
+  assert.ok(html.includes('<span class="fine-position-unit">ม.</span>'));
+  assert.match(html,/input\.disabled=!primary\|\|locked\|\|multi/);
+  assert.match(html,/input\.placeholder=multi\?'—'/);
+  assert.ok(html.includes('ค่า Absolute ปิดอยู่ ใช้ −/+ เพื่อเลื่อนทั้งกลุ่ม'));
+});
+
+test('Selection ว่างปิด Contextual Toolbar, Fine Position และ Asset List พร้อมกัน',()=>{
+  assert.match(html,/function resetAssetContextOpenState\(\)[\s\S]*advanced\.open=false[\s\S]*closeAssetList\(false\)[\s\S]*resetFinePositionDraft\(\)/);
+  assert.match(html,/if\(!valid\.length\)resetAssetContextOpenState\(\)/);
+  assert.match(html,/toolbar\.hidden=!selectionCount/);
+  assert.match(html,/if\(!selectedSceneItemIds\(\)\.length\)return false/);
+  assert.match(html,/panel\.hidden=true/);
+});
+
+test('Fine Position ไม่เปลี่ยน Smart Move',()=>{
   assert.ok(html.includes('id="btnMoveSmart"'));
   assert.match(html,/document\.getElementById\('btnMoveSmart'\)\.onclick=\(\)=>setObjectMoveMode\('smart'\)/);
 });

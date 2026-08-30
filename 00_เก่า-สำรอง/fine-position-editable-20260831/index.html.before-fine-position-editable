@@ -518,16 +518,9 @@ select:focus{border-color:var(--acc)}
 .fine-position-axis{display:grid;place-items:center;width:22px;height:28px;border-radius:6px;background:rgba(var(--acc-rgb),.12);color:var(--acc2);font-size:11px;font-weight:800}
 .canvas-object-toolbar .fine-position-row .fine-position-step{width:38px;min-width:38px;height:34px;min-height:34px;justify-content:center;padding:0;border-color:var(--line);background:var(--bg3);font-size:18px;font-weight:700;text-align:center}
 .canvas-object-toolbar .fine-position-row .fine-position-step:hover:not(:disabled){border-color:var(--acc);background:var(--accbg);color:var(--acc2)}
-.fine-position-field{display:grid;grid-template-columns:minmax(0,1fr) 20px;align-items:center;min-height:34px;border:1px solid var(--line);border-radius:7px;background:var(--bg2);overflow:hidden;transition:border-color .16s,box-shadow .16s}
-.fine-position-field:focus-within{border-color:var(--acc);box-shadow:0 0 0 2px rgba(var(--acc-rgb),.13)}
-.fine-position-field.is-invalid{border-color:#ef5b5b;box-shadow:0 0 0 2px rgba(239,91,91,.13)}
-.fine-position-input{width:100%;min-width:0;height:32px;padding:5px 4px 5px 8px;border:0;outline:0;background:transparent;color:var(--tx);font:inherit;font-size:11px;text-align:right;font-variant-numeric:tabular-nums}
-.fine-position-input::placeholder{color:var(--tx3);opacity:1}
-.fine-position-input:disabled{cursor:not-allowed;color:var(--tx3);opacity:.72}
-.fine-position-unit{padding-right:7px;color:var(--tx3);font-size:10px;white-space:nowrap}
+.fine-position-value{display:grid;place-items:center;min-height:34px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg2);color:var(--tx);font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .fine-position-help{min-height:17px;padding:3px 2px 0;color:var(--tx3);font-size:9.5px;line-height:1.45}
 .fine-position-help.is-warning{color:#ef9b82}
-.canvas-object-toolbar[hidden],.asset-list-panel[hidden]{display:none!important}
 .canvas-object-toolbar.locked-selected .tool-mode{background:rgba(138,145,156,.16);color:#cbd1da}
 .canvas-object-toolbar .tool-mode{display:flex;align-items:center;min-height:36px;padding:7px 10px;border-radius:7px;
   background:rgba(var(--acc-rgb),.14);color:var(--acc2);font-size:10.5px;font-weight:600;white-space:nowrap}
@@ -1215,7 +1208,7 @@ select:focus{border-color:var(--acc)}
       <span class="tag" id="tagType">—</span>
     </div>
     <div id="view" role="tabpanel" aria-label="พื้นที่ออกแบบบูธ"></div>
-    <div class="object-actions canvas-object-toolbar" id="objectToolbar" hidden aria-hidden="true" role="toolbar" aria-label="เครื่องมือจัดวางวัตถุ">
+    <div class="object-actions canvas-object-toolbar" id="objectToolbar" role="toolbar" aria-label="เครื่องมือจัดวางวัตถุ">
       <span class="tool-mode brand-move-mode" title="ลากโลโก้เพื่อย้ายตำแหน่ง">✥ ลากโลโก้เพื่อย้าย</span>
       <button class="btn move-mode on" id="btnMoveSmart" type="button" title="ลากตัว Asset เพื่อย้ายระดับเดิม หรือลาก Anchor ไปชนจุดและพื้นผิว" aria-label="เปิด Smart Move">✥ Smart Move</button>
       <details class="move-advanced" id="moveAdvanced">
@@ -1225,19 +1218,19 @@ select:focus{border-color:var(--acc)}
           <div class="fine-position-row">
             <span class="fine-position-axis" aria-hidden="true">X</span>
             <button class="btn fine-position-step" type="button" data-fine-axis="x" data-fine-delta="-0.05" aria-label="เลื่อน Asset ไปทางซ้าย 5 เซนติเมตร" title="X− ซ้าย 5 ซม.">−</button>
-            <label class="fine-position-field" for="finePositionX"><input class="fine-position-input" id="finePositionX" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="—" aria-label="พิกัด X หน่วยเมตร"><span class="fine-position-unit">ม.</span></label>
+            <output class="fine-position-value" id="finePositionX" aria-label="พิกัด X ปัจจุบัน">—</output>
             <button class="btn fine-position-step" type="button" data-fine-axis="x" data-fine-delta="0.05" aria-label="เลื่อน Asset ไปทางขวา 5 เซนติเมตร" title="X+ ขวา 5 ซม.">+</button>
           </div>
           <div class="fine-position-row">
             <span class="fine-position-axis" aria-hidden="true">Y</span>
             <button class="btn fine-position-step" type="button" data-fine-axis="y" data-fine-delta="-0.05" aria-label="เลื่อน Asset ลง 5 เซนติเมตร" title="Y− ลง 5 ซม.">−</button>
-            <label class="fine-position-field" for="finePositionY"><input class="fine-position-input" id="finePositionY" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="—" aria-label="พิกัด Y หน่วยเมตร"><span class="fine-position-unit">ม.</span></label>
+            <output class="fine-position-value" id="finePositionY" aria-label="พิกัด Y ปัจจุบัน">—</output>
             <button class="btn fine-position-step" type="button" data-fine-axis="y" data-fine-delta="0.05" aria-label="เลื่อน Asset ขึ้น 5 เซนติเมตร" title="Y+ ขึ้น 5 ซม.">+</button>
           </div>
           <div class="fine-position-row">
             <span class="fine-position-axis" aria-hidden="true">Z</span>
             <button class="btn fine-position-step" type="button" data-fine-axis="z" data-fine-delta="-0.05" aria-label="เลื่อน Asset ไปด้านหลัง 5 เซนติเมตร" title="Z− ด้านหลัง 5 ซม.">−</button>
-            <label class="fine-position-field" for="finePositionZ"><input class="fine-position-input" id="finePositionZ" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="—" aria-label="พิกัด Z หน่วยเมตร"><span class="fine-position-unit">ม.</span></label>
+            <output class="fine-position-value" id="finePositionZ" aria-label="พิกัด Z ปัจจุบัน">—</output>
             <button class="btn fine-position-step" type="button" data-fine-axis="z" data-fine-delta="0.05" aria-label="เลื่อน Asset มาด้านหน้า 5 เซนติเมตร" title="Z+ ด้านหน้า 5 ซม.">+</button>
           </div>
           <div class="fine-position-help" id="finePositionHelp" role="status">เลือก Asset ที่ต้องการปรับ</div>
@@ -1255,7 +1248,7 @@ select:focus{border-color:var(--acc)}
       <button class="btn" id="btnUndoObject" type="button" title="ย้อนกลับ" aria-label="ย้อนกลับการแก้ไขวัตถุ">↶ Undo</button>
       <button class="btn" id="btnRedoObject" type="button" title="ทำซ้ำ" aria-label="ทำซ้ำการแก้ไขวัตถุ">↷ Redo</button>
     </div>
-    <aside class="asset-list-panel" id="assetListPanel" hidden aria-hidden="true" aria-label="รายการ Asset ทั้งหมด">
+    <aside class="asset-list-panel" id="assetListPanel" aria-hidden="true" aria-label="รายการ Asset ทั้งหมด">
       <div class="asset-list-head">
         <div><small>SCENE OBJECTS</small><h2>Asset List</h2></div>
         <button class="asset-list-close" id="assetListClose" type="button" aria-label="ปิด Asset List">×</button>
@@ -2009,7 +2002,6 @@ function setObjectSelection(ids=[],primaryId=null){
   const valid=[...new Set(ids)].filter(id=>sceneItemExists(id));
   objectEditor.selectedIds=valid;
   objectEditor.selectedId=primaryId&&valid.includes(primaryId)?primaryId:(valid.at(-1)||null);
-  if(!valid.length)resetAssetContextOpenState();
 }
 function restoreObjectSnapshot(snapshot){
   const parsed=JSON.parse(snapshot);if(Array.isArray(parsed)){S.objects=parsed;return;}
@@ -3127,22 +3119,8 @@ function renderAssetList(){
   const lock=document.getElementById('assetListLock'),visibility=document.getElementById('assetListVisibility');if(lock)lock.textContent=objects.length&&objects.every(item=>item.locked)?'ปลดล็อก':'ล็อก';if(visibility)visibility.textContent=chosen.length&&chosen.every(item=>!item.visible)?'แสดง':'ซ่อน';
   if(assetListUI.open&&objectEditor.selectedId&&assetListUI.lastPrimary!==objectEditor.selectedId){assetListUI.lastPrimary=objectEditor.selectedId;requestAnimationFrame(()=>body.querySelector('[data-scene-item="'+CSS.escape(objectEditor.selectedId)+'"]')?.scrollIntoView({block:'nearest'}));}
 }
-function openAssetList(){
-  if(!selectedSceneItemIds().length)return false;
-  assetListUI.open=true;const panel=document.getElementById('assetListPanel'),button=document.getElementById('btnAssetList');
-  if(panel){panel.hidden=false;panel.classList.add('open');panel.setAttribute('aria-hidden','false');}
-  button?.setAttribute('aria-expanded','true');renderAssetList();requestAnimationFrame(()=>document.getElementById('assetListSearch')?.focus());return true;
-}
-function closeAssetList(returnFocus=true){
-  assetListUI.open=false;const panel=document.getElementById('assetListPanel'),button=document.getElementById('btnAssetList');
-  if(panel){panel.classList.remove('open');panel.setAttribute('aria-hidden','true');panel.hidden=true;}
-  button?.setAttribute('aria-expanded','false');if(returnFocus&&!button?.hidden&&button?.offsetParent!==null)button.focus();
-}
-function resetAssetContextOpenState(){
-  const advanced=document.getElementById('moveAdvanced');if(advanced?.open)advanced.open=false;
-  closeAssetList(false);resetFinePositionDraft();
-  if(document.getElementById('mAssetSettings')?.classList.contains('show'))closeAssetSettings();
-}
+function openAssetList(){assetListUI.open=true;const panel=document.getElementById('assetListPanel'),button=document.getElementById('btnAssetList');panel?.classList.add('open');panel?.setAttribute('aria-hidden','false');button?.setAttribute('aria-expanded','true');renderAssetList();requestAnimationFrame(()=>document.getElementById('assetListSearch')?.focus());}
+function closeAssetList(){assetListUI.open=false;const panel=document.getElementById('assetListPanel'),button=document.getElementById('btnAssetList');panel?.classList.remove('open');panel?.setAttribute('aria-hidden','true');button?.setAttribute('aria-expanded','false');button?.focus();}
 function focusSceneItem(id){if(threeRenderer?.focusSceneItem)threeRenderer.focusSceneItem(id);}
 function entranceFrameSide(obj){return Number(obj?.position?.x)<S.W/2?'left':'right';}
 function moveEntranceFrameToSide(id,side){
@@ -3425,10 +3403,9 @@ function selectedAlignmentBounds(obj){
     minY:base,maxY:base+(Number(size.h)||0),centerY:base+(Number(size.h)||0)/2};
 }
 const FINE_POSITION_STEP=.05;
-const finePositionDraft={selectionKey:'',values:{x:'',y:'',z:''},dirty:new Set(),errors:{}};
 function finePositionAxisOverflow(bounds,axis){
   if(axis==='x')return Math.max(0,-bounds.minX)+Math.max(0,bounds.maxX-S.W);
-  if(axis==='y')return Math.max(0,-(Number(S.raise)||0)/100-bounds.minY);
+  if(axis==='y')return Math.max(0,-bounds.minY);
   if(axis==='z')return Math.max(0,-bounds.minZ)+Math.max(0,bounds.maxZ-S.D);
   return Infinity;
 }
@@ -3442,55 +3419,14 @@ function shiftedFinePositionBounds(bounds,axis,delta){
 function finePositionPrimaryObject(objects=selectedObjects()){
   return objectById(objectEditor.selectedId)||objects.at(-1)||null;
 }
-function finePositionSelectionKey(objects=selectedObjects()){
-  return objects.map(obj=>obj.id).sort().join('|')+'::'+(objectEditor.selectedId||'');
-}
-function resetFinePositionDraft(){
-  finePositionDraft.selectionKey='';finePositionDraft.values={x:'',y:'',z:''};finePositionDraft.dirty.clear();finePositionDraft.errors={};
-  document.querySelectorAll('.fine-position-field').forEach(field=>field.classList.remove('is-invalid'));
-  document.querySelectorAll('.fine-position-input').forEach(input=>input.removeAttribute('aria-invalid'));
-}
-function finePositionInput(axis){return document.getElementById('finePosition'+axis.toUpperCase());}
-function setFinePositionError(axis,message=''){
-  const input=finePositionInput(axis),field=input?.closest('.fine-position-field');finePositionDraft.errors[axis]=message;
-  field?.classList.toggle('is-invalid',!!message);if(input)message?input.setAttribute('aria-invalid','true'):input.removeAttribute('aria-invalid');
-  const help=document.getElementById('finePositionHelp');if(help&&message){help.classList.add('is-warning');help.textContent=message;}
-}
-function cancelFinePositionDraft(axis){
-  const primary=finePositionPrimaryObject(),input=finePositionInput(axis);finePositionDraft.dirty.delete(axis);delete finePositionDraft.errors[axis];
-  finePositionDraft.values[axis]='';setFinePositionError(axis,'');if(input){input.value=primary?Number(primary.position?.[axis]||0).toFixed(2):'';input.placeholder=primary?'':'—';}
-  syncFinePositionControls();
-}
-function parseFinePositionDraft(value){
-  const normalized=String(value??'').trim().replace(/,/g,'.');
-  if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized))return null;
-  const numeric=Number(normalized);return Number.isFinite(numeric)?numeric:null;
-}
-function releaseObjectAttachment(obj){
-  obj.attachment=null;if(obj.placement){obj.placement.mode='free';obj.placement.surface='free';obj.placement.targetId=null;obj.placement.anchorAttachment=null;}
-}
-function commitFinePositionInput(axis){
-  const objects=selectedObjects(),input=finePositionInput(axis);if(objects.length!==1||!input)return false;
-  const obj=objects[0];if(objectLocked(obj)){setFinePositionError(axis,'ปลดล็อก Asset ก่อนปรับตำแหน่ง');return false;}
-  const numeric=parseFinePositionDraft(input.value);if(numeric===null){setFinePositionError(axis,'กรอกพิกัดเป็นตัวเลข เช่น 1.25 หรือ 1,25');return false;}
-  const current=Number(obj.position?.[axis])||0,delta=numeric-current,next=shiftedFinePositionBounds(selectedAlignmentBounds(obj),axis,delta);
-  if(finePositionAxisOverflow(next,axis)>.0001){setFinePositionError(axis,'ยืนยันไม่ได้ เพราะ Bounding Box ของ Asset จะอยู่นอกพื้นที่บูธ');return false;}
-  finePositionDraft.dirty.delete(axis);delete finePositionDraft.errors[axis];setFinePositionError(axis,'');
-  if(Math.abs(delta)<.000001){input.value=current.toFixed(2);return true;}
-  const before=objectSnapshot();obj.position[axis]=+numeric.toFixed(3);releaseObjectAttachment(obj);normalizeSceneObjectModel(obj);
-  recordObjectHistory(before);sync();announceCatalog('ปรับพิกัด '+axis.toUpperCase()+' เป็น '+Number(obj.position[axis]).toFixed(2)+' ม. แล้ว','success');return true;
-}
 function syncFinePositionControls(){
-  const objects=selectedObjects(),primary=finePositionPrimaryObject(objects),locked=objects.some(objectLocked),multi=objects.length>1,buttons=document.querySelectorAll('[data-fine-axis]'),help=document.getElementById('finePositionHelp'),selectionKey=finePositionSelectionKey(objects);
-  if(finePositionDraft.selectionKey!==selectionKey){resetFinePositionDraft();finePositionDraft.selectionKey=selectionKey;}
-  ['x','y','z'].forEach(axis=>{const input=finePositionInput(axis);if(!input)return;input.disabled=!primary||locked||multi;input.placeholder=multi?'—':primary?'':'—';
-    if(multi)input.value='';else if(!finePositionDraft.dirty.has(axis))input.value=primary?Number(primary.position?.[axis]||0).toFixed(2):'';
-    input.closest('.fine-position-field')?.classList.toggle('is-invalid',!!finePositionDraft.errors[axis]);});
+  const objects=selectedObjects(),primary=finePositionPrimaryObject(objects),locked=objects.some(objectLocked),buttons=document.querySelectorAll('[data-fine-axis]'),help=document.getElementById('finePositionHelp');
+  ['x','y','z'].forEach(axis=>{const output=document.getElementById('finePosition'+axis.toUpperCase());if(output)output.textContent=primary?Number(primary.position?.[axis]||0).toFixed(2)+' ม.':'—';});
   buttons.forEach(button=>button.disabled=!objects.length||locked);
   const summary=document.querySelector('#moveAdvanced>summary');if(summary)summary.setAttribute('aria-disabled',String(!objects.length||locked));
   if(!help)return;
-  const error=Object.values(finePositionDraft.errors).find(Boolean)||'';help.classList.toggle('is-warning',!!error||!objects.length||locked);
-  help.textContent=error||(!objects.length?'เลือก Asset ที่ต้องการปรับ':locked?'ปลดล็อก Asset ก่อนปรับตำแหน่ง':multi?'เลือก '+objects.length+' ชิ้น · ค่า Absolute ปิดอยู่ ใช้ −/+ เพื่อเลื่อนทั้งกลุ่ม':'พิมพ์ค่าแล้วกด Enter · Esc หรือคลิกออกเพื่อยกเลิก');
+  help.classList.toggle('is-warning',!objects.length||locked);
+  help.textContent=!objects.length?'เลือก Asset ที่ต้องการปรับ':locked?'ปลดล็อก Asset ก่อนปรับตำแหน่ง':objects.length>1?'เลือก '+objects.length+' ชิ้น · เลื่อนพร้อมกันด้วย Delta เดียวกัน':'Global Axis · X ซ้าย/ขวา · Y ลง/ขึ้น · Z หลัง/หน้า';
 }
 function fineMoveSelectedObjects(axis,delta){
   if(!['x','y','z'].includes(axis))return false;
@@ -3509,7 +3445,8 @@ function fineMoveSelectedObjects(axis,delta){
   const before=objectSnapshot();
   objects.forEach(obj=>{
     obj.position[axis]=+(Number(obj.position?.[axis]||0)+delta).toFixed(3);
-    releaseObjectAttachment(obj);
+    obj.attachment=null;
+    if(obj.placement){obj.placement.mode='free';obj.placement.surface='free';obj.placement.targetId=null;obj.placement.anchorAttachment=null;}
     normalizeSceneObjectModel(obj);
   });
   recordObjectHistory(before);sync();return true;
@@ -3573,7 +3510,7 @@ function redoObjectChange(){
 }
 function syncObjectControls(){
   const obj=objectById(objectEditor.selectedId),item=obj&&objectCatalogDef(obj.catalogId),sceneItem=sceneItemById(objectEditor.selectedId),locked=objectLocked(obj),brandSelected=objectEditor.selectedId==='system-brand',box=document.getElementById('objectSelected');
-  logoEditor.selected=brandSelected;const selectionCount=selectedSceneItemIds().length;if(!selectionCount)resetAssetContextOpenState();
+  logoEditor.selected=brandSelected;const selectionCount=selectedSceneItemIds().length;
   box.classList.toggle('on',!!sceneItem||brandSelected);
   box.classList.toggle('structure-active',!!obj&&(isEntranceFrameObject(obj)||isDownlightBeamObject(obj)));
   const info=document.getElementById('placementGridInfo');
@@ -3620,7 +3557,7 @@ function syncObjectControls(){
   const magneticToggle=document.getElementById('magneticSnapEnabled');if(magneticToggle)magneticToggle.checked=S.magneticSnap!==false;
   const count=document.getElementById('dockCount');if(count)count.textContent=S.objects.length?String(S.objects.length):'';
   const toolbar=document.getElementById('objectToolbar'),workspaceNode=document.getElementById('workspace'),positionButton=document.getElementById('btnPositionLogo3D');
-  if(toolbar){toolbar.hidden=!selectionCount;toolbar.setAttribute('aria-hidden',String(!selectionCount));toolbar.classList.toggle('brand-selected',brandSelected);toolbar.classList.toggle('locked-selected',!!obj&&locked);
+  if(toolbar){toolbar.classList.toggle('brand-selected',brandSelected);toolbar.classList.toggle('locked-selected',!!obj&&locked);
     toolbar.classList.toggle('no-object-selection',!obj&&!brandSelected);requestAnimationFrame(positionObjectToolbar);}
   const moveButtons={smart:'btnMoveSmart'};
   Object.entries(moveButtons).forEach(([mode,id])=>{const button=document.getElementById(id);if(!button)return;
@@ -4506,12 +4443,6 @@ function build(){
   document.getElementById('btnMoveSmart').onclick=()=>setObjectMoveMode('smart');
   document.querySelectorAll('[data-fine-axis]').forEach(button=>button.onclick=event=>{
     event.preventDefault();event.stopPropagation();fineMoveSelectedObjects(button.dataset.fineAxis,button.dataset.fineDelta);
-  });
-  ['x','y','z'].forEach(axis=>{const input=finePositionInput(axis);if(!input)return;
-    input.oninput=()=>{finePositionDraft.values[axis]=input.value;finePositionDraft.dirty.add(axis);setFinePositionError(axis,'');};
-    input.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();event.stopPropagation();commitFinePositionInput(axis);}
-      else if(event.key==='Escape'){event.preventDefault();event.stopPropagation();cancelFinePositionDraft(axis);input.blur();}};
-    input.onblur=()=>{if(finePositionDraft.dirty.has(axis))cancelFinePositionDraft(axis);};
   });
   document.getElementById('moveAdvanced').ontoggle=syncFinePositionControls;
   document.getElementById('btnLockObject').onclick=toggleSelectedObjectLock;
