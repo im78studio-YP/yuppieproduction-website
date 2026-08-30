@@ -587,7 +587,7 @@ select:focus{border-color:var(--acc)}
 .okic{width:50px;height:50px;border-radius:50%;background:rgba(78,168,122,.15);color:var(--ok);
   display:grid;place-items:center;font-size:23px;margin:0 auto 12px}
 .release-sheet{display:flex;flex-direction:column;width:min(640px,calc(100vw - 32px));max-width:640px;height:min(760px,90vh);max-height:90vh;padding:0;overflow:hidden;text-align:left}
-.quick-setup-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:15px 54px 13px 24px;border-bottom:1px solid var(--line);background:rgba(9,7,10,.96)}
+.quick-setup-progress{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:15px 54px 13px 24px;border-bottom:1px solid var(--line);background:rgba(9,7,10,.96)}
 .quick-progress-item{display:flex;align-items:center;gap:7px;min-width:0;color:var(--tx3);font-size:10.5px;font-weight:600;line-height:1.2}
 .quick-progress-dot{width:22px;height:22px;flex:none;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--bg3);font:700 9px Inter,sans-serif}
 .quick-progress-item span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -615,16 +615,9 @@ select:focus{border-color:var(--acc)}
 .quick-custom-field input:focus,.quick-number-field input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.1)}
 .quick-error{min-height:18px;margin-top:6px;color:#ff8cbf;font-size:11.5px;line-height:1.4}.quick-error:empty{display:none}
 .quick-layout-types{grid-template-columns:repeat(4,minmax(0,1fr))}.quick-layout-types .quick-choice{min-height:82px;padding-right:11px;text-align:center}.quick-layout-types .quick-choice-check{top:7px;right:7px}
-.quick-corner-options{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px}.quick-corner-options[hidden]{display:none}
-.quick-compact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-compact-grid .quick-choice{min-height:62px}
-.quick-color-card{display:grid;grid-template-columns:84px minmax(0,1fr);gap:14px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--bg3)}
-.quick-color-preview{width:84px;height:84px;border:1px solid rgba(255,255,255,.18);border-radius:12px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2),0 10px 24px rgba(0,0,0,.2)}
-.quick-color-fields{display:grid;grid-template-columns:62px minmax(0,1fr);gap:9px;align-items:end}.quick-color-fields label{display:block;margin-bottom:6px;color:var(--tx2);font-size:11.5px;font-weight:600}
-.quick-color-fields input[type=color]{width:62px;height:44px;padding:3px;border:1px solid var(--line);border-radius:9px;background:var(--bg2);cursor:pointer}.quick-color-fields input[type=text]{width:100%;height:44px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg2);color:var(--tx);font:600 15px Inter,sans-serif;text-transform:uppercase;outline:none}
-.quick-color-fields input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.1)}
-.quick-default-callout{display:flex;gap:9px;align-items:flex-start;margin-top:12px;padding:11px 12px;border:1px solid rgba(var(--acc-rgb),.24);border-radius:10px;background:rgba(var(--acc-rgb),.06);color:var(--tx2);font-size:11.5px;line-height:1.5}.quick-default-callout b{color:var(--acc2)}
-.quick-loading{height:100%;display:grid;place-items:center;padding:32px;text-align:center}.quick-loading[hidden]{display:none}.quick-loading-spinner{width:46px;height:46px;margin:0 auto 16px;border:4px solid rgba(var(--acc-rgb),.18);border-top-color:var(--acc);border-radius:50%;animation:quickSpin .75s linear infinite}.quick-loading h2{margin:0;color:#fff;font-size:22px}.quick-loading p{margin:8px 0 0;color:var(--tx2);font-size:13px}
-@keyframes quickSpin{to{transform:rotate(360deg)}}
+.quick-size-presets{grid-template-columns:repeat(3,minmax(0,1fr))}.quick-size-presets .quick-choice{min-height:62px;text-align:center;padding-right:11px}.quick-size-presets .quick-choice-check{top:7px;right:7px}
+.quick-custom-size{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px}.quick-custom-size[hidden]{display:none}
+.quick-number-wrap{position:relative}.quick-number-wrap input{padding-right:34px}.quick-number-unit{position:absolute;right:11px;bottom:12px;color:var(--tx3);font-size:11px;pointer-events:none}
 .quick-selection-summary{margin-top:10px;padding:9px 11px;border:1px solid rgba(var(--acc-rgb),.24);border-radius:9px;background:rgba(var(--acc-rgb),.06);color:var(--tx2);font-size:11.5px;line-height:1.5}
 .quick-step-actions{display:flex;align-items:center;gap:9px;flex:none;padding:14px 30px calc(18px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:rgba(14,10,15,.97);box-shadow:0 -10px 28px rgba(0,0,0,.18)}
 .quick-step-actions .btn{min-height:48px}.quick-step-actions .quick-back{flex:0 0 132px}.quick-step-actions .quick-next{flex:1;font-size:15px;font-weight:700}
@@ -647,9 +640,8 @@ select:focus{border-color:var(--acc)}
   .release-sheet{width:calc(100vw - 32px);height:90dvh;max-height:90dvh}
   .quick-setup-progress{padding:13px 44px 11px 16px}.quick-progress-item{gap:5px;font-size:9px}.quick-progress-dot{width:20px;height:20px}.quick-progress-item span:last-child{display:none}
   .quick-step-scroll{padding:22px 18px 18px}.quick-step-head h2{font-size:24px}.quick-step-description{font-size:14px}
-  .quick-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.quick-layout-types{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .quick-color-card{grid-template-columns:64px minmax(0,1fr);padding:12px}.quick-color-preview{width:64px;height:64px}.quick-color-fields{grid-template-columns:54px minmax(0,1fr)}.quick-color-fields input[type=color]{width:54px}
-  .quick-step-actions{padding:12px 18px calc(16px + env(safe-area-inset-bottom))}.quick-step-actions .quick-back{flex-basis:104px}
+  .quick-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.quick-layout-types{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-size-presets{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .quick-custom-size{grid-template-columns:1fr}.quick-step-actions{padding:12px 18px calc(16px + env(safe-area-inset-bottom))}.quick-step-actions .quick-back{flex-basis:104px}
   .release-top{padding:24px 20px 20px}.release-top h2{padding-right:24px;font-size:26px}.release-tagline{font-size:16px}.release-description{font-size:14px}
   .release-list{padding:18px 20px 0}.release-note{grid-template-columns:32px minmax(0,1fr);gap:10px;padding:10px}.release-note b{font-size:13.5px}
   .release-status-note{margin:16px 20px 0}.release-actions{padding:16px 20px calc(20px + env(safe-area-inset-bottom))}
@@ -1237,11 +1229,9 @@ select:focus{border-color:var(--acc)}
     <button class="close" id="releaseClose" type="button" aria-label="ปิด Quick Setup" onclick="closeReleaseNotes()">×</button>
     <span class="sr-only" id="quickSetupDialogLabel">YUPPIE BOOTH AI Quick Setup</span>
     <div class="quick-setup-progress" id="quickSetupProgress" aria-label="ความคืบหน้า Quick Setup">
+      <div class="quick-progress-item current" data-progress-step="intro"><span class="quick-progress-dot">●</span><span>แนะนำ</span></div>
       <div class="quick-progress-item" data-progress-step="business"><span class="quick-progress-dot">1</span><span>ธุรกิจ</span></div>
-      <div class="quick-progress-item" data-progress-step="layout"><span class="quick-progress-dot">2</span><span>รูปแบบ</span></div>
-      <div class="quick-progress-item" data-progress-step="brand"><span class="quick-progress-dot">3</span><span>สีแบรนด์</span></div>
-      <div class="quick-progress-item" data-progress-step="floor"><span class="quick-progress-dot">4</span><span>พื้น</span></div>
-      <div class="quick-progress-item" data-progress-step="room"><span class="quick-progress-dot">5</span><span>เพิ่มห้อง</span></div>
+      <div class="quick-progress-item" data-progress-step="layout"><span class="quick-progress-dot">2</span><span>รูปแบบและพื้นที่</span></div>
     </div>
     <div class="quick-setup-stage">
       <section class="quick-setup-step" data-quick-step="intro" id="quickStepIntro">
@@ -1292,13 +1282,21 @@ select:focus{border-color:var(--acc)}
         <div class="quick-step-scroll">
           <header class="quick-step-head">
             <div class="quick-step-kicker">QUICK SETUP • ขั้นตอนที่ 2</div>
-            <h2 id="quickLayoutTitle" tabindex="-1">รูปแบบบูธ</h2>
-            <p class="quick-step-description">เลือกรูปแบบบูธ ระบบจะกำหนดขนาดมาตรฐาน จำนวนผนัง และด้านเปิดให้อัตโนมัติ โดยใช้แกนเดียวกับ Workspace 3D</p>
+            <h2 id="quickLayoutTitle" tabindex="-1">รูปแบบและพื้นที่</h2>
+            <p class="quick-step-description">เลือกรูปแบบและขนาดพื้นที่บูธ เพื่อให้ระบบสร้างโครงสร้างเริ่มต้นได้อย่างถูกต้อง</p>
           </header>
           <div class="quick-section">
             <div class="quick-section-title">รูปแบบบูธ</div>
             <div class="quick-choice-grid quick-layout-types" id="quickBoothTypes" role="radiogroup" aria-label="เลือกรูปแบบบูธ"></div>
-            <div class="quick-choice-grid quick-corner-options" id="quickCornerSides" role="radiogroup" aria-label="เลือกด้านหัวมุม" hidden></div>
+          </div>
+          <div class="quick-section">
+            <div class="quick-section-title">พื้นที่บูธ</div>
+            <div class="quick-choice-grid quick-size-presets" id="quickBoothSizes" role="radiogroup" aria-label="เลือกขนาดพื้นที่บูธ"></div>
+            <div class="quick-custom-size" id="quickCustomSize" hidden>
+              <div class="quick-number-field"><label for="quickWidth">ความกว้าง</label><div class="quick-number-wrap"><input id="quickWidth" type="number" inputmode="decimal" aria-describedby="quickLayoutError"><span class="quick-number-unit">ม.</span></div></div>
+              <div class="quick-number-field"><label for="quickDepth">ความลึก</label><div class="quick-number-wrap"><input id="quickDepth" type="number" inputmode="decimal" aria-describedby="quickLayoutError"><span class="quick-number-unit">ม.</span></div></div>
+              <div class="quick-number-field"><label for="quickHeight">ความสูง</label><div class="quick-number-wrap"><input id="quickHeight" type="number" inputmode="decimal" aria-describedby="quickLayoutError"><span class="quick-number-unit">ม.</span></div></div>
+            </div>
             <div class="quick-selection-summary" id="quickLayoutSummary"></div>
             <div class="quick-error" id="quickLayoutError" role="status" aria-live="polite"></div>
           </div>
@@ -1307,66 +1305,6 @@ select:focus{border-color:var(--acc)}
           <button class="btn quick-back" id="quickLayoutBack" type="button">ย้อนกลับ</button>
           <button class="btn pri quick-next" id="quickLayoutNext" type="button" disabled>ขั้นต่อไป</button>
         </div>
-      </section>
-
-      <section class="quick-setup-step" data-quick-step="brand" id="quickStepBrand" hidden>
-        <div class="quick-step-scroll">
-          <header class="quick-step-head">
-            <div class="quick-step-kicker">QUICK SETUP • ขั้นตอนที่ 3</div>
-            <h2 id="quickBrandTitle" tabindex="-1">สีแบรนด์</h2>
-            <p class="quick-step-description">เลือกสีหลักสำหรับองค์ประกอบเริ่มต้นของบูธ และใช้เป็นข้อมูลสีแบรนด์ใน AI Prompt คุณกลับมาเปลี่ยนภายหลังได้เสมอ</p>
-          </header>
-          <div class="quick-section quick-color-card">
-            <div class="quick-color-preview" id="quickBrandPreview" aria-hidden="true"></div>
-            <div class="quick-color-fields">
-              <div><label for="quickBrandPicker">เลือกสี</label><input id="quickBrandPicker" type="color" value="#2E7D4F"></div>
-              <div><label for="quickBrandHex">รหัส HEX</label><input id="quickBrandHex" type="text" value="#2E7D4F" maxlength="7" spellcheck="false" autocomplete="off" aria-describedby="quickBrandError"></div>
-            </div>
-          </div>
-          <div class="quick-error" id="quickBrandError" role="status" aria-live="polite"></div>
-        </div>
-        <div class="quick-step-actions">
-          <button class="btn quick-back" id="quickBrandBack" type="button">ย้อนกลับ</button>
-          <button class="btn pri quick-next" id="quickBrandNext" type="button">ขั้นต่อไป</button>
-        </div>
-      </section>
-
-      <section class="quick-setup-step" data-quick-step="floor" id="quickStepFloor" hidden>
-        <div class="quick-step-scroll">
-          <header class="quick-step-head">
-            <div class="quick-step-kicker">QUICK SETUP • ขั้นตอนที่ 4</div>
-            <h2 id="quickFloorTitle" tabindex="-1">พื้น</h2>
-            <p class="quick-step-description">ค่าเริ่มต้นคือไม่ยกพื้นและปูพรมสีเทาดำ ยืนยันค่าเดิมหรือเลือกวัสดุเริ่มต้นแบบอื่นได้</p>
-          </header>
-          <div class="quick-section"><div class="quick-section-title">ระดับพื้น</div><div class="quick-choice-grid quick-compact-grid" id="quickRaiseOptions" role="radiogroup" aria-label="เลือกระดับพื้น"></div></div>
-          <div class="quick-section"><div class="quick-section-title">วัสดุปูพื้น</div><div class="quick-choice-grid quick-compact-grid" id="quickFloorOptions" role="radiogroup" aria-label="เลือกวัสดุปูพื้น"></div></div>
-          <div class="quick-section" id="quickCarpetSection"><div class="quick-section-title">สีพรม</div><div class="quick-choice-grid quick-compact-grid" id="quickCarpetOptions" role="radiogroup" aria-label="เลือกสีพรม"></div></div>
-          <div class="quick-default-callout"><b>ค่าเริ่มต้น</b><span>ไม่ยกพื้น · พรมสีเทาดำ หากไม่เปลี่ยนค่า ระบบจะใช้ชุดนี้สร้างบูธทันที</span></div>
-        </div>
-        <div class="quick-step-actions">
-          <button class="btn quick-back" id="quickFloorBack" type="button">ย้อนกลับ</button>
-          <button class="btn pri quick-next" id="quickFloorNext" type="button">ขั้นต่อไป</button>
-        </div>
-      </section>
-
-      <section class="quick-setup-step" data-quick-step="room" id="quickStepRoom" hidden>
-        <div class="quick-step-scroll">
-          <header class="quick-step-head">
-            <div class="quick-step-kicker">QUICK SETUP • ขั้นตอนที่ 5</div>
-            <h2 id="quickRoomTitle" tabindex="-1">เพิ่มห้อง</h2>
-            <p class="quick-step-description">เลือกว่าจะสร้างห้องเก็บของมาตรฐานพร้อมบูธหรือไม่ ขนาดและตำแหน่งสามารถปรับต่อในหน้าออกแบบได้</p>
-          </header>
-          <div class="quick-section"><div class="quick-choice-grid quick-compact-grid" id="quickRoomOptions" role="radiogroup" aria-label="เลือกเพิ่มห้องเก็บของ"></div></div>
-          <div class="quick-selection-summary" id="quickRoomSummary"></div>
-        </div>
-        <div class="quick-step-actions">
-          <button class="btn quick-back" id="quickRoomBack" type="button">ย้อนกลับ</button>
-          <button class="btn pri quick-next" id="quickRoomFinish" type="button">สร้างบูธและเริ่มออกแบบ</button>
-        </div>
-      </section>
-
-      <section class="quick-setup-step" data-quick-step="loading" id="quickStepLoading" hidden aria-live="polite">
-        <div class="quick-loading"><div><div class="quick-loading-spinner" aria-hidden="true"></div><h2 id="quickLoadingTitle" tabindex="-1">กำลังสร้างพื้นที่บูธของคุณ…</h2><p>กำลังจัดผนัง พื้น สีแบรนด์ และมุมกล้อง</p></div></div>
       </section>
     </div>
   </div>
@@ -3403,8 +3341,6 @@ function buildDesignPrompt(){
     'สร้างภาพเรนเดอร์ 3D ของบูธแสดงสินค้าแบบสมจริง',
     'ประเภทธุรกิจ: '+business,
     ...businessCategoryPromptLines(S),
-    'สีแบรนด์หลัก: '+String(S.primary||'#2E7D4F').toUpperCase()+' · ใช้เป็นสีหลักขององค์ประกอบ กราฟิก และจุดเน้นของบูธ',
-    'สีแบรนด์รอง: '+String(S.secondary||'ไม่ระบุ').toUpperCase()+' · ใช้เสริมโดยไม่กลบสีหลัก',
     'สไตล์การออกแบบและเรนเดอร์: '+renderStyle.th+' ('+renderStyle.en+')',
     'แนวทางสไตล์: '+renderStyle.prompt,
     'รูปแบบบูธ: '+(boothType.n||S.type||'ไม่ระบุ'),
@@ -6785,18 +6721,13 @@ fp.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{S.photo=r.result;render();};r.readAsDataURL(f);};
 
 const releaseNotesModal=document.getElementById('mRelease');
-const QUICK_SETUP_STEPS=Object.freeze(['intro','business','layout','brand','floor','room','loading']);
-const QUICK_SETUP_PROGRESS_STEPS=Object.freeze(['business','layout','brand','floor','room']);
+const QUICK_SETUP_STEPS=Object.freeze(['intro','business','layout']);
 const QUICK_SETUP_TYPE_KEYS=Object.freeze(['inline','corner','penin','island']);
-let quickSetupStep='intro',quickSetupDraft=null,quickBusinessAttempted=false,quickLayoutAttempted=false,quickBrandAttempted=false,quickSetupCompleting=false;
-const quickBoothDefaults=type=>window.YPQuickSetupContext?.boothDefaultsFor(type)||({inline:{width:6,depth:3,height:2.4,displaySize:'3 × 6 ม.',openSides:1},corner:{width:6,depth:3,height:2.4,displaySize:'3 × 6 ม.',openSides:2},penin:{width:6,depth:6,height:2.4,displaySize:'6 × 6 ม.',openSides:3},island:{width:6,depth:6,height:2.4,displaySize:'6 × 6 ม.',openSides:4}}[type]||null);
-const normalizedQuickHex=(value,fallback='#2E7D4F')=>window.YPQuickSetupContext?.normalizeHexColor(value,fallback)||(/^#[0-9a-fA-F]{6}$/.test(String(value||''))?String(value).toUpperCase():fallback);
+let quickSetupStep='intro',quickSetupDraft=null,quickBusinessAttempted=false,quickLayoutAttempted=false;
 function quickSetupDraftFromEditor(){
-  const boothType=QUICK_SETUP_TYPE_KEYS.includes(S.type)?S.type:'inline',preset=quickBoothDefaults(boothType)||quickBoothDefaults('inline');
+  const preset=PRESETS.find(item=>item.w===Number(S.W)&&item.d===Number(S.D));
   return{businessCategoryId:S.cat||'',businessCategoryLabel:businessCategoryLabel(S),customBusinessCategory:String(S.customBusinessCategory||''),
-    boothType,cornerSide:boothType==='corner'?(S.cornerSide||'right'):'',width:preset.width,depth:preset.depth,height:preset.height,
-    primary:normalizedQuickHex(S.primary||'#2E7D4F'),brandTouched:false,raise:RAISE.some(item=>item.k===S.raise)?S.raise:0,
-    floor:FLOORS.some(item=>item.k===S.floor)?S.floor:'carpet',carpet:CARPETS.some(item=>item.k===S.carpet)?S.carpet:'grey',addStorage:S.stSize!=='none'};
+    boothType:QUICK_SETUP_TYPE_KEYS.includes(S.type)?S.type:'',width:Number(S.W),depth:Number(S.D),height:Number(S.H),sizeMode:preset?(preset.w+'x'+preset.d):'custom'};
 }
 function createQuickChoice({value,label,detail='',selected=false,onSelect}){
   const button=document.createElement('button');button.type='button';button.className='quick-choice';button.dataset.value=value;button.setAttribute('role','radio');button.setAttribute('aria-checked',String(selected));
@@ -6815,7 +6746,6 @@ function buildQuickBusinessChoices(){
   CATGROUPS.forEach(group=>{const section=document.createElement('section');section.className='quick-business-group';section.appendChild(el('h3',null,group.g));
     const grid=el('div','quick-choice-grid');group.items.forEach(category=>grid.appendChild(createQuickChoice({value:category.k,label:category.n,
       selected:quickSetupDraft?.businessCategoryId===category.k,onSelect:value=>{quickSetupDraft.businessCategoryId=value;quickSetupDraft.businessCategoryLabel=category.n;
-        if(!quickSetupDraft.brandTouched)quickSetupDraft.primary=normalizedQuickHex(category.col||quickSetupDraft.primary);
         quickBusinessAttempted=value==='other';updateQuickBusinessStep();if(value==='other')requestAnimationFrame(()=>document.getElementById('quickBusinessCustom').focus());}})));section.appendChild(grid);host.appendChild(section);});
   bindQuickRadioKeys(host);
 }
@@ -6834,106 +6764,70 @@ function updateQuickBusinessStep(){
 }
 function buildQuickLayoutChoices(){
   const typeHost=document.getElementById('quickBoothTypes');typeHost.innerHTML='';
-  TYPES.filter(item=>item.on&&QUICK_SETUP_TYPE_KEYS.includes(item.k)).forEach(type=>{const preset=quickBoothDefaults(type.k);typeHost.appendChild(createQuickChoice({value:type.k,label:type.n,detail:(preset?.displaySize||'')+' · เปิด '+(preset?.openSides||0)+' ด้าน',
-    selected:quickSetupDraft?.boothType===type.k,onSelect:value=>{const previous=quickSetupDraft.boothType,picked=quickBoothDefaults(value);quickSetupDraft.boothType=value;
-      if(picked)Object.assign(quickSetupDraft,{width:picked.width,depth:picked.depth,height:picked.height});
-      if(value==='corner'&&previous!=='corner')quickSetupDraft.cornerSide='';if(value!=='corner')quickSetupDraft.cornerSide='';
-      quickLayoutAttempted=value==='corner';updateQuickLayoutStep();}}));});
+  TYPES.filter(item=>item.on&&QUICK_SETUP_TYPE_KEYS.includes(item.k)).forEach(type=>typeHost.appendChild(createQuickChoice({value:type.k,label:type.n,detail:type.s,
+    selected:quickSetupDraft?.boothType===type.k,onSelect:value=>{const previous=quickSetupDraft.boothType;quickSetupDraft.boothType=value;
+      if(value==='island'&&previous!=='island'){quickSetupDraft.width=6;quickSetupDraft.depth=6;quickSetupDraft.height=2.4;quickSetupDraft.sizeMode='6x6';}
+      quickLayoutAttempted=false;updateQuickLayoutStep();}})));
   bindQuickRadioKeys(typeHost);
-  const cornerHost=document.getElementById('quickCornerSides');cornerHost.innerHTML='';CORNER_SIDES.forEach(side=>cornerHost.appendChild(createQuickChoice({value:side.k,label:side.n,detail:side.s,
-    selected:quickSetupDraft?.cornerSide===side.k,onSelect:value=>{quickSetupDraft.cornerSide=value;quickLayoutAttempted=false;updateQuickLayoutStep();}})));bindQuickRadioKeys(cornerHost);
+  const sizeHost=document.getElementById('quickBoothSizes');sizeHost.innerHTML='';
+  PRESETS.forEach(preset=>{const value=preset.w+'x'+preset.d;sizeHost.appendChild(createQuickChoice({value,label:preset.w+' × '+preset.d+' ม.',detail:(preset.w*preset.d)+' ตร.ม.',
+    selected:quickSetupDraft?.sizeMode===value,onSelect:()=>{quickSetupDraft.sizeMode=value;quickSetupDraft.width=preset.w;quickSetupDraft.depth=preset.d;quickSetupDraft.height=2.4;quickLayoutAttempted=false;updateQuickLayoutStep();}}));});
+  sizeHost.appendChild(createQuickChoice({value:'custom',label:'กำหนดเอง',detail:'ใส่ขนาดจริง',selected:quickSetupDraft?.sizeMode==='custom',onSelect:()=>{quickSetupDraft.sizeMode='custom';quickLayoutAttempted=false;updateQuickLayoutStep();requestAnimationFrame(()=>document.getElementById('quickWidth').focus());}}));
+  bindQuickRadioKeys(sizeHost);
+}
+function copyQuickNumberRules(sourceId,targetId){
+  const source=document.getElementById(sourceId),target=document.getElementById(targetId);['min','max','step'].forEach(name=>target.setAttribute(name,source.getAttribute(name)));target.value=sourceId==='dW'?quickSetupDraft.width:sourceId==='dD'?quickSetupDraft.depth:quickSetupDraft.height;
 }
 function quickLayoutValidation(){
   if(!QUICK_SETUP_TYPE_KEYS.includes(quickSetupDraft?.boothType))return'กรุณาเลือกรูปแบบบูธ';
-  if(quickSetupDraft.boothType==='corner'&&!['left','right'].includes(quickSetupDraft.cornerSide))return'กรุณาเลือกหัวมุมซ้ายหรือหัวมุมขวา';
+  if(!quickSetupDraft?.sizeMode)return'กรุณาเลือกขนาดพื้นที่บูธ';
+  const rules=[['width','dW','ความกว้าง'],['depth','dD','ความลึก'],['height','dH','ความสูง']];
+  for(const [key,sourceId,label] of rules){const source=document.getElementById(sourceId),value=Number(quickSetupDraft[key]),min=Number(source.min),max=Number(source.max);
+    if(!Number.isFinite(value)||value<=0)return'กรุณาระบุ'+label+'เป็นตัวเลขที่มากกว่า 0';if(value<min||value>max)return label+'ต้องอยู่ระหว่าง '+min+'–'+max+' ม.';}
   return'';
 }
 function updateQuickLayoutStep(){
   document.querySelectorAll('#quickBoothTypes [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===quickSetupDraft?.boothType)));
-  const corner=quickSetupDraft?.boothType==='corner',cornerHost=document.getElementById('quickCornerSides');cornerHost.hidden=!corner;
-  document.querySelectorAll('#quickCornerSides [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===quickSetupDraft?.cornerSide)));
-  const type=TYPES.find(item=>item.k===quickSetupDraft?.boothType),preset=quickBoothDefaults(quickSetupDraft?.boothType),error=quickLayoutValidation(),side=CORNER_SIDES.find(item=>item.k===quickSetupDraft?.cornerSide);
-  document.getElementById('quickLayoutSummary').textContent=type&&preset?'รูปแบบ '+type.n+(corner&&side?' · '+side.n:'')+' · '+preset.displaySize+' (กว้าง '+preset.width+' × ลึก '+preset.depth+' × สูง '+preset.height+' ม.) · เปิด '+preset.openSides+' ด้าน':'กรุณาเลือกรูปแบบบูธ';
+  document.querySelectorAll('#quickBoothSizes [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===quickSetupDraft?.sizeMode)));
+  const custom=quickSetupDraft?.sizeMode==='custom';document.getElementById('quickCustomSize').hidden=!custom;
+  if(custom){copyQuickNumberRules('dW','quickWidth');copyQuickNumberRules('dD','quickDepth');copyQuickNumberRules('dH','quickHeight');}
+  const type=TYPES.find(item=>item.k===quickSetupDraft?.boothType),error=quickLayoutValidation();
+  document.getElementById('quickLayoutSummary').textContent=(type?'รูปแบบ '+type.n+' · ':'')+(Number.isFinite(Number(quickSetupDraft?.width))?'พื้นที่ '+quickSetupDraft.width+' × '+quickSetupDraft.depth+' × '+quickSetupDraft.height+' ม.':'กรุณาเลือกขนาดพื้นที่');
   document.getElementById('quickLayoutError').textContent=quickLayoutAttempted?error:'';document.getElementById('quickLayoutNext').disabled=!!error;
-}
-function quickBrandValidation(){return /^#[0-9a-fA-F]{6}$/.test(String(quickSetupDraft?.primary||''))?'':'กรุณากรอกรหัสสี HEX 6 หลัก เช่น #F72585';}
-function updateQuickBrandStep(){
-  const picker=document.getElementById('quickBrandPicker'),hex=document.getElementById('quickBrandHex'),preview=document.getElementById('quickBrandPreview'),error=quickBrandValidation();
-  if(!error){picker.value=quickSetupDraft.primary.toLowerCase();preview.style.background=quickSetupDraft.primary;}
-  if(document.activeElement!==hex)hex.value=quickSetupDraft.primary;hex.setAttribute('aria-invalid',String(!!error));document.getElementById('quickBrandError').textContent=quickBrandAttempted?error:'';document.getElementById('quickBrandNext').disabled=!!error;
-}
-function buildQuickFloorChoices(){
-  const raiseHost=document.getElementById('quickRaiseOptions');raiseHost.innerHTML='';RAISE.forEach(item=>raiseHost.appendChild(createQuickChoice({value:String(item.k),label:item.n,detail:item.s,selected:Number(quickSetupDraft?.raise)===item.k,onSelect:()=>{quickSetupDraft.raise=item.k;updateQuickFloorStep();}})));bindQuickRadioKeys(raiseHost);
-  const floorHost=document.getElementById('quickFloorOptions');floorHost.innerHTML='';FLOORS.forEach(item=>floorHost.appendChild(createQuickChoice({value:item.k,label:item.n,detail:item.s,selected:quickSetupDraft?.floor===item.k,onSelect:value=>{quickSetupDraft.floor=value;updateQuickFloorStep();}})));bindQuickRadioKeys(floorHost);
-  const carpetHost=document.getElementById('quickCarpetOptions');carpetHost.innerHTML='';CARPETS.forEach(item=>carpetHost.appendChild(createQuickChoice({value:item.k,label:item.k==='grey'?'เทาดำ':item.n,detail:item.k==='grey'?'ค่าเริ่มต้น':'',selected:quickSetupDraft?.carpet===item.k,onSelect:value=>{quickSetupDraft.carpet=value;updateQuickFloorStep();}})));bindQuickRadioKeys(carpetHost);
-}
-function updateQuickFloorStep(){
-  document.querySelectorAll('#quickRaiseOptions [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(Number(button.dataset.value)===Number(quickSetupDraft?.raise))));
-  document.querySelectorAll('#quickFloorOptions [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===quickSetupDraft?.floor)));
-  document.querySelectorAll('#quickCarpetOptions [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===quickSetupDraft?.carpet)));
-  document.getElementById('quickCarpetSection').hidden=quickSetupDraft?.floor!=='carpet';
-}
-function buildQuickRoomChoices(){
-  const host=document.getElementById('quickRoomOptions');host.innerHTML='';[
-    {value:'none',label:'ไม่เพิ่มห้อง',detail:'ค่าเริ่มต้น'},
-    {value:'storage',label:'เพิ่มห้องเก็บของ',detail:'สร้างขนาดมาตรฐาน 1.2 × 1.2 ม.'}
-  ].forEach(item=>host.appendChild(createQuickChoice({value:item.value,label:item.label,detail:item.detail,selected:item.value===(quickSetupDraft?.addStorage?'storage':'none'),onSelect:value=>{quickSetupDraft.addStorage=value==='storage';updateQuickRoomStep();}})));bindQuickRadioKeys(host);
-}
-function updateQuickRoomStep(){
-  const selected=quickSetupDraft?.addStorage?'storage':'none';document.querySelectorAll('#quickRoomOptions [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===selected)));
-  document.getElementById('quickRoomSummary').textContent=quickSetupDraft?.addStorage?'ระบบจะเพิ่มห้องเก็บของมาตรฐาน และเปิดให้ปรับขนาด/ตำแหน่งต่อในเมนู “เพิ่มห้อง”':'เริ่มด้วยพื้นที่บูธโล่ง โดยยังเพิ่มห้องภายหลังได้';
+  ['quickWidth','quickDepth','quickHeight'].forEach(id=>document.getElementById(id).setAttribute('aria-invalid',String(!!error&&custom)));
 }
 function setQuickSetupStep(step,{focus=true}={}){
   if(!QUICK_SETUP_STEPS.includes(step))return;quickSetupStep=step;
   document.querySelectorAll('[data-quick-step]').forEach(panel=>{const active=panel.dataset.quickStep===step;panel.hidden=!active;panel.classList.remove('is-entering');if(active){void panel.offsetWidth;panel.classList.add('is-entering');panel.querySelector('.quick-step-scroll')?.scrollTo(0,0);}});
-  const index=QUICK_SETUP_PROGRESS_STEPS.indexOf(step);document.querySelectorAll('[data-progress-step]').forEach(item=>{const itemIndex=QUICK_SETUP_PROGRESS_STEPS.indexOf(item.dataset.progressStep),loading=step==='loading';item.classList.toggle('current',!loading&&itemIndex===index);item.classList.toggle('complete',loading||index>=0&&itemIndex<index);item.setAttribute('aria-current',!loading&&itemIndex===index?'step':'false');});
-  if(step==='business'){buildQuickBusinessChoices();updateQuickBusinessStep();}
-  if(step==='layout'){buildQuickLayoutChoices();updateQuickLayoutStep();}
-  if(step==='brand')updateQuickBrandStep();
-  if(step==='floor'){buildQuickFloorChoices();updateQuickFloorStep();}
-  if(step==='room'){buildQuickRoomChoices();updateQuickRoomStep();}
-  const focusIds={intro:'releaseTitle',business:'quickBusinessTitle',layout:'quickLayoutTitle',brand:'quickBrandTitle',floor:'quickFloorTitle',room:'quickRoomTitle',loading:'quickLoadingTitle'};
-  if(focus)requestAnimationFrame(()=>focusIds[step]&&document.getElementById(focusIds[step])?.focus());
+  const index=QUICK_SETUP_STEPS.indexOf(step);document.querySelectorAll('[data-progress-step]').forEach(item=>{const itemIndex=QUICK_SETUP_STEPS.indexOf(item.dataset.progressStep);item.classList.toggle('current',itemIndex===index);item.classList.toggle('complete',itemIndex<index);item.setAttribute('aria-current',itemIndex===index?'step':'false');});
+  if(step==='business'){buildQuickBusinessChoices();updateQuickBusinessStep();}if(step==='layout'){buildQuickLayoutChoices();updateQuickLayoutStep();}
+  if(focus)requestAnimationFrame(()=>({intro:'releaseTitle',business:'quickBusinessTitle',layout:'quickLayoutTitle'}[step]&&document.getElementById({intro:'releaseTitle',business:'quickBusinessTitle',layout:'quickLayoutTitle'}[step]).focus()));
 }
 function completeQuickSetup(){
-  if(quickSetupCompleting)return false;
-  quickBusinessAttempted=true;quickLayoutAttempted=true;quickBrandAttempted=true;const businessError=quickBusinessValidation(),layoutError=quickLayoutValidation(),brandError=quickBrandValidation();
-  if(businessError){setQuickSetupStep('business');updateQuickBusinessStep();return false;}if(layoutError){setQuickSetupStep('layout');updateQuickLayoutStep();return false;}if(brandError){setQuickSetupStep('brand');updateQuickBrandStep();return false;}
-  const category=ALLCATS.find(item=>item.k===quickSetupDraft.businessCategoryId),type=TYPES.find(item=>item.k===quickSetupDraft.boothType),preset=quickBoothDefaults(quickSetupDraft.boothType);if(!category||!type||!preset)return false;
-  quickSetupCompleting=true;setQuickSetupStep('loading');
-  window.setTimeout(()=>{
-    const categoryChanged=S.cat!==category.k;S.cat=category.k;S.customBusinessCategory=category.k==='other'?String(quickSetupDraft.customBusinessCategory||'').trim():'';
-    if(categoryChanged&&!S.pairTouched)S.pair=category.pr;
-    S.type=type.k;S.cornerSide=type.k==='corner'?quickSetupDraft.cornerSide:'right';S.W=preset.width;S.D=preset.depth;S.H=preset.height;
-    S.primary=normalizedQuickHex(quickSetupDraft.primary);S.colTouched=true;S.logoColor=S.primary;S.logoColorTouched=false;
-    S.raise=Number(quickSetupDraft.raise)||0;S.floor=quickSetupDraft.floor||'carpet';S.carpet=quickSetupDraft.carpet||'grey';
-    S.stSize=quickSetupDraft.addStorage?'a':'none';if(quickSetupDraft.addStorage){S.stW=1.2;S.stD=1.2;S.stHmode=2.4;S.stPos='right';S.doorTouched=false;}
-    S.lights=type.k!=='island';S.view='three';syncDims();sync();closeDockPanel(false);
-    loadThreeRenderer().then(renderer=>renderer.setCameraView('perspective')).catch(()=>{});
-    quickSetupCompleting=false;closeReleaseNotes(false);quickSetupDraft=null;
-  },360);
-  return true;
+  quickBusinessAttempted=true;quickLayoutAttempted=true;const businessError=quickBusinessValidation(),layoutError=quickLayoutValidation();if(businessError){setQuickSetupStep('business');updateQuickBusinessStep();return false;}if(layoutError){updateQuickLayoutStep();return false;}
+  const category=ALLCATS.find(item=>item.k===quickSetupDraft.businessCategoryId),type=TYPES.find(item=>item.k===quickSetupDraft.boothType);if(!category||!type)return false;
+  const categoryChanged=S.cat!==category.k;S.cat=category.k;S.customBusinessCategory=category.k==='other'?String(quickSetupDraft.customBusinessCategory||'').trim():'';
+  if(categoryChanged&&!S.colTouched)S.primary=category.col;if(categoryChanged&&!S.pairTouched)S.pair=category.pr;
+  S.type=type.k;S.W=Number(quickSetupDraft.width);S.D=Number(quickSetupDraft.depth);S.H=Number(quickSetupDraft.height);
+  if(type.k==='island')S.floor='carpet';if(!type.walls.length)S.lights=false;
+  syncDims();sync();quickSetupDraft=null;closeReleaseNotes(false);return true;
 }
 function closeReleaseNotes(discardDraft=true){
-  if(quickSetupCompleting)return;
   if(!releaseNotesModal.classList.contains('show'))return;
   if(discardDraft)quickSetupDraft=null;
   releaseNotesModal.classList.remove('show');releaseNotesModal.setAttribute('aria-hidden','true');
   document.querySelector('.dock-tool.on')?.focus();
 }
 function initQuickSetup(){
-  quickSetupDraft=quickSetupDraftFromEditor();quickBusinessAttempted=false;quickLayoutAttempted=false;quickBrandAttempted=false;quickSetupCompleting=false;setQuickSetupStep('intro',{focus:false});
+  quickSetupDraft=quickSetupDraftFromEditor();quickBusinessAttempted=false;quickLayoutAttempted=false;setQuickSetupStep('intro',{focus:false});
   document.getElementById('releaseStart').onclick=()=>{if(!quickSetupDraft)quickSetupDraft=quickSetupDraftFromEditor();setQuickSetupStep('business');};
   document.getElementById('releaseSkip').onclick=()=>closeReleaseNotes(true);
   document.getElementById('quickBusinessBack').onclick=()=>setQuickSetupStep('intro');
   document.getElementById('quickBusinessNext').onclick=()=>{quickBusinessAttempted=true;const error=quickBusinessValidation();updateQuickBusinessStep();if(!error)setQuickSetupStep('layout');};
-  document.getElementById('quickLayoutBack').onclick=()=>setQuickSetupStep('business');document.getElementById('quickLayoutNext').onclick=()=>{quickLayoutAttempted=true;const error=quickLayoutValidation();updateQuickLayoutStep();if(!error)setQuickSetupStep('brand');};
-  document.getElementById('quickBrandBack').onclick=()=>setQuickSetupStep('layout');document.getElementById('quickBrandNext').onclick=()=>{quickBrandAttempted=true;const error=quickBrandValidation();updateQuickBrandStep();if(!error)setQuickSetupStep('floor');};
-  document.getElementById('quickFloorBack').onclick=()=>setQuickSetupStep('brand');document.getElementById('quickFloorNext').onclick=()=>setQuickSetupStep('room');
-  document.getElementById('quickRoomBack').onclick=()=>setQuickSetupStep('floor');document.getElementById('quickRoomFinish').onclick=completeQuickSetup;
+  document.getElementById('quickLayoutBack').onclick=()=>setQuickSetupStep('business');
+  document.getElementById('quickLayoutNext').onclick=completeQuickSetup;
   document.getElementById('quickBusinessCustom').oninput=event=>{quickSetupDraft.customBusinessCategory=event.target.value;quickBusinessAttempted=true;updateQuickBusinessStep();};
-  document.getElementById('quickBrandPicker').oninput=event=>{quickSetupDraft.primary=normalizedQuickHex(event.target.value);quickSetupDraft.brandTouched=true;quickBrandAttempted=false;updateQuickBrandStep();};
-  document.getElementById('quickBrandHex').oninput=event=>{let value=event.target.value.trim().toUpperCase();if(value&&!value.startsWith('#'))value='#'+value;quickSetupDraft.primary=value;quickSetupDraft.brandTouched=true;quickBrandAttempted=true;updateQuickBrandStep();};
+  [['quickWidth','width'],['quickDepth','depth'],['quickHeight','height']].forEach(([id,key])=>document.getElementById(id).oninput=event=>{quickSetupDraft[key]=event.target.value.trim()===''?NaN:Number(event.target.value);quickLayoutAttempted=true;updateQuickLayoutStep();});
 }
 document.addEventListener('keydown',event=>{
   if(!releaseNotesModal.classList.contains('show'))return;
@@ -6946,7 +6840,7 @@ document.addEventListener('keydown',event=>{
 });
 initQuickSetup();requestAnimationFrame(()=>document.getElementById('releaseClose').focus());
 window.YPQuickSetupBridge={getState:()=>({step:quickSetupStep,draft:quickSetupDraft?{...quickSetupDraft}:null,open:releaseNotesModal.classList.contains('show')}),
-  open(){quickSetupDraft=quickSetupDraftFromEditor();quickSetupCompleting=false;releaseNotesModal.classList.add('show');releaseNotesModal.setAttribute('aria-hidden','false');setQuickSetupStep('intro');},close:()=>closeReleaseNotes(true)};
+  open(){quickSetupDraft=quickSetupDraftFromEditor();releaseNotesModal.classList.add('show');releaseNotesModal.setAttribute('aria-hidden','false');setQuickSetupStep('intro');},close:()=>closeReleaseNotes(true)};
 
 function openM(id){document.getElementById(id).classList.add('show');}
 function closeM(id){document.getElementById(id).classList.remove('show');}
