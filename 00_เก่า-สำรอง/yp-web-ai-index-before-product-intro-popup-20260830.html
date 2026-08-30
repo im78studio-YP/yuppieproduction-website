@@ -586,28 +586,16 @@ select:focus{border-color:var(--acc)}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .okic{width:50px;height:50px;border-radius:50%;background:rgba(78,168,122,.15);color:var(--ok);
   display:grid;place-items:center;font-size:23px;margin:0 auto 12px}
-.release-sheet{width:min(600px,calc(100vw - 32px));max-width:600px;max-height:90vh;padding:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;text-align:left}
-.release-top{padding:30px 32px 24px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,rgba(224,168,60,.12),transparent 58%)}
-.release-eyebrow{margin-bottom:8px;color:var(--acc2);font:700 11.5px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase}
-.release-top h2{max-width:500px;margin:0;color:#fff;font-size:30px;font-weight:800;line-height:1.15;letter-spacing:-.02em}
-.release-tagline{margin:9px 0 0;color:#e8e9ec;font-size:18px;font-weight:600;line-height:1.35}
-.release-description{max-width:530px;margin:12px 0 0;color:var(--tx2);font-size:14px;font-weight:400;line-height:1.6}
-.release-list{display:grid;gap:8px;margin:0;padding:22px 30px 0;list-style:none}
-.release-note{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:start;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg3)}
-.release-note-index{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;background:rgba(224,168,60,.12);color:var(--acc2);font:700 12px Inter,sans-serif}
-.release-note-content{min-width:0}.release-note b{display:block;color:var(--tx);font-size:14px;font-weight:600;line-height:1.4}
-.release-note-detail{display:block;margin-top:3px;color:var(--tx3);font-size:12.5px;font-weight:400;line-height:1.45;overflow-wrap:anywhere}
-.release-status-note{margin:16px 30px 0;padding:11px 13px;border:1px solid rgba(255,255,255,.055);border-radius:10px;background:rgba(255,255,255,.025);color:var(--tx3);font-size:12px;font-weight:400;line-height:1.5}
-.release-actions{display:grid;gap:4px;padding:16px 30px 26px}.release-actions .release-primary{width:100%;min-height:48px;font-size:15.5px;font-weight:700}
-.release-skip{width:100%;min-height:48px;padding:9px 12px;border:0;background:transparent;color:var(--tx2);font-size:13px;font-weight:500;text-align:center}
-.release-skip:hover{color:var(--acc2)}.release-skip:focus-visible{outline:2px solid var(--acc);outline-offset:-4px;border-radius:9px}
-@media(max-width:480px){
-  #mRelease{padding:16px}
-  .release-sheet{width:calc(100vw - 32px);max-height:90dvh}
-  .release-top{padding:24px 20px 20px}.release-top h2{padding-right:24px;font-size:26px}.release-tagline{font-size:16px}.release-description{font-size:14px}
-  .release-list{padding:18px 20px 0}.release-note{grid-template-columns:32px minmax(0,1fr);gap:10px;padding:10px}.release-note b{font-size:13.5px}
-  .release-status-note{margin:16px 20px 0}.release-actions{padding:16px 20px calc(20px + env(safe-area-inset-bottom))}
-}
+.release-sheet{max-width:540px;padding:0;overflow:hidden;text-align:left}
+.release-top{padding:24px 26px 18px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,rgba(224,168,60,.12),transparent 58%)}
+.release-eyebrow{margin-bottom:7px;color:var(--acc2);font:700 10px Inter,sans-serif;letter-spacing:1.5px}
+.release-top h2{max-width:420px;font-size:21px;line-height:1.35}.release-top p{margin-top:7px;color:var(--tx2);font-size:12px;line-height:1.6}
+.release-list{display:grid;gap:8px;margin:0;padding:18px 26px 4px;list-style:none}
+.release-note{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg3)}
+.release-note-index{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:rgba(224,168,60,.12);color:var(--acc2);font:700 11px Inter,sans-serif}
+.release-note b{display:block;font-size:12px}.release-note span:last-child{display:block;margin-top:2px;color:var(--tx3);font-size:10.5px;line-height:1.5}
+.release-actions{padding:14px 26px 24px}.release-actions .btn{width:100%}
+@media(max-width:480px){.release-top{padding:21px 20px 16px}.release-list{padding:15px 20px 3px}.release-actions{padding:13px 20px 20px}}
 </style>
 <link rel="stylesheet" href="css/asset-editor.css?v=20260829-3">
 </head>
@@ -1187,24 +1175,19 @@ select:focus{border-color:var(--acc)}
 
 <div class="modal show" id="mRelease" role="dialog" aria-modal="true" aria-labelledby="releaseTitle" aria-describedby="releaseIntro" aria-hidden="false" onclick="if(event.target===this)closeReleaseNotes()">
   <div class="sheet release-sheet">
-    <button class="close" id="releaseClose" type="button" aria-label="ปิดคำแนะนำผลิตภัณฑ์" onclick="closeReleaseNotes()">×</button>
+    <button class="close" id="releaseClose" type="button" aria-label="ปิดหน้าต่างอัปเดตล่าสุด" onclick="closeReleaseNotes()">×</button>
     <div class="release-top">
-      <div class="release-eyebrow">BETA 1.1 • EARLY ACCESS</div>
-      <h2 id="releaseTitle">YUPPIE BOOTH AI</h2>
-      <p class="release-tagline">จากไอเดียแรก สู่ภาพบูธที่ชัดเจน</p>
-      <p class="release-description" id="releaseIntro">ออกแบบบูธบนพื้นที่มาตรฐานได้ด้วยตัวเอง กำหนดรายละเอียดสำคัญ และเปลี่ยนความต้องการของคุณให้เป็น Prompt พร้อมใช้สำหรับสร้างภาพด้วย AI</p>
+      <div class="release-eyebrow">LATEST UPDATE · 23 AUG 2026</div>
+      <h2 id="releaseTitle">YP_WEB_ONLINE Beta 1.1 พัฒนาอะไรเพิ่มบ้าง</h2>
+      <p id="releaseIntro">อัปเดตเครื่องมือออกแบบบูธให้ควบคุมรายละเอียดหน้างานและจัดวางองค์ประกอบได้แม่นยำขึ้น</p>
     </div>
     <ol class="release-list">
-      <li class="release-note"><span class="release-note-index">01</span><span class="release-note-content"><b>กำหนดพื้นที่บูธ</b><span class="release-note-detail">เลือกขนาด ความสูง และพื้นที่มาตรฐานที่เหมาะกับงานของคุณ</span></span></li>
-      <li class="release-note"><span class="release-note-index">02</span><span class="release-note-content"><b>เลือกรูปแบบบูธ</b><span class="release-note-detail">กำหนด Inline, Corner, Peninsular หรือ Island พร้อมเลือกด้านเปิดและผนังที่ต้องการ</span></span></li>
-      <li class="release-note"><span class="release-note-index">03</span><span class="release-note-content"><b>ปรับวัสดุและองค์ประกอบ</b><span class="release-note-detail">เลือกพื้น ผนัง สี วัสดุ และองค์ประกอบสำคัญให้สอดคล้องกับแบรนด์ของคุณ</span></span></li>
-      <li class="release-note"><span class="release-note-index">04</span><span class="release-note-content"><b>สร้าง Prompt พร้อมใช้กับ AI</b><span class="release-note-detail">ระบบรวบรวมความต้องการและเรียบเรียงเป็น Prompt สำหรับนำไปสร้างภาพบูธด้วย AI</span></span></li>
+      <li class="release-note"><span class="release-note-index">01</span><span><b>เลือกผิวผนังแยกแต่ละด้าน</b><span>กำหนดทาสีหรือสติกเกอร์ให้ผนังหลัง ซ้าย และขวาได้อิสระ</span></span></li>
+      <li class="release-note"><span class="release-note-index">02</span><span><b>เพิ่มชุดโต๊ะสูงพร้อมเก้าอี้ 2 ตัว</b><span>เลือกจากหมวดเฟอร์นิเจอร์และวางเป็นโมเดล 3D ลงในบูธได้ทันที</span></span></li>
+      <li class="release-note"><span class="release-note-index">03</span><span><b>ปรับระบบไฟ 3D ให้ตรงกับหน้างาน</b><span>แก้ทิศทางโคมและเว้นช่วงผนังที่ห้องเก็บของทรงสูงบังอัตโนมัติ</span></span></li>
+      <li class="release-note"><span class="release-note-index">04</span><span><b>กำหนดความสูงละเอียดขึ้น</b><span>ปรับได้ครั้งละ 0.1 เมตร โดยรองรับความสูงบูธสูงสุด 4.9 เมตร</span></span></li>
     </ol>
-    <p class="release-status-note">เวอร์ชันนี้ออกแบบมาให้ผู้เริ่มต้นสามารถใช้งานได้ง่าย โปรเจกต์กำลังอยู่ในช่วงพัฒนา และจะได้รับการปรับปรุงความสามารถอย่างต่อเนื่อง</p>
-    <div class="release-actions">
-      <button class="btn pri lg release-primary" id="releaseStart" type="button" onclick="closeReleaseNotes()">เริ่มสร้างบูธของคุณ</button>
-      <button class="release-skip" id="releaseSkip" type="button" onclick="closeReleaseNotes()">ข้ามและใช้ค่าเริ่มต้น</button>
-    </div>
+    <div class="release-actions"><button class="btn pri lg" id="releaseStart" type="button" onclick="closeReleaseNotes()">เริ่มออกแบบบูธ</button></div>
   </div>
 </div>
 
