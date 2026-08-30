@@ -383,16 +383,6 @@ select:focus{border-color:var(--acc)}
 .prompt-actions .btn:disabled{opacity:.42}
 .prompt-soon{display:block;font-size:9px;color:var(--tx3);margin-top:2px}
 .prompt-status{min-height:19px;margin-top:8px;color:var(--line-gr);font-size:11px}
-.prompt-render-progress{display:grid;gap:6px;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.02)}
-.prompt-render-progress[hidden]{display:none}.prompt-render-step{display:flex;align-items:center;gap:8px;color:var(--tx3);font-size:10.5px}
-.prompt-render-step::before{content:'';width:8px;height:8px;flex:none;border:1px solid var(--tx3);border-radius:50%}
-.prompt-render-step.is-active{color:var(--acc2);font-weight:600}.prompt-render-step.is-active::before{border-color:var(--acc);background:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.13)}
-.prompt-render-step.is-done{color:var(--tx2)}.prompt-render-step.is-done::before{border-color:#58c98d;background:#58c98d}
-.prompt-render-step.is-error{color:#ff806f}.prompt-render-step.is-error::before{border-color:#ff806f;background:#ff806f}
-.prompt-dev-tools{display:grid;gap:8px;margin-top:10px;padding:10px;border:1px dashed rgba(var(--acc-rgb),.42);border-radius:8px;background:rgba(var(--acc-rgb),.035)}
-.prompt-dev-tools[hidden]{display:none}.prompt-dev-tools label{font-size:10px;color:var(--tx2)}
-.prompt-dev-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.prompt-dev-row select{min-height:36px;background:var(--bg2);color:var(--tx);border-color:var(--line)}
-.prompt-dev-report{color:var(--tx3);font:10px/1.55 Inter,"Noto Sans Thai",sans-serif;white-space:pre-wrap}
 .business-page #oCat{display:grid;gap:2px}
 .business-page .cgrp{margin-bottom:9px}
 .business-page .cat{padding:7px 10px}
@@ -827,22 +817,8 @@ select:focus{border-color:var(--acc)}
         </div>
         <div class="prompt-actions">
           <button class="btn pri sm" type="button" id="promptCopy">คัดลอก PROMPT</button>
-          <button class="btn sm" type="button" id="promptRenderAi" disabled aria-disabled="true" title="ยังไม่ได้เชื่อมต่อ AI Render API">Render AI<span class="prompt-soon">รอเชื่อมต่อ API</span></button>
+          <button class="btn sm" type="button" id="promptRenderAi" disabled aria-disabled="true" title="Render AI จะเปิดใช้งานในเฟสถัดไป">Render AI<span class="prompt-soon">เร็ว ๆ นี้</span></button>
           <button class="btn sm prompt-clean" type="button" id="promptCleanScreenshot">ดาวน์โหลด Clean Screenshot<span class="prompt-soon">PNG · ใช้มุมกล้องปัจจุบัน</span></button>
-        </div>
-        <div class="prompt-render-progress" id="promptRenderProgress" hidden aria-label="สถานะการสร้างภาพ">
-          <div class="prompt-render-step" data-render-step="preparing">กำลังเตรียมข้อมูล</div>
-          <div class="prompt-render-step" data-render-step="uploading">กำลังอัปโหลดแบบ 3D</div>
-          <div class="prompt-render-step" data-render-step="generating">AI กำลังสร้างภาพ</div>
-          <div class="prompt-render-step" data-render-step="displaying">กำลังแสดงผล</div>
-        </div>
-        <div class="prompt-dev-tools" id="promptDevTools" hidden>
-          <label for="promptVariant">Development Prompt Variant</label>
-          <div class="prompt-dev-row">
-            <select id="promptVariant"><option value="full">Full Prompt</option><option value="compact">Compact Prompt</option></select>
-            <button class="btn sm" type="button" id="promptRunAB" disabled>รัน A/B Test</button>
-          </div>
-          <div class="prompt-dev-report" id="promptDevReport">A/B Test ใช้ภาพอ้างอิง โมเดล ขนาด และคุณภาพเดียวกัน</div>
         </div>
         <div class="prompt-status" id="promptStatus" role="status" aria-live="polite"></div>
         <div class="note">PROMPT นี้รวมตัวเลือกปัจจุบันของบูธ เช่น ขนาด รูปแบบ วัสดุ สี โลโก้ แสง และอุปกรณ์ที่จัดวางไว้ เพื่อใช้ต่อในขั้นตอน Render AI</div>
@@ -1464,7 +1440,6 @@ select:focus{border-color:var(--acc)}
 </div>
 <script src="js/quick-setup.js?v=20260830-1"></script>
 <script src="js/ai-staging.js?v=20260830-1"></script>
-<script src="js/ai-render-pipeline.js?v=20260830-1"></script>
 <script>
 /* ================= ข้อมูล ================= */
 const CATGROUPS=[
@@ -1660,7 +1635,7 @@ const WHITE='#f2f3f5';
 /* ================= state ================= */
 /* BoothSpec is the serializable single source of truth. S remains as a compatibility
    alias so the proven controls, rules, pricing, and SVG renderer keep one data path. */
-const AI_RENDER_SCHEMA_VERSION=3;
+const AI_RENDER_SCHEMA_VERSION=2;
 const AI_LOCK_LEVELS=Object.freeze(['LOCKED','STYLEABLE','OPTIONAL']);
 const AI_ALLOWED_CHANGES=Object.freeze(['material','color','finish','graphic','lighting','reflection','atmosphere','add','remove','position','rotation','scale']);
 const AI_OPTIONAL_CATEGORIES=Object.freeze(['furniture','products','plants','people','decor','props']);
@@ -1683,7 +1658,7 @@ const defaultAIStagingSettings=()=>globalThis.YPAIStaging?.normalizeAIStaging({}
 function defaultAIRenderingSettings(){
   return{schemaVersion:AI_RENDER_SCHEMA_VERSION,allowOptionalProps:true,
     optionalPermissions:{furniture:true,products:true,plants:true,people:true,decor:true,props:true},
-    renderStyle:AI_RENDER_STYLE_DEFAULT,promptVariant:'full',camera:null,preview:null};
+    renderStyle:AI_RENDER_STYLE_DEFAULT,camera:null,preview:null};
 }
 const BoothSpec={version:3,cat:'food',customBusinessCategory:'',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
   wallCol:'white',wallMat:'paint',wallStickerFaces:[],wallStickers:{
@@ -1905,7 +1880,6 @@ function normalizeAIRenderingSettings(spec=S){
     plants:staging.enabled&&staging.allowPlants,people:staging.enabled&&staging.allowPeople,
     decor:staging.enabled&&staging.allowDecor,props:staging.enabled&&staging.allowDecor};
   source.renderStyle=aiRenderStyle(source.renderStyle).key;
-  source.promptVariant=['full','compact'].includes(source.promptVariant)?source.promptVariant:'full';
   source.camera=source.camera&&typeof source.camera==='object'?source.camera:null;
   source.preview=source.preview&&typeof source.preview==='object'?source.preview:null;
   spec.aiRendering=source;return source;
@@ -3485,7 +3459,7 @@ function businessCategoryPromptLines(spec=S){
   const userChoices=(spec.objects||[]).map(object=>objectCatalogDef(object.catalogId)?.name||object.name||'').filter(Boolean);
   return api.categoryPromptLines({categoryId:spec.cat,categoryLabel:businessCategoryLabel(spec),customBusinessCategory:spec.customBusinessCategory,userChoices}).slice(1);
 }
-function buildFullDesignPrompt(){
+function buildDesignPrompt(){
   const boothType=typ()||{};
   const business=businessCategoryLabel(S);
   const stagingFreedom=promptFidelityValue();
@@ -3542,71 +3516,9 @@ function buildFullDesignPrompt(){
     'มุมมอง: perspective ระดับสายตา เน้นสัดส่วนจริง วัสดุ เงา และแสงสมจริง'
   ].join('\n');
 }
-function compactSelectedObjectLines(){
-  const objects=Array.isArray(S.objects)?S.objects:[];
-  if(!objects.length)return['อุปกรณ์ที่ลูกค้าเลือกและต้องคงตำแหน่ง: ไม่มี'];
-  return['อุปกรณ์ที่ลูกค้าเลือกและต้องคงตำแหน่ง ('+objects.length+' ชิ้น):'].concat(objects.map((obj,index)=>{
-    const item=objectCatalogDef(obj.catalogId),position=obj.position||{},size=obj.size||item?.size||{};
-    const oriented=sceneObjectOrientedSize(obj,size),attachment=obj.attachment?' · ต่อกับ '+sceneAttachmentLabel(obj.attachment):'';
-    const surface=obj.placement?.mode==='surface'?' · Snap '+String(obj.placement.surface||'surface')+' กับ '+String(obj.placement.targetId||'โครงสร้าง'):'';
-    return'- '+(index+1)+' '+(obj.label||item?.name||'Asset')+' ['+(obj.id||obj.catalogId||'object')+']'+
-      ' · จุดกลางฐาน XYZ '+promptNumber(position.x)+'/'+promptNumber(position.y)+'/'+promptNumber(position.z)+' ม.'+
-      ' · ขนาด W/D/H '+promptNumber(size.w)+'/'+promptNumber(size.d)+'/'+promptNumber(size.h)+' ม.'+
-      ' · หมุน XYZ '+promptNumber(obj.rotationX)+'°/'+promptNumber(obj.rotationY)+'°/'+promptNumber(obj.rotationZ)+'°'+
-      ' · ขอบเขตหลังหมุน '+promptNumber(oriented.w)+'/'+promptNumber(oriented.d)+'/'+promptNumber(oriented.h)+' ม.'+attachment+surface;
-  }));
-}
-function buildCompactDesignPrompt(){
-  const boothType=typ()||{},business=businessCategoryLabel(S),staging=normalizeAIStagingSettings(S);
-  const stagingFreedom=promptFidelityValue(),renderStyle=aiRenderStyle(normalizeAIRenderingSettings(S).renderStyle);
-  const walls=boothType.walls||[],wallFaces=walls.map(face=>WALL_FACES.find(item=>item.k===face)?.n||face).join(', ')||'ไม่มี';
-  const openFaces=['left','right','back'].filter(face=>!walls.includes(face)).map(face=>({left:'ซ้าย',right:'ขวา',back:'หลัง'})[face]);
-  const floor=(()=>{try{return floorName();}catch(e){return S.floor||'ไม่ระบุ';}})();
-  const wallThickness=boothWallThickness(S),floorLevel=promptSafeNumber(S.raise)/100;
-  const geometry=[
-    'รูปแบบ '+(boothType.n||S.type)+' · W/D/H '+promptNumber(S.W)+'/'+promptNumber(S.D)+'/'+promptNumber(S.H)+' ม.',
-    'ระบบพิกัดครั้งเดียว: origin มุมหลังซ้ายบนพื้น, X ซ้าย→ขวา, Y ล่าง→บน, Z หลัง→หน้า, หน่วยเมตร',
-    'พื้นเต็มกรอบ X 0–'+promptNumber(S.W)+', Z 0–'+promptNumber(S.D)+', ระดับบน Y '+promptNumber(floorLevel)+' · '+(S.raise?'ยก '+S.raise+' ซม.':'ไม่ยกพื้น')+' · '+floor,
-    'ผนัง '+wallFaces+' · หนา '+promptNumber(wallThickness)+' ม. · สูง '+promptNumber(S.H)+' ม. · ด้านเปิด '+(openFaces.length?openFaces.join(', ')+' และหน้า':'หน้า'),
-    ...(S.type==='photo360'?['ผนังหลังโค้ง R '+promptNumber(S.wallRadius)+' ม. และแท่นวงกลม Ø1.00 × สูง 0.10 ม. กึ่งกลาง']:[]),
-    'ผิวผนัง '+wallFinishSummary()
-  ];
-  if(S.floor==='sticker'&&S.floorStickerData)geometry.push('กราฟิกพื้น '+(S.floorStickerName||'ไฟล์ลูกค้า')+' · '+promptNumber(S.floorStickerW)+' × '+promptNumber(S.floorStickerD)+' ม. · กึ่งกลาง · หมุน '+promptNumber(S.floorStickerRotation)+'° · รักษาสัดส่วนภาพ');
-  (S.wallStickerFaces||[]).forEach(face=>{
-    const sticker=S.wallStickers?.[face];if(!sticker?.data)return;
-    geometry.push('กราฟิก'+(WALL_FACES.find(item=>item.k===face)?.n||face)+' '+(sticker.name||'ไฟล์ลูกค้า')+' · '+promptNumber(sticker.w)+' × '+promptNumber(sticker.h)+' ม. · หมุน '+promptNumber(sticker.rotation)+'° · รักษาสัดส่วนภาพ');
-  });
-  if(hasStore())geometry.push('ห้องเก็บของ '+stChosenLabel()+' · รักษาขนาด ตำแหน่ง และช่องประตูจาก Screenshot');
-  if(S.type!=='island')geometry.push('Branding: โลโก้ '+(LOGOTYPES.find(item=>item.k===S.logoType)?.n||S.logoType)+' ขนาด '+S.logoScale+'/'+BRAND_SCALE_MAX+
-    ' · ชื่อ “'+(S.brand||'YOUR BRAND')+'” ขนาด '+S.nameScale+'/'+BRAND_SCALE_MAX+' · '+logoPlacementSummary(S));
-  const categorySuggestions=businessCategoryPromptLines(S);
-  const autoStagingLines=globalThis.YPAIStaging?.buildAutoStagingPromptLines({settings:staging,selectedAssetCount:S.objects.length,
-    business,brandColor:S.primary,renderStyle:renderStyle.th+' ('+renderStyle.en+')',categorySuggestions,
-    geometryFidelity:S.geometryFidelity,stagingFreedom})||[];
-  return[
-    'สร้างภาพบูธแสดงสินค้าที่เปิดใช้งานจริงแบบ Photorealistic โดยใช้ Clean Screenshot เป็น Geometry Reference แบบบังคับ',
-    'ธุรกิจ '+business+' · สีหลัก '+String(S.primary||'#2E7D4F').toUpperCase()+' · สีรอง '+String(S.secondary||'ไม่ระบุ').toUpperCase(),
-    'สไตล์ '+renderStyle.th+' ('+renderStyle.en+') · '+renderStyle.prompt,
-    '',
-    'LAYER A — LOCKED 3D GEOMETRY · Fidelity '+S.geometryFidelity+'/10',
-    ...geometry,
-    ...compactSelectedObjectLines(),
-    'LOCK: คงขนาด ผัง พื้น ผนัง ห้อง Branding ช่องเปิด มุมกล้อง จำนวน และ Transform ของทุกชิ้นตาม Screenshot/รายการ ห้ามย้าย ลบ เพิ่ม หรือเปลี่ยนสัดส่วนโครงสร้างถาวร',
-    '',
-    ...autoStagingLines,
-    '',
-    'RENDER: คง Perspective เดิม ใช้วัสดุ PBR, global illumination, ambient occlusion, contact shadows, realistic reflections และแสง Exhibition Hall แบบมืออาชีพ',
-    'ผลลัพธ์ต้องลบ Grid เส้นแกน ตัวเลข Bounding Box และ UI ทั้งหมด และต้องผลิตก่อสร้างได้จริง'
-  ].filter(Boolean).join('\n');
-}
-function currentPromptVariant(){return normalizeAIRenderingSettings(S).promptVariant;}
-function buildDesignPrompt(variant=currentPromptVariant()){
-  return variant==='compact'?buildCompactDesignPrompt():buildFullDesignPrompt();
-}
 function updatePromptPreview(){
   syncPromptRenderStyleControls();
   syncPromptStagingControls();
-  const variant=document.getElementById('promptVariant');if(variant&&variant.value!==currentPromptVariant())variant.value=currentPromptVariant();
   const field=document.getElementById('designPrompt');
   if(field)field.value=buildDesignPrompt();
 }
@@ -3635,8 +3547,8 @@ async function downloadCleanScreenshot(){
   if(button?.disabled)return;
   if(button)button.disabled=true;if(status)status.textContent='กำลังเตรียม Scene และสร้าง Clean Screenshot…';
   try{
-    const result=await createCleanScreenshot({download:true,minLongEdge:1536,maxLongEdge:2048,maxBytes:4*1024*1024,includeDataUrl:false});
-    if(status)status.textContent='ดาวน์โหลด '+result.fileName+' ('+result.width+' × '+result.height+' px · '+Math.max(1,Math.round(result.blob.size/1024))+' KB) แล้ว';
+    const result=await createCleanScreenshot({download:true,minLongEdge:1536,includeDataUrl:false});
+    if(status)status.textContent='ดาวน์โหลด '+result.fileName+' ('+result.width+' × '+result.height+' px) แล้ว';
   }catch(error){
     console.error('Clean Screenshot export failed',error);
     if(status)status.textContent='สร้าง Clean Screenshot ไม่สำเร็จ กรุณาลองใหม่';
@@ -3646,76 +3558,6 @@ async function downloadCleanScreenshot(){
     downloadCleanScreenshot.timer=window.setTimeout(()=>{if(status)status.textContent='';},5000);
   }
 }
-const AI_RENDER_DEVELOPMENT=location.hostname===''||location.hostname==='localhost'||location.hostname==='127.0.0.1'||new URLSearchParams(location.search).get('aiRenderDev')==='1';
-const aiRenderPipeline=globalThis.YPAIRenderPipeline?.create({development:AI_RENDER_DEVELOPMENT,onStatus:updateAIRenderStatus})||null;
-function updateAIRenderStatus(payload={}){
-  const progress=document.getElementById('promptRenderProgress'),status=document.getElementById('promptStatus');
-  const order=['preparing','uploading','generating','displaying'],activeIndex=order.indexOf(payload.status);
-  if(progress)progress.hidden=!order.includes(payload.status)&&payload.status!=='complete'&&payload.status!=='error';
-  document.querySelectorAll('[data-render-step]').forEach((step,index)=>{
-    step.classList.toggle('is-active',activeIndex===index);
-    step.classList.toggle('is-done',payload.status==='complete'||(activeIndex>=0&&index<activeIndex));
-    step.classList.toggle('is-error',payload.status==='error'&&index===Math.max(0,activeIndex));
-  });
-  if(status)status.textContent=payload.label+(payload.detail?' · '+payload.detail:'')+(payload.requestId?' · '+payload.requestId:'');
-}
-function aiReferenceLimits(){
-  const size=threeRenderer?.lastSize||[],expectedAspect=Number(size[0])&&Number(size[1])?Number(size[0])/Number(size[1]):0;
-  return{minLongEdge:1536,maxLongEdge:2048,maxBytes:4*1024*1024,expectedAspect,aspectTolerance:.005};
-}
-async function prepareAIRenderReference(){
-  return createCleanScreenshot({download:false,minLongEdge:1536,maxLongEdge:2048,maxBytes:4*1024*1024,includeDataUrl:false});
-}
-function syncAIRenderControls(){
-  const render=document.getElementById('promptRenderAi'),ab=document.getElementById('promptRunAB'),tools=document.getElementById('promptDevTools');
-  const ready=!!aiRenderPipeline?.ready(),busy=!!aiRenderPipeline?.active;
-  if(render){render.disabled=!ready||busy;render.setAttribute('aria-disabled',String(!ready||busy));render.title=ready?(busy?'กำลังสร้างภาพ':'สร้างภาพด้วย AI Render Adapter ที่เชื่อมต่อแล้ว'):'ยังไม่ได้เชื่อมต่อ AI Render API';
-    const note=render.querySelector('.prompt-soon');if(note)note.textContent=ready?(busy?'กำลังทำงาน':'พร้อมสร้างภาพ'):'รอเชื่อมต่อ API';}
-  if(tools)tools.hidden=!AI_RENDER_DEVELOPMENT;
-  if(ab)ab.disabled=!ready||busy;
-  const variant=document.getElementById('promptVariant');if(variant)variant.value=currentPromptVariant();
-}
-async function runAIRender(){
-  if(!aiRenderPipeline?.ready()){syncAIRenderControls();return null;}
-  syncAIRenderControls();
-  try{
-    return await aiRenderPipeline.run({promptVariant:currentPromptVariant(),buildPrompt:context=>buildDesignPrompt(context.promptVariant),
-      prepareReferenceImage:prepareAIRenderReference,referenceLimits:aiReferenceLimits()});
-  }catch(error){console.error('AI Render failed',error);return null;}
-  finally{syncAIRenderControls();}
-}
-function formatAIRenderABReport(result){
-  if(!result)return'';
-  const full=result.full,compact=result.compact,reduction=full.promptCharacters?Math.round((1-compact.promptCharacters/full.promptCharacters)*100):0;
-  const largest=report=>Object.entries(report.timings||{}).sort((a,b)=>b[1]-a[1])[0]||['-',0];
-  const fullLargest=largest(full),compactLargest=largest(compact);
-  return[
-    'A/B '+result.abTestId+' · ใช้ภาพอ้างอิงเดียวกัน',
-    'Full: '+full.promptCharacters.toLocaleString()+' ตัวอักษร · '+Math.round(full.totalMs)+' ms · ช้าที่สุด '+fullLargest[0]+' '+Math.round(fullLargest[1])+' ms',
-    'Compact: '+compact.promptCharacters.toLocaleString()+' ตัวอักษร · '+Math.round(compact.totalMs)+' ms · ช้าที่สุด '+compactLargest[0]+' '+Math.round(compactLargest[1])+' ms',
-    'ลดความยาว Prompt '+reduction+'% · คุณภาพภาพต้องตรวจเทียบด้วยสายตาก่อนเลือกใช้จริง'
-  ].join('\n');
-}
-async function runAIRenderABTest(){
-  if(!aiRenderPipeline?.ready()){syncAIRenderControls();return null;}
-  const report=document.getElementById('promptDevReport');if(report)report.textContent='กำลังรัน Full และ Compact ด้วยภาพอ้างอิงเดียวกัน…';
-  syncAIRenderControls();
-  try{
-    const result=await aiRenderPipeline.runABTest({buildFullPrompt:()=>buildFullDesignPrompt(),buildCompactPrompt:()=>buildCompactDesignPrompt(),
-      prepareReferenceImage:prepareAIRenderReference,referenceLimits:aiReferenceLimits()});
-    if(report)report.textContent=formatAIRenderABReport(result);return result;
-  }catch(error){if(report)report.textContent='A/B Test ไม่สำเร็จ · '+(error?.message||error);console.error('AI Render A/B Test failed',error);return null;}
-  finally{syncAIRenderControls();}
-}
-function configureAIRenderAdapter(adapter){const ready=!!aiRenderPipeline?.configure(adapter);syncAIRenderControls();return ready;}
-window.YPAIRenderBridge=Object.freeze({
-  configureAdapter:configureAIRenderAdapter,
-  run:runAIRender,
-  runABTest:runAIRenderABTest,
-  buildPrompt:variant=>buildDesignPrompt(variant),
-  prepareReferenceImage:prepareAIRenderReference,
-  getState:()=>({ready:!!aiRenderPipeline?.ready(),active:aiRenderPipeline?.active||null,lastReport:aiRenderPipeline?.lastReport||null,promptVariant:currentPromptVariant()})
-});
 function hx(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');
   return[parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];}
 const toHex=a=>'#'+a.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
@@ -4594,9 +4436,7 @@ class ThreeBoothRenderer{
     const T=this.THREE,sourceWidth=Math.max(1,this.lastSize[0]||Math.floor(this.host.getBoundingClientRect().width)||16);
     const sourceHeight=Math.max(1,this.lastSize[1]||Math.floor(this.host.getBoundingClientRect().height)||9);
     const sourceAspect=sourceWidth/sourceHeight,minLongEdge=Math.max(1536,Math.floor(Number(options.minLongEdge)||1536));
-    const maxLongEdge=Math.max(minLongEdge,Math.floor(Number(options.maxLongEdge)||2048));
-    const requestedLongEdge=Math.floor(Number(options.longEdge)||minLongEdge);
-    const longEdge=Math.max(minLongEdge,Math.min(maxLongEdge,requestedLongEdge));
+    const longEdge=Math.max(minLongEdge,sourceWidth,sourceHeight);
     const width=sourceAspect>=1?longEdge:Math.max(1,Math.round(longEdge*sourceAspect));
     const height=sourceAspect>=1?Math.max(1,Math.round(longEdge/sourceAspect)):longEdge;
     const oldSize=this.renderer.getSize(new T.Vector2()),oldPixelRatio=this.renderer.getPixelRatio(),oldAspect=this.camera.aspect;
@@ -4619,18 +4459,14 @@ class ThreeBoothRenderer{
       const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(new Error('ไม่สามารถสร้างไฟล์ PNG ได้')),'image/png'));
       const fileName=String(options.fileName||this.cleanScreenshotFileName()).replace(/[\\/:*?"<>|]+/g,'-');
       const camera=this.cameraManifest({width,height,pixelRatio:1}),manifest=buildGeometryManifest(BoothSpec);manifest.camera=camera;
-      const maxBytes=Math.max(1,Math.floor(Number(options.maxBytes)||4*1024*1024));
-      const preflight={mimeType:blob.type||'image/png',bytes:blob.size,width,height,aspect:manifestNumber(width/height,6),
-        sourceAspect:manifestNumber(sourceAspect,6),longEdge,maxLongEdge,withinByteLimit:blob.size<=maxBytes};
-      if(!preflight.withinByteLimit)console.warn('[AI Render] Clean Screenshot เกินขนาดแนะนำ',{bytes:blob.size,maxBytes,width,height});
-      const preview={kind:'clean-screenshot',width,height,aspect:preflight.aspect,fileName,bytes:blob.size,createdAt:new Date().toISOString(),camera};
+      const preview={kind:'clean-screenshot',width,height,aspect:manifestNumber(width/height,6),fileName,createdAt:new Date().toISOString(),camera};
       normalizeAIRenderingSettings(BoothSpec).preview=preview;
       const dataUrl=options.includeDataUrl?canvas.toDataURL('image/png'):null;
       if(options.download){
         const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=fileName;link.hidden=true;
         document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
       }
-      return{blob,dataUrl,width,height,aspect:width/height,fileName,camera,manifest,preflight};
+      return{blob,dataUrl,width,height,aspect:width/height,fileName,camera,manifest};
     }finally{
       hidden.forEach(([object,visible])=>{object.visible=visible;});
       this.scene.background=oldBackground;this.renderer.setPixelRatio(oldPixelRatio);this.renderer.setSize(oldSize.x,oldSize.y,false);
@@ -6796,15 +6632,6 @@ const promptCopyButton=document.getElementById('promptCopy');
 if(promptCopyButton)promptCopyButton.onclick=copyDesignPrompt;
 const promptCleanScreenshotButton=document.getElementById('promptCleanScreenshot');
 if(promptCleanScreenshotButton)promptCleanScreenshotButton.onclick=downloadCleanScreenshot;
-const promptRenderAiButton=document.getElementById('promptRenderAi');
-if(promptRenderAiButton)promptRenderAiButton.onclick=runAIRender;
-const promptRunABButton=document.getElementById('promptRunAB');
-if(promptRunABButton)promptRunABButton.onclick=runAIRenderABTest;
-const promptVariantSelect=document.getElementById('promptVariant');
-if(promptVariantSelect)promptVariantSelect.onchange=e=>{
-  normalizeAIRenderingSettings(S).promptVariant=e.target.value==='compact'?'compact':'full';updatePromptPreview();
-};
-syncAIRenderControls();
 const promptRenderStyleSelect=document.getElementById('promptRenderStyle');
 if(promptRenderStyleSelect)promptRenderStyleSelect.onchange=e=>setPromptRenderStyle(e.target.value);
 document.querySelectorAll('[data-staging-enabled]').forEach(button=>button.onclick=()=>setPromptStagingEnabled(button.dataset.stagingEnabled==='true'));

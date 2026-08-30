@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "node --test qa/quick-setup/quick-setup-context.test.mjs qa/ai-rendering/ai-staging.test.mjs qa/ai-rendering/ai-render-pipeline.test.mjs qa/ai-rendering/ai-render-page.test.mjs"
+    "test": "node --test qa/quick-setup/quick-setup-context.test.mjs qa/ai-rendering/ai-staging.test.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.383.0",

@@ -167,7 +167,7 @@ Before Generate, the user will see:
 - Geometry Manifest preview/download
 - Validation warnings for missing or inconsistent information
 
-`Render AI` remains disabled until an explicit provider adapter is configured. The UI does not invent an API URL or silently send Scene data to an unknown endpoint.
+`Render AI` remains disabled until a later integration phase.
 
 ## 9. Test plan
 
@@ -221,49 +221,3 @@ Before Generate, the user will see:
 4. Completed — AI Auto-Staging permission controls and two-layer Prompt Builder
 5. Render-package Preview and QA
 6. Future AI provider integration after separate approval
-
-## 11. Instrumented Render Pipeline
-
-The provider-neutral pipeline lives in `public/yp-web-ai/js/ai-render-pipeline.js`. It exposes a narrow adapter contract through `window.YPAIRenderBridge.configureAdapter(adapter)` and measures these stages independently:
-
-1. `buildPrompt`
-2. `prepareReferenceImage`
-3. `uploadReferenceImage`
-4. `sendRenderRequest`
-5. `waitForModel`
-6. `downloadResult`
-7. `displayResult`
-
-Development mode prints one timing table per `requestId`. It is active for `file:`, `localhost`, `127.0.0.1`, or `?aiRenderDev=1`. Production mode does not print the timing table.
-
-Safety behavior:
-
-- Single-flight: while a request is active, a second submit reuses the same Promise and never sends another render request.
-- Every request receives a unique `requestId`; a single pipeline execution allows exactly one `sendRenderRequest` call.
-- The core performs no automatic retry. Provider polling/retry must be implemented by an adapter, use the supplied `maxPollAttempts`, and remain bounded by the pipeline wait timeout.
-- The model wait is bounded (default 180 seconds).
-- Clean Screenshot preflight requires a 1,536–2,048 px long edge, no more than 4 MB, and an aspect ratio matching the current viewport within tolerance.
-- The exporter keeps PNG/lossless geometry edges but caps resolution instead of exporting a 2K/4K source viewport unnecessarily.
-
-Adapter contract:
-
-```text
-uploadReferenceImage(reference, context)       optional
-sendRenderRequest(payload)                     required
-waitForModel(renderRequest, context)            optional
-downloadResult(modelResult, context)            optional
-displayResult(downloadedResult, context)        optional
-```
-
-The Prompt page shows four user-facing states: preparing data, uploading the 3D reference, AI generating, and displaying the result. Render remains unavailable until `sendRenderRequest` exists.
-
-### Full/Compact A/B test
-
-Development mode provides Full and Compact Prompt variants plus an A/B runner. An A/B run:
-
-- captures the Clean Screenshot once and reuses the exact same reference object;
-- runs the same adapter/model/size/quality configuration sequentially;
-- reports Prompt characters, total time, and the slowest stage for each variant;
-- leaves visual quality comparison to a reviewer because the pipeline must not invent a quality score.
-
-Full Prompt is the default and preserves current behavior. Compact Prompt removes repeated booth dimensions, coordinates, floor, and wall declarations while keeping the single authoritative coordinate system, every locked transform, camera lock, Auto-Staging rules, and negative geometry constraints.
