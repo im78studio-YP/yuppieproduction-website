@@ -3359,7 +3359,7 @@ function objectLayoutPrompt(){
   ];
   if(boothType.note)header.push('รายละเอียดรูปแบบบูธ: '+boothType.note);
   if(!objects.length)return header.concat('อุปกรณ์ที่ลูกค้าเลือกและต้องคงตำแหน่ง: ไม่มี',
-    'หมายเหตุ: ไม่มีอุปกรณ์ที่ลูกค้าเลือกไม่ได้หมายความว่าต้องสร้างบูธเปล่า การเติมองค์ประกอบประกอบภาพให้ใช้กฎ AI AUTO-STAGING แยกต่างหาก').join('\n');
+    'เป้าหมายภาพ: แสดงบูธที่เปิดใช้งานจริงด้วย AI AUTO-STAGING ที่ได้รับอนุญาต โดยห้ามเปลี่ยน Geometry พิกัด สัดส่วน และมุมกล้องจากแบบ 3 มิติ').join('\n');
   const records=objects.map((obj,index)=>{
     const item=objectCatalogDef(obj.catalogId),position=obj.position||{},size=obj.size||item?.size||{},distances=promptObjectWallDistances(obj);
     const name=obj.label||item?.name||'อุปกรณ์กำหนดเอง',rotation=promptSafeNumber(obj.rotationY),rotationX=promptSafeNumber(obj.rotationX),rotationZ=promptSafeNumber(obj.rotationZ),x=promptSafeNumber(position.x),z=promptSafeNumber(position.z);

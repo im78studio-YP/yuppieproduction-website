@@ -29,11 +29,12 @@ test('Geometry Fidelity คงที่ 10 แม้ State เก่าระบ
   assert.equal(freedom.stagingFreedom, 8);
 });
 
-test('ไม่มี selectedAssets ไม่ถูกตีความเป็นบูธเปล่า', () => {
+test('ไม่มี selectedAssets ให้สร้างบูธที่เปิดใช้งานจริงโดยล็อก Geometry', () => {
   const prompt = api.buildAutoStagingPromptLines({
     settings: {}, selectedAssetCount: 0, business: 'เทคโนโลยีและไอที', brandColor: '#F72585', renderStyle: 'Futuristic Tech'
   }).join('\n');
-  assert.match(prompt, /ไม่ได้หมายความว่าต้องสร้างบูธเปล่า/);
+  assert.match(prompt, /บูธที่เปิดใช้งานจริง/);
+  assert.match(prompt, /รักษา Geometry พิกัด สัดส่วน และมุมกล้องจากแบบ 3 มิติเดิมอย่างเคร่งครัด/);
   assert.match(prompt, /ระดับองค์ประกอบ ปานกลาง/);
   assert.match(prompt, /เฟอร์นิเจอร์ลอยตัว/);
   assert.match(prompt, /AI Suggested \/ Render Staging/);
@@ -49,7 +50,7 @@ test('ปิด Auto-Staging แล้วแสดงเฉพาะองค์
   const prompt = api.buildAutoStagingPromptLines({ settings: { enabled: false }, selectedAssetCount: 0 }).join('\n');
   assert.match(prompt, /สถานะ: ปิด/);
   assert.match(prompt, /แสดงเฉพาะองค์ประกอบที่อยู่ในแบบ 3D/);
-  assert.doesNotMatch(prompt, /ไม่ได้หมายความว่าต้องสร้างบูธเปล่า/);
+  assert.doesNotMatch(prompt, /บูธที่เปิดใช้งานจริง/);
 });
 
 test('AI suggestions ถูกบังคับให้อยู่นอก BOQ และ Confirmed Geometry', () => {
