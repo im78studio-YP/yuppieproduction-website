@@ -379,16 +379,8 @@ select:focus{border-color:var(--acc)}
 .prompt-fidelity-note{margin-top:6px;color:var(--tx3);font-size:10px;line-height:1.5}
 .prompt-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:9px}
 .prompt-actions .btn{width:100%;min-height:38px}
-.prompt-actions .prompt-copy{grid-column:1/-1}
 .prompt-actions .prompt-clean{grid-column:1/-1}
 .prompt-actions .btn:disabled{opacity:.42}
-.prompt-intent-quality{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.02)}
-.prompt-intent-quality strong{font-size:11px}.prompt-quality-options{display:flex;gap:6px}.prompt-quality-choice{min-height:32px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg3);color:var(--tx2);font-size:11px;font-weight:700;cursor:pointer}.prompt-quality-choice.on{border-color:var(--acc);color:var(--acc);background:var(--accbg)}
-.prompt-intent-button{display:flex;flex-direction:column;justify-content:center;gap:2px}.prompt-intent-button small{font-size:9px;font-weight:500;opacity:.72}.prompt-intent-button.concept{border-color:rgba(247,37,133,.55);color:#ff70b5}.prompt-intent-button.from3d{background:var(--acc);border-color:var(--acc);color:#14161a}
-.prompt-render-result{margin-top:10px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:rgba(255,255,255,.02)}.prompt-render-result[hidden]{display:none}
-.prompt-result-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border-bottom:1px solid var(--line)}.prompt-result-badge{display:inline-flex;align-items:center;min-height:25px;padding:0 9px;border-radius:999px;background:rgba(247,37,133,.13);border:1px solid rgba(247,37,133,.42);color:#ff70b5;font-size:10px;font-weight:800}.prompt-result-request{font-size:9px;color:var(--tx3)}
-.prompt-result-image{display:block;width:100%;max-height:320px;object-fit:contain;background:#090b0f}.prompt-result-image[hidden]{display:none}
-.concept-proposal{padding:10px}.concept-proposal[hidden]{display:none}.concept-proposal h4{font-size:12px;margin:0 0 4px}.concept-proposal-summary{font-size:10.5px;line-height:1.5;color:var(--tx3);margin-bottom:8px}.concept-proposal-list{display:grid;gap:6px;max-height:230px;overflow:auto}.concept-proposal-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:7px;align-items:center;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}.concept-proposal-row b{display:block;font-size:10.5px}.concept-proposal-row small{display:block;margin-top:2px;color:var(--tx3);font-size:9px;line-height:1.35}.concept-proposal-status{font-size:8.5px;font-weight:800;color:#ff70b5;text-align:right}.concept-proposal-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:9px}.concept-proposal-actions .btn{min-height:34px;font-size:9.5px}
 .prompt-soon{display:block;font-size:9px;color:var(--tx3);margin-top:2px}
 .prompt-status{min-height:19px;margin-top:8px;color:var(--line-gr);font-size:11px}
 .prompt-render-progress{display:grid;gap:6px;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.02)}
@@ -496,7 +488,7 @@ select:focus{border-color:var(--acc)}
   border:1px solid rgba(var(--acc-rgb),.38);border-radius:10px;background:rgba(9,11,15,.88);backdrop-filter:blur(12px);
   box-shadow:0 12px 28px rgba(0,0,0,.36);transition:opacity .12s ease,transform .12s ease}
 #view.three-active+.object-actions.canvas-object-toolbar{display:flex}
-.canvas-object-toolbar.no-object-selection>:not(.asset-list-trigger):not(.move-advanced){display:none!important}
+.canvas-object-toolbar.no-object-selection>:not(.asset-list-trigger){display:none!important}
 .canvas-object-toolbar.context-below{transform:translateX(-50%)}
 .canvas-object-toolbar.context-dragging{opacity:.18;pointer-events:none}
 .canvas-object-toolbar .btn{min-height:36px;padding:7px 9px;font-size:10.5px;border-color:transparent;background:transparent;white-space:nowrap}
@@ -511,16 +503,6 @@ select:focus{border-color:var(--acc)}
 .canvas-object-toolbar .move-advanced-menu{position:absolute;left:0;bottom:calc(100% + 9px);display:grid;gap:4px;min-width:160px;padding:6px;
   border:1px solid rgba(var(--acc-rgb),.38);border-radius:9px;background:rgba(9,11,15,.97);box-shadow:0 12px 28px rgba(0,0,0,.42)}
 .canvas-object-toolbar .move-advanced-menu .btn{width:100%;justify-content:flex-start;text-align:left}
-.canvas-object-toolbar .fine-position-menu{width:264px;gap:7px;padding:10px}
-.fine-position-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 2px 3px;color:var(--tx);font-size:11px}
-.fine-position-head small{color:var(--tx3);font-size:9.5px;font-weight:500}
-.fine-position-row{display:grid;grid-template-columns:22px 38px minmax(92px,1fr) 38px;align-items:center;gap:6px}
-.fine-position-axis{display:grid;place-items:center;width:22px;height:28px;border-radius:6px;background:rgba(var(--acc-rgb),.12);color:var(--acc2);font-size:11px;font-weight:800}
-.canvas-object-toolbar .fine-position-row .fine-position-step{width:38px;min-width:38px;height:34px;min-height:34px;justify-content:center;padding:0;border-color:var(--line);background:var(--bg3);font-size:18px;font-weight:700;text-align:center}
-.canvas-object-toolbar .fine-position-row .fine-position-step:hover:not(:disabled){border-color:var(--acc);background:var(--accbg);color:var(--acc2)}
-.fine-position-value{display:grid;place-items:center;min-height:34px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg2);color:var(--tx);font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.fine-position-help{min-height:17px;padding:3px 2px 0;color:var(--tx3);font-size:9.5px;line-height:1.45}
-.fine-position-help.is-warning{color:#ef9b82}
 .canvas-object-toolbar.locked-selected .tool-mode{background:rgba(138,145,156,.16);color:#cbd1da}
 .canvas-object-toolbar .tool-mode{display:flex;align-items:center;min-height:36px;padding:7px 10px;border-radius:7px;
   background:rgba(var(--acc-rgb),.14);color:var(--acc2);font-size:10.5px;font-weight:600;white-space:nowrap}
@@ -541,7 +523,6 @@ select:focus{border-color:var(--acc)}
 .asset-list-body{min-height:120px;overflow:auto;padding:7px 9px 12px}.asset-list-empty{padding:34px 16px;text-align:center;color:var(--tx3);font-size:12px;line-height:1.55}
 .asset-list-category{margin-top:7px}.asset-list-category-title{display:flex;align-items:center;justify-content:space-between;padding:5px 6px;color:var(--tx3);font-size:10px;font-weight:700;letter-spacing:.06em}.asset-list-category-title span:last-child{font-weight:500;letter-spacing:0}
 .asset-list-row{display:grid;grid-template-columns:24px 36px minmax(0,1fr) 30px 30px 30px;align-items:center;gap:5px;padding:7px 6px;border:1px solid transparent;border-radius:9px;cursor:pointer;transition:.12s}.asset-list-row:hover{background:var(--bg3)}.asset-list-row.selected{border-color:#f72585;background:rgba(247,37,133,.1);box-shadow:0 0 0 1px rgba(247,37,133,.12) inset}.asset-list-row.hidden-item{opacity:.56}
-.asset-list-row.ai-suggested{border-color:rgba(247,37,133,.28)}.asset-list-ai-status{color:#ff70b5!important;font-weight:700}.asset-list-row.ai-suggested .asset-list-icon-btn{opacity:.3}
 .asset-list-check{width:16px;height:16px;accent-color:var(--acc)}.asset-list-thumb{width:34px;height:34px;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line);border-radius:7px;background:var(--bg4);color:var(--acc2);font-size:9px;font-weight:700}.asset-list-thumb img{width:100%;height:100%;object-fit:cover}
 .asset-list-copy{min-width:0}.asset-list-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx);font-size:11.5px;font-weight:600}.asset-list-type{display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx3);font-size:9.5px}.asset-list-system{color:var(--acc2)}
 .asset-list-icon-btn{width:30px;height:30px;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;color:var(--tx2);font-size:13px}.asset-list-icon-btn:hover{border-color:var(--line);background:var(--bg4)}.asset-list-icon-btn.on{color:var(--acc2)}.asset-list-icon-btn:disabled{opacity:.34;cursor:not-allowed}
@@ -598,7 +579,6 @@ select:focus{border-color:var(--acc)}
   .object-actions.canvas-object-toolbar:has(.move-advanced[open])>:not(.move-advanced){display:none}
   .canvas-object-toolbar .move-advanced-menu{position:absolute;left:50%;right:auto;bottom:calc(100% + 10px);z-index:40;
     width:min(calc(100vw - 84px),360px);transform:translateX(-50%);grid-template-columns:repeat(3,minmax(0,1fr));min-width:0}
-  .canvas-object-toolbar .fine-position-menu{width:min(calc(100vw - 84px),280px);grid-template-columns:1fr}
   .selected-card .object-selected{display:block}
   .object-inspector-lock{display:inline-flex;flex:0 0 100%;justify-content:center;margin-top:8px}
   .booth-curve-field{display:none}.booth-curve-mobile-trigger{display:flex}
@@ -609,7 +589,6 @@ select:focus{border-color:var(--acc)}
     border-width:1px 0 0;border-radius:18px 18px 0 0;box-shadow:0 -18px 50px rgba(0,0,0,.42)}
   .asset-list-panel,.wrap.dock-collapsed .asset-list-panel{top:auto;left:8px;right:68px;bottom:8px;width:auto;max-height:min(68dvh,620px);border-radius:16px;transform:translateY(24px)}
   .asset-list-panel.open{transform:none}.asset-list-head{padding-top:13px}.asset-list-actions{grid-template-columns:repeat(4,minmax(62px,1fr));overflow-x:auto}.asset-list-row{grid-template-columns:24px 36px minmax(0,1fr) 34px 34px 34px}
-  .prompt-actions{grid-template-columns:1fr}.prompt-actions .prompt-clean{grid-column:auto}.prompt-intent-quality{align-items:flex-start;flex-direction:column}.prompt-quality-options{width:100%}.prompt-quality-choice{flex:1}.concept-proposal-actions{grid-template-columns:1fr}
 }
 @media(max-width:480px){
   .header-actions .btn{padding:7px 9px}.logo>div:last-child{display:none}.logo .m{width:28px;height:28px}.summary-trigger-label{display:none}.summary-trigger{min-width:38px;justify-content:center}.header-total{min-width:70px}.header-total strong{font-size:13px}
@@ -625,7 +604,7 @@ select:focus{border-color:var(--acc)}
   .object-actions.canvas-object-toolbar{max-width:calc(100% - 12px);overflow-x:auto}
   .canvas-object-toolbar .btn{width:38px;min-width:38px;padding:7px 4px;font-size:0}
   .canvas-object-toolbar .btn:before{font-size:15px}
-  #btnMoveSmart:before{content:'✥'}
+  #btnMoveSmart:before{content:'✥'}#btnMovePlane:before{content:'↔'}#btnMoveHeight:before{content:'↕'}#btnMoveSurface:before{content:'⌁'}
   .move-advanced-summary{width:42px;min-width:42px;font-size:0}.move-advanced-summary:before{content:'⚙';font-size:14px}
   #btnRotateObject:before{content:'↻'}#btnDuplicateObject:before{content:'⧉'}#btnDeleteObject:before{content:'×'}
   #btnAssetList:before{content:'☷'}
@@ -867,17 +846,9 @@ select:focus{border-color:var(--acc)}
           </div>
           <div class="prompt-fidelity-note" id="promptFidelityNote">เติมองค์ประกอบในระดับสมดุล โดยไม่เปลี่ยน Geometry ที่ล็อกไว้</div>
         </div>
-        <div class="prompt-intent-quality" aria-label="คุณภาพการสร้างภาพ แยกจาก Render Intent">
-          <strong>คุณภาพภาพ</strong>
-          <div class="prompt-quality-options" role="radiogroup" aria-label="เลือกคุณภาพ Preview หรือ Final">
-            <button class="prompt-quality-choice on" type="button" data-render-quality="preview" role="radio" aria-checked="true">Preview</button>
-            <button class="prompt-quality-choice" type="button" data-render-quality="final" role="radio" aria-checked="false">Final</button>
-          </div>
-        </div>
         <div class="prompt-actions">
-          <button class="btn pri sm prompt-copy" type="button" id="promptCopy">คัดลอก PROMPT</button>
-          <button class="btn sm prompt-intent-button concept" type="button" id="promptRenderConcept" disabled aria-disabled="true" title="ยังไม่ได้เชื่อมต่อ AI Render API">AI ช่วยออกแบบบูธ<small>Concept · ไม่ใช้ Clean Screenshot</small></button>
-          <button class="btn sm prompt-intent-button from3d" type="button" id="promptRender3d" disabled aria-disabled="true" title="ยังไม่ได้เชื่อมต่อ AI Render API">เรนเดอร์ตามแบบ 3D<small>Geometry Fidelity 10/10</small></button>
+          <button class="btn pri sm" type="button" id="promptCopy">คัดลอก PROMPT</button>
+          <button class="btn sm" type="button" id="promptRenderAi" disabled aria-disabled="true" title="ยังไม่ได้เชื่อมต่อ AI Render API">Render AI<span class="prompt-soon">รอเชื่อมต่อ API</span></button>
           <button class="btn sm prompt-clean" type="button" id="promptCleanScreenshot">ดาวน์โหลด Clean Screenshot<span class="prompt-soon">PNG · ใช้มุมกล้องปัจจุบัน</span></button>
         </div>
         <div class="prompt-render-progress" id="promptRenderProgress" hidden aria-label="สถานะการสร้างภาพ">
@@ -885,20 +856,6 @@ select:focus{border-color:var(--acc)}
           <div class="prompt-render-step" data-render-step="uploading">กำลังอัปโหลดแบบ 3D</div>
           <div class="prompt-render-step" data-render-step="generating">AI กำลังสร้างภาพ</div>
           <div class="prompt-render-step" data-render-step="displaying">กำลังแสดงผล</div>
-        </div>
-        <div class="prompt-render-result" id="promptRenderResult" hidden>
-          <div class="prompt-result-head"><span class="prompt-result-badge" id="promptResultBadge">3D-Based Render</span><span class="prompt-result-request" id="promptResultRequest"></span></div>
-          <img class="prompt-result-image" id="promptResultImage" alt="ผลลัพธ์จาก AI Render" hidden>
-          <div class="concept-proposal" id="conceptProposal" hidden>
-            <h4>Scene Proposal</h4>
-            <div class="concept-proposal-summary" id="conceptProposalSummary"></div>
-            <div class="concept-proposal-list" id="conceptProposalList"></div>
-            <div class="concept-proposal-actions">
-              <button class="btn pri" type="button" id="conceptAddAll">เพิ่มทั้งหมดที่มีโมเดล</button>
-              <button class="btn" type="button" id="conceptAddSelected">เพิ่มเฉพาะที่เลือก</button>
-              <button class="btn danger" type="button" id="conceptReject">ปฏิเสธข้อเสนอ</button>
-            </div>
-          </div>
         </div>
         <div class="prompt-dev-tools" id="promptDevTools" hidden>
           <label for="promptVariant">Development Prompt Variant</label>
@@ -1212,28 +1169,11 @@ select:focus{border-color:var(--acc)}
       <span class="tool-mode brand-move-mode" title="ลากโลโก้เพื่อย้ายตำแหน่ง">✥ ลากโลโก้เพื่อย้าย</span>
       <button class="btn move-mode on" id="btnMoveSmart" type="button" title="ลากตัว Asset เพื่อย้ายระดับเดิม หรือลาก Anchor ไปชนจุดและพื้นผิว" aria-label="เปิด Smart Move">✥ Smart Move</button>
       <details class="move-advanced" id="moveAdvanced">
-        <summary class="btn move-advanced-summary" title="ปรับตำแหน่งตามแกน X, Y และ Z ครั้งละ 5 เซนติเมตร">ปรับละเอียด</summary>
-        <div class="move-advanced-menu fine-position-menu" role="group" aria-label="ปรับตำแหน่ง Asset แบบละเอียด">
-          <div class="fine-position-head"><strong>Fine Position</strong><small>ครั้งละ 0.05 ม.</small></div>
-          <div class="fine-position-row">
-            <span class="fine-position-axis" aria-hidden="true">X</span>
-            <button class="btn fine-position-step" type="button" data-fine-axis="x" data-fine-delta="-0.05" aria-label="เลื่อน Asset ไปทางซ้าย 5 เซนติเมตร" title="X− ซ้าย 5 ซม.">−</button>
-            <output class="fine-position-value" id="finePositionX" aria-label="พิกัด X ปัจจุบัน">—</output>
-            <button class="btn fine-position-step" type="button" data-fine-axis="x" data-fine-delta="0.05" aria-label="เลื่อน Asset ไปทางขวา 5 เซนติเมตร" title="X+ ขวา 5 ซม.">+</button>
-          </div>
-          <div class="fine-position-row">
-            <span class="fine-position-axis" aria-hidden="true">Y</span>
-            <button class="btn fine-position-step" type="button" data-fine-axis="y" data-fine-delta="-0.05" aria-label="เลื่อน Asset ลง 5 เซนติเมตร" title="Y− ลง 5 ซม.">−</button>
-            <output class="fine-position-value" id="finePositionY" aria-label="พิกัด Y ปัจจุบัน">—</output>
-            <button class="btn fine-position-step" type="button" data-fine-axis="y" data-fine-delta="0.05" aria-label="เลื่อน Asset ขึ้น 5 เซนติเมตร" title="Y+ ขึ้น 5 ซม.">+</button>
-          </div>
-          <div class="fine-position-row">
-            <span class="fine-position-axis" aria-hidden="true">Z</span>
-            <button class="btn fine-position-step" type="button" data-fine-axis="z" data-fine-delta="-0.05" aria-label="เลื่อน Asset ไปด้านหลัง 5 เซนติเมตร" title="Z− ด้านหลัง 5 ซม.">−</button>
-            <output class="fine-position-value" id="finePositionZ" aria-label="พิกัด Z ปัจจุบัน">—</output>
-            <button class="btn fine-position-step" type="button" data-fine-axis="z" data-fine-delta="0.05" aria-label="เลื่อน Asset มาด้านหน้า 5 เซนติเมตร" title="Z+ ด้านหน้า 5 ซม.">+</button>
-          </div>
-          <div class="fine-position-help" id="finePositionHelp" role="status">เลือก Asset ที่ต้องการปรับ</div>
+        <summary class="btn move-advanced-summary" title="เลือกโหมดปรับตำแหน่งแบบละเอียด">ปรับละเอียด</summary>
+        <div class="move-advanced-menu" role="group" aria-label="โหมดปรับตำแหน่งแบบละเอียด">
+          <button class="btn move-mode" id="btnMovePlane" type="button" title="ย้ายซ้าย–ขวาและหน้า–หลัง" aria-label="ย้าย Asset บนแกน X และ Z">↔ พื้น X/Z</button>
+          <button class="btn move-mode" id="btnMoveHeight" type="button" title="ยกหรือลดระดับ" aria-label="ยกหรือลด Asset บนแกน Y">↕ ยก Y</button>
+          <button class="btn move-mode" id="btnMoveSurface" type="button" title="ลากไป Snap กับพื้น ผนัง เพดาน โครงสร้าง หรือ Asset อื่น" aria-label="Snap Asset เข้ากับพื้นผิว">⌁ Snap ผิว</button>
         </div>
       </details>
       <button class="btn" id="btnLockObject" type="button" title="ล็อก Asset" aria-label="ล็อก Asset ที่เลือก">Lock</button>
@@ -1573,7 +1513,6 @@ select:focus{border-color:var(--acc)}
 </div>
 <script src="js/quick-setup.js?v=20260830-1"></script>
 <script src="js/ai-staging.js?v=20260830-1"></script>
-<script src="js/ai-render-intent.js?v=20260831-1"></script>
 <script src="js/ai-render-pipeline.js?v=20260830-1"></script>
 <script>
 /* ================= ข้อมูล ================= */
@@ -1793,7 +1732,7 @@ const defaultAIStagingSettings=()=>globalThis.YPAIStaging?.normalizeAIStaging({}
 function defaultAIRenderingSettings(){
   return{schemaVersion:AI_RENDER_SCHEMA_VERSION,allowOptionalProps:true,
     optionalPermissions:{furniture:true,products:true,plants:true,people:true,decor:true,props:true},
-    renderStyle:AI_RENDER_STYLE_DEFAULT,promptVariant:'full',renderIntent:'from3d',quality:'preview',camera:null,preview:null};
+    renderStyle:AI_RENDER_STYLE_DEFAULT,promptVariant:'full',camera:null,preview:null};
 }
 const BoothSpec={version:3,cat:'food',customBusinessCategory:'',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
   wallCol:'white',wallMat:'paint',wallStickerFaces:[],wallStickers:{
@@ -1947,7 +1886,6 @@ const objectSnapshot=()=>JSON.stringify({objects:S.objects,sceneItemState:S.scen
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
 const objectLocked=obj=>obj?.locked===true;
 const ASSET_LIST_CATEGORIES=[
-  {key:'ai-suggested',label:'AI Suggested'},
   {key:'structure',label:'โครงสร้าง'},
   {key:'branding',label:'โลโก้และกราฟิก'},
   {key:'furniture',label:'เฟอร์นิเจอร์'},
@@ -1956,7 +1894,6 @@ const ASSET_LIST_CATEGORIES=[
   {key:'decor',label:'ของตกแต่ง'}
 ];
 const assetListUI={open:false,query:'',filter:'all',anchorId:null,lastPrimary:null};
-const aiConceptUI={proposal:null,suggestions:[],selectedIds:new Set(),lastReport:null,imageUrl:''};
 function systemSceneItems(){
   const items=[{id:'system-floor',name:'พื้นบูธ',type:'พื้น',category:'structure',icon:'▱',system:true,locked:true}];
   (typ().walls||[]).forEach(face=>items.push({id:'system-wall-'+face,name:{back:'ผนังหลัง',left:'ผนังซ้าย',right:'ผนังขวา'}[face]||'ผนัง',type:'ผนัง',category:'structure',icon:'▥',system:true,locked:true}));
@@ -1978,13 +1915,9 @@ function objectSceneCategory(obj,item=objectCatalogDef(obj?.catalogId)){
   return'equipment';
 }
 function sceneItems(){
-  const suggestions=aiConceptUI.suggestions.map(suggestion=>({
-    id:'ai-suggested-'+suggestion.id,name:suggestion.name,type:suggestion.status||'AI Suggested',category:'ai-suggested',icon:'AI',thumb:'',system:false,
-    aiSuggested:true,visible:true,locked:true,suggestion
-  }));
   return systemSceneItems().concat(S.objects.map(obj=>{const item=objectCatalogDef(obj.catalogId);normalizeSceneObjectModel(obj,item);return{
     id:obj.id,name:selectedAssetName(obj),type:item?.name||obj.type||'Asset',category:objectSceneCategory(obj,item),icon:item?.icon||'OBJ',thumb:item?.thumbUrl||'',system:false,
-    visible:obj.visible!==false,locked:objectLocked(obj),object:obj,item};}),suggestions);
+    visible:obj.visible!==false,locked:objectLocked(obj),object:obj,item};}));
 }
 const sceneItemById=id=>sceneItems().find(item=>item.id===id)||null;
 const sceneItemExists=id=>!!sceneItemById(id);
@@ -2022,7 +1955,6 @@ function resetBoothToInitialState(){
   objectEditor.future.length=0;
   objectEditor.seq=0;
   logoEditor.selected=false;
-  aiConceptUI.proposal=null;aiConceptUI.suggestions=[];aiConceptUI.selectedIds.clear();aiConceptUI.lastReport=null;
   lastValidLayout=null;
 
   closeAssetSettings();
@@ -2065,8 +1997,6 @@ function normalizeAIRenderingSettings(spec=S){
     decor:staging.enabled&&staging.allowDecor,props:staging.enabled&&staging.allowDecor};
   source.renderStyle=aiRenderStyle(source.renderStyle).key;
   source.promptVariant=['full','compact'].includes(source.promptVariant)?source.promptVariant:'full';
-  source.renderIntent=globalThis.YPAIRenderIntent?.normalizeIntent(source.renderIntent)||'from3d';
-  source.quality=globalThis.YPAIRenderIntent?.normalizeQuality(source.quality)||'preview';
   source.camera=source.camera&&typeof source.camera==='object'?source.camera:null;
   source.preview=source.preview&&typeof source.preview==='object'?source.preview:null;
   spec.aiRendering=source;return source;
@@ -3094,13 +3024,13 @@ function renderAssetList(){
   if(!items.length)body.innerHTML='<div class="asset-list-empty">ไม่พบ Asset ตามคำค้นหาหรือตัวกรองนี้</div>';
   else body.innerHTML=ASSET_LIST_CATEGORIES.map(category=>{const rows=items.filter(item=>item.category===category.key);if(!rows.length)return'';
     return'<section class="asset-list-category"><div class="asset-list-category-title"><span>'+esc(category.label)+'</span><span>'+rows.length+'</span></div>'+rows.map(item=>{
-      const thumb=item.thumb?'<img src="'+esc(item.thumb)+'" alt="">':esc(item.icon||'OBJ'),systemLabel=item.system?' · System':item.aiSuggested?' · ยังไม่เพิ่มใน Project':'';
-      return'<div class="asset-list-row'+(selected.has(item.id)?' selected':'')+(item.visible?'':' hidden-item')+(item.aiSuggested?' ai-suggested':'')+'" data-scene-item="'+esc(item.id)+'" tabindex="0" role="option" aria-selected="'+selected.has(item.id)+'">'+
+      const thumb=item.thumb?'<img src="'+esc(item.thumb)+'" alt="">':esc(item.icon||'OBJ'),systemLabel=item.system?' · System':'';
+      return'<div class="asset-list-row'+(selected.has(item.id)?' selected':'')+(item.visible?'':' hidden-item')+'" data-scene-item="'+esc(item.id)+'" tabindex="0" role="option" aria-selected="'+selected.has(item.id)+'">'+
         '<input class="asset-list-check" type="checkbox" '+(selected.has(item.id)?'checked ':'')+'aria-label="เลือก '+esc(item.name)+'">'+
-        '<span class="asset-list-thumb">'+thumb+'</span><span class="asset-list-copy"><span class="asset-list-name">'+esc(item.name)+'</span><span class="asset-list-type'+(item.system?' asset-list-system':'')+(item.aiSuggested?' asset-list-ai-status':'')+'">'+esc(item.type+systemLabel)+'</span></span>'+
-        '<button class="asset-list-icon-btn" type="button" data-list-action="focus" title="Focus" aria-label="จัดกล้องไปที่ '+esc(item.name)+'" '+(item.aiSuggested?'disabled':'')+'>◎</button>'+
-        '<button class="asset-list-icon-btn'+(item.visible?' on':'')+'" type="button" data-list-action="visibility" title="'+(item.visible?'ซ่อน':'แสดง')+'" aria-label="'+(item.visible?'ซ่อน ':'แสดง ')+esc(item.name)+'" '+(item.aiSuggested?'disabled':'')+'>'+(item.visible?'◉':'○')+'</button>'+
-        '<button class="asset-list-icon-btn'+(item.locked?' on':'')+'" type="button" data-list-action="lock" title="'+(item.system?'System Lock':item.locked?'ปลดล็อก':'ล็อก')+'" aria-label="สถานะล็อก '+esc(item.name)+'" '+(item.system||item.aiSuggested?'disabled':'')+'>'+(item.locked?'▣':'▢')+'</button></div>';}).join('')+'</section>';}).join('');
+        '<span class="asset-list-thumb">'+thumb+'</span><span class="asset-list-copy"><span class="asset-list-name">'+esc(item.name)+'</span><span class="asset-list-type'+(item.system?' asset-list-system':'')+'">'+esc(item.type+systemLabel)+'</span></span>'+
+        '<button class="asset-list-icon-btn" type="button" data-list-action="focus" title="Focus" aria-label="จัดกล้องไปที่ '+esc(item.name)+'">◎</button>'+
+        '<button class="asset-list-icon-btn'+(item.visible?' on':'')+'" type="button" data-list-action="visibility" title="'+(item.visible?'ซ่อน':'แสดง')+'" aria-label="'+(item.visible?'ซ่อน ':'แสดง ')+esc(item.name)+'">'+(item.visible?'◉':'○')+'</button>'+
+        '<button class="asset-list-icon-btn'+(item.locked?' on':'')+'" type="button" data-list-action="lock" title="'+(item.system?'System Lock':item.locked?'ปลดล็อก':'ล็อก')+'" aria-label="สถานะล็อก '+esc(item.name)+'" '+(item.system?'disabled':'')+'>'+(item.locked?'▣':'▢')+'</button></div>';}).join('')+'</section>';}).join('');
   body.querySelectorAll('[data-scene-item]').forEach(row=>{
     const id=row.dataset.sceneItem;
     row.onclick=event=>{const action=event.target.closest('[data-list-action]')?.dataset.listAction,item=sceneItemById(id);if(!item)return;
@@ -3114,7 +3044,7 @@ function renderAssetList(){
     row.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectSceneItem(id,{additive:event.ctrlKey||event.metaKey,toggle:event.ctrlKey||event.metaKey});}};
   });
   const chosen=selectedSceneItemIds().map(sceneItemById).filter(Boolean),objects=chosen.filter(item=>item.object),primary=sceneItemById(objectEditor.selectedId);
-  const buttonState={assetListRename:!primary||primary.aiSuggested,assetListDuplicate:!primary?.object||primary.locked,assetListGroup:objects.length<2||objects.some(item=>item.locked),assetListUngroup:!objects.some(item=>item.object.groupId),assetListFocus:!primary||primary.aiSuggested,assetListLock:!objects.length,assetListVisibility:!chosen.length||chosen.some(item=>item.aiSuggested),assetListDelete:!objects.length||chosen.some(item=>item.system||item.locked||item.aiSuggested)};
+  const buttonState={assetListRename:!primary,assetListDuplicate:!primary?.object||primary.locked,assetListGroup:objects.length<2||objects.some(item=>item.locked),assetListUngroup:!objects.some(item=>item.object.groupId),assetListFocus:!primary,assetListLock:!objects.length,assetListVisibility:!chosen.length,assetListDelete:!objects.length||chosen.some(item=>item.system||item.locked)};
   Object.entries(buttonState).forEach(([id,disabled])=>{const button=document.getElementById(id);if(button)button.disabled=disabled;});
   const lock=document.getElementById('assetListLock'),visibility=document.getElementById('assetListVisibility');if(lock)lock.textContent=objects.length&&objects.every(item=>item.locked)?'ปลดล็อก':'ล็อก';if(visibility)visibility.textContent=chosen.length&&chosen.every(item=>!item.visible)?'แสดง':'ซ่อน';
   if(assetListUI.open&&objectEditor.selectedId&&assetListUI.lastPrimary!==objectEditor.selectedId){assetListUI.lastPrimary=objectEditor.selectedId;requestAnimationFrame(()=>body.querySelector('[data-scene-item="'+CSS.escape(objectEditor.selectedId)+'"]')?.scrollIntoView({block:'nearest'}));}
@@ -3402,55 +3332,6 @@ function selectedAlignmentBounds(obj){
   return{...horizontal,centerX:(horizontal.minX+horizontal.maxX)/2,centerZ:(horizontal.minZ+horizontal.maxZ)/2,
     minY:base,maxY:base+(Number(size.h)||0),centerY:base+(Number(size.h)||0)/2};
 }
-const FINE_POSITION_STEP=.05;
-function finePositionAxisOverflow(bounds,axis){
-  if(axis==='x')return Math.max(0,-bounds.minX)+Math.max(0,bounds.maxX-S.W);
-  if(axis==='y')return Math.max(0,-bounds.minY);
-  if(axis==='z')return Math.max(0,-bounds.minZ)+Math.max(0,bounds.maxZ-S.D);
-  return Infinity;
-}
-function shiftedFinePositionBounds(bounds,axis,delta){
-  const next={...bounds};
-  if(axis==='x'){next.minX+=delta;next.maxX+=delta;next.centerX+=delta;}
-  else if(axis==='y'){next.minY+=delta;next.maxY+=delta;next.centerY+=delta;}
-  else if(axis==='z'){next.minZ+=delta;next.maxZ+=delta;next.centerZ+=delta;}
-  return next;
-}
-function finePositionPrimaryObject(objects=selectedObjects()){
-  return objectById(objectEditor.selectedId)||objects.at(-1)||null;
-}
-function syncFinePositionControls(){
-  const objects=selectedObjects(),primary=finePositionPrimaryObject(objects),locked=objects.some(objectLocked),buttons=document.querySelectorAll('[data-fine-axis]'),help=document.getElementById('finePositionHelp');
-  ['x','y','z'].forEach(axis=>{const output=document.getElementById('finePosition'+axis.toUpperCase());if(output)output.textContent=primary?Number(primary.position?.[axis]||0).toFixed(2)+' ม.':'—';});
-  buttons.forEach(button=>button.disabled=!objects.length||locked);
-  const summary=document.querySelector('#moveAdvanced>summary');if(summary)summary.setAttribute('aria-disabled',String(!objects.length||locked));
-  if(!help)return;
-  help.classList.toggle('is-warning',!objects.length||locked);
-  help.textContent=!objects.length?'เลือก Asset ที่ต้องการปรับ':locked?'ปลดล็อก Asset ก่อนปรับตำแหน่ง':objects.length>1?'เลือก '+objects.length+' ชิ้น · เลื่อนพร้อมกันด้วย Delta เดียวกัน':'Global Axis · X ซ้าย/ขวา · Y ลง/ขึ้น · Z หลัง/หน้า';
-}
-function fineMoveSelectedObjects(axis,delta){
-  if(!['x','y','z'].includes(axis))return false;
-  const direction=Math.sign(Number(delta));if(!direction)return false;delta=direction*FINE_POSITION_STEP;
-  const objects=selectedObjects();
-  if(!objects.length){syncFinePositionControls();return announceCatalog('เลือก Asset ที่ต้องการปรับ','error'),false;}
-  if(objects.some(objectLocked)){syncFinePositionControls();return announceCatalog('ปลดล็อก Asset ก่อนปรับตำแหน่ง','error'),false;}
-  const epsilon=.0001,blocked=objects.some(obj=>{
-    const current=selectedAlignmentBounds(obj),next=shiftedFinePositionBounds(current,axis,delta),beforeOverflow=finePositionAxisOverflow(current,axis),afterOverflow=finePositionAxisOverflow(next,axis);
-    return afterOverflow>epsilon&&afterOverflow>=beforeOverflow-epsilon;
-  });
-  if(blocked){
-    const direction=axis==='x'?(delta<0?'ซ้าย':'ขวา'):axis==='y'?(delta<0?'ลง':'ขึ้น'):(delta<0?'ด้านหลัง':'ด้านหน้า');
-    announceCatalog('เลื่อนไปทาง'+direction+'ไม่ได้ เพราะ Bounding Box ของ Asset จะอยู่นอกพื้นที่บูธ','error');syncFinePositionControls();return false;
-  }
-  const before=objectSnapshot();
-  objects.forEach(obj=>{
-    obj.position[axis]=+(Number(obj.position?.[axis]||0)+delta).toFixed(3);
-    obj.attachment=null;
-    if(obj.placement){obj.placement.mode='free';obj.placement.surface='free';obj.placement.targetId=null;obj.placement.anchorAttachment=null;}
-    normalizeSceneObjectModel(obj);
-  });
-  recordObjectHistory(before);sync();return true;
-}
 function alignSelectedObjects(mode){
   const objects=selectedObjects(),reference=objectById(objectEditor.selectedId);
   if(objects.length<2||!reference)return announceCatalog('กรุณาเลือก Asset อย่างน้อย 2 ชิ้น','error');
@@ -3559,15 +3440,14 @@ function syncObjectControls(){
   const toolbar=document.getElementById('objectToolbar'),workspaceNode=document.getElementById('workspace'),positionButton=document.getElementById('btnPositionLogo3D');
   if(toolbar){toolbar.classList.toggle('brand-selected',brandSelected);toolbar.classList.toggle('locked-selected',!!obj&&locked);
     toolbar.classList.toggle('no-object-selection',!obj&&!brandSelected);requestAnimationFrame(positionObjectToolbar);}
-  const moveButtons={smart:'btnMoveSmart'};
+  const moveButtons={smart:'btnMoveSmart',plane:'btnMovePlane',height:'btnMoveHeight',surface:'btnMoveSurface'};
   Object.entries(moveButtons).forEach(([mode,id])=>{const button=document.getElementById(id);if(!button)return;
     button.disabled=!obj||locked;button.classList.toggle('on',objectEditor.moveMode===mode);button.setAttribute('aria-pressed',String(objectEditor.moveMode===mode));});
-  const advanced=document.getElementById('moveAdvanced'),advancedSummary=advanced?.querySelector('summary');if(advancedSummary)advancedSummary.classList.toggle('on',!!advanced?.open);
+  const advanced=document.getElementById('moveAdvanced'),advancedSummary=advanced?.querySelector('summary');if(advancedSummary)advancedSummary.classList.toggle('on',objectEditor.moveMode!=='smart');
   if(workspaceNode){workspaceNode.classList.toggle('logo-placement-active',brandSelected);workspaceNode.classList.toggle('has-object-selection',!!obj);}
   if(toolbar&&obj){normalizeSceneObjectModel(obj);toolbar.classList.toggle('flipped-x',obj.transform.flipX);toolbar.classList.toggle('flipped-y',obj.transform.flipY);}
   if(positionButton){positionButton.classList.toggle('on',brandSelected);positionButton.textContent=brandSelected?'✓ พร้อมลากโลโก้ใน 3D':'จัดตำแหน่งใน 3D';}
   if(threeRenderer)threeRenderer.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
-  syncFinePositionControls();
   renderAssetList();
   window.dispatchEvent(new CustomEvent('yp:asset-editor-sync'));
 }
@@ -3889,35 +3769,15 @@ function buildCompactDesignPrompt(){
   ].filter(Boolean).join('\n');
 }
 function currentPromptVariant(){return normalizeAIRenderingSettings(S).promptVariant;}
-function currentRenderIntent(){return normalizeAIRenderingSettings(S).renderIntent;}
-function currentRenderQuality(){return normalizeAIRenderingSettings(S).quality;}
-function conceptPromptContext(){
-  const type=typ()||{},floor=(()=>{try{return(S.raise?'ยกพื้น '+S.raise+' ซม.':'ไม่ยกพื้น')+' · '+floorName();}catch(e){return S.floor||'ไม่ระบุ';}})();
-  return{business:businessCategoryLabel(S),primary:S.primary,secondary:S.secondary,style:aiRenderStyle(normalizeAIRenderingSettings(S).renderStyle).th+
-    ' ('+aiRenderStyle(normalizeAIRenderingSettings(S).renderStyle).en+')',floor,hasStorage:hasStore(),booth:{type:type.n||S.type,width:S.W,depth:S.D,height:S.H,openSides:type.s||''}};
-}
-function buildConceptDesignPrompt(){
-  return globalThis.YPAIRenderIntent?.buildConceptPrompt(conceptPromptContext())||'AI CONCEPT DESIGN · '+JSON.stringify(conceptPromptContext());
-}
-function buildDesignPrompt(variant=currentPromptVariant(),intent=currentRenderIntent()){
-  if(intent==='concept')return buildConceptDesignPrompt();
+function buildDesignPrompt(variant=currentPromptVariant()){
   return variant==='compact'?buildCompactDesignPrompt():buildFullDesignPrompt();
-}
-function setRenderIntent(value,{update=true}={}){
-  normalizeAIRenderingSettings(S).renderIntent=globalThis.YPAIRenderIntent?.normalizeIntent(value)||'from3d';
-  if(update)updatePromptPreview();return currentRenderIntent();
-}
-function setRenderQuality(value){
-  normalizeAIRenderingSettings(S).quality=globalThis.YPAIRenderIntent?.normalizeQuality(value)||'preview';
-  document.querySelectorAll('[data-render-quality]').forEach(button=>{const on=button.dataset.renderQuality===currentRenderQuality();button.classList.toggle('on',on);button.setAttribute('aria-checked',String(on));});
-  return currentRenderQuality();
 }
 function updatePromptPreview(){
   syncPromptRenderStyleControls();
   syncPromptStagingControls();
   const variant=document.getElementById('promptVariant');if(variant&&variant.value!==currentPromptVariant())variant.value=currentPromptVariant();
   const field=document.getElementById('designPrompt');
-  if(field)field.value=buildDesignPrompt(currentPromptVariant(),currentRenderIntent());
+  if(field)field.value=buildDesignPrompt();
 }
 async function copyDesignPrompt(){
   const field=document.getElementById('designPrompt'),status=document.getElementById('promptStatus');
@@ -3960,15 +3820,13 @@ const aiRenderPipeline=globalThis.YPAIRenderPipeline?.create({development:AI_REN
 function updateAIRenderStatus(payload={}){
   const progress=document.getElementById('promptRenderProgress'),status=document.getElementById('promptStatus');
   const order=['preparing','uploading','generating','displaying'],activeIndex=order.indexOf(payload.status);
-  const uploadStep=document.querySelector('[data-render-step="uploading"]');if(uploadStep)uploadStep.textContent=currentRenderIntent()==='concept'?'กำลังเตรียม Concept':'กำลังอัปโหลดแบบ 3D';
   if(progress)progress.hidden=!order.includes(payload.status)&&payload.status!=='complete'&&payload.status!=='error';
   document.querySelectorAll('[data-render-step]').forEach((step,index)=>{
     step.classList.toggle('is-active',activeIndex===index);
     step.classList.toggle('is-done',payload.status==='complete'||(activeIndex>=0&&index<activeIndex));
     step.classList.toggle('is-error',payload.status==='error'&&index===Math.max(0,activeIndex));
   });
-  const statusLabel=payload.status==='uploading'&&currentRenderIntent()==='concept'?'กำลังเตรียม Concept':payload.label;
-  if(status)status.textContent=statusLabel+(payload.detail?' · '+payload.detail:'')+(payload.requestId?' · '+payload.requestId:'');
+  if(status)status.textContent=payload.label+(payload.detail?' · '+payload.detail:'')+(payload.requestId?' · '+payload.requestId:'');
 }
 function aiReferenceLimits(){
   const size=threeRenderer?.lastSize||[],expectedAspect=Number(size[0])&&Number(size[1])?Number(size[0])/Number(size[1]):0;
@@ -3977,76 +3835,21 @@ function aiReferenceLimits(){
 async function prepareAIRenderReference(){
   return createCleanScreenshot({download:false,minLongEdge:1536,maxLongEdge:2048,maxBytes:4*1024*1024,includeDataUrl:false});
 }
-function extractAIRenderImage(result){
-  if(typeof result==='string'&&/^(data:|blob:|https?:)/.test(result))return result;
-  const candidates=[result?.imageUrl,result?.image_url,result?.url,result?.dataUrl,result?.output?.imageUrl,result?.image?.url];
-  const found=candidates.find(value=>typeof value==='string'&&value);if(found)return found;
-  const blob=result?.imageBlob||result?.blob;return typeof Blob!=='undefined'&&blob instanceof Blob?URL.createObjectURL(blob):'';
-}
-function matchedConceptSuggestion(source){
-  const suggestion={...source},match=globalThis.YPAIRenderIntent?.matchSuggestedAsset(suggestion,allObjectCatalog());
-  suggestion.matchedCatalogId=match?.catalogId||null;suggestion.matchName=match?.item?.name||'';
-  if(!suggestion.renderOnly&&!match){suggestion.renderOnly=true;suggestion.status='Render Staging เท่านั้น · ไม่พบโมเดล 3D ที่ตรง';}
-  return suggestion;
-}
-function renderAIConceptProposal(){
-  const panel=document.getElementById('conceptProposal'),list=document.getElementById('conceptProposalList'),summary=document.getElementById('conceptProposalSummary');
-  if(!panel||!list||!summary)return;const proposal=aiConceptUI.proposal,suggestions=aiConceptUI.suggestions;
-  panel.hidden=!proposal;if(!proposal)return;
-  summary.textContent=proposal.summary||'AI เสนอองค์ประกอบสำหรับทำให้บูธพร้อมใช้งานจริง กรุณาตรวจและยืนยันก่อนเพิ่มลง Project';
-  if(!suggestions.length)list.innerHTML='<div class="asset-list-empty">ผลลัพธ์นี้ไม่มี Asset 3D ที่เสนอเพิ่มเติม</div>';
-  else list.innerHTML=suggestions.map(item=>'<label class="concept-proposal-row"><input type="checkbox" data-concept-suggestion="'+esc(item.id)+'" '+(aiConceptUI.selectedIds.has(item.id)?'checked ':'')+(item.confirmed?'disabled ':'')+'><span><b>'+esc(item.name)+'</b><small>'+esc(item.category+' · '+item.dimensions.w.toFixed(2)+' × '+item.dimensions.d.toFixed(2)+' × '+item.dimensions.h.toFixed(2)+' ม.'+(item.matchName?' · จับคู่ '+item.matchName:''))+'</small></span><span class="concept-proposal-status">'+esc(item.status)+'</span></label>').join('');
-  list.querySelectorAll('[data-concept-suggestion]').forEach(input=>input.onchange=()=>{input.checked?aiConceptUI.selectedIds.add(input.dataset.conceptSuggestion):aiConceptUI.selectedIds.delete(input.dataset.conceptSuggestion);});
-  renderAssetList();
-}
-function setAIConceptProposal(result){
-  const proposal=globalThis.YPAIRenderIntent?.normalizeSceneProposal(result)||{summary:'',suggestedAssets:[]};
-  aiConceptUI.proposal=proposal;aiConceptUI.suggestions=proposal.suggestedAssets.map(matchedConceptSuggestion);aiConceptUI.selectedIds=new Set(aiConceptUI.suggestions.map(item=>item.id));renderAIConceptProposal();return proposal;
-}
-function displayAIRenderOutcome(report,intent){
-  const raw=report?.rawResult&&typeof report.rawResult==='object'?report.rawResult:{},displayed=report?.result&&typeof report.result==='object'?report.result:{},result=typeof report?.result==='string'?report.result:{...raw,...displayed},panel=document.getElementById('promptRenderResult'),badge=document.getElementById('promptResultBadge'),request=document.getElementById('promptResultRequest'),image=document.getElementById('promptResultImage');
-  if(!panel)return;panel.hidden=false;if(badge)badge.textContent=intent==='concept'?'AI Concept — ผังยังไม่ยืนยัน':'3D-Based Render';if(request)request.textContent=report?.requestId||'';
-  const src=extractAIRenderImage(result);if(image){image.hidden=!src;if(src)image.src=src;}
-  if(intent==='concept')setAIConceptProposal(result);else{aiConceptUI.proposal=null;aiConceptUI.suggestions=[];aiConceptUI.selectedIds.clear();renderAIConceptProposal();renderAssetList();}
-  aiConceptUI.lastReport=report;
-}
-function clearAIConceptProposal(){
-  const suggestionIds=new Set(aiConceptUI.suggestions.map(item=>'ai-suggested-'+item.id));setObjectSelection(selectedSceneItemIds().filter(id=>!suggestionIds.has(id)),objectEditor.selectedId&&!suggestionIds.has(objectEditor.selectedId)?objectEditor.selectedId:null);
-  aiConceptUI.proposal=null;aiConceptUI.suggestions=[];aiConceptUI.selectedIds.clear();renderAIConceptProposal();syncObjectControls();renderAssetList();
-}
-function confirmAIConceptSuggestions(mode='selected'){
-  const selected=(mode==='all'?aiConceptUI.suggestions:aiConceptUI.suggestions.filter(item=>aiConceptUI.selectedIds.has(item.id))).filter(item=>!item.confirmed);if(!selected.length)return;
-  const before=objectSnapshot(),created=[],acceptedRenderOnly=[];
-  selected.forEach(suggestion=>{
-    if(suggestion.renderOnly||!suggestion.matchedCatalogId){suggestion.confirmed=true;suggestion.status='Render Staging · ยืนยันสำหรับภาพ';acceptedRenderOnly.push(suggestion);return;}
-    const obj=makeCatalogObject(suggestion.matchedCatalogId);if(!obj)return;const position=suggestion.position,size=obj.size||suggestion.dimensions;
-    if(position){obj.position.x=clampNumber(position.x,size.w/2,Math.max(size.w/2,S.W-size.w/2));obj.position.z=clampNumber(position.z,size.d/2,Math.max(size.d/2,S.D-size.d/2));obj.position.y=Math.max(0,Number(position.y)||0);}
-    else{const staging=frontAssetStagingPlacement(size,obj.rotationY||0);obj.position.x=staging.x;obj.position.z=staging.z;obj.placement.allowOutsideBooth=true;}
-    obj.rotationY=Number(suggestion.rotationY)||0;obj.aiSource={status:'AI Suggested · ยืนยันแล้ว',proposalId:suggestion.id,renderIntent:'concept'};normalizeSceneObjectModel(obj,objectCatalogDef(obj.catalogId));S.objects.push(obj);created.push(obj);
-  });
-  if(created.length){recordObjectHistory(before);setObjectSelection(created.map(obj=>obj.id),created.at(-1).id);}
-  const createdIds=new Set(selected.filter(item=>!item.renderOnly&&item.matchedCatalogId).map(item=>item.id));aiConceptUI.suggestions=aiConceptUI.suggestions.filter(item=>!createdIds.has(item.id));aiConceptUI.selectedIds=new Set(acceptedRenderOnly.map(item=>item.id));
-  sync();renderAIConceptProposal();announceCatalog('ยืนยันและเพิ่ม Asset จาก AI '+created.length+' ชิ้น'+(acceptedRenderOnly.length?' · Render Staging '+acceptedRenderOnly.length+' รายการไม่ถูกเพิ่มเป็น Geometry':''),'success');
-}
 function syncAIRenderControls(){
-  const renders=[document.getElementById('promptRenderConcept'),document.getElementById('promptRender3d')].filter(Boolean),ab=document.getElementById('promptRunAB'),tools=document.getElementById('promptDevTools');
+  const render=document.getElementById('promptRenderAi'),ab=document.getElementById('promptRunAB'),tools=document.getElementById('promptDevTools');
   const ready=!!aiRenderPipeline?.ready(),busy=!!aiRenderPipeline?.active;
-  renders.forEach(render=>{render.disabled=!ready||busy;render.setAttribute('aria-disabled',String(!ready||busy));render.title=ready?(busy?'กำลังสร้างภาพ':'สร้างภาพด้วย AI Render Adapter ที่เชื่อมต่อแล้ว'):'ยังไม่ได้เชื่อมต่อ AI Render API';});
+  if(render){render.disabled=!ready||busy;render.setAttribute('aria-disabled',String(!ready||busy));render.title=ready?(busy?'กำลังสร้างภาพ':'สร้างภาพด้วย AI Render Adapter ที่เชื่อมต่อแล้ว'):'ยังไม่ได้เชื่อมต่อ AI Render API';
+    const note=render.querySelector('.prompt-soon');if(note)note.textContent=ready?(busy?'กำลังทำงาน':'พร้อมสร้างภาพ'):'รอเชื่อมต่อ API';}
   if(tools)tools.hidden=!AI_RENDER_DEVELOPMENT;
   if(ab)ab.disabled=!ready||busy;
   const variant=document.getElementById('promptVariant');if(variant)variant.value=currentPromptVariant();
-  setRenderQuality(currentRenderQuality());
 }
-async function runAIRender(intent=currentRenderIntent()){
+async function runAIRender(){
   if(!aiRenderPipeline?.ready()){syncAIRenderControls();return null;}
-  intent=setRenderIntent(intent);syncAIRenderControls();
+  syncAIRenderControls();
   try{
-    const concept=intent==='concept',report=await aiRenderPipeline.run({renderIntent:intent,quality:currentRenderQuality(),requiresReference:!concept,
-      promptVariant:currentPromptVariant(),buildPrompt:context=>buildDesignPrompt(context.promptVariant,intent),
-      prepareReferenceImage:concept?undefined:prepareAIRenderReference,referenceLimits:concept?undefined:aiReferenceLimits(),
-      projectContext:concept?conceptPromptContext():{geometryManifest:buildGeometryManifest(S),camera:currentCameraManifest(S)},
-      expectedOutput:concept?{image:true,sceneProposal:true,suggestedAssetsStatus:'AI Suggested'}:{image:true,label:'3D-Based Render'}});
-    displayAIRenderOutcome(report,intent);return report;
+    return await aiRenderPipeline.run({promptVariant:currentPromptVariant(),buildPrompt:context=>buildDesignPrompt(context.promptVariant),
+      prepareReferenceImage:prepareAIRenderReference,referenceLimits:aiReferenceLimits()});
   }catch(error){console.error('AI Render failed',error);return null;}
   finally{syncAIRenderControls();}
 }
@@ -4064,7 +3867,6 @@ function formatAIRenderABReport(result){
 }
 async function runAIRenderABTest(){
   if(!aiRenderPipeline?.ready()){syncAIRenderControls();return null;}
-  setRenderIntent('from3d');
   const report=document.getElementById('promptDevReport');if(report)report.textContent='กำลังรัน Full และ Compact ด้วยภาพอ้างอิงเดียวกัน…';
   syncAIRenderControls();
   try{
@@ -4078,15 +3880,10 @@ function configureAIRenderAdapter(adapter){const ready=!!aiRenderPipeline?.confi
 window.YPAIRenderBridge=Object.freeze({
   configureAdapter:configureAIRenderAdapter,
   run:runAIRender,
-  runConcept:()=>runAIRender('concept'),
-  runFrom3D:()=>runAIRender('from3d'),
   runABTest:runAIRenderABTest,
-  buildPrompt:(variant,intent=currentRenderIntent())=>buildDesignPrompt(variant,intent),
+  buildPrompt:variant=>buildDesignPrompt(variant),
   prepareReferenceImage:prepareAIRenderReference,
-  setConceptProposal:setAIConceptProposal,
-  confirmSuggestions:confirmAIConceptSuggestions,
-  rejectSuggestions:clearAIConceptProposal,
-  getState:()=>({ready:!!aiRenderPipeline?.ready(),active:aiRenderPipeline?.active||null,lastReport:aiRenderPipeline?.lastReport||null,promptVariant:currentPromptVariant(),renderIntent:currentRenderIntent(),quality:currentRenderQuality(),suggestions:aiConceptUI.suggestions})
+  getState:()=>({ready:!!aiRenderPipeline?.ready(),active:aiRenderPipeline?.active||null,lastReport:aiRenderPipeline?.lastReport||null,promptVariant:currentPromptVariant()})
 });
 function hx(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');
   return[parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];}
@@ -4441,10 +4238,9 @@ function build(){
   document.getElementById('btnUndoObject').onclick=undoObjectChange;
   document.getElementById('btnRedoObject').onclick=redoObjectChange;
   document.getElementById('btnMoveSmart').onclick=()=>setObjectMoveMode('smart');
-  document.querySelectorAll('[data-fine-axis]').forEach(button=>button.onclick=event=>{
-    event.preventDefault();event.stopPropagation();fineMoveSelectedObjects(button.dataset.fineAxis,button.dataset.fineDelta);
-  });
-  document.getElementById('moveAdvanced').ontoggle=syncFinePositionControls;
+  document.getElementById('btnMovePlane').onclick=()=>setObjectMoveMode('plane');
+  document.getElementById('btnMoveHeight').onclick=()=>setObjectMoveMode('height');
+  document.getElementById('btnMoveSurface').onclick=()=>setObjectMoveMode('surface');
   document.getElementById('btnLockObject').onclick=toggleSelectedObjectLock;
   document.getElementById('btnRotateObject').onclick=rotateSelectedObject;
   document.getElementById('btnFlipObjectX').onclick=()=>flipSelectedObject('x');
@@ -7212,14 +7008,8 @@ const promptCopyButton=document.getElementById('promptCopy');
 if(promptCopyButton)promptCopyButton.onclick=copyDesignPrompt;
 const promptCleanScreenshotButton=document.getElementById('promptCleanScreenshot');
 if(promptCleanScreenshotButton)promptCleanScreenshotButton.onclick=downloadCleanScreenshot;
-const promptRenderConceptButton=document.getElementById('promptRenderConcept');
-if(promptRenderConceptButton)promptRenderConceptButton.onclick=()=>runAIRender('concept');
-const promptRender3dButton=document.getElementById('promptRender3d');
-if(promptRender3dButton)promptRender3dButton.onclick=()=>runAIRender('from3d');
-document.querySelectorAll('[data-render-quality]').forEach(button=>button.onclick=()=>setRenderQuality(button.dataset.renderQuality));
-const conceptAddAll=document.getElementById('conceptAddAll');if(conceptAddAll)conceptAddAll.onclick=()=>confirmAIConceptSuggestions('all');
-const conceptAddSelected=document.getElementById('conceptAddSelected');if(conceptAddSelected)conceptAddSelected.onclick=()=>confirmAIConceptSuggestions('selected');
-const conceptReject=document.getElementById('conceptReject');if(conceptReject)conceptReject.onclick=clearAIConceptProposal;
+const promptRenderAiButton=document.getElementById('promptRenderAi');
+if(promptRenderAiButton)promptRenderAiButton.onclick=runAIRender;
 const promptRunABButton=document.getElementById('promptRunAB');
 if(promptRunABButton)promptRunABButton.onclick=runAIRenderABTest;
 const promptVariantSelect=document.getElementById('promptVariant');

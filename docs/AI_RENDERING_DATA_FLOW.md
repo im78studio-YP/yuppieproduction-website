@@ -267,3 +267,48 @@ Development mode provides Full and Compact Prompt variants plus an A/B runner. A
 - leaves visual quality comparison to a reviewer because the pipeline must not invent a quality score.
 
 Full Prompt is the default and preserves current behavior. Compact Prompt removes repeated booth dimensions, coordinates, floor, and wall declarations while keeping the single authoritative coordinate system, every locked transform, camera lock, Auto-Staging rules, and negative geometry constraints.
+
+## 12. Render Intent
+
+Render Intent is independent from output quality (`preview` or `final`). The user must choose one of two explicit workflows before submitting a provider request.
+
+### AI Concept Design
+
+- Source of truth: Quick Setup values and current Project State.
+- Does not capture, prepare, or upload a Clean Screenshot.
+- Uses concept-level geometry fidelity and high Auto-Staging freedom.
+- Requests both a concept image and a `sceneProposal.suggestedAssets` payload.
+- Suggested assets are transient `AI Suggested` rows in Asset List. They are excluded from Project State, BOQ, production scope, and confirmed geometry until accepted.
+- Suggested people, generic products, and props without a matching 3D catalog model remain Render Staging only.
+- Catalog-backed suggestions are matched by category and closest dimensions. The user may accept all, accept selected rows, or reject the proposal.
+- Accepting catalog-backed suggestions creates Project objects in one undoable history action.
+
+### Render from 3D
+
+- Source of truth: Clean Canvas, Geometry Manifest, camera, Project State, and actual Asset transforms.
+- Geometry fidelity is forced to 10/10.
+- The provider must not alter booth dimensions, floor, walls, storage room, openings, or confirmed Asset positions.
+- The output is labeled `3D-Based Render`; Concept output is labeled `AI Concept — ผังยังไม่ยืนยัน`.
+
+### Provider response shape for Concept mode
+
+```json
+{
+  "imageUrl": "provider-result-url",
+  "sceneProposal": {
+    "summary": "Short proposal summary",
+    "suggestedAssets": [
+      {
+        "id": "suggestion-1",
+        "name": "Reception counter",
+        "category": "furniture",
+        "dimensions": { "w": 1.2, "d": 0.6, "h": 1.0 },
+        "position": { "x": 3.0, "y": 0.0, "z": 2.2 },
+        "rotationY": 0
+      }
+    ]
+  }
+}
+```
+
+The pipeline report preserves both the provider's raw result and the optional display adapter result so the image and Scene Proposal remain available even when `displayResult` returns a display-only value.
