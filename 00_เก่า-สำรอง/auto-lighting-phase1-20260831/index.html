@@ -488,37 +488,6 @@ select:focus{border-color:var(--acc)}
 .fixed-spec{display:flex;align-items:center;justify-content:space-between;margin-top:9px;padding:9px 11px;border:1px solid var(--line);
   border-radius:9px;background:rgba(255,255,255,.025);font-size:11px;color:var(--tx3)}
 .fixed-spec b{font:600 12px Inter,sans-serif;color:var(--tx2)}
-.lighting-mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
-.lighting-mode-tabs .opt.on{border-color:var(--acc);background:rgba(var(--acc-rgb),.12);color:var(--acc2)}
-.auto-lighting-panel{display:grid;gap:12px}
-.auto-lighting-panel[hidden]{display:none!important}
-.auto-lighting-field>label{display:block;margin:0 0 6px;color:var(--tx2);font-size:10.5px;font-weight:600}
-.auto-lighting-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-.auto-lighting-options.four{grid-template-columns:repeat(4,minmax(0,1fr))}
-.auto-lighting-options .opt{min-height:40px;padding:7px 6px;font-size:10.5px}
-.auto-lighting-options .opt small{margin-top:2px;font-size:8.5px}
-.auto-lighting-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.auto-lighting-actions .btn{min-height:42px;white-space:normal}
-.auto-lighting-actions .btn.pri{grid-column:1/-1}
-.auto-lighting-summary{padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.025);color:var(--tx2);font-size:10.5px;line-height:1.55}
-.auto-lighting-summary b{color:var(--acc2)}
-.auto-lighting-summary.is-warning{border-color:#8c5638;color:#efb08b}
-.auto-lighting-editor{border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.018);overflow:hidden}
-.auto-lighting-editor summary{cursor:pointer;padding:10px 11px;color:var(--tx2);font-size:11px;font-weight:700;list-style:none}
-.auto-lighting-editor summary::-webkit-details-marker{display:none}
-.auto-lighting-editor-body{display:grid;gap:8px;padding:0 10px 10px}
-.auto-lighting-editor select{width:100%;min-height:38px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--tx);padding:0 9px}
-.auto-lighting-fine{display:grid;grid-template-columns:28px 38px 1fr 38px 22px;gap:5px;align-items:center}
-.auto-lighting-fine b{font-size:11px;color:var(--acc2)}
-.auto-lighting-fine output{height:36px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;background:#10151c;font-variant-numeric:tabular-nums;font-size:11px}
-.auto-lighting-fine button,.auto-lighting-editor-actions button{min-height:36px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);color:var(--tx);font-weight:700;cursor:pointer}
-.auto-lighting-editor-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.auto-lighting-editor-actions .danger{color:#ff8c8c}
-.manual-lighting-advanced{margin-top:12px;border-top:1px solid var(--line)}
-.manual-lighting-advanced>summary{padding:12px 2px 3px;color:var(--tx2);font-size:11px;font-weight:650;cursor:pointer;list-style-position:inside}
-.manual-lighting-advanced[open]>summary{color:var(--acc2)}
-.manual-lighting-body{padding-top:6px}
-@media(max-width:520px){.auto-lighting-options.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .wrap.dock-collapsed{grid-template-columns:minmax(0,1fr) 72px 0}
 .wrap.dock-collapsed .panel{visibility:hidden;opacity:0;pointer-events:none}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
@@ -1096,38 +1065,9 @@ select:focus{border-color:var(--acc)}
   </div>
 
   <div class="sec" id="settingsLights">
-    <div class="sech"><h3>ระบบแสง</h3><span class="hint">Auto Lighting</span></div>
-    <div class="lighting-mode-tabs" id="oLightingMode"></div>
-    <div class="auto-lighting-panel" id="autoLightingPanel">
-      <div class="auto-lighting-field"><label>เปิดใช้งานระบบแสง</label><div class="g2" id="oAutoLightingEnabled"></div></div>
-      <div class="auto-lighting-field"><label>เป้าหมายของแสง</label><div class="auto-lighting-options four" id="oLightIntent"></div></div>
-      <div class="auto-lighting-field"><label>อุณหภูมิสี</label><div class="g3" id="oLightTemperature"></div></div>
-      <div class="auto-lighting-field"><label>ความสว่าง</label><div class="g3" id="oLightBrightness"></div></div>
-      <div class="auto-lighting-field"><label>รูปแบบโคมที่ต้องการ</label><div class="auto-lighting-options" id="oLightPreference"></div></div>
-      <div class="auto-lighting-actions">
-        <button class="btn pri" id="btnAutoLightGenerate" type="button">จัดแสงอัตโนมัติ</button>
-        <button class="btn" id="btnAutoLightRecalculate" type="button">คำนวณใหม่</button>
-        <button class="btn" id="btnAutoLightApprove" type="button">ยืนยันชุดโคม</button>
-        <button class="btn" id="btnAutoLightManual" type="button">ปรับด้วยตัวเอง</button>
-      </div>
-      <div class="auto-lighting-summary" id="autoLightingSummary" role="status" aria-live="polite"></div>
-      <details class="auto-lighting-editor" id="autoLightingFixtureEditor">
-        <summary>แก้ไขไฟที่อนุมัติแล้ว · Position / Rotate / Aim / Type</summary>
-        <div class="auto-lighting-editor-body">
-          <select id="autoLightingFixtureSelect" aria-label="เลือกไฟที่อนุมัติแล้ว"></select>
-          <div class="auto-lighting-fine"><b>X</b><button type="button" data-light-axis="x" data-light-delta="-0.05">−</button><output id="autoLightX">0.00</output><button type="button" data-light-axis="x" data-light-delta="0.05">+</button><span>ม.</span></div>
-          <div class="auto-lighting-fine"><b>Y</b><button type="button" data-light-axis="y" data-light-delta="-0.05">−</button><output id="autoLightY">0.00</output><button type="button" data-light-axis="y" data-light-delta="0.05">+</button><span>ม.</span></div>
-          <div class="auto-lighting-fine"><b>Z</b><button type="button" data-light-axis="z" data-light-delta="-0.05">−</button><output id="autoLightZ">0.00</output><button type="button" data-light-axis="z" data-light-delta="0.05">+</button><span>ม.</span></div>
-          <select id="autoLightingFixtureType" aria-label="ประเภทโคม"><option value="clear">Clear Light</option><option value="arm">Arm Light</option><option value="invisible">Invisible Preview Light</option></select>
-          <div class="auto-lighting-editor-actions"><button id="autoLightRotate" type="button">หมุน 15°</button><button id="autoLightAim" type="button">เล็งจุดกลาง</button><button id="autoLightDelete" class="danger" type="button">ลบไฟ</button></div>
-        </div>
-      </details>
-    </div>
-    <details class="manual-lighting-advanced" id="manualLightingAdvanced">
-      <summary>Manual Lighting · ขั้นสูง</summary>
-      <div class="manual-lighting-body">
-      <div class="g2" id="oLights"></div>
-      <div id="lightBody">
+    <div class="sech"><h3>ไฟสปอตไลท์</h3><span class="hint">เปิดหรือปิด</span></div>
+    <div class="g2" id="oLights"></div>
+    <div id="lightBody">
       <label class="lbl">รูปแบบโคม</label>
       <div class="light-model-grid" id="oLightModel"></div>
       <div class="note light-model-status" id="lightModelStatus" role="status" aria-live="polite"></div>
@@ -1146,9 +1086,7 @@ select:focus{border-color:var(--acc)}
         <button class="btn sm" id="lreset">ค่าอัตโนมัติ</button>
       </div>
       <div class="note" id="lightNote"></div>
-      </div>
     </div>
-    </details>
   </div>
 
   <div class="sec" id="settingsFloor">
@@ -1671,7 +1609,6 @@ select:focus{border-color:var(--acc)}
 <script src="js/ai-staging.js?v=20260830-1"></script>
 <script src="js/ai-render-intent.js?v=20260831-1"></script>
 <script src="js/ai-render-pipeline.js?v=20260830-1"></script>
-<script src="js/auto-lighting.js?v=20260831-1"></script>
 <script>
 /* ================= ข้อมูล ================= */
 const CATGROUPS=[
@@ -1910,8 +1847,7 @@ const BoothSpec={version:3,cat:'food',customBusinessCategory:'',primary:'#2e7d4f
   logoMount:'wall',logoWall:'back',logoWidth:2,logoDepth:.05,logoBaseWidth:0,logoBaseDepth:0,logoBaseColor:'#20252d',logoColor:'#2e7d4f',logoColorTouched:false,logoWallU:3,logoWallY:1.6,
   logoFloorX:3,logoFloorZ:1.5,logoFloorRotation:0,
   logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,brand:'',view:'three',photo:null,objects:[],sceneItemState:{},promptFidelity:6,wallRadius:3.5,
-  placementSnap:true,magneticSnap:true,geometryFidelity:10,stagingFreedom:6,aiStaging:defaultAIStagingSettings(),aiRendering:defaultAIRenderingSettings(),
-  lighting:globalThis.YPAutoLighting.defaultLightingState()};
+  placementSnap:true,magneticSnap:true,geometryFidelity:10,stagingFreedom:6,aiStaging:defaultAIStagingSettings(),aiRendering:defaultAIRenderingSettings()};
 const S=BoothSpec;
 const INITIAL_BOOTH_SPEC_JSON=JSON.stringify(BoothSpec);
 const MAX_CARPET_TEXTURE_UPLOADS=3;
@@ -2041,7 +1977,7 @@ let lastValidLayout=null;
 const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
 const fmt=n=>Math.round(n).toLocaleString('en-US');
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const objectSnapshot=()=>JSON.stringify({objects:S.objects,sceneItemState:S.sceneItemState||{},lighting:S.lighting||null,lights:S.lights,lightFixture:S.lightFixture,lightCol:S.lightCol,lightWall:S.lightWall,lightWatts:S.lightWatts,lightAdj:S.lightAdj});
+const objectSnapshot=()=>JSON.stringify({objects:S.objects,sceneItemState:S.sceneItemState||{}});
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
 const objectLocked=obj=>obj?.locked===true;
 const ASSET_LIST_CATEGORIES=[
@@ -2055,7 +1991,6 @@ const ASSET_LIST_CATEGORIES=[
 ];
 const assetListUI={open:false,query:'',filter:'all',anchorId:null,lastPrimary:null};
 const aiConceptUI={proposal:null,suggestions:[],selectedIds:new Set(),lastReport:null,imageUrl:''};
-let selectedAutoLightingFixtureId=null;
 function systemSceneItems(){
   const items=[{id:'system-floor',name:'พื้นบูธ',type:'พื้น',category:'structure',icon:'▱',system:true,locked:true}];
   (typ().walls||[]).forEach(face=>items.push({id:'system-wall-'+face,name:{back:'ผนังหลัง',left:'ผนังซ้าย',right:'ผนังขวา'}[face]||'ผนัง',type:'ผนัง',category:'structure',icon:'▥',system:true,locked:true}));
@@ -2063,10 +1998,7 @@ function systemSceneItems(){
   if(S.type!=='island')items.push({id:'system-brand',name:'โลโก้และชื่อแบรนด์',type:'กราฟิกแบรนด์',category:'branding',icon:'LOGO',system:true,locked:true});
   if(S.floorStickerData)items.push({id:'system-floor-sticker',name:'สติ๊กเกอร์พื้น',type:'กราฟิกพื้น',category:'branding',icon:'IMG',system:true,locked:true});
   (S.wallStickerFaces||[]).filter(face=>wallStickerFor(face)?.data).forEach(face=>items.push({id:'system-wall-sticker-'+face,name:'สติ๊กเกอร์'+({back:'ผนังหลัง',left:'ผนังซ้าย',right:'ผนังขวา'}[face]||'ผนัง'),type:'กราฟิกผนัง',category:'branding',icon:'IMG',system:true,locked:true}));
-  const lighting=globalThis.YPAutoLighting.normalizeLightingState(S.lighting,{legacyProject:false});
-  if(lighting.mode==='manual'&&S.lights)items.push({id:'system-lights',name:'ชุดไฟบูธ (Manual)',type:'แสง',category:'lighting',icon:'LIGHT',system:true,locked:true});
-  lighting.approvedFixtures.forEach(fixture=>items.push({id:'lighting-'+fixture.id,name:fixture.name,type:'ไฟที่อนุมัติแล้ว',category:'lighting',icon:'LIGHT',system:true,locked:true,lightingFixture:fixture}));
-  lighting.suggestions.filter(fixture=>fixture.fixtureType!=='invisible').forEach(fixture=>items.push({id:'lighting-'+fixture.id,name:fixture.name,type:'AI Suggested / Render Staging',category:'lighting',icon:'AI',system:true,locked:true,lightingFixture:fixture}));
+  if(S.lights)items.push({id:'system-lights',name:'ชุดไฟบูธ',type:'แสง',category:'lighting',icon:'LIGHT',system:true,locked:true});
   if(S.type==='photo360')items.push({id:'system-photo360',name:'แท่นถ่ายภาพ 360',type:'แท่น',category:'equipment',icon:'360',system:true,locked:true});
   return items.map(item=>{const state=(S.sceneItemState||{})[item.id]||{};return{...item,name:state.name||item.name,visible:state.visible!==false,locked:true};});
 }
@@ -2109,8 +2041,6 @@ function setObjectSelection(ids=[],primaryId=null){
 function restoreObjectSnapshot(snapshot){
   const parsed=JSON.parse(snapshot);if(Array.isArray(parsed)){S.objects=parsed;return;}
   S.objects=Array.isArray(parsed?.objects)?parsed.objects:[];S.sceneItemState=parsed?.sceneItemState&&typeof parsed.sceneItemState==='object'?parsed.sceneItemState:{};
-  if(parsed?.lighting)S.lighting=globalThis.YPAutoLighting.normalizeLightingState(parsed.lighting);
-  ['lights','lightFixture','lightCol','lightWall','lightWatts','lightAdj'].forEach(key=>{if(parsed&&Object.prototype.hasOwnProperty.call(parsed,key))S[key]=parsed[key];});
 }
 function resetBoothToInitialState(){
   const confirmed=window.confirm('คืนค่าการออกแบบทั้งหมดให้เหมือนตอนเปิดเว็บครั้งแรก?\nAsset และการแก้ไขปัจจุบันทั้งหมดจะถูกล้าง');
@@ -2327,20 +2257,11 @@ function buildGeometryManifest(spec=S){
         source:{kind:'derived',path:'BoothSpec.logoBase*'}});
     }
   }
-  const lightingState=globalThis.YPAutoLighting.normalizeLightingState(spec.lighting,{legacyProject:!spec.lighting});
-  if(lightingState.mode==='manual'&&spec.lights)lightPoints(thickness).forEach((point,index)=>push({id:'wall-light-'+String(index+1).padStart(2,'0'),type:'light-fixture',
+  if(spec.lights)lightPoints(thickness).forEach((point,index)=>push({id:'wall-light-'+String(index+1).padStart(2,'0'),type:'light-fixture',
     name:lightModelDef()?.n||'โคมไฟ',parentId:'booth-root',geometry:{kind:'fixture',catalogId:spec.lightFixture,attachmentFace:point.w,along:manifestNumber(point.u)},
     dimensions:null,transform:manifestLightTransform(point,spec,thickness),materialIntent:(LIGHTCOL.find(item=>item.k===spec.lightCol)?.n||spec.lightCol)+' '+String(spec.lightWatts)+'W',
     semantics:manifestSemantics('STYLEABLE',{materialIntent:'preserve-fixture-count-and-placement',allowedChanges:['material','color','finish','lighting','reflection']}),
     source:{kind:'derived',path:'BoothSpec.lights/light*'}}));
-  lightingState.approvedFixtures.concat(lightingState.suggestions).forEach((fixture,index)=>push({
-    id:'auto-light-'+fixture.id,type:'light-fixture',name:fixture.name,parentId:'booth-root',geometry:{kind:'fixture',catalogId:fixture.fixtureType,attachmentSurfaceId:fixture.mountSurfaceId},
-    dimensions:null,transform:{position:manifestVector(fixture.position.x,floorY+fixture.position.y,fixture.position.z),rotationDeg:manifestVector(fixture.rotation.x*180/Math.PI,fixture.rotation.y*180/Math.PI,fixture.rotation.z*180/Math.PI)},
-    aimTarget:manifestVector(fixture.aimTarget.x,floorY+fixture.aimTarget.y,fixture.aimTarget.z),temperatureK:fixture.temperatureK,intensity:fixture.intensity,beamAngle:fixture.beamAngle,
-    target:{type:fixture.targetType,assetId:fixture.targetAssetId,zoneId:fixture.targetZoneId},valid:fixture.valid,validationWarnings:[...(fixture.validationWarnings||[])],
-    semantics:manifestSemantics(fixture.status==='approved'?'LOCKED':'OPTIONAL',{materialIntent:'lighting',allowedChanges:fixture.status==='approved'?['intensity','temperature']:['lighting']}),
-    classification:{status:fixture.status==='approved'?'Customer Approved Lighting':'AI Suggested / Render Staging',confirmed:fixture.status==='approved',countsAsSelectedAsset:fixture.status==='approved',includedInBOQ:fixture.status==='approved'&&fixture.fixtureType!=='invisible',includedInProductionScope:fixture.status==='approved'&&fixture.fixtureType!=='invisible',includedInConfirmedGeometry:fixture.status==='approved'},
-    source:{kind:fixture.source,path:'BoothSpec.lighting.'+(fixture.status==='approved'?'approvedFixtures':'suggestions')+'['+index+']'}}));
   (Array.isArray(spec.objects)?spec.objects:[]).forEach((obj,index)=>{
     const item=objectCatalogDef(obj.catalogId),size=obj.size||item?.size||{},position=obj.position||{},rule=normalizeObjectAIRule(obj,item);normalizeSceneObjectModel(obj,item);
     push({id:String(obj.id||'asset-'+(index+1)),type:String(obj.type||item?.type||'asset'),name:obj.label||item?.name||String(obj.catalogId||'Asset'),parentId:'booth-root',
@@ -2367,7 +2288,7 @@ function buildGeometryManifest(spec=S){
         geometryFidelity:spec.geometryFidelity,stagingFreedom:spec.stagingFreedom},
       stagingClassification:{status:staging.statusLabel,requiresUserConfirmation:true,countsAsSelectedAsset:false,includedInBOQ:false,
         includedInProductionScope:false,includedInConfirmedGeometry:false}},
-    lighting:JSON.parse(JSON.stringify(lightingState)),renderStaging:{status:staging.statusLabel,suggestions:JSON.parse(JSON.stringify(staging.suggestions||[]))},objects};
+    renderStaging:{status:staging.statusLabel,suggestions:JSON.parse(JSON.stringify(staging.suggestions||[]))},objects};
 }
 const PLACEMENT_GRID=.05;
 const MAGNETIC_SNAP_DISTANCE=.15;
@@ -3952,11 +3873,6 @@ function renderQualityPromptLine(){
     ?'คุณภาพภาพ: Final · Photorealistic รายละเอียดสูง แสง วัสดุ และผิวงานพร้อมสำหรับภาพนำเสนอ'
     :'คุณภาพภาพ: Preview · แนวคิดรวดเร็ว รายละเอียดปานกลาง เหมาะสำหรับตรวจทิศทางภาพ';
 }
-function lightingPromptForSpec(spec=S){
-  const state=globalThis.YPAutoLighting.normalizeLightingState(spec.lighting,{legacyProject:!spec.lighting});
-  if(state.mode==='manual')return['LIGHTING INTENT','โหมดไฟ: Manual Lighting · รักษาจำนวน รูปแบบโคม สีแสง และตำแหน่งตามแบบ 3D'];
-  return globalThis.YPAutoLighting.promptLines(state,{includePreview:true});
-}
 function buildFullDesignPrompt(){
   const boothType=typ()||{};
   const business=businessCategoryLabel(S);
@@ -3968,10 +3884,7 @@ function buildFullDesignPrompt(){
   const logoShape=LOGOSHAPES.find(item=>item.k===S.logoShape)?.n||S.logoShape||'ไม่ระบุ';
   const lockup=LOCKUPS.find(item=>item.k===S.lockup)?.n||S.lockup||'ไม่ระบุ';
   const wallFaces=(boothType.walls||[]).map(face=>WALL_FACES.find(item=>item.k===face)?.n||face).join(', ')||'ไม่มี';
-  const lightingState=globalThis.YPAutoLighting.normalizeLightingState(S.lighting,{legacyProject:!S.lighting});
-  const lights=lightingState.mode==='auto'
-    ?(lightingState.enabled?'Auto Lighting · อนุมัติแล้ว '+lightingState.approvedFixtures.length+' จุด · แนะนำ '+lightingState.suggestions.filter(item=>item.fixtureType!=='invisible').length+' จุด · Preview '+lightingState.suggestions.filter(item=>item.fixtureType==='invisible').length+' จุด':'Auto Lighting ปิด')
-    :S.lights?(()=>{
+  const lights=S.lights?(()=>{
     const model=lightModelDef()?.n||S.lightFixture||'ไม่ระบุ';
     const colour=LIGHTCOL.find(item=>item.k===S.lightCol)?.n||S.lightCol||'ไม่ระบุ';
     const wall=LIGHTWALL.find(item=>item.k===S.lightWall)?.n||S.lightWall||'ไม่ระบุ';
@@ -4007,8 +3920,7 @@ function buildFullDesignPrompt(){
       :['โลโก้: '+logoType+' · รูปทรง '+logoShape+' · '+lockup+' · ขนาดโลโก้ '+S.logoScale+'/'+BRAND_SCALE_MAX+' · '+logoPlacementSummary(S),
         'ชื่อแบรนด์: '+(S.brand||'YOUR BRAND')+' · ขนาดชื่อ '+S.nameScale+'/'+BRAND_SCALE_MAX]),
     'ห้องเก็บของ: '+store+(storeHeight?' · สูง '+storeHeight:''),
-    'แสงสว่างเดิม: '+lights,
-    ...lightingPromptForSpec(S),
+    'แสงสว่าง: '+lights,
     'อุปกรณ์ที่ลูกค้าเลือกและต้องคงตำแหน่ง: '+objectListLabel(),
     objectLayoutPrompt(),
     'ข้อกำหนด LOCKED: ต้องคงขนาดพื้นที่ พื้น ระดับพื้น ผนัง ห้องเก็บของ โลโก้ ป้ายแบรนด์ และพิกัด/ขนาด/การหมุนของอุปกรณ์ที่ลูกค้าเลือกตามแบบเดิมทั้งหมด',
@@ -4068,7 +3980,6 @@ function buildCompactDesignPrompt(){
     '',
     'LAYER A — LOCKED 3D GEOMETRY · Fidelity '+S.geometryFidelity+'/10',
     ...geometry,
-    ...lightingPromptForSpec(S),
     ...compactSelectedObjectLines(),
     'LOCK: คงขนาด ผัง พื้น ผนัง ห้อง Branding ช่องเปิด มุมกล้อง จำนวน และ Transform ของทุกชิ้นตาม Screenshot/รายการ ห้ามย้าย ลบ เพิ่ม หรือเปลี่ยนสัดส่วนโครงสร้างถาวร',
     '',
@@ -4132,7 +4043,7 @@ function renderStatePayload(spec,camera){
     width:Number(spec.W),depth:Number(spec.D),height:Number(spec.H),activeWalls,openSides,
     floor:renderFloorSnapshot(spec),room:{enabled:spec.stSize!=='none',size:spec.stSize,width:Number(spec.stW)||0,depth:Number(spec.stD)||0,heightMode:spec.stHmode,height:Number(spec.stHv)||0,position:spec.stPos,door:spec.stDoor,doorType:spec.stDoorType},
     brand:{primary:String(spec.primary||'').toUpperCase(),secondary:String(spec.secondary||'').toUpperCase(),name:spec.brand||'YOUR BRAND',logoVisible:spec.type!=='island'},
-    assets:renderAssetSnapshot(spec),lighting:cloneRenderValue(globalThis.YPAutoLighting.normalizeLightingState(spec.lighting,{legacyProject:!spec.lighting})),camera:stableRenderCameraSnapshot(camera),qualityMode:rendering.quality||'preview',renderStyle:rendering.renderStyle||AI_RENDER_STYLE_DEFAULT,
+    assets:renderAssetSnapshot(spec),camera:stableRenderCameraSnapshot(camera),qualityMode:rendering.quality||'preview',renderStyle:rendering.renderStyle||AI_RENDER_STYLE_DEFAULT,
     aiEnhancementOptions:{enabled:staging.enabled!==false,density:staging.density||'medium',allowFurniture:staging.allowFurniture!==false,allowProducts:staging.allowProducts!==false,allowPeople:staging.allowPeople!==false,allowDecor:staging.allowDecor!==false,allowPlants:staging.allowPlants!==false,allowNewPermanentStructures:false,stagingFreedom:Number(spec.stagingFreedom)||6}
   };
 }
@@ -4527,11 +4438,11 @@ function lightCounts(t){
     let bi=0; sp.forEach((x,i)=>{if(x.e-x.s>sp[bi].e-sp[bi].s)bi=i;});
     n[bi]=Math.max(0,n[bi]+S.lightAdj);}
   return{sp,n,total:n.reduce((a,b)=>a+b,0),autoTotal};}
-const lightTotal=()=>normalizeAutoLighting().mode==='auto'?normalizeAutoLighting().approvedFixtures.filter(item=>item.fixtureType!=='invisible').length:(S.lights?lightCounts(boothWallThickness(S)).total:0);
+const lightTotal=()=>S.lights?lightCounts(boothWallThickness(S)).total:0;
 const lightModelDef=()=>LIGHT_MODELS.find(x=>x.k===S.lightFixture)||LIGHT_MODELS[0];
 const lightWattDef=()=>LIGHT_WATTS.find(x=>x.k===S.lightWatts)||LIGHT_WATTS[0];
-const lightTotalWatts=()=>normalizeAutoLighting().mode==='auto'?normalizeAutoLighting().approvedFixtures.reduce((sum,item)=>sum+(item.fixtureType==='arm'?10:item.fixtureType==='invisible'?0:100),0):lightTotal()*lightWattDef().k;
-const lightPriceTotal=()=>normalizeAutoLighting().mode==='auto'?autoLightingPriceTotal():lightTotal()*lightWattDef().price;
+const lightTotalWatts=()=>lightTotal()*lightWattDef().k;
+const lightPriceTotal=()=>lightTotal()*lightWattDef().price;
 function lightPoints(t){
   if(!S.lights)return[];
   const {sp,n}=lightCounts(t),out=[],model=lightModelDef(),isArm=model?.k==='arm',backClearance=isArm&&Number.isFinite(model?.backWallClearance)?Math.max(0,model.backWallClearance):0;
@@ -4687,22 +4598,6 @@ function build(){
   mk('oStDoor',ST_DOOR,v=>{if(doorBlocked(v,boothWallThickness(S)))return;S.stDoor=v;S.doorTouched=true;});
   mk('oStDoorType',ST_DOOR_TYPE,v=>S.stDoorType=v);
   mk('oDoorOff',DOOROFF,v=>S.doorOff=v,()=>'');
-  mk('oLightingMode',[{k:'auto',n:'Auto Lighting',s:'แนะนำ'},{k:'manual',n:'Manual Lighting',s:'ขั้นสูง'}],v=>updateAutoLightingOption(state=>state.mode=v,false));
-  mk('oAutoLightingEnabled',[{k:'on',n:'เปิด',s:'ค่าเริ่มต้น'},{k:'off',n:'ปิด',s:''}],v=>updateAutoLightingOption(state=>state.enabled=v==='on',false));
-  mk('oLightIntent',[{k:'balanced',n:'สมดุล'},{k:'brand',n:'เน้นแบรนด์'},{k:'product',n:'เน้นสินค้า'},{k:'counter',n:'เน้นเคาน์เตอร์'}],v=>updateAutoLightingOption(state=>state.intent=v));
-  mk('oLightTemperature',[{k:3000,n:'3000K',s:'วอร์ม'},{k:4000,n:'4000K',s:'กลาง'},{k:5000,n:'5000K',s:'ขาว'}],v=>updateAutoLightingOption(state=>state.temperatureK=Number(v)));
-  mk('oLightBrightness',[{k:'soft',n:'นุ่ม'},{k:'standard',n:'มาตรฐาน'},{k:'bright',n:'สว่าง'}],v=>updateAutoLightingOption(state=>state.brightness=v));
-  mk('oLightPreference',[{k:'auto',n:'อัตโนมัติ',s:'เลือกตามจุดติดตั้ง'},{k:'clear',n:'Clear Light',s:'โครงสร้างเหนือศีรษะ'},{k:'arm',n:'Arm Light',s:'ติดผนัง'},{k:'mixed',n:'ผสม',s:'เลือกตามพื้นผิว'},{k:'invisible',n:'Invisible',s:'Preview ไม่มีตัวโคม'}],v=>updateAutoLightingOption(state=>state.fixturePreference=v));
-  document.getElementById('btnAutoLightGenerate').onclick=()=>calculateAutoLighting(false);
-  document.getElementById('btnAutoLightRecalculate').onclick=()=>calculateAutoLighting(true);
-  document.getElementById('btnAutoLightApprove').onclick=approveAutoLighting;
-  document.getElementById('btnAutoLightManual').onclick=()=>{const editor=document.getElementById('autoLightingFixtureEditor'),state=normalizeAutoLighting();if(!state.approvedFixtures.length&&!state.suggestions.some(item=>item.fixtureType!=='invisible'))return announceCatalog('จัดแสงอัตโนมัติก่อนปรับโคมทีละจุด','error');editor.hidden=false;editor.open=true;editor.scrollIntoView({block:'nearest',behavior:'smooth'});};
-  document.getElementById('autoLightingFixtureSelect').onchange=event=>{selectedAutoLightingFixtureId=event.target.value||null;syncAutoLightingFixtureEditor();};
-  document.querySelectorAll('[data-light-axis]').forEach(button=>button.onclick=()=>moveApprovedLightingFixture(button.dataset.lightAxis,Number(button.dataset.lightDelta)));
-  document.getElementById('autoLightingFixtureType').onchange=event=>editApprovedLightingFixture(fixture=>{fixture.fixtureType=event.target.value;fixture.name=event.target.value==='arm'?'Arm Light':event.target.value==='clear'?'Clear Light':'Invisible Preview Light';},'เปลี่ยนประเภทโคม');
-  document.getElementById('autoLightRotate').onclick=()=>editApprovedLightingFixture(fixture=>{fixture.rotation.y=(Number(fixture.rotation.y)||0)+Math.PI/12;},'หมุนไฟ 15°');
-  document.getElementById('autoLightAim').onclick=()=>editApprovedLightingFixture(fixture=>{fixture.aimTarget={x:Number(S.W)/2,y:Math.max(.8,Number(S.H)*.55),z:Number(S.D)/2};},'เล็งไฟเข้ากึ่งกลางบูธ');
-  document.getElementById('autoLightDelete').onclick=()=>{const fixture=selectedAutoLightingFixture();if(!fixture)return;const before=objectSnapshot(),state=normalizeAutoLighting();state.approvedFixtures=state.approvedFixtures.filter(item=>item.id!==fixture.id);state.suggestions=state.suggestions.filter(item=>item.id!==fixture.id);selectedAutoLightingFixtureId=null;recordObjectHistory(before);sync();announceCatalog('ลบโคมที่เลือกแล้ว','success');};
   mk('oLights',[{k:'on',n:'มีไฟ',s:'ค่าเริ่มต้น'},{k:'off',n:'ไม่มี',s:''}],v=>S.lights=(v==='on'));
   const oLightModel=document.getElementById('oLightModel');oLightModel.innerHTML='';
   LIGHT_MODELS.forEach(model=>{const b=el('button','light-model-card','<div class="light-model-thumb-live" data-thumb-key="'+model.k+'" aria-label="ภาพพรีวิวโคม '+model.n+'"><span>กำลังโหลดภาพพรีวิว…</span></div>'+
@@ -6361,8 +6256,6 @@ class ThreeBoothRenderer{
     return{position:[spec.W-surface,top,point.u],rotationY:yaw,targetDepth:normalSpan*.55-surface,inward:[-1,0,0]};
   }
   addSpotlights(group,spec,t,floorY){
-    const autoState=globalThis.YPAutoLighting.normalizeLightingState(spec.lighting,{legacyProject:!spec.lighting});
-    if(autoState.mode==='auto'){this.addAutoLightingFixtures(group,spec,floorY,autoState);return;}
     if(!spec.lights)return;
     const T=this.THREE,points=lightPoints(t),lightDef=lightWattDef(),tone=LIGHTCOL.find(c=>c.k===spec.lightCol),span=Math.max(spec.W,spec.D,spec.H);
     const hasModel=this.fixtureTemplates.has(spec.lightFixture);if(!hasModel)this.requestFixtureTemplate(spec.lightFixture);
@@ -6598,27 +6491,6 @@ class ThreeBoothRenderer{
       root.visible=obj.visible!==false;group.add(root);this.objectMeshes.set(obj.id,root);
     });
   }
-  addAutoLightingFixtures(group,spec,floorY,state){
-    if(!state.enabled)return;
-    const T=this.THREE,fixtures=state.approvedFixtures.concat(state.suggestions),span=Math.max(spec.W,spec.D,spec.H),temperatureColor=k=>k<=3200?0xffd4a3:k>=4800?0xddeaff:0xfff4df;
-    fixtures.forEach((data,index)=>{
-      const approved=data.status==='approved',root=new T.Group();root.name='auto-light-root-'+data.id;root.userData.lightingFixtureId=data.id;root.userData.status=data.status;
-      root.position.set(Number(data.position.x)||0,floorY+(Number(data.position.y)||0),Number(data.position.z)||0);
-      root.rotation.set(Number(data.rotation.x)||0,Number(data.rotation.y)||0,Number(data.rotation.z)||0);
-      const modelKey=data.fixtureType==='arm'?'arm':'clear100',visibleFixture=data.fixtureType!=='invisible';
-      if(visibleFixture){
-        if(!this.fixtureTemplates.has(modelKey))this.requestFixtureTemplate(modelKey);
-        const model=this.fixtureModel(modelKey);
-        if(model){model.name='auto-light-model-'+data.id;root.add(model);}
-        else{const fallback=new T.Mesh(new T.CylinderGeometry(.055,.075,.14,12),new T.MeshStandardMaterial({color:0x343941,roughness:.38,metalness:.7}));fallback.name='auto-light-fallback-'+data.id;fallback.rotation.x=Math.PI/2;fallback.castShadow=approved;root.add(fallback);}
-      }
-      const light=new T.SpotLight(temperatureColor(Number(data.temperatureK)||4000),Math.max(.12,(Number(data.intensity)||1)*3.1),span*3,Number(data.beamAngle)||.65,.82,1.5);
-      light.name='auto-light-source-'+data.id;light.position.set(0,0,0);light.castShadow=approved&&index<4;
-      if(light.castShadow){light.shadow.mapSize.set(512,512);light.shadow.bias=-.0005;light.shadow.normalBias=.012;}
-      const target=new T.Object3D();target.name='auto-light-target-'+data.id;target.position.set((Number(data.aimTarget.x)||0)-root.position.x,floorY+(Number(data.aimTarget.y)||0)-root.position.y,(Number(data.aimTarget.z)||0)-root.position.z);
-      root.add(light,target);light.target=target;group.add(root);
-    });
-  }
   applyCatalogObjectTransform(root,obj,floorY=0){
     const T=this.THREE,heading=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),T.MathUtils.degToRad(Number(obj.rotationY)||0)),
       local=new T.Quaternion().setFromEuler(new T.Euler(T.MathUtils.degToRad(Number(obj.rotationX)||0),0,T.MathUtils.degToRad(Number(obj.rotationZ)||0),'XYZ'));
@@ -6648,7 +6520,6 @@ class ThreeBoothRenderer{
       if(id.startsWith('system-wall-')){const face=id.slice('system-wall-'.length);return name==='booth-wall-'+face||name.startsWith('booth-wall-'+face+'-');}
       if(id==='system-storage')return name.startsWith('storage-');
       if(id==='system-lights')return name.startsWith('spotlight');
-      if(id.startsWith('lighting-'))return name==='auto-light-root-'+id.slice('lighting-'.length);
       if(id==='system-photo360')return name==='photo360-platform';
       return false;
     };
@@ -7356,91 +7227,9 @@ function render(){
     v.querySelector('.photoslot').onclick=()=>fp.click();}
 }
 
-function normalizeAutoLighting(options={}){
-  const legacyProject=options.legacyProject===true||(!S.lighting&&options.newProject!==true);
-  S.lighting=globalThis.YPAutoLighting.normalizeLightingState(S.lighting,{legacyProject});
-  return S.lighting;
-}
-function invalidateAutoLighting(){
-  const state=normalizeAutoLighting();
-  if(state.mode==='auto'&&state.suggestions.length){state.stale=true;state.lastCalculatedSceneRevision=null;}
-}
-function autoLightingSceneSignature(){
-  const camera=S.aiRendering?.camera||null;
-  return JSON.stringify({type:S.type,cornerSide:S.cornerSide,W:S.W,D:S.D,H:S.H,raise:S.raise,floor:S.floor,stSize:S.stSize,stW:S.stW,stD:S.stD,stHv:S.stHv,stPos:S.stPos,
-    logoScale:S.logoScale,nameScale:S.nameScale,logoMount:S.logoMount,logoWall:S.logoWall,logoWallU:S.logoWallU,logoWallY:S.logoWallY,wallStickerFaces:S.wallStickerFaces,
-    objects:(S.objects||[]).map(obj=>({id:obj.id,visible:obj.visible!==false,position:obj.position,size:obj.size,rotationX:obj.rotationX,rotationY:obj.rotationY,rotationZ:obj.rotationZ})),
-    camera:camera?{cameraViewType:camera.cameraViewType,position:camera.position||camera.cameraPosition,target:camera.target||camera.cameraTarget,fov:camera.fov}:null});
-}
-function refreshAutoLightingStale(){
-  const state=normalizeAutoLighting();if(state.mode!=='auto'||(!state.suggestions.length&&!state.approvedFixtures.length)||!state.lastCalculatedSceneSignature)return;
-  if(state.lastCalculatedSceneSignature===autoLightingSceneSignature())return;
-  const stale=globalThis.YPAutoLighting.markStale(state,Math.max(sceneRevision,state.lastCalculatedSceneRevision||0)+1);stale.lastCalculatedSceneSignature=state.lastCalculatedSceneSignature;S.lighting=stale;
-}
-function updateAutoLightingOption(mutator,markPlanStale=true){
-  const before=objectSnapshot(),state=normalizeAutoLighting();mutator(state);if(markPlanStale)invalidateAutoLighting();recordObjectHistory(before);sync();
-}
-function calculateAutoLighting(recalculate=false){
-  const state=normalizeAutoLighting();if(!state.enabled)return announceCatalog('กรุณาเปิดระบบแสงก่อนสร้าง Auto Lighting','error');
-  if(!typ().walls.length&&!S.objects.some(obj=>/beam|fascia|entrance|frame|overhead|column|structure|คาน|กรอบ|เสา|โครง/i.test((obj.type||'')+' '+(obj.catalogId||'')+' '+(obj.label||'')))){
-    /* Island/no-wall projects remain supported with invisible preview lights. */
-  }
-  const before=objectSnapshot(),targetRevision=Math.max(1,sceneRevision+1),args={spec:S,sceneRevision:targetRevision,lighting:state};
-  S.lighting=recalculate?globalThis.YPAutoLighting.recalculateLightingPlan(args):globalThis.YPAutoLighting.generateLightingPlan(args);S.lighting.lastCalculatedSceneSignature=autoLightingSceneSignature();
-  recordObjectHistory(before);sync();S.lighting.lastCalculatedSceneRevision=sceneRevision;S.lighting.stale=false;
-  const visible=S.lighting.suggestions.filter(item=>item.fixtureType!=='invisible').length,invisible=S.lighting.suggestions.length-visible;
-  announceCatalog('สร้าง Auto Lighting '+S.lighting.suggestions.length+' จุดแล้ว'+(invisible?' · Invisible Preview '+invisible+' จุด':''),'success');
-}
-function approveAutoLighting(){
-  const state=normalizeAutoLighting();if(!state.suggestions.length)return announceCatalog('ยังไม่มีไฟแนะนำให้อนุมัติ','error');
-  const before=objectSnapshot(),next=globalThis.YPAutoLighting.approveSuggestions(state),count=next.approvedNow?.length||0;delete next.approvedNow;S.lighting=next;
-  recordObjectHistory(before);sync();announceCatalog(count?'อนุมัติไฟ '+count+' จุดและเพิ่มในรายการโครงการแล้ว':'ไม่มีไฟที่ผ่าน Validation ให้อนุมัติ',count?'success':'error');
-}
-function autoLightingSummaryText(){
-  const state=normalizeAutoLighting(),suggested=state.suggestions.length,approved=state.approvedFixtures.length,invalid=state.suggestions.filter(item=>item.valid===false).length,
-    invisible=state.suggestions.filter(item=>item.fixtureType==='invisible').length;
-  if(!state.enabled)return'ระบบ Auto Lighting ปิดอยู่ · ไฟ Manual เดิมยังไม่ถูกลบ';
-  if(!suggested&&!approved)return'ยังไม่มีแผนไฟ · กด “จัดแสงอัตโนมัติ” เพื่อวิเคราะห์ Target และพื้นผิวติดตั้ง';
-  return'แนะนำ <b>'+suggested+' จุด</b> · อนุมัติแล้ว <b>'+approved+' จุด</b>'+(invisible?' · Invisible Preview '+invisible+' จุด':'')+(invalid?' · ตรวจสอบ '+invalid+' จุด':'')+(state.stale?' · แบบเปลี่ยนแล้ว กรุณาคำนวณใหม่':'');
-}
-function autoLightingFixtureCount(){const state=normalizeAutoLighting();return state.approvedFixtures.length+state.suggestions.length;}
-function autoLightingPriceTotal(){return normalizeAutoLighting().approvedFixtures.filter(item=>item.fixtureType!=='invisible').reduce((sum,item)=>sum+(item.fixtureType==='arm'?1800:3200),0);}
-function selectedAutoLightingFixture(){
-  const state=normalizeAutoLighting(),fixtures=state.approvedFixtures.concat(state.suggestions.filter(item=>item.fixtureType!=='invisible'));
-  if(!fixtures.some(item=>item.id===selectedAutoLightingFixtureId))selectedAutoLightingFixtureId=fixtures[0]?.id||null;
-  return fixtures.find(item=>item.id===selectedAutoLightingFixtureId)||null;
-}
-function editApprovedLightingFixture(mutator,label='แก้ไขไฟ'){
-  const fixture=selectedAutoLightingFixture();if(!fixture)return announceCatalog('ยังไม่มีโคมให้แก้ไข','error');
-  const before=objectSnapshot();mutator(fixture);fixture.source='manual';fixture.valid=true;fixture.validationWarnings=[];recordObjectHistory(before);sync();announceCatalog(label+'แล้ว','success');
-}
-function moveApprovedLightingFixture(axis,delta){
-  editApprovedLightingFixture(fixture=>{const limit=axis==='x'?Number(S.W):axis==='z'?Number(S.D):5;fixture.position[axis]=Math.max(0,Math.min(limit,Number(fixture.position[axis]||0)+Number(delta||0)));},'ปรับตำแหน่งไฟ');
-}
-function syncAutoLightingFixtureEditor(){
-  const state=normalizeAutoLighting(),select=document.getElementById('autoLightingFixtureSelect'),editor=document.getElementById('autoLightingFixtureEditor');if(!select||!editor)return;
-  const fixtures=state.approvedFixtures.concat(state.suggestions.filter(item=>item.fixtureType!=='invisible'));if(!fixtures.some(item=>item.id===selectedAutoLightingFixtureId))selectedAutoLightingFixtureId=fixtures[0]?.id||null;
-  select.innerHTML=fixtures.length?fixtures.map(item=>'<option value="'+esc(item.id)+'">'+esc(item.name)+' · '+esc(item.targetType)+' · '+(item.status==='approved'?'ยืนยันแล้ว':'แนะนำ')+'</option>').join(''):'<option value="">ยังไม่มีโคมที่แก้ไขได้</option>';
-  select.value=selectedAutoLightingFixtureId||'';select.disabled=!fixtures.length;editor.hidden=!fixtures.length;
-  const fixture=selectedAutoLightingFixture();['x','y','z'].forEach(axis=>{const out=document.getElementById('autoLight'+axis.toUpperCase());if(out)out.textContent=fixture?Number(fixture.position[axis]||0).toFixed(2):'—';});
-  const type=document.getElementById('autoLightingFixtureType');if(type){type.disabled=!fixture;if(fixture)type.value=fixture.fixtureType;}
-  editor.querySelectorAll('button').forEach(button=>button.disabled=!fixture);
-}
-function syncAutoLightingControls(){
-  const state=normalizeAutoLighting(),auto=state.mode==='auto',manual=document.getElementById('manualLightingAdvanced'),panel=document.getElementById('autoLightingPanel');
-  document.querySelectorAll('#oLightingMode .opt').forEach(button=>button.classList.toggle('on',button.dataset.k===state.mode));
-  if(panel)panel.hidden=!auto;if(manual){manual.hidden=auto;if(!auto)manual.open=true;}
-  const activeMap={oAutoLightingEnabled:state.enabled?'on':'off',oLightIntent:state.intent,oLightTemperature:String(state.temperatureK),oLightBrightness:state.brightness,oLightPreference:state.fixturePreference};
-  Object.entries(activeMap).forEach(([id,value])=>document.querySelectorAll('#'+id+' .opt').forEach(button=>button.classList.toggle('on',button.dataset.k===value)));
-  const summary=document.getElementById('autoLightingSummary');if(summary){summary.innerHTML=autoLightingSummaryText();summary.classList.toggle('is-warning',state.stale||state.validationWarnings.length>0);}
-  const approve=document.getElementById('btnAutoLightApprove'),approvable=state.suggestions.filter(item=>item.valid!==false&&item.fixtureType!=='invisible').length;if(approve){approve.disabled=!approvable;approve.textContent='ยืนยันชุดโคม'+(approvable?' ('+approvable+')':'');}
-  const recalc=document.getElementById('btnAutoLightRecalculate');if(recalc)recalc.disabled=!state.suggestions.length&&!state.approvedFixtures.length;
-  syncAutoLightingFixtureEditor();
-}
-
 function syncLightModelStatus(){
   const box=document.getElementById('lightModelStatus');if(!box)return;
-  if(normalizeAutoLighting().mode!=='manual'||!S.lights){box.textContent='';box.dataset.state='idle';return;}
+  if(!S.lights){box.textContent='';box.dataset.state='idle';return;}
   const model=lightModelDef(),state=threeRenderer&&threeRenderer.fixtureState?threeRenderer.fixtureState(model.k):'idle';
   const wattLabel=lightWattDef().n+' / จุด';
   box.dataset.state=state;
@@ -7452,8 +7241,6 @@ function syncLightModelStatus(){
 
 function sync(){
   normalizeAIRenderingSettings(S);
-  normalizeAutoLighting();
-  refreshAutoLightingStale();
   if(isFixedBoothType(S.type)){S.W=6;S.D=3;S.H=2.4;}
   S.W=Math.max(1,Math.min(30,S.W||1));S.D=Math.max(1,Math.min(30,S.D||1));
   S.H=Math.max(2.4,Math.min(MAX_BOOTH_HEIGHT,S.H||2.4));
@@ -7607,14 +7394,13 @@ function sync(){
     document.getElementById('stNote').textContent=n;}
 
   const hasLightWall=typ().walls.length>0;
-  syncAutoLightingControls();
   document.querySelectorAll('#oLights .opt').forEach(b=>{
     const unavailable=b.dataset.k==='on'&&!hasLightWall;
     b.disabled=unavailable;b.classList.toggle('off',unavailable);
     b.classList.toggle('on',(b.dataset.k==='on')===S.lights);
   });
   document.getElementById('lightBody').style.display=S.lights?'block':'none';
-  if(S.lights&&S.lighting.mode==='manual'){
+  if(S.lights){
     document.querySelectorAll('#oLightModel .light-model-card').forEach(b=>{const active=b.dataset.k===S.lightFixture;
       b.classList.toggle('on',active);b.setAttribute('aria-pressed',String(active));});
     document.querySelectorAll('#oLightCol .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.lightCol));
@@ -7720,9 +7506,8 @@ function sync(){
     ['โลโก้',S.type==='island'?'ไม่มี':LOGOTYPES.find(t=>t.k===S.logoType).n+' · '+LOGOSHAPES.find(shape=>shape.k===S.logoShape).n+' · '+LOCKUPS.find(t=>t.k===S.lockup).n+
       ' · '+logoPlacementSummary(S)+
       (S.type==='corner'&&S.sideLogo?' · +ผนังข้าง ('+SIDEPOS.find(x=>x.k===S.sidePos).n+')':'')],
-    ['ไฟแสงสว่าง',S.lighting.mode==='auto'?(S.lighting.enabled?'Auto Lighting · แนะนำ '+S.lighting.suggestions.length+' · อนุมัติ '+S.lighting.approvedFixtures.length+' จุด':'Auto Lighting ปิดอยู่'):
-      (S.lights?('Manual · สปอตไลท์ '+lightTotal()+' จุด · '+lightModelDef().n+' · '+LIGHTCOL.find(c=>c.k===S.lightCol).n+
-      ' · '+lightWattDef().n+' / ดวง · '+LIGHTWALL.find(w=>w.k===S.lightWall).n):'Manual · ไม่มี')],
+    ['ไฟแสงสว่าง',S.lights?('สปอตไลท์ '+lightTotal()+' จุด · '+lightModelDef().n+' · '+LIGHTCOL.find(c=>c.k===S.lightCol).n+
+      ' · '+lightWattDef().n+' / ดวง · '+LIGHTWALL.find(w=>w.k===S.lightWall).n):'ไม่มี'],
     ['คลังอุปกรณ์',objectListLabel()]];
   document.getElementById('spec').innerHTML=rows.map(r=>
     `<div class="kv"><b>${r[0]}</b><span>${esc(r[1])}</span></div>`).join('');
@@ -8166,7 +7951,7 @@ function completeQuickSetup(){
     S.primary=normalizedQuickHex(quickSetupDraft.primary);S.colTouched=true;S.logoColor=S.primary;S.logoColorTouched=false;
     S.raise=Number(quickSetupDraft.raise)||0;S.floor=quickSetupDraft.floor||'carpet';S.carpet=quickSetupDraft.carpet||'grey';
     S.stSize=quickSetupDraft.addStorage?'a':'none';if(quickSetupDraft.addStorage){S.stW=1.2;S.stD=1.2;S.stHmode=2.4;S.stPos='right';S.doorTouched=false;}
-    S.lights=type.k!=='island';S.lighting=globalThis.YPAutoLighting.defaultLightingState();S.view='three';syncDims();sync();closeDockPanel(false);
+    S.lights=type.k!=='island';S.view='three';syncDims();sync();closeDockPanel(false);
     loadThreeRenderer().then(renderer=>renderer.setCameraView('perspective')).catch(()=>{});
     quickSetupCompleting=false;closeReleaseNotes(false);quickSetupDraft=null;
   },360);
