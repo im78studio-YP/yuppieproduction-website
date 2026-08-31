@@ -2068,8 +2068,6 @@ function resetBoothToInitialState(){
   if(catalogStatus){catalogStatus.textContent='';catalogStatus.className='object-layout-status';}
 
   if(threeRenderer){
-    threeRenderer.cancelCameraTransition?.();
-    threeRenderer.restoreTopViewHidden?.();
     threeRenderer.currentKey='';
     threeRenderer.currentView='perspective';
     threeRenderer.hasFramed=false;
@@ -2105,7 +2103,6 @@ function normalizeAIRenderingSettings(spec=S){
   source.renderIntent='structure_enhancement';
   source.quality=globalThis.YPAIRenderIntent?.normalizeQuality(source.quality)||'preview';
   source.camera=source.camera&&typeof source.camera==='object'?source.camera:null;
-  source.cameraViewType=String(source.cameraViewType||source.camera?.cameraViewType||source.camera?.cameraPresetId||'perspective');
   source.preview=source.preview&&typeof source.preview==='object'?source.preview:null;
   source.renderPackage=source.renderPackage&&typeof source.renderPackage==='object'?source.renderPackage:null;
   spec.aiRendering=source;return source;
@@ -3993,16 +3990,14 @@ function currentPromptVariant(){return normalizeAIRenderingSettings(S).promptVar
 const STRUCTURE_ENHANCEMENT_INTENT='structure_enhancement';
 const CAMERA_PRESET_BASE=Object.freeze({heightM:1.6,lensEquivalentMm:40,verticalLines:'Straight',framingWidthRatio:.85,aspectRatio:4/3,aspectLabel:'Landscape 4:3'});
 const CAMERA_PRESETS=Object.freeze({
-  perspective:Object.freeze({...CAMERA_PRESET_BASE,id:'perspective',cameraViewType:'perspective',label:'Perspective',perspectiveType:'Free Orbit Perspective Camera',freeOrbit:true}),
-  perspective_front_left:Object.freeze({...CAMERA_PRESET_BASE,id:'perspective_front_left',cameraViewType:'perspective_front_left',label:'Front-Left',perspectiveType:'Two-Point Perspective',angleDeg:-35}),
-  perspective_front_right:Object.freeze({...CAMERA_PRESET_BASE,id:'perspective_front_right',cameraViewType:'perspective_front_right',label:'Front-Right',perspectiveType:'Two-Point Perspective',angleDeg:35}),
-  orthographic_front:Object.freeze({...CAMERA_PRESET_BASE,id:'orthographic_front',cameraViewType:'orthographic_front',label:'Front Elevation',perspectiveType:'Front Orthographic Elevation',orthographic:true,axis:'front'}),
-  orthographic_rear:Object.freeze({...CAMERA_PRESET_BASE,id:'orthographic_rear',cameraViewType:'orthographic_rear',label:'Rear Elevation',perspectiveType:'Rear Orthographic Elevation',orthographic:true,axis:'rear'}),
-  orthographic_left:Object.freeze({...CAMERA_PRESET_BASE,id:'orthographic_left',cameraViewType:'orthographic_left',label:'Left Elevation',perspectiveType:'Left Orthographic Elevation',orthographic:true,axis:'left'}),
-  orthographic_right:Object.freeze({...CAMERA_PRESET_BASE,id:'orthographic_right',cameraViewType:'orthographic_right',label:'Right Elevation',perspectiveType:'Right Orthographic Elevation',orthographic:true,axis:'right'}),
-  orthographic_top:Object.freeze({...CAMERA_PRESET_BASE,id:'orthographic_top',cameraViewType:'orthographic_top',label:'Top Plan',perspectiveType:'Top Orthographic Plan View',orthographic:true,axis:'top'})
+  perspective:Object.freeze({...CAMERA_PRESET_BASE,id:'perspective',label:'Perspective',perspectiveType:'Free Orbit Mode',freeOrbit:true}),
+  front:Object.freeze({...CAMERA_PRESET_BASE,id:'front',label:'Front Straight',perspectiveType:'Front Straight',angleDeg:0}),
+  'front-left':Object.freeze({...CAMERA_PRESET_BASE,id:'front-left',label:'Front-Left',perspectiveType:'Two-Point Perspective',angleDeg:-35}),
+  'front-right':Object.freeze({...CAMERA_PRESET_BASE,id:'front-right',label:'Front-Right',perspectiveType:'Two-Point Perspective',angleDeg:35}),
+  'left-dominant':Object.freeze({...CAMERA_PRESET_BASE,id:'left-dominant',label:'Left-Dominant',perspectiveType:'Two-Point Perspective',angleDeg:-70}),
+  'right-dominant':Object.freeze({...CAMERA_PRESET_BASE,id:'right-dominant',label:'Right-Dominant',perspectiveType:'Two-Point Perspective',angleDeg:70}),
+  top:Object.freeze({...CAMERA_PRESET_BASE,id:'top',label:'Top',perspectiveType:'Top Orthographic',orthographic:true})
 });
-const PRESENTATION_CAMERA_VIEW_TYPES=Object.freeze(['orthographic_front','orthographic_rear','orthographic_left','orthographic_right','orthographic_top']);
 let sceneRevision=0,sceneStateSignature='',lastPreparedRenderPackage=null;
 function currentRenderIntent(){return STRUCTURE_ENHANCEMENT_INTENT;}
 function currentRenderQuality(){return normalizeAIRenderingSettings(S).quality;}
@@ -4026,9 +4021,9 @@ function renderAssetSnapshot(spec){
 }
 function stableRenderCameraSnapshot(camera){
   if(!camera||typeof camera!=='object')return null;
-  const preset=camera.cameraViewType||camera.cameraPresetId||camera.preset||'perspective',position=cloneRenderValue(camera.cameraPosition||camera.position),target=cloneRenderValue(camera.cameraTarget||camera.target);
+  const preset=camera.cameraPresetId||camera.preset||'perspective',position=cloneRenderValue(camera.cameraPosition||camera.position),target=cloneRenderValue(camera.cameraTarget||camera.target);
   return{
-    id:camera.id||null,projection:camera.projection||'perspective',preset,cameraPresetId:preset,cameraViewType:preset,
+    id:camera.id||null,projection:camera.projection||'perspective',preset,cameraPresetId:preset,
     position,target,cameraPosition:cloneRenderValue(position),cameraTarget:cloneRenderValue(target),up:cloneRenderValue(camera.up),
     fov:Number(camera.fov)||null,near:Number(camera.near)||null,far:Number(camera.far)||null,
     aspectRatio:Number(camera.aspectRatio||camera.renderProfile?.aspectRatio||camera.aspect)||4/3,zoom:Number(camera.zoom)||null,frustum:cloneRenderValue(camera.frustum),
@@ -4083,7 +4078,7 @@ function renderPackageMissingFields(snapshot){
   if(!/^#[0-9a-f]{6}$/i.test(p.brand.primary))missing.push('สีแบรนด์หลัก');if(!p.boothType)missing.push('รูปแบบบูธ');if(![p.width,p.depth,p.height].every(value=>value>0))missing.push('ขนาดบูธ');return missing;
 }
 function renderCameraPromptLines(snapshot){
-  const state=snapshot?.payload?.camera||snapshot?.camera||{},camera=state.renderProfile||CAMERA_PRESETS[state.cameraViewType||state.cameraPresetId||state.preset]||CAMERA_PRESETS.perspective;
+  const state=snapshot?.payload?.camera||snapshot?.camera||{},camera=state.renderProfile||CAMERA_PRESETS[state.cameraPresetId||state.preset]||CAMERA_PRESETS.perspective;
   const lines=['CAMERA & COMPOSITION — LOCKED FOR OUTPUT','Camera Preset: '+camera.label,'Perspective Type: '+camera.perspectiveType];
   if(!camera.orthographic&&!camera.freeOrbit)lines.push('Camera Height: '+Number(camera.heightM||1.6).toFixed(2)+' m','Lens Equivalent: '+Number(camera.lensEquivalentMm||40)+' mm','Vertical Lines: '+(camera.verticalLines||'Straight'));
   lines.push('Framing: Booth occupies approximately '+Math.round(Number(camera.framingWidthRatio||.85)*100)+'% of image width','Aspect Ratio: '+(camera.aspectLabel||'Landscape 4:3'));
@@ -5057,7 +5052,7 @@ class ThreeBoothRenderer{
     this.hint=el('div','three-hint','ลากเพื่อหมุน · เลื่อนเพื่อซูม');
     this.shell.append(this.host,this.tools,this.hint);
     this.viewButtons=new Map();
-    [['perspective','Perspective'],['perspective_front_left','เฉียงซ้าย'],['perspective_front_right','เฉียงขวา'],['orthographic_front','หน้า'],['orthographic_rear','หลัง'],['orthographic_left','ซ้าย'],['orthographic_right','ขวา'],['orthographic_top','บน']].forEach(([key,label])=>{
+    [['perspective','Perspective'],['front','หน้า'],['front-left','เฉียงซ้าย'],['front-right','เฉียงขวา'],['left-dominant','ซ้าย'],['right-dominant','ขวา'],['top','บน']].forEach(([key,label])=>{
       const b=el('button','',label);b.type='button';b.onclick=()=>this.setCameraView(key);
       this.tools.appendChild(b);this.viewButtons.set(key,b);
     });
@@ -5093,11 +5088,6 @@ class ThreeBoothRenderer{
     this.applyingCameraPreset=false;
     this.onControlsChange=()=>{
       if(this.applyingCameraPreset||!this.active)return;
-      if(this.camera?.isOrthographicCamera){
-        const preset=CAMERA_PRESETS[this.currentView]||CAMERA_PRESETS.orthographic_front;
-        this.renderCameraProfile={...preset,presentationScaleM:manifestNumber(this.orthographicFrameHeight,4),marginPercent:9};
-        this.commitCameraState();return;
-      }
       this.renderCameraProfile={...CAMERA_PRESETS.perspective};
       this.currentView='perspective';this.viewButtons.forEach((button,key)=>button.classList.toggle('on',key==='perspective'));
       this.commitCameraState();
@@ -5131,7 +5121,7 @@ class ThreeBoothRenderer{
     const fill=new THREE.DirectionalLight(0xffd9a0,.45);fill.position.set(-7,6,5);this.scene.add(fill);
 
     this.boothGroup=new THREE.Group();this.scene.add(this.boothGroup);
-    this.currentKey='';this.currentView='perspective';this.renderCameraProfile=null;this.topViewHidden=[];this.cameraTransitionRaf=0;this.lastSize=[0,0];this.active=false;this.raf=0;
+    this.currentKey='';this.currentView='perspective';this.renderCameraProfile=null;this.lastSize=[0,0];this.active=false;this.raf=0;
     this.resizeObserver=new ResizeObserver(()=>this.resize());
     this.resizeObserver.observe(this.shell);
   }
@@ -5146,7 +5136,6 @@ class ThreeBoothRenderer{
   }
   dispose(){
     this.active=false;if(this.raf)cancelAnimationFrame(this.raf);this.raf=0;
-    if(this.cameraTransitionRaf)cancelAnimationFrame(this.cameraTransitionRaf);this.cameraTransitionRaf=0;this.restoreTopViewHidden();
     const canvas=this.renderer.domElement;
     canvas.removeEventListener('pointerdown',this.onObjectPointerDown,true);
     canvas.removeEventListener('pointermove',this.onObjectPointerMove);canvas.removeEventListener('pointerup',this.onObjectPointerUp);
@@ -5188,7 +5177,7 @@ class ThreeBoothRenderer{
     const viewportHeight=Math.max(1,Math.floor(viewportOverride?.height||r.height||this.lastSize[1]||1));
     const viewportPixelRatio=viewportOverride?.pixelRatio??this.renderer.getPixelRatio();
     const projection=this.camera.isOrthographicCamera?'orthographic':'perspective',preset=this.currentView||'perspective',aspectRatio=Number(this.renderCameraProfile?.aspectRatio)||viewportWidth/viewportHeight;
-    const manifest={id:'camera-active',projection,preset,cameraPresetId:preset,cameraViewType:preset,
+    const manifest={id:'camera-active',projection,preset,cameraPresetId:preset,
       position:manifestVector(position.x,position.y,position.z),target:manifestVector(target.x,target.y,target.z),up:manifestVector(up.x,up.y,up.z),
       cameraPosition:manifestVector(position.x,position.y,position.z),cameraTarget:manifestVector(target.x,target.y,target.z),
       fov:this.camera.isPerspectiveCamera?manifestNumber(this.camera.fov):null,near:manifestNumber(this.camera.near),far:manifestNumber(this.camera.far),aspect:manifestNumber(viewportWidth/viewportHeight,6),aspectRatio:manifestNumber(aspectRatio,6),zoom:manifestNumber(this.camera.zoom||1,6),
@@ -5200,7 +5189,7 @@ class ThreeBoothRenderer{
   commitCameraState(){
     if(!this.camera||!this.controls)return null;
     if(this.camera.position.distanceToSquared(this.controls.target)<1e-8)return null;
-    const state=this.cameraManifest(),settings=normalizeAIRenderingSettings(BoothSpec);settings.camera=state;settings.cameraViewType=state.cameraViewType;
+    const state=this.cameraManifest();normalizeAIRenderingSettings(BoothSpec).camera=state;
     if(typeof syncSceneRevision==='function')syncSceneRevision();return state;
   }
   applyCameraManifest(state){
@@ -5214,10 +5203,8 @@ class ThreeBoothRenderer{
     if(this.camera.isPerspectiveCamera&&Number.isFinite(state.fov))this.camera.fov=state.fov;if(Number.isFinite(state.near))this.camera.near=state.near;if(Number.isFinite(state.far))this.camera.far=state.far;
     if(this.camera.isOrthographicCamera&&state.frustum){const f=state.frustum;if([f.left,f.right,f.top,f.bottom].every(Number.isFinite)){this.camera.left=f.left;this.camera.right=f.right;this.camera.top=f.top;this.camera.bottom=f.bottom;this.orthographicFrameHeight=Math.abs(f.top-f.bottom)||this.orthographicFrameHeight;}}
     if(Number.isFinite(state.zoom))this.camera.zoom=state.zoom;
-    this.camera.updateProjectionMatrix();this.controls.update();this.currentView=state.cameraViewType||state.cameraPresetId||state.preset||'perspective';this.renderCameraProfile=state.renderProfile?{...state.renderProfile}:null;
-    this.controls.enableRotate=!this.camera.isOrthographicCamera;
-    if(this.currentView==='orthographic_top')this.hideTopViewOverheadAssets(BoothSpec);else this.restoreTopViewHidden();
-    this.viewButtons.forEach((button,key)=>button.classList.toggle('on',key===this.currentView));this.applyingCameraPreset=wasApplying;return true;
+    this.camera.updateProjectionMatrix();this.controls.update();this.currentView=state.cameraPresetId||state.preset||'perspective';this.renderCameraProfile=state.renderProfile?{...state.renderProfile}:null;
+    this.controls.enableRotate=!this.camera.isOrthographicCamera;this.viewButtons.forEach((button,key)=>button.classList.toggle('on',key===this.currentView));this.applyingCameraPreset=wasApplying;return true;
   }
   pendingSceneAssets(){
     const promises=[];
@@ -5675,11 +5662,10 @@ class ThreeBoothRenderer{
   }
   update(spec){
     const key=this.visualKey(spec);if(key===this.currentKey)return;
-    this.restoreTopViewHidden();this.currentKey=key;this.buildId=(this.buildId||0)+1;this.scene.remove(this.boothGroup);disposeThreeObject(this.boothGroup);
+    this.currentKey=key;this.buildId=(this.buildId||0)+1;this.scene.remove(this.boothGroup);disposeThreeObject(this.boothGroup);
     this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.selectionHelpers=[];this.anchorGuideGroup=null;this.snapPreviewGroup=null;
     this.hoveredAnchorMarker=null;this.activeAnchorMarker=null;
     this.boothGroup=new this.THREE.Group();this.scene.add(this.boothGroup);this.buildBooth(spec);this.applySceneVisibility();
-    if(this.currentView==='orthographic_top')this.hideTopViewOverheadAssets(spec);
     this.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
     const span=Math.max(spec.W,spec.D,spec.H);
     this.controls.minDistance=Math.max(1.2,span*.34);this.controls.maxDistance=Math.max(8,span*4.8);
@@ -6545,7 +6531,7 @@ class ThreeBoothRenderer{
     const box=new this.THREE.Box3();targets.forEach(target=>box.expandByObject(target));if(box.isEmpty())return false;
     const center=box.getCenter(new this.THREE.Vector3()),size=box.getSize(new this.THREE.Vector3()),maxSize=Math.max(size.x,size.y,size.z,.25),direction=this.camera.position.clone().sub(this.controls.target);
     if(direction.lengthSq()<.001)direction.set(1,.65,1);direction.normalize();const distance=Math.max(maxSize*1.8,1.4);
-    this.applyingCameraPreset=true;this.cancelCameraTransition();this.restoreTopViewHidden();this.switchCameraPreservingPose(this.perspectiveCamera);this.controls.enableRotate=true;this.controls.target.copy(center);this.camera.position.copy(center).addScaledVector(direction,distance);this.camera.near=Math.max(.01,distance/1000);this.camera.far=Math.max(this.camera.far,distance*20);this.camera.updateProjectionMatrix();
+    this.applyingCameraPreset=true;this.controls.target.copy(center);this.camera.position.copy(center).addScaledVector(direction,distance);this.camera.near=Math.max(.01,distance/1000);this.camera.far=Math.max(this.camera.far,distance*20);this.camera.updateProjectionMatrix();
     this.camera.lookAt(center);this.controls.update();this.applyingCameraPreset=false;this.currentView='perspective';this.renderCameraProfile={...CAMERA_PRESETS.perspective};this.viewButtons.forEach((button,key)=>button.classList.toggle('on',key==='perspective'));this.commitCameraState();this.renderer.render(this.scene,this.camera);return true;
   }
   setSelected(id){this.setSelectedObjects(id?[id]:[],id);}
@@ -6600,46 +6586,15 @@ class ThreeBoothRenderer{
     this.addSpotlights(g,spec,t,floorY);
     this.addBoothDimensions(g,spec,floorY);
   }
-  presentationBounds(spec=BoothSpec){
-    const T=this.THREE,floorY=(Number(spec.raise)||0)/100,box=new T.Box3(new T.Vector3(0,floorY,0),new T.Vector3(Number(spec.W),floorY+Number(spec.H),Number(spec.D)));
-    this.objectMeshes.forEach(root=>{if(root.visible!==false)box.expandByObject(root,true);});return box;
-  }
-  presentationElevationFrameHeight(spec=BoothSpec){
-    const size=this.presentationBounds(spec).getSize(new this.THREE.Vector3()),aspect=Number(CAMERA_PRESET_BASE.aspectRatio)||4/3,usable=.82;
-    return Math.max(size.y/usable,size.x/(usable*aspect),size.z/(usable*aspect),.5);
-  }
-  restoreTopViewHidden(){
-    (this.topViewHidden||[]).forEach(entry=>{if(entry.object)entry.object.visible=entry.visible;});this.topViewHidden=[];
-  }
-  hideTopViewOverheadAssets(spec=BoothSpec){
-    this.restoreTopViewHidden();const floorY=(Number(spec.raise)||0)/100,threshold=floorY+Math.max(1.8,Number(spec.H)*.65),T=this.THREE;
-    this.objectMeshes.forEach(root=>{if(root.visible===false)return;const box=new T.Box3().setFromObject(root,true);if(!box.isEmpty()&&box.min.y>=threshold){this.topViewHidden.push({object:root,visible:root.visible});root.visible=false;}});
-  }
-  cancelCameraTransition(){
-    if(this.cameraTransitionRaf)cancelAnimationFrame(this.cameraTransitionRaf);this.cameraTransitionRaf=0;
-    if(this.cameraTransitionResolve)this.cameraTransitionResolve(false);this.cameraTransitionResolve=null;
-    if(this.cameraTransitionControlsEnabled!==undefined)this.controls.enabled=this.cameraTransitionControlsEnabled;this.cameraTransitionControlsEnabled=undefined;
-  }
-  transitionCameraTo({position,target,up,frameHeight=null},duration=400){
-    this.cancelCameraTransition();const T=this.THREE,startPosition=this.camera.position.clone(),startTarget=this.controls.target.clone(),startUp=this.camera.up.clone(),startFrame=this.orthographicFrameHeight;
-    const apply=t=>{this.camera.position.lerpVectors(startPosition,position,t);this.controls.target.lerpVectors(startTarget,target,t);this.camera.up.lerpVectors(startUp,up,t).normalize();if(Number.isFinite(frameHeight)){this.orthographicFrameHeight=startFrame+(frameHeight-startFrame)*t;this.updateCameraAspect(this.lastSize[0]/Math.max(1,this.lastSize[1]));}this.camera.lookAt(this.controls.target);this.camera.updateProjectionMatrix();this.renderer.render(this.scene,this.camera);};
-    if(!duration){apply(1);return Promise.resolve(true);}
-    this.cameraTransitionControlsEnabled=this.controls.enabled;this.controls.enabled=false;const started=performance.now();
-    return new Promise(resolve=>{this.cameraTransitionResolve=resolve;const tick=now=>{const raw=Math.min(1,(now-started)/duration),t=raw<.5?4*raw*raw*raw:1-Math.pow(-2*raw+2,3)/2;apply(t);if(raw<1)this.cameraTransitionRaf=requestAnimationFrame(tick);else{this.cameraTransitionRaf=0;this.cameraTransitionResolve=null;this.controls.enabled=this.cameraTransitionControlsEnabled;this.cameraTransitionControlsEnabled=undefined;resolve(true);}};this.cameraTransitionRaf=requestAnimationFrame(tick);});
-  }
-  switchCameraPreservingPose(camera){
-    if(this.camera===camera)return;const position=this.camera.position.clone(),up=this.camera.up.clone();this.useCamera(camera);this.camera.position.copy(position);this.camera.up.copy(up);
-  }
-  async setCameraView(view,options={}){
-    const profile=CAMERA_PRESETS[view]||CAMERA_PRESETS.perspective,animate=options.animate!==false,commit=options.commit!==false;
-    if(view!=='orthographic_top')this.restoreTopViewHidden();
-    this.currentView=profile.cameraViewType;this.renderCameraProfile={...profile};this.viewButtons.forEach((button,key)=>button.classList.toggle('on',key===view));
-    if(profile.orthographic){if(view==='orthographic_top')this.hideTopViewOverheadAssets(BoothSpec);return this.setOrthographicCameraPreset(BoothSpec,profile,{animate,commit});}
-    if(view!=='perspective')return this.setTwoPointCameraPreset(BoothSpec,profile,{animate,commit});
-    const spec=BoothSpec,span=Math.max(spec.W,spec.D,spec.H),floorY=(Number(spec.raise)||0)/100,target=new this.THREE.Vector3(spec.W/2,Math.max(floorY+.2,spec.H*.42),spec.D/2),position=new this.THREE.Vector3(spec.W*.72,Math.max(spec.H*.72,2.2),spec.D+span*1.35);
-    this.applyingCameraPreset=true;this.switchCameraPreservingPose(this.perspectiveCamera);this.controls.enableRotate=true;this.camera.fov=42;this.updateCameraAspect(this.lastSize[0]/Math.max(1,this.lastSize[1]));
-    const completed=await this.transitionCameraTo({position,target,up:new this.THREE.Vector3(0,1,0)},animate?400:0);if(!completed)return false;
-    this.applyingCameraPreset=false;this.controls.update();if(commit)this.commitCameraState();return this.cameraManifest();
+  setCameraView(view){
+    if(view==='top')return this.setTopCameraPreset(BoothSpec,CAMERA_PRESETS.top);
+    if(view!=='perspective'&&CAMERA_PRESETS[view])return this.setTwoPointCameraPreset(BoothSpec,CAMERA_PRESETS[view]);
+    const spec=BoothSpec,span=Math.max(spec.W,spec.D,spec.H),floorY=(Number(spec.raise)||0)/100,target=new this.THREE.Vector3(spec.W/2,Math.max(floorY+.2,spec.H*.42),spec.D/2);
+    this.applyingCameraPreset=true;this.useCamera(this.perspectiveCamera);this.controls.enableRotate=true;this.camera.up.set(0,1,0);this.camera.fov=42;
+    this.camera.position.set(spec.W*.72,Math.max(spec.H*.72,2.2),spec.D+span*1.35);this.controls.target.copy(target);this.camera.lookAt(target);this.updateCameraAspect(this.lastSize[0]/Math.max(1,this.lastSize[1]));
+    const damping=this.controls.enableDamping;this.controls.enableDamping=false;this.controls.update();this.controls.enableDamping=damping;
+    this.currentView='perspective';this.renderCameraProfile={...CAMERA_PRESETS.perspective};this.applyingCameraPreset=false;
+    this.viewButtons.forEach((button,key)=>button.classList.toggle('on',key==='perspective'));this.renderer.render(this.scene,this.camera);this.commitCameraState();return this.cameraManifest();
   }
   safePresetAngle(spec,profile){
     const requested=Number(profile.angleDeg)||0;if(!requested)return{requested,effective:0,occlusionAdjusted:false};
@@ -6647,7 +6602,7 @@ class ThreeBoothRenderer{
     const effective=closed?Math.sign(requested)*(Math.abs(requested)>=60?25:15):requested;
     return{requested,effective,occlusionAdjusted:closed};
   }
-  async setTwoPointCameraPreset(spec=BoothSpec,profile=CAMERA_PRESETS.perspective_front_left,options={}){
+  setTwoPointCameraPreset(spec=BoothSpec,profile=CAMERA_PRESETS.front){
     const T=this.THREE,floorY=(Number(spec.raise)||0)/100,target=new T.Vector3(Number(spec.W)/2,floorY+Number(profile.heightM||1.6),Number(spec.D)/2),angle=this.safePresetAngle(spec,profile);
     const radians=T.MathUtils.degToRad(angle.effective),direction=new T.Vector3(Math.sin(radians),0,Math.cos(radians)).normalize(),aspect=Number(profile.aspectRatio)||4/3,focal=Math.max(1,Number(profile.lensEquivalentMm)||40);
     const verticalFov=T.MathUtils.radToDeg(2*Math.atan(24/(2*focal))),horizontalFov=2*Math.atan(Math.tan(T.MathUtils.degToRad(verticalFov)/2)*aspect);
@@ -6655,39 +6610,24 @@ class ThreeBoothRenderer{
     const verticalHalf=Math.max(target.y-floorY,floorY+Number(spec.H)-target.y),verticalDistance=verticalHalf/(.9*Math.tan(T.MathUtils.degToRad(verticalFov)/2));
     let distance=Math.max(1,verticalDistance,projectedHalf/(frameRatio*Math.tan(horizontalFov/2)));
     const corners=[[0,0],[Number(spec.W),0],[0,Number(spec.D)],[Number(spec.W),Number(spec.D)]].map(([x,z])=>new T.Vector3(x,target.y,z));
-    this.applyingCameraPreset=true;this.switchCameraPreservingPose(this.perspectiveCamera);this.controls.enableRotate=true;
-    const transitionStartPosition=this.camera.position.clone(),transitionStartTarget=this.controls.target.clone(),transitionStartUp=this.camera.up.clone();this.camera.fov=verticalFov;this.camera.aspect=aspect;
+    this.applyingCameraPreset=true;this.useCamera(this.perspectiveCamera);this.controls.enableRotate=true;this.camera.up.set(0,1,0);this.camera.fov=verticalFov;this.camera.aspect=aspect;this.controls.target.copy(target);
     for(let pass=0;pass<5;pass++){
-      this.camera.position.copy(target).addScaledVector(direction,distance);this.controls.target.copy(target);this.camera.lookAt(target);this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);
+      this.camera.position.copy(target).addScaledVector(direction,distance);this.camera.lookAt(target);this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);
       const xs=corners.map(point=>point.clone().project(this.camera).x),span=Math.max(...xs)-Math.min(...xs);if(!Number.isFinite(span)||span<=0)break;
       distance*=span/(frameRatio*2);
     }
-    const position=target.clone().addScaledVector(direction,distance);this.camera.position.copy(transitionStartPosition);this.controls.target.copy(transitionStartTarget);this.camera.up.copy(transitionStartUp);this.updateCameraAspect(this.lastSize[0]/Math.max(1,this.lastSize[1]));
-    this.renderCameraProfile={...profile,requestedAngleDeg:angle.requested,effectiveAngleDeg:angle.effective,occlusionAdjusted:angle.occlusionAdjusted,fov:manifestNumber(verticalFov,3),cameraHeightReference:'finished-floor'};
-    const completed=await this.transitionCameraTo({position,target,up:new T.Vector3(0,1,0)},options.animate===false?0:400);if(!completed)return false;
-    this.applyingCameraPreset=false;this.controls.update();if(options.commit!==false)this.commitCameraState();return this.cameraManifest();
+    this.camera.position.copy(target).addScaledVector(direction,distance);this.camera.lookAt(target);this.updateCameraAspect(this.lastSize[0]/Math.max(1,this.lastSize[1]));
+    const damping=this.controls.enableDamping;this.controls.enableDamping=false;this.controls.update();this.controls.enableDamping=damping;
+    this.currentView=profile.id;this.renderCameraProfile={...profile,requestedAngleDeg:angle.requested,effectiveAngleDeg:angle.effective,occlusionAdjusted:angle.occlusionAdjusted,fov:manifestNumber(verticalFov,3),cameraHeightReference:'finished-floor'};this.applyingCameraPreset=false;
+    this.viewButtons.forEach((button,key)=>button.classList.toggle('on',key===profile.id));this.renderer.render(this.scene,this.camera);this.commitCameraState();return this.cameraManifest();
   }
-  async setOrthographicCameraPreset(spec=BoothSpec,profile=CAMERA_PRESETS.orthographic_front,options={}){
-    const T=this.THREE,bounds=this.presentationBounds(spec),center=bounds.getCenter(new T.Vector3()),size=bounds.getSize(new T.Vector3()),distance=Math.max(size.x,size.y,size.z,1)*4+4;
-    const target=center.clone(),position=center.clone(),up=new T.Vector3(0,1,0),commonFrameHeight=this.presentationElevationFrameHeight(spec);
-    let frameHeight=commonFrameHeight;
-    if(profile.axis==='front')position.z=bounds.max.z+distance;
-    else if(profile.axis==='rear')position.z=bounds.min.z-distance;
-    else if(profile.axis==='left')position.x=bounds.min.x-distance;
-    else if(profile.axis==='right')position.x=bounds.max.x+distance;
-    else{position.y=bounds.max.y+distance;position.z+=.001;up.set(0,0,-1);frameHeight=commonFrameHeight;}
-    this.applyingCameraPreset=true;this.switchCameraPreservingPose(this.orthographicCamera);this.controls.enableRotate=false;this.camera.near=.05;this.camera.far=Math.max(250,distance*8);this.renderCameraProfile={...profile,presentationScaleM:manifestNumber(frameHeight,4),marginPercent:9};
-    const completed=await this.transitionCameraTo({position,target,up,frameHeight},options.animate===false?0:400);if(!completed)return false;
-    this.applyingCameraPreset=false;this.controls.update();if(options.commit!==false)this.commitCameraState();return this.cameraManifest();
-  }
-  async capturePresentationView(cameraViewType,options={}){
-    if(!PRESENTATION_CAMERA_VIEW_TYPES.includes(cameraViewType))throw new Error('Unsupported presentation camera view: '+cameraViewType);
-    const previous=this.cameraManifest();await this.setCameraView(cameraViewType,{animate:false,commit:false});
-    try{return{cameraViewType,...await this.exportCleanScreenshot({...options,download:options.download===true,aspectRatio:Number(options.aspectRatio)||4/3,fileName:options.fileName||('YUPPIE-'+cameraViewType+'.png')})};}
-    finally{this.restoreTopViewHidden();this.applyCameraManifest(previous);this.updateCameraAspect(this.lastSize[0]/Math.max(1,this.lastSize[1]));this.renderer.render(this.scene,this.camera);}
-  }
-  async capturePresentationViews(options={}){
-    const results=[];for(const cameraViewType of PRESENTATION_CAMERA_VIEW_TYPES)results.push(await this.capturePresentationView(cameraViewType,{...options,download:false}));return results;
+  setTopCameraPreset(spec=BoothSpec,profile=CAMERA_PRESETS.top){
+    const T=this.THREE,floorY=(Number(spec.raise)||0)/100,aspect=Number(profile.aspectRatio)||4/3,target=new T.Vector3(Number(spec.W)/2,floorY,Number(spec.D)/2);
+    this.applyingCameraPreset=true;this.useCamera(this.orthographicCamera);this.controls.enableRotate=false;this.camera.up.set(0,0,-1);this.camera.position.set(target.x,floorY+Math.max(10,Number(spec.H)+6),target.z+.001);this.controls.target.copy(target);
+    this.orthographicFrameHeight=Math.max(Number(spec.W)/(Math.max(.2,Number(profile.framingWidthRatio)||.85)*aspect),Number(spec.D)/.9,.5);this.updateCameraAspect(this.lastSize[0]/Math.max(1,this.lastSize[1]));this.camera.lookAt(target);
+    const damping=this.controls.enableDamping;this.controls.enableDamping=false;this.controls.update();this.controls.enableDamping=damping;
+    this.currentView=profile.id;this.renderCameraProfile={...profile,cameraHeightReference:'top-orthographic'};this.applyingCameraPreset=false;
+    this.viewButtons.forEach((button,key)=>button.classList.toggle('on',key===profile.id));this.renderer.render(this.scene,this.camera);this.commitCameraState();return this.cameraManifest();
   }
 }
 

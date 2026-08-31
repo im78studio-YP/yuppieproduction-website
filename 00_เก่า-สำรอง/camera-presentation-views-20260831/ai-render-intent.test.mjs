@@ -73,39 +73,25 @@ test('Prompt กำกับ AI Digital Display Placement โดยไม่เ�
 });
 
 test('Camera Controls มี Preset ครบตามลำดับและเลื่อนได้บนจอแคบ', () => {
-  assert.match(html, /\[\['perspective','Perspective'\],\['perspective_front_left','เฉียงซ้าย'\],\['perspective_front_right','เฉียงขวา'\],\['orthographic_front','หน้า'\],\['orthographic_rear','หลัง'\],\['orthographic_left','ซ้าย'\],\['orthographic_right','ขวา'\],\['orthographic_top','บน'\]\]/);
+  assert.match(html, /\[\['perspective','Perspective'\],\['front','หน้า'\],\['front-left','เฉียงซ้าย'\],\['front-right','เฉียงขวา'\],\['left-dominant','ซ้าย'\],\['right-dominant','ขวา'\],\['top','บน'\]\]/);
   assert.match(html, /\.three-tools\{[^}]*flex-wrap:nowrap[^}]*overflow-x:auto/s);
   assert.match(html, /\.three-tools button\{[^}]*white-space:nowrap/s);
 });
 
-test('Camera Presets ใช้มุมเรนเดอร์ Two-Point และรูปด้าน Orthographic จริง', () => {
-  for (const text of ['Front-Left', 'Front-Right', 'Front Orthographic Elevation', 'Rear Orthographic Elevation', 'Left Orthographic Elevation', 'Right Orthographic Elevation', 'Top Orthographic Plan View', 'Two-Point Perspective', 'Landscape 4:3']) assert.match(html, new RegExp(text));
+test('Camera Presets ใช้มุม Two-Point, 40 มม., ระดับ 1.60 ม. และ Top Orthographic', () => {
+  for (const text of ['Front Straight', 'Front-Left', 'Front-Right', 'Left-Dominant', 'Right-Dominant', 'Top Orthographic', 'Two-Point Perspective', 'Landscape 4:3']) assert.match(html, new RegExp(text));
   assert.match(html, /heightM:1\.6,lensEquivalentMm:40/);
   assert.match(html, /framingWidthRatio:\.85,aspectRatio:4\/3/);
-  assert.match(html, /angleDeg:-35/);assert.match(html, /angleDeg:35/);
+  assert.match(html, /angleDeg:-35/);assert.match(html, /angleDeg:35/);assert.match(html, /angleDeg:-70/);assert.match(html, /angleDeg:70/);
   assert.match(html, /new THREE\.OrthographicCamera/);
-  assert.match(html, /setTwoPointCameraPreset/);assert.match(html, /setOrthographicCameraPreset/);
-  assert.match(html, /profile\.axis==='front'/);assert.match(html, /profile\.axis==='rear'/);
-  assert.match(html, /profile\.axis==='left'/);assert.match(html, /profile\.axis==='right'/);
+  assert.match(html, /setTwoPointCameraPreset/);assert.match(html, /setTopCameraPreset/);
+  assert.match(html, /this\.camera\.up\.set\(0,1,0\)/);
   assert.match(html, /occlusionAdjusted/);
 });
 
-test('Presentation Views ใช้สเกลร่วม เว้นขอบ 8–10% ซ่อน Overhead เฉพาะ Top และมี Export API', () => {
-  assert.match(html, /presentationElevationFrameHeight/);
-  assert.match(html, /usable=\.82/);
-  assert.match(html, /marginPercent:9/);
-  assert.match(html, /frameHeight=commonFrameHeight/);
-  assert.match(html, /hideTopViewOverheadAssets/);
-  assert.match(html, /restoreTopViewHidden/);
-  assert.match(html, /transitionCameraTo\([\s\S]*duration=400/);
-  assert.match(html, /capturePresentationView\(cameraViewType/);
-  assert.match(html, /capturePresentationViews\(options=/);
-  for (const view of ['orthographic_front','orthographic_rear','orthographic_left','orthographic_right','orthographic_top']) assert.match(html, new RegExp(view));
-});
-
 test('Camera Preset บันทึก Project State และ Render Package ใช้มุม Snapshot ปัจจุบัน', () => {
-  for (const token of ['cameraViewType', 'cameraPresetId', 'cameraPosition', 'cameraTarget', 'fov', 'aspectRatio']) assert.match(html, new RegExp(token));
-  assert.match(html, /settings\.camera=state;settings\.cameraViewType=state\.cameraViewType/);
+  for (const token of ['cameraPresetId', 'cameraPosition', 'cameraTarget', 'fov', 'aspectRatio']) assert.match(html, new RegExp(token));
+  assert.match(html, /normalizeAIRenderingSettings\(BoothSpec\)\.camera=state/);
   assert.match(html, /renderCameraPromptLines\(snapshot\)/);
   assert.match(html, /aspectRatio:renderPackageAspectRatio\(snapshot\)/);
   assert.doesNotMatch(html, /applyStandardRenderCamera|setHeroFrontRightCamera|RENDER_CAMERA_PROFILE/);
