@@ -4068,6 +4068,17 @@ function buildStructureEnhancementPrompt(snapshot){
   const p=snapshot.payload,style=aiRenderStyle(p.renderStyle),assets=p.assets.filter(asset=>asset.visible),room=p.room.enabled?'มีห้องเก็บของ · '+p.room.size+' · ตำแหน่ง '+p.room.position+' · ประตู '+p.room.door:'ไม่มีห้องเก็บของ';
   const assetLines=assets.length?assets.map((asset,index)=>'- '+(index+1)+'. '+asset.name+' ['+asset.id+'] · XYZ '+asset.position.x.toFixed(2)+'/'+asset.position.y.toFixed(2)+'/'+asset.position.z.toFixed(2)+' ม. · หมุน XYZ '+asset.rotation.x.toFixed(1)+'/'+asset.rotation.y.toFixed(1)+'/'+asset.rotation.z.toFixed(1)+'° · Scale '+asset.scale.x.toFixed(2)+'/'+asset.scale.y.toFixed(2)+'/'+asset.scale.z.toFixed(2)):['- ไม่มี Asset ที่ลูกค้าวาง'];
   const allow=[];if(p.aiEnhancementOptions.allowFurniture)allow.push('สินค้าและเฟอร์นิเจอร์');if(p.aiEnhancementOptions.allowPeople)allow.push('คนและบรรยากาศ');if(p.aiEnhancementOptions.allowDecor||p.aiEnhancementOptions.allowPlants)allow.push('ของตกแต่งและต้นไม้');
+  const digitalDisplayLines=p.aiEnhancementOptions.enabled?[
+    '',
+    'AI DIGITAL DISPLAY PLACEMENT',
+    'พิจารณาเพิ่มจอ TV หรือ Digital Display ได้ไม่เกิน 1 จุด เฉพาะเมื่อมีพื้นผิวที่เหมาะสมในโครงสร้างเดิม',
+    'ลำดับตำแหน่งที่ควรพิจารณา: 1) พื้นผิวแนวตั้งด้านหน้าของโครงสร้างเดิมที่ยื่นออกจากผนัง 2) ผนังหรือโครงสร้างเดิมด้านหลังเคาน์เตอร์ 3) ผนังรองที่มีพื้นที่ว่างและมองเห็นได้จากทางเดิน',
+    'ติดตั้งจอราบไปกับพื้นผิวเดิม ปรับขนาดให้เหมาะกับพื้นที่รองรับ และเหลือระยะขอบรอบจออย่างสมดุล',
+    'ห้ามสร้างกรอบ แผง เสา ฐาน หรือโครงสร้างใหม่เพื่อรองรับจอ และห้ามเพิ่ม ขยาย ตัด ย้าย หรือเปลี่ยน Geometry ของโครงสร้างเดิม',
+    'ห้ามปิดทับโลโก้ ประตู ช่องเปิด ชั้นสินค้า โคมไฟ งานพิมพ์ หรือ Asset ที่มีอยู่',
+    'หากไม่มีโครงสร้างหรือตำแหน่งที่เหมาะสม ไม่ต้องเพิ่มจอ หากผนังเดียวกันมีงานพิมพ์ ให้ลดขนาดหรือความหนาแน่นของงานพิมพ์เพื่อรักษาความสมดุล',
+    'จอที่ AI เพิ่มเป็น AI Suggested / Render Staging เท่านั้น ไม่รวมใน Project, BOQ หรือขอบเขตการผลิต'
+  ]:[];
   return[
     'STRUCTURE ENHANCEMENT RENDER PACKAGE',
     'renderPackageId: '+snapshot.renderPackageId,'stateHash: '+snapshot.stateHash,'sceneRevision: '+snapshot.sceneRevision,
@@ -4090,6 +4101,7 @@ function buildStructureEnhancementPrompt(snapshot){
     'ความหนาแน่นองค์ประกอบ: '+p.aiEnhancementOptions.density+' · อิสระการจัดฉาก '+p.aiEnhancementOptions.stagingFreedom+'/10',
     'องค์ประกอบที่เติมต้องอยู่ในบูธ มีสัดส่วนจริง ไม่ชน Asset เดิม ไม่บังโลโก้/ประตู/ทางเข้า และเป็น Render Staging เท่านั้น ไม่รวม BOQ หรือสโคปผลิต',
     'ห้ามสร้างพื้น ผนัง ห้อง หรือโครงสร้างถาวรใหม่ และห้ามใช้แบรนด์จริงที่ลูกค้าไม่ได้อัปโหลด',
+    ...digitalDisplayLines,
     'ใช้วัสดุ PBR, global illumination, ambient occlusion, contact shadows, realistic reflections และแสง Exhibition Hall แบบมืออาชีพ',
     'ภาพสุดท้ายต้องไม่มี Grid เส้นแกน ตัวเลข Bounding Box หรือหน้าตาโปรแกรม'
   ].join('\n');

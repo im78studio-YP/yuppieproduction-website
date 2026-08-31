@@ -64,6 +64,14 @@ test('Prompt ล็อก Geometry และแยกสิ่งที่ AI �
   assert.match(html, /ห้ามสร้างพื้น ผนัง ห้อง หรือโครงสร้างถาวรใหม่/);
 });
 
+test('Prompt กำกับ AI Digital Display Placement โดยไม่เปลี่ยน Geometry', () => {
+  for (const text of ['AI DIGITAL DISPLAY PLACEMENT', 'ได้ไม่เกิน 1 จุด', 'พื้นผิวแนวตั้งด้านหน้าของโครงสร้างเดิม', 'ผนังหรือโครงสร้างเดิมด้านหลังเคาน์เตอร์', 'ผนังรองที่มีพื้นที่ว่าง']) assert.match(html, new RegExp(text));
+  assert.match(html, /ห้ามสร้างกรอบ แผง เสา ฐาน หรือโครงสร้างใหม่เพื่อรองรับจอ/);
+  assert.match(html, /ห้ามปิดทับโลโก้ ประตู ช่องเปิด ชั้นสินค้า โคมไฟ งานพิมพ์ หรือ Asset/);
+  assert.match(html, /AI Suggested \/ Render Staging เท่านั้น ไม่รวมใน Project, BOQ หรือขอบเขตการผลิต/);
+  assert.match(html, /digitalDisplayLines=p\.aiEnhancementOptions\.enabled\?/);
+});
+
 test('UI แสดง Summary และผลสำเร็จสองรายการแยกกัน', () => {
   assert.match(html, /id="promptProjectSummary"/);
   assert.match(html, /✓ คัดลอกคำสั่งสำหรับ AI แล้ว/);
