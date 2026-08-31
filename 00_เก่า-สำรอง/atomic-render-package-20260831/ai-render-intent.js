@@ -2,14 +2,17 @@
   'use strict';
 
   const INTENTS = Object.freeze({
-    STRUCTURE_ENHANCEMENT: 'structure_enhancement'
+    CONCEPT: 'concept',
+    PRECISION: 'precision',
+    /* Compatibility alias for integrations created before Render Intent was renamed. */
+    FROM_3D: 'precision'
   });
   const QUALITY = Object.freeze({ PREVIEW: 'preview', FINAL: 'final' });
   const RENDER_ONLY_TYPES = new Set(['people', 'person', 'product', 'products', 'prop', 'props']);
 
   const number = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
   const text = (value, fallback = '') => String(value ?? fallback).trim();
-  const normalizeIntent = () => INTENTS.STRUCTURE_ENHANCEMENT;
+  const normalizeIntent = value => value === INTENTS.CONCEPT ? INTENTS.CONCEPT : INTENTS.PRECISION;
   const normalizeQuality = value => value === QUALITY.FINAL ? QUALITY.FINAL : QUALITY.PREVIEW;
   const normalizeDimensions = source => ({
     w: Math.max(.01, number(source?.w ?? source?.width, 1)),
@@ -51,7 +54,7 @@
       Array.isArray(root.suggested_assets) ? root.suggested_assets : [];
     return {
       version: Math.max(1, Math.round(number(root.version, 1))),
-      renderIntent: INTENTS.STRUCTURE_ENHANCEMENT,
+      renderIntent: INTENTS.CONCEPT,
       summary: text(root.summary || root.designSummary),
       zones: Array.isArray(root.zones) ? root.zones : [],
       suggestedAssets: assets.map(normalizeSuggestedAsset),

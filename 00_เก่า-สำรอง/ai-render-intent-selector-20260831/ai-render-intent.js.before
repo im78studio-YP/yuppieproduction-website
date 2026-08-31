@@ -2,14 +2,15 @@
   'use strict';
 
   const INTENTS = Object.freeze({
-    STRUCTURE_ENHANCEMENT: 'structure_enhancement'
+    CONCEPT: 'concept',
+    FROM_3D: 'from3d'
   });
   const QUALITY = Object.freeze({ PREVIEW: 'preview', FINAL: 'final' });
   const RENDER_ONLY_TYPES = new Set(['people', 'person', 'product', 'products', 'prop', 'props']);
 
   const number = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
   const text = (value, fallback = '') => String(value ?? fallback).trim();
-  const normalizeIntent = () => INTENTS.STRUCTURE_ENHANCEMENT;
+  const normalizeIntent = value => value === INTENTS.CONCEPT ? INTENTS.CONCEPT : INTENTS.FROM_3D;
   const normalizeQuality = value => value === QUALITY.FINAL ? QUALITY.FINAL : QUALITY.PREVIEW;
   const normalizeDimensions = source => ({
     w: Math.max(.01, number(source?.w ?? source?.width, 1)),
@@ -51,7 +52,7 @@
       Array.isArray(root.suggested_assets) ? root.suggested_assets : [];
     return {
       version: Math.max(1, Math.round(number(root.version, 1))),
-      renderIntent: INTENTS.STRUCTURE_ENHANCEMENT,
+      renderIntent: INTENTS.CONCEPT,
       summary: text(root.summary || root.designSummary),
       zones: Array.isArray(root.zones) ? root.zones : [],
       suggestedAssets: assets.map(normalizeSuggestedAsset),
@@ -96,26 +97,17 @@
     const secondary = text(context.secondary, '#111318').toUpperCase();
     const storage = context.hasStorage ? 'มีห้องเก็บของมาตรฐาน' : 'ไม่มีห้องเก็บของ';
     const floor = text(context.floor, 'ไม่ยกพื้น · พรมสีเทาดำ');
-    const openSides = text(booth.openSides, 'ตามมาตรฐานของรูปแบบบูธ');
-    const corner = text(booth.cornerSide);
-    const quality = normalizeQuality(context.quality);
-    const qualityLine = quality === QUALITY.FINAL
-      ? 'คุณภาพภาพ: Final · Photorealistic รายละเอียดสูง แสง วัสดุ และผิวงานพร้อมสำหรับภาพนำเสนอ'
-      : 'คุณภาพภาพ: Preview · สร้างแนวคิดรวดเร็ว รายละเอียดปานกลาง เหมาะสำหรับตรวจทิศทางการออกแบบ';
     return [
       'AI RENDER INTENT — CONCEPT DESIGN',
-      'สร้างภาพแนวคิดบูธที่เปิดใช้งานจริงจากข้อมูล Project State โดยไม่ใช้ภาพอ้างอิงจากระบบ 3D',
+      'สร้างภาพแนวคิดบูธที่เปิดใช้งานจริงโดยไม่ใช้ Clean Screenshot เป็นภาพอ้างอิง',
       `ประเภทธุรกิจ: ${business}`,
       `สีแบรนด์: สีหลัก ${primary} · สีรอง ${secondary}`,
       `รูปแบบบูธ: ${text(booth.type, 'Inline')} · ขนาดกว้าง ${number(booth.width, 6).toFixed(2)} ม. × ลึก ${number(booth.depth, 3).toFixed(2)} ม. × สูง ${number(booth.height, 2.4).toFixed(2)} ม.`,
-      `ด้านเปิด: ${openSides}${corner ? ` · หัวมุม${corner === 'left' ? 'ซ้าย' : corner === 'right' ? 'ขวา' : corner}` : ''}`,
       `ข้อกำหนดตั้งต้น: ${floor} · ${storage}`,
       `สไตล์: ${style}`,
-      qualityLine,
       '',
       'GEOMETRY FIDELITY — CONCEPT',
-      'รักษาประเภทธุรกิจ สีแบรนด์ สไตล์ รูปแบบบูธ ด้านเปิด หัวมุม และขนาดรวมที่กำหนด',
-      'ให้อิสระออกแบบการแบ่งโซน เคาน์เตอร์ ชั้นและแท่นแสดงสินค้า โต๊ะและเก้าอี้ สินค้า Generic คน ต้นไม้ ของตกแต่ง แสง และบรรยากาศได้อย่างสร้างสรรค์',
+      'รักษาประเภทธุรกิจ สีแบรนด์ รูปแบบบูธ จำนวนด้านเปิด และขนาดรวมที่กำหนด แต่สามารถเสนอการแบ่งโซน เฟอร์นิเจอร์ลอยตัว แท่นสินค้า สินค้า Generic คน ต้นไม้ พร็อพ แสง และบรรยากาศได้อย่างสร้างสรรค์',
       'Auto-Staging Freedom: สูง · ห้ามใช้แบรนด์จริงหรือเครื่องหมายการค้าที่ลูกค้าไม่ได้ให้มา · ห้ามวางของขวางทางเข้าและทางเดินหลัก',
       '',
       'OUTPUT CONTRACT',

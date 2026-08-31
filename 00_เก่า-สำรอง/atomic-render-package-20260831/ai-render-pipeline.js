@@ -118,7 +118,7 @@
         requestId,
         abTestId: input.abTestId || null,
         promptVariant: input.promptVariant === 'compact' ? 'compact' : 'full',
-        renderIntent: 'structure_enhancement',
+        renderIntent: input.renderIntent === 'concept' ? 'concept' : 'precision',
         model: input.model || this.adapter.model || null,
         quality: input.quality || this.adapter.quality || null,
         size: input.size || this.adapter.size || null,
@@ -142,7 +142,7 @@
 
         this.status('uploading', requestId, requiresReference
           ? `${referenceMeta.width} × ${referenceMeta.height} px · ${(referenceMeta.bytes / 1024).toFixed(0)} KB`
-          : 'ไม่พบภาพอ้างอิง 3D');
+          : 'Concept Design · ไม่ใช้ Clean Screenshot');
         const uploadedReference = await measure('uploadReferenceImage', () => requiresReference && this.adapter.uploadReferenceImage
           ? this.adapter.uploadReferenceImage(reference, context)
           : reference);

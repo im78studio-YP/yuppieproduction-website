@@ -393,8 +393,6 @@ select:focus{border-color:var(--acc)}
 .prompt-precision-lock{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;padding:10px;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.13)}.prompt-precision-lock>span{color:var(--acc);font-size:15px;font-weight:800}.prompt-precision-lock strong{display:block;color:var(--tx);font-size:11px}.prompt-precision-lock small{display:block;margin-top:3px;color:var(--tx3);font-size:9.5px;line-height:1.45}
 .prompt-reality-title{color:var(--tx2);font-size:11px;font-weight:700}.prompt-reality-list{display:grid;gap:7px}.prompt-reality-item{display:flex;align-items:center;gap:8px;min-height:36px;padding:7px 9px;border:1px solid rgba(var(--acc-rgb),.28);border-radius:8px;background:rgba(var(--acc-rgb),.055);color:var(--tx2);font-size:10.5px;font-weight:650}.prompt-reality-item::before{content:'\2713';display:grid;place-items:center;width:17px;height:17px;border-radius:5px;background:var(--acc);color:#14161a;font-size:11px;font-weight:900}
 .prompt-package-note{grid-column:1/-1;margin:-2px 0 0;color:var(--tx3);font-size:9.5px;line-height:1.45;text-align:center}.prompt-package-note[hidden]{display:none!important}
-.prompt-package-summary{padding:9px 10px;border:1px solid rgba(var(--acc-rgb),.28);border-radius:8px;background:rgba(0,0,0,.18);color:var(--tx);font-size:11px;font-weight:650;line-height:1.5}
-.prompt-package-results{grid-column:1/-1;display:grid;gap:5px;padding:9px 10px;border:1px solid rgba(83,200,136,.32);border-radius:8px;background:rgba(31,116,76,.12);color:#8ee0b2;font-size:11px;font-weight:650}.prompt-package-results[hidden]{display:none!important}
 .prompt-render-result{margin-top:10px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:rgba(255,255,255,.02)}.prompt-render-result[hidden]{display:none}
 .prompt-result-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border-bottom:1px solid var(--line)}.prompt-result-badge{display:inline-flex;align-items:center;min-height:25px;padding:0 9px;border-radius:999px;background:rgba(247,37,133,.13);border:1px solid rgba(247,37,133,.42);color:#ff70b5;font-size:10px;font-weight:800}.prompt-result-request{font-size:9px;color:var(--tx3)}
 .prompt-result-image{display:block;width:100%;max-height:320px;object-fit:contain;background:#090b0f}.prompt-result-image[hidden]{display:none}
@@ -884,10 +882,16 @@ select:focus{border-color:var(--acc)}
           </div>
           <div class="prompt-fidelity-note" id="promptFidelityNote">เติมองค์ประกอบในระดับสมดุล โดยไม่เปลี่ยน Geometry ที่ล็อกไว้</div>
         </div>
+        <div class="prompt-intent-quality" id="promptConceptQuality" aria-label="คุณภาพการสร้างภาพสำหรับ Concept" hidden>
+          <strong>คุณภาพ</strong>
+          <div class="prompt-quality-options" role="radiogroup" aria-label="เลือกคุณภาพ Preview หรือ Final">
+            <button class="prompt-quality-choice on" type="button" data-render-quality="preview" role="radio" aria-checked="true">ร่างเร็ว</button>
+            <button class="prompt-quality-choice" type="button" data-render-quality="final" role="radio" aria-checked="false">ภาพนำเสนอ</button>
+          </div>
+        </div>
         <div class="prompt-precision-prep" id="promptPrecisionPrep">
           <h4>สร้างภาพจำลองเมื่อบูธเสร็จสมบูรณ์</h4>
           <p>ระบบจะยึดโครงสร้าง 3D ของคุณ แล้วเติมรายละเอียดให้ดูพร้อมใช้งานจริง</p>
-          <div class="prompt-package-summary" id="promptProjectSummary" aria-live="polite"></div>
           <div class="prompt-intent-quality" aria-label="คุณภาพการสร้างภาพตามแบบ 3D">
             <strong>คุณภาพ</strong>
             <div class="prompt-quality-options" role="radiogroup" aria-label="เลือกคุณภาพร่างเร็วหรือภาพนำเสนอ">
@@ -908,11 +912,11 @@ select:focus{border-color:var(--acc)}
         </div>
         <div class="prompt-actions">
           <button class="btn pri sm prompt-copy" type="button" id="promptCopy">เตรียมชุดสร้างภาพ</button>
+          <button class="btn sm prompt-intent-button concept" type="button" id="promptRenderConcept" aria-pressed="false">AI ช่วยออกแบบ<small>Concept · ไม่ใช้ Clean Screenshot</small></button>
+          <button class="btn sm prompt-intent-button precision on" type="button" id="promptRender3d" aria-pressed="true">เรนเดอร์ตามแบบ 3D<small>Geometry Fidelity 10/10</small></button>
+          <p class="prompt-intent-note" id="promptIntentNote">ใช้ Prompt และ Clean Screenshot เพื่อเรนเดอร์ให้ตรงกับ Geometry และตำแหน่ง Asset ในแบบ 3D</p>
+          <button class="btn sm prompt-clean" type="button" id="promptCleanScreenshot">ดาวน์โหลด Clean Screenshot<span class="prompt-soon">PNG · ใช้มุมกล้องปัจจุบัน</span></button>
           <p class="prompt-package-note" id="promptPackageNote">คัดลอกคำสั่งและดาวน์โหลดภาพอ้างอิง 3D</p>
-          <div class="prompt-package-results" id="promptPackageResults" hidden aria-live="polite">
-            <div data-package-result="prompt">✓ คัดลอกคำสั่งสำหรับ AI แล้ว</div>
-            <div data-package-result="screenshot">✓ ดาวน์โหลดภาพอ้างอิงแล้ว</div>
-          </div>
         </div>
         <div class="prompt-render-progress" id="promptRenderProgress" hidden aria-label="สถานะการสร้างภาพ">
           <div class="prompt-render-step" data-render-step="preparing">กำลังเตรียมข้อมูล</div>
@@ -1827,7 +1831,7 @@ const defaultAIStagingSettings=()=>globalThis.YPAIStaging?.normalizeAIStaging({}
 function defaultAIRenderingSettings(){
   return{schemaVersion:AI_RENDER_SCHEMA_VERSION,allowOptionalProps:true,
     optionalPermissions:{furniture:true,products:true,plants:true,people:true,decor:true,props:true},
-    renderStyle:AI_RENDER_STYLE_DEFAULT,promptVariant:'compact',renderIntent:'structure_enhancement',quality:'preview',camera:null,preview:null,renderPackage:null};
+    renderStyle:AI_RENDER_STYLE_DEFAULT,promptVariant:'full',renderIntent:'precision',quality:'preview',camera:null,preview:null};
 }
 const BoothSpec={version:3,cat:'food',customBusinessCategory:'',primary:'#2e7d4f',colTouched:false,secondary:'#5a4028',secTouched:false,
   wallCol:'white',wallMat:'paint',wallStickerFaces:[],wallStickers:{
@@ -2100,11 +2104,10 @@ function normalizeAIRenderingSettings(spec=S){
     decor:staging.enabled&&staging.allowDecor,props:staging.enabled&&staging.allowDecor};
   source.renderStyle=aiRenderStyle(source.renderStyle).key;
   source.promptVariant=['full','compact'].includes(source.promptVariant)?source.promptVariant:'full';
-  source.renderIntent='structure_enhancement';
+  source.renderIntent=globalThis.YPAIRenderIntent?.normalizeIntent(source.renderIntent)||'precision';
   source.quality=globalThis.YPAIRenderIntent?.normalizeQuality(source.quality)||'preview';
   source.camera=source.camera&&typeof source.camera==='object'?source.camera:null;
   source.preview=source.preview&&typeof source.preview==='object'?source.preview:null;
-  source.renderPackage=source.renderPackage&&typeof source.renderPackage==='object'?source.renderPackage:null;
   spec.aiRendering=source;return source;
 }
 function defaultObjectAIRule(item){
@@ -3987,160 +3990,116 @@ function buildCompactDesignPrompt(){
   ].filter(Boolean).join('\n');
 }
 function currentPromptVariant(){return normalizeAIRenderingSettings(S).promptVariant;}
-const STRUCTURE_ENHANCEMENT_INTENT='structure_enhancement';
-let sceneRevision=0,sceneStateSignature='',lastPreparedRenderPackage=null;
-function currentRenderIntent(){return STRUCTURE_ENHANCEMENT_INTENT;}
+let renderIntent='precision';
+function currentRenderIntent(){return renderIntent;}
 function currentRenderQuality(){return normalizeAIRenderingSettings(S).quality;}
-const cloneRenderValue=value=>JSON.parse(JSON.stringify(value??null));
-const renderWallName=face=>({back:'ผนังหลัง',left:'ผนังซ้าย',right:'ผนังขวา',front:'ผนังหน้า'})[face]||face;
-const renderOpenSideName=face=>({front:'ด้านหน้า',back:'ด้านหลัง',left:'ด้านซ้าย',right:'ด้านขวา'})[face]||face;
-function renderFloorSnapshot(spec){
-  const material=({carpet:'พรม',grass:'หญ้าเทียม',tile:'กระเบื้องยาง',sticker:'สติ๊กเกอร์พื้น'})[spec.floor]||spec.floor||'ไม่ระบุ';
-  const detail=spec.floor==='carpet'?(spec.carpet||'grey'):spec.floor==='tile'?(spec.tile||'woodL'):spec.floor==='sticker'?(spec.floorStickerName||'ไฟล์ลูกค้า'):'';
-  return{type:spec.floor||'',material,detail,raiseCm:Number(spec.raise)||0,levelM:(Number(spec.raise)||0)/100};
+function conceptPromptContext(){
+  const type=typ()||{},floor=(()=>{try{return(S.raise?'ยกพื้น '+S.raise+' ซม.':'ไม่ยกพื้น')+' · '+floorName();}catch(e){return S.floor||'ไม่ระบุ';}})();
+  return{business:businessCategoryLabel(S),primary:S.primary,secondary:S.secondary,style:aiRenderStyle(normalizeAIRenderingSettings(S).renderStyle).th+
+    ' ('+aiRenderStyle(normalizeAIRenderingSettings(S).renderStyle).en+')',floor,hasStorage:hasStore(),quality:currentRenderQuality(),
+    booth:{type:type.n||S.type,width:S.W,depth:S.D,height:S.H,openSides:type.s||'',cornerSide:S.type==='corner'?S.cornerSide:''}};
 }
-function renderAssetSnapshot(spec){
-  return(Array.isArray(spec.objects)?spec.objects:[]).map((object,index)=>({
-    id:String(object.id||object.catalogId||'asset-'+(index+1)),name:String(object.label||objectCatalogDef(object.catalogId)?.name||'Asset '+(index+1)),
-    type:String(object.type||objectCatalogDef(object.catalogId)?.type||'asset'),catalogId:object.catalogId||'',
-    position:{x:Number(object.position?.x)||0,y:Number(object.position?.y)||0,z:Number(object.position?.z)||0},
-    rotation:{x:Number(object.rotationX)||0,y:Number(object.rotationY)||0,z:Number(object.rotationZ)||0},
-    scale:{x:Number(object.scale?.x)||1,y:Number(object.scale?.y)||1,z:Number(object.scale?.z)||1},
-    size:cloneRenderValue(object.size||objectCatalogDef(object.catalogId)?.size||{}),locked:object.locked===true,visible:object.visible!==false
-  }));
+function buildConceptDesignPrompt(){
+  return globalThis.YPAIRenderIntent?.buildConceptPrompt(conceptPromptContext())||'AI CONCEPT DESIGN · '+JSON.stringify(conceptPromptContext());
 }
-function stableRenderCameraSnapshot(camera){
-  if(!camera||typeof camera!=='object')return null;
-  return{
-    id:camera.id||null,projection:camera.projection||'perspective',preset:camera.preset||'perspective',
-    position:cloneRenderValue(camera.position),target:cloneRenderValue(camera.target),up:cloneRenderValue(camera.up),
-    fov:Number(camera.fov)||null,near:Number(camera.near)||null,far:Number(camera.far)||null
-  };
+function buildDesignPrompt(variant=currentPromptVariant(),intent=currentRenderIntent()){
+  if(intent==='concept')return buildConceptDesignPrompt();
+  return variant==='compact'?buildCompactDesignPrompt():buildFullDesignPrompt();
 }
-function renderStatePayload(spec,camera){
-  const type=manifestBoothType(spec),activeWalls=[...(type.walls||[])],openSides=['front',...['left','right','back'].filter(face=>!activeWalls.includes(face))];
-  const rendering=spec.aiRendering||{},staging=spec.aiStaging||{};
-  return{
-    boothType:spec.type,boothTypeLabel:TYPES.find(item=>item.k===spec.type)?.n||spec.type,cornerSide:spec.type==='corner'?spec.cornerSide:null,
-    width:Number(spec.W),depth:Number(spec.D),height:Number(spec.H),activeWalls,openSides,
-    floor:renderFloorSnapshot(spec),room:{enabled:spec.stSize!=='none',size:spec.stSize,width:Number(spec.stW)||0,depth:Number(spec.stD)||0,heightMode:spec.stHmode,height:Number(spec.stHv)||0,position:spec.stPos,door:spec.stDoor,doorType:spec.stDoorType},
-    brand:{primary:String(spec.primary||'').toUpperCase(),secondary:String(spec.secondary||'').toUpperCase(),name:spec.brand||'YOUR BRAND',logoVisible:spec.type!=='island'},
-    assets:renderAssetSnapshot(spec),camera:stableRenderCameraSnapshot(camera),qualityMode:rendering.quality||'preview',renderStyle:rendering.renderStyle||AI_RENDER_STYLE_DEFAULT,
-    aiEnhancementOptions:{enabled:staging.enabled!==false,density:staging.density||'medium',allowFurniture:staging.allowFurniture!==false,allowProducts:staging.allowProducts!==false,allowPeople:staging.allowPeople!==false,allowDecor:staging.allowDecor!==false,allowPlants:staging.allowPlants!==false,allowNewPermanentStructures:false,stagingFreedom:Number(spec.stagingFreedom)||6}
-  };
+function setRenderIntent(value,{update=true}={}){
+  renderIntent=globalThis.YPAIRenderIntent?.normalizeIntent(value)||'precision';
+  normalizeAIRenderingSettings(S).renderIntent=renderIntent;
+  if(update)updatePromptPreview();return currentRenderIntent();
 }
-function currentRenderCamera(spec=S){return cloneRenderValue(threeRenderer?.cameraManifest?.()||spec.aiRendering?.camera||null);}
-function captureRenderDraft(){
-  const spec=JSON.parse(serializeBoothSpec()),camera=currentRenderCamera(S);if(spec.aiRendering)spec.aiRendering.camera=cloneRenderValue(camera);
-  const payload=renderStatePayload(spec,camera);return{intent:STRUCTURE_ENHANCEMENT_INTENT,spec,payload,camera,signature:JSON.stringify(payload),sceneRevision};
-}
-function invalidatePreparedRenderPackage(message='แบบ 3D มีการเปลี่ยนแปลง · กรุณาเตรียมชุดสร้างภาพใหม่'){
-  if(!lastPreparedRenderPackage&&!S.aiRendering?.renderPackage)return;
-  lastPreparedRenderPackage=null;normalizeAIRenderingSettings(S).renderPackage=null;normalizeAIRenderingSettings(S).preview=null;
-  const results=document.getElementById('promptPackageResults');if(results)results.hidden=true;
-  const note=document.getElementById('promptPackageNote');if(note)note.textContent=message;
-  const status=document.getElementById('promptStatus');if(status)status.textContent=message.replace(' · ',' ');
-}
-function syncSceneRevision(){
-  const draft=captureRenderDraft();
-  if(!sceneStateSignature){sceneStateSignature=draft.signature;sceneRevision=1;return draft;}
-  if(draft.signature!==sceneStateSignature){sceneStateSignature=draft.signature;sceneRevision+=1;invalidatePreparedRenderPackage();}
-  draft.sceneRevision=sceneRevision;return draft;
-}
-async function renderStateHash(signature){
-  if(globalThis.crypto?.subtle){const bytes=new TextEncoder().encode(signature),digest=await crypto.subtle.digest('SHA-256',bytes);return[...new Uint8Array(digest)].map(value=>value.toString(16).padStart(2,'0')).join('');}
-  let hash=2166136261;for(let index=0;index<signature.length;index++){hash^=signature.charCodeAt(index);hash=Math.imul(hash,16777619);}return('00000000'+(hash>>>0).toString(16)).slice(-8);
-}
-async function createAtomicRenderSnapshot(){
-  const draft=syncSceneRevision(),stateHash=await renderStateHash(draft.signature);
-  if(draft.signature!==captureRenderDraft().signature)throw new Error('RENDER_STATE_CHANGED');
-  return{...draft,sceneRevision,renderPackageId:'rp-'+Date.now().toString(36)+'-'+stateHash.slice(0,10),stateHash,createdAt:new Date().toISOString()};
-}
-function renderPackageSummary(snapshot){
-  const p=snapshot.payload,corner=p.boothType==='corner'?' · '+(p.cornerSide==='left'?'หัวมุมซ้าย':'หัวมุมขวา'):'';
-  return p.boothTypeLabel+corner+' · '+p.width.toFixed(2)+' × '+p.depth.toFixed(2)+' × '+p.height.toFixed(2)+' ม. · เปิด'+p.openSides.map(renderOpenSideName).join('และ');
-}
-function renderPackageMissingFields(snapshot){
-  const p=snapshot.payload,missing=[];if(!snapshot.spec.cat||(snapshot.spec.cat==='other'&&!String(snapshot.spec.customBusinessCategory||'').trim()))missing.push('ประเภทธุรกิจ');
-  if(!/^#[0-9a-f]{6}$/i.test(p.brand.primary))missing.push('สีแบรนด์หลัก');if(!p.boothType)missing.push('รูปแบบบูธ');if(![p.width,p.depth,p.height].every(value=>value>0))missing.push('ขนาดบูธ');return missing;
-}
-function buildStructureEnhancementPrompt(snapshot){
-  const p=snapshot.payload,style=aiRenderStyle(p.renderStyle),assets=p.assets.filter(asset=>asset.visible),room=p.room.enabled?'มีห้องเก็บของ · '+p.room.size+' · ตำแหน่ง '+p.room.position+' · ประตู '+p.room.door:'ไม่มีห้องเก็บของ';
-  const assetLines=assets.length?assets.map((asset,index)=>'- '+(index+1)+'. '+asset.name+' ['+asset.id+'] · XYZ '+asset.position.x.toFixed(2)+'/'+asset.position.y.toFixed(2)+'/'+asset.position.z.toFixed(2)+' ม. · หมุน XYZ '+asset.rotation.x.toFixed(1)+'/'+asset.rotation.y.toFixed(1)+'/'+asset.rotation.z.toFixed(1)+'° · Scale '+asset.scale.x.toFixed(2)+'/'+asset.scale.y.toFixed(2)+'/'+asset.scale.z.toFixed(2)):['- ไม่มี Asset ที่ลูกค้าวาง'];
-  const allow=[];if(p.aiEnhancementOptions.allowFurniture)allow.push('สินค้าและเฟอร์นิเจอร์');if(p.aiEnhancementOptions.allowPeople)allow.push('คนและบรรยากาศ');if(p.aiEnhancementOptions.allowDecor||p.aiEnhancementOptions.allowPlants)allow.push('ของตกแต่งและต้นไม้');
-  return[
-    'STRUCTURE ENHANCEMENT RENDER PACKAGE',
-    'renderPackageId: '+snapshot.renderPackageId,'stateHash: '+snapshot.stateHash,'sceneRevision: '+snapshot.sceneRevision,
-    'สรุปแบบ: '+renderPackageSummary(snapshot),'ประเภทธุรกิจ: '+businessCategoryLabel(snapshot.spec),'สีแบรนด์: '+p.brand.primary+' / '+p.brand.secondary,
-    'สไตล์: '+style.th+' ('+style.en+') · '+style.prompt,
-    p.qualityMode==='final'?'คุณภาพ: ภาพนำเสนอ Photorealistic รายละเอียดสูง':'คุณภาพ: ร่างเร็ว รายละเอียดปานกลาง',
-    '',
-    'LAYER A — LOCKED 3D GEOMETRY (Geometry Fidelity 10/10)',
-    'ใช้ Clean Screenshot ที่มี renderPackageId และ stateHash เดียวกันเป็น Geometry Reference แบบบังคับ',
-    'รูปแบบบูธ: '+p.boothTypeLabel+(p.boothType==='corner'?' · '+(p.cornerSide==='left'?'หัวมุมซ้าย':'หัวมุมขวา'):''),
-    'ขนาดคงที่: '+p.width.toFixed(2)+' × '+p.depth.toFixed(2)+' × '+p.height.toFixed(2)+' ม.',
-    'ผนังคงที่: '+(p.activeWalls.length?p.activeWalls.map(renderWallName).join(', '):'ไม่มีผนังหลัก'),
-    'ด้านเปิดคงที่: '+p.openSides.map(renderOpenSideName).join(', '),
-    'พื้นคงที่: '+(p.floor.raiseCm?'ยก '+p.floor.raiseCm+' ซม.':'ไม่ยกพื้น')+' · '+p.floor.material+(p.floor.detail?' · '+p.floor.detail:''),
-    'ห้อง: '+room,'Asset ที่ลูกค้าวางและต้องคง Transform ทุกชิ้น:',...assetLines,
-    'ห้ามเปลี่ยนขนาดหรือรูปทรงบูธ จำนวนและตำแหน่งผนัง ด้านเปิด ห้อง มุมกล้อง หรือ Asset ที่ลูกค้าวางไว้',
-    '',
-    'LAYER B — AI STRUCTURE ENHANCEMENT',
-    'AI เพิ่มได้: วัสดุและแสง'+(allow.length?' · '+allow.join(' · '):''),
-    'ความหนาแน่นองค์ประกอบ: '+p.aiEnhancementOptions.density+' · อิสระการจัดฉาก '+p.aiEnhancementOptions.stagingFreedom+'/10',
-    'องค์ประกอบที่เติมต้องอยู่ในบูธ มีสัดส่วนจริง ไม่ชน Asset เดิม ไม่บังโลโก้/ประตู/ทางเข้า และเป็น Render Staging เท่านั้น ไม่รวม BOQ หรือสโคปผลิต',
-    'ห้ามสร้างพื้น ผนัง ห้อง หรือโครงสร้างถาวรใหม่ และห้ามใช้แบรนด์จริงที่ลูกค้าไม่ได้อัปโหลด',
-    'ใช้วัสดุ PBR, global illumination, ambient occlusion, contact shadows, realistic reflections และแสง Exhibition Hall แบบมืออาชีพ',
-    'ภาพสุดท้ายต้องไม่มี Grid เส้นแกน ตัวเลข Bounding Box หรือหน้าตาโปรแกรม'
-  ].join('\n');
-}
-function buildDesignPrompt(){const draft=syncSceneRevision();return buildStructureEnhancementPrompt({...draft,renderPackageId:'DRAFT-เตรียมชุดสร้างภาพก่อนใช้งาน',stateHash:'pending',sceneRevision});}
 function setRenderQuality(value,{update=true}={}){
   normalizeAIRenderingSettings(S).quality=globalThis.YPAIRenderIntent?.normalizeQuality(value)||'preview';
   document.querySelectorAll('[data-render-quality]').forEach(button=>{const on=button.dataset.renderQuality===currentRenderQuality();button.classList.toggle('on',on);button.setAttribute('aria-checked',String(on));});
   if(update)updatePromptPreview();
   return currentRenderQuality();
 }
+function syncRenderIntentControls(){
+  const intent=currentRenderIntent(),concept=intent==='concept',conceptButton=document.getElementById('promptRenderConcept'),precisionButton=document.getElementById('promptRender3d'),copy=document.getElementById('promptCopy'),clean=document.getElementById('promptCleanScreenshot'),note=document.getElementById('promptIntentNote'),precisionPrep=document.getElementById('promptPrecisionPrep'),conceptQuality=document.getElementById('promptConceptQuality'),packageNote=document.getElementById('promptPackageNote');
+  [[conceptButton,concept],[precisionButton,!concept]].forEach(([button,on])=>{if(!button)return;button.classList.toggle('on',on);button.setAttribute('aria-pressed',String(on));});
+  if(copy)copy.textContent=concept?'คัดลอก CONCEPT PROMPT':'เตรียมชุดสร้างภาพ';
+  if(clean)clean.hidden=true;
+  if(precisionPrep)precisionPrep.hidden=concept;
+  if(conceptQuality)conceptQuality.hidden=!concept;
+  if(packageNote){packageNote.hidden=concept;packageNote.textContent='คัดลอกคำสั่งและดาวน์โหลดภาพอ้างอิง 3D';}
+  if(note){note.classList.toggle('concept',concept);note.textContent=concept
+    ?'ให้ AI ช่วยคิดผัง เฟอร์นิเจอร์ สินค้า และบรรยากาศ ภาพที่ได้เป็น Concept และยังไม่ใช่แบบยืนยัน'
+    :'สร้างภาพจำลองจากแบบ 3D โดยรักษา Geometry และตำแหน่ง Asset ที่คุณจัดวาง';}
+}
 function updatePromptPreview(){
   syncPromptRenderStyleControls();
   syncPromptStagingControls();
-  const draft=syncSceneRevision(),summary=document.getElementById('promptProjectSummary');if(summary)summary.textContent=renderPackageSummary(draft);
+  syncRenderIntentControls();
   const variant=document.getElementById('promptVariant');if(variant&&variant.value!==currentPromptVariant())variant.value=currentPromptVariant();
   const field=document.getElementById('designPrompt');
-  if(field&&!lastPreparedRenderPackage)field.value=buildStructureEnhancementPrompt({...draft,renderPackageId:'DRAFT-เตรียมชุดสร้างภาพก่อนใช้งาน',stateHash:'pending',sceneRevision});
+  if(field)field.value=buildDesignPrompt(currentPromptVariant(),currentRenderIntent());
+}
+function renderIntentMissingFields(){
+  const missing=[];
+  if(!S.cat||(S.cat==='other'&&!String(S.customBusinessCategory||'').trim()))missing.push('ประเภทธุรกิจ');
+  if(!/^#[0-9a-f]{6}$/i.test(String(S.primary||'')))missing.push('สีแบรนด์หลัก');
+  if(!/^#[0-9a-f]{6}$/i.test(String(S.secondary||'')))missing.push('สีแบรนด์รอง');
+  if(!typ())missing.push('รูปแบบบูธ');
+  if(S.type==='corner'&&!['left','right'].includes(S.cornerSide))missing.push('หัวมุมซ้าย/ขวา');
+  if(![S.W,S.D,S.H].every(value=>Number(value)>0))missing.push('ขนาดบูธ');
+  if(!S.floor)missing.push('ประเภทพื้น');
+  return missing;
+}
+async function copyDesignPrompt(){
+  const field=document.getElementById('designPrompt'),status=document.getElementById('promptStatus');
+  const missing=renderIntentMissingFields();
+  if(missing.length){if(status)status.textContent='กรุณาตั้งค่าก่อน: '+missing.join(', ');return false;}
+  if(!field)return false;field.value=buildDesignPrompt(currentPromptVariant(),currentRenderIntent());if(!field.value)return false;
+  try{
+    let copied=false;
+    if(navigator.clipboard?.writeText){try{await navigator.clipboard.writeText(field.value);copied=true;}catch(e){}}
+    if(!copied){field.focus();field.select();copied=document.execCommand('copy');field.setSelectionRange(field.value.length,field.value.length);}
+    if(!copied)throw new Error('copy failed');
+    if(status)status.textContent=currentRenderIntent()==='concept'?'คัดลอก Concept Prompt แล้ว':'คัดลอก Prompt แล้ว';
+  }catch(e){
+    if(status)status.textContent='คัดลอกไม่สำเร็จ กรุณาเลือกข้อความแล้วคัดลอกเอง';return false;
+  }
+  window.clearTimeout(copyDesignPrompt.timer);
+  copyDesignPrompt.timer=window.setTimeout(()=>{if(status)status.textContent='';},2400);
+  return true;
 }
 async function createCleanScreenshot(options={}){
   const renderer=threeRenderer||await loadThreeRenderer();
-  const snapshot=options.snapshot;if(snapshot)renderer.update(snapshot.spec);else renderer.update(BoothSpec);
+  renderer.update(BoothSpec);
   return renderer.exportCleanScreenshot(options);
 }
-function assertAtomicRenderSnapshot(snapshot){if(!snapshot||captureRenderDraft().signature!==snapshot.signature)throw new Error('RENDER_STATE_CHANGED');return true;}
-async function copyRenderPackagePrompt(prompt,field){
-  let copied=false;if(navigator.clipboard?.writeText){try{await navigator.clipboard.writeText(prompt);copied=true;}catch(e){}}
-  if(!copied&&field){field.value=prompt;field.focus();field.select();copied=document.execCommand('copy');field.setSelectionRange(prompt.length,prompt.length);}if(!copied)throw new Error('COPY_FAILED');return true;
+async function downloadCleanScreenshot(){
+  const button=document.getElementById('promptCleanScreenshot'),status=document.getElementById('promptStatus');
+  if(currentRenderIntent()==='concept'){if(status)status.textContent='Concept Prompt ไม่ใช้ Clean Screenshot';return null;}
+  if(button?.disabled)return;
+  if(button)button.disabled=true;if(status)status.textContent='กำลังเตรียม Scene และสร้าง Clean Screenshot…';
+  try{
+    const result=await createCleanScreenshot({download:true,minLongEdge:1536,maxLongEdge:2048,maxBytes:4*1024*1024,includeDataUrl:false});
+    if(status)status.textContent='ดาวน์โหลด '+result.fileName+' ('+result.width+' × '+result.height+' px · '+Math.max(1,Math.round(result.blob.size/1024))+' KB) แล้ว';
+    return result;
+  }catch(error){
+    console.error('Clean Screenshot export failed',error);
+    if(status)status.textContent='สร้าง Clean Screenshot ไม่สำเร็จ กรุณาลองใหม่';
+    return null;
+  }finally{
+    if(button)button.disabled=false;
+    window.clearTimeout(downloadCleanScreenshot.timer);
+    downloadCleanScreenshot.timer=window.setTimeout(()=>{if(status)status.textContent='';},5000);
+  }
 }
 async function prepareRenderPackage(){
-  const button=document.getElementById('promptCopy'),status=document.getElementById('promptStatus'),field=document.getElementById('designPrompt'),results=document.getElementById('promptPackageResults'),note=document.getElementById('promptPackageNote');
+  if(currentRenderIntent()==='concept')return copyDesignPrompt();
+  const button=document.getElementById('promptCopy'),status=document.getElementById('promptStatus');
   if(prepareRenderPackage.busy)return false;
-  prepareRenderPackage.busy=true;if(button)button.disabled=true;if(results)results.hidden=true;
+  prepareRenderPackage.busy=true;if(button)button.disabled=true;
   try{
-    if(status)status.textContent='กำลัง Snapshot แบบ 3D ปัจจุบัน…';
-    const snapshot=await createAtomicRenderSnapshot(),missing=renderPackageMissingFields(snapshot);if(missing.length)throw new Error('MISSING:'+missing.join(', '));
-    const prompt=buildStructureEnhancementPrompt(snapshot);if(field)field.value=prompt;assertAtomicRenderSnapshot(snapshot);
-    if(status)status.textContent='กำลังคัดลอกคำสั่งสำหรับ AI…';await copyRenderPackagePrompt(prompt,field);assertAtomicRenderSnapshot(snapshot);
-    if(status)status.textContent='กำลังสร้าง Clean Screenshot จาก Snapshot เดียวกัน…';
-    const image=await createCleanScreenshot({snapshot,download:true,minLongEdge:1536,maxLongEdge:2048,maxBytes:4*1024*1024,includeDataUrl:false,
-      fileName:'YUPPIE-Booth-'+snapshot.payload.boothType+'-'+snapshot.renderPackageId+'-'+snapshot.stateHash.slice(0,12)+'.png',renderPackageId:snapshot.renderPackageId,stateHash:snapshot.stateHash,sceneRevision:snapshot.sceneRevision,camera:snapshot.camera,validateState:()=>assertAtomicRenderSnapshot(snapshot)});
-    assertAtomicRenderSnapshot(snapshot);lastPreparedRenderPackage={...snapshot,prompt,fileName:image.fileName,manifest:image.manifest};
-    normalizeAIRenderingSettings(S).renderPackage={renderPackageId:snapshot.renderPackageId,stateHash:snapshot.stateHash,sceneRevision:snapshot.sceneRevision,createdAt:snapshot.createdAt,fileName:image.fileName};
-    normalizeAIRenderingSettings(S).preview={kind:'clean-screenshot',renderPackageId:snapshot.renderPackageId,stateHash:snapshot.stateHash,sceneRevision:snapshot.sceneRevision,width:image.width,height:image.height,fileName:image.fileName};
-    if(results)results.hidden=false;if(note)note.textContent='Render Package '+snapshot.renderPackageId+' · State '+snapshot.stateHash.slice(0,12);
-    if(status)status.textContent='เตรียมชุดสร้างภาพสำเร็จ';return true;
-  }catch(error){
-    console.error('Atomic render package failed',error);lastPreparedRenderPackage=null;if(results)results.hidden=true;
-    if(error?.message==='RENDER_STATE_CHANGED'){if(status)status.textContent='แบบ 3D มีการเปลี่ยนแปลง กรุณาเตรียมชุดสร้างภาพใหม่';if(note)note.textContent='แบบ 3D มีการเปลี่ยนแปลง · กรุณาเตรียมชุดสร้างภาพใหม่';}
-    else if(String(error?.message||'').startsWith('MISSING:')){if(status)status.textContent='กรุณาตั้งค่าก่อน: '+error.message.slice(8);}
-    else if(status)status.textContent=error?.message==='COPY_FAILED'?'คัดลอกไม่สำเร็จ กรุณาอนุญาต Clipboard แล้วลองใหม่':'เตรียมชุดสร้างภาพไม่สำเร็จ กรุณาลองใหม่';return false;
+    const copied=await copyDesignPrompt();if(!copied)return false;
+    const image=await downloadCleanScreenshot();
+    if(image&&status)status.textContent='เตรียมชุดสร้างภาพแล้ว · คัดลอกคำสั่งและดาวน์โหลดภาพอ้างอิง 3D เรียบร้อย';
+    return !!image;
   }finally{
     prepareRenderPackage.busy=false;if(button)button.disabled=false;
   }
@@ -4150,14 +4109,14 @@ const aiRenderPipeline=globalThis.YPAIRenderPipeline?.create({development:AI_REN
 function updateAIRenderStatus(payload={}){
   const progress=document.getElementById('promptRenderProgress'),status=document.getElementById('promptStatus');
   const order=['preparing','uploading','generating','displaying'],activeIndex=order.indexOf(payload.status);
-  const uploadStep=document.querySelector('[data-render-step="uploading"]');if(uploadStep)uploadStep.textContent='กำลังอัปโหลดแบบ 3D';
+  const uploadStep=document.querySelector('[data-render-step="uploading"]');if(uploadStep)uploadStep.textContent=currentRenderIntent()==='concept'?'กำลังเตรียม Concept':'กำลังอัปโหลดแบบ 3D';
   if(progress)progress.hidden=!order.includes(payload.status)&&payload.status!=='complete'&&payload.status!=='error';
   document.querySelectorAll('[data-render-step]').forEach((step,index)=>{
     step.classList.toggle('is-active',activeIndex===index);
     step.classList.toggle('is-done',payload.status==='complete'||(activeIndex>=0&&index<activeIndex));
     step.classList.toggle('is-error',payload.status==='error'&&index===Math.max(0,activeIndex));
   });
-  const statusLabel=payload.label;
+  const statusLabel=payload.status==='uploading'&&currentRenderIntent()==='concept'?'กำลังเตรียม Concept':payload.label;
   if(status)status.textContent=statusLabel+(payload.detail?' · '+payload.detail:'')+(payload.requestId?' · '+payload.requestId:'');
 }
 function aiReferenceLimits(){
@@ -4195,9 +4154,9 @@ function setAIConceptProposal(result){
 }
 function displayAIRenderOutcome(report,intent){
   const raw=report?.rawResult&&typeof report.rawResult==='object'?report.rawResult:{},displayed=report?.result&&typeof report.result==='object'?report.result:{},result=typeof report?.result==='string'?report.result:{...raw,...displayed},panel=document.getElementById('promptRenderResult'),badge=document.getElementById('promptResultBadge'),request=document.getElementById('promptResultRequest'),image=document.getElementById('promptResultImage');
-  if(!panel)return;panel.hidden=false;if(badge)badge.textContent='3D-Based Render';if(request)request.textContent=report?.requestId||'';
+  if(!panel)return;panel.hidden=false;if(badge)badge.textContent=intent==='concept'?'AI Concept — ผังยังไม่ยืนยัน':'3D-Based Render';if(request)request.textContent=report?.requestId||'';
   const src=extractAIRenderImage(result);if(image){image.hidden=!src;if(src)image.src=src;}
-  aiConceptUI.proposal=null;aiConceptUI.suggestions=[];aiConceptUI.selectedIds.clear();renderAIConceptProposal();renderAssetList();
+  if(intent==='concept')setAIConceptProposal(result);else{aiConceptUI.proposal=null;aiConceptUI.suggestions=[];aiConceptUI.selectedIds.clear();renderAIConceptProposal();renderAssetList();}
   aiConceptUI.lastReport=report;
 }
 function clearAIConceptProposal(){
@@ -4219,22 +4178,23 @@ function confirmAIConceptSuggestions(mode='selected'){
   sync();renderAIConceptProposal();announceCatalog('ยืนยันและเพิ่ม Asset จาก AI '+created.length+' ชิ้น'+(acceptedRenderOnly.length?' · Render Staging '+acceptedRenderOnly.length+' รายการไม่ถูกเพิ่มเป็น Geometry':''),'success');
 }
 function syncAIRenderControls(){
-  const ab=document.getElementById('promptRunAB'),tools=document.getElementById('promptDevTools');
+  const selectors=[document.getElementById('promptRenderConcept'),document.getElementById('promptRender3d')].filter(Boolean),ab=document.getElementById('promptRunAB'),tools=document.getElementById('promptDevTools');
   const ready=!!aiRenderPipeline?.ready(),busy=!!aiRenderPipeline?.active;
+  selectors.forEach(button=>{button.disabled=busy;button.setAttribute('aria-disabled',String(busy));button.title=busy?'กำลังสร้างภาพ':'เลือก Render Intent และสร้าง Prompt';});
   if(tools)tools.hidden=!AI_RENDER_DEVELOPMENT;
   if(ab)ab.disabled=!ready||busy;
   const variant=document.getElementById('promptVariant');if(variant)variant.value=currentPromptVariant();
-  setRenderQuality(currentRenderQuality(),{update:false});
+  setRenderQuality(currentRenderQuality(),{update:false});syncRenderIntentControls();
 }
 async function runAIRender(intent=currentRenderIntent()){
   if(!aiRenderPipeline?.ready()){syncAIRenderControls();return null;}
-  intent=STRUCTURE_ENHANCEMENT_INTENT;syncAIRenderControls();
+  intent=setRenderIntent(intent);syncAIRenderControls();
   try{
-    const snapshot=await createAtomicRenderSnapshot(),report=await aiRenderPipeline.run({renderIntent:intent,quality:currentRenderQuality(),requiresReference:true,
-      promptVariant:'compact',buildPrompt:()=>buildStructureEnhancementPrompt(snapshot),
-      prepareReferenceImage:()=>createCleanScreenshot({snapshot,download:false,minLongEdge:1536,maxLongEdge:2048,maxBytes:4*1024*1024,renderPackageId:snapshot.renderPackageId,stateHash:snapshot.stateHash,sceneRevision:snapshot.sceneRevision,camera:snapshot.camera,validateState:()=>assertAtomicRenderSnapshot(snapshot)}),referenceLimits:aiReferenceLimits(),
-      projectContext:{geometryManifest:buildGeometryManifest(snapshot.spec),camera:snapshot.camera,renderPackageId:snapshot.renderPackageId,stateHash:snapshot.stateHash},
-      expectedOutput:{image:true,label:'3D-Based Render'}});
+    const concept=intent==='concept',report=await aiRenderPipeline.run({renderIntent:intent,quality:currentRenderQuality(),requiresReference:!concept,
+      promptVariant:currentPromptVariant(),buildPrompt:context=>buildDesignPrompt(context.promptVariant,intent),
+      prepareReferenceImage:concept?undefined:prepareAIRenderReference,referenceLimits:concept?undefined:aiReferenceLimits(),
+      projectContext:concept?conceptPromptContext():{geometryManifest:buildGeometryManifest(S),camera:currentCameraManifest(S)},
+      expectedOutput:concept?{image:true,sceneProposal:true,suggestedAssetsStatus:'AI Suggested'}:{image:true,label:'3D-Based Render'}});
     displayAIRenderOutcome(report,intent);return report;
   }catch(error){console.error('AI Render failed',error);return null;}
   finally{syncAIRenderControls();}
@@ -4253,6 +4213,7 @@ function formatAIRenderABReport(result){
 }
 async function runAIRenderABTest(){
   if(!aiRenderPipeline?.ready()){syncAIRenderControls();return null;}
+  setRenderIntent('precision');
   const report=document.getElementById('promptDevReport');if(report)report.textContent='กำลังรัน Full และ Compact ด้วยภาพอ้างอิงเดียวกัน…';
   syncAIRenderControls();
   try{
@@ -5135,17 +5096,7 @@ class ThreeBoothRenderer{
   commitCameraState(){
     if(!this.camera||!this.controls)return null;
     if(this.camera.position.distanceToSquared(this.controls.target)<1e-8)return null;
-    const state=this.cameraManifest();normalizeAIRenderingSettings(BoothSpec).camera=state;
-    if(typeof syncSceneRevision==='function')syncSceneRevision();return state;
-  }
-  applyCameraManifest(state){
-    if(!state||!this.camera||!this.controls)return false;
-    const p=state.position||{},t=state.target||{},u=state.up||{};
-    if(![p.x,p.y,p.z,t.x,t.y,t.z].every(Number.isFinite))return false;
-    this.camera.position.set(p.x,p.y,p.z);this.controls.target.set(t.x,t.y,t.z);
-    if([u.x,u.y,u.z].every(Number.isFinite))this.camera.up.set(u.x,u.y,u.z);
-    if(Number.isFinite(state.fov))this.camera.fov=state.fov;if(Number.isFinite(state.near))this.camera.near=state.near;if(Number.isFinite(state.far))this.camera.far=state.far;
-    this.camera.updateProjectionMatrix();this.controls.update();return true;
+    const state=this.cameraManifest();normalizeAIRenderingSettings(BoothSpec).camera=state;return state;
   }
   pendingSceneAssets(){
     const promises=[];
@@ -5156,7 +5107,7 @@ class ThreeBoothRenderer{
     this.wallStickerLoads.forEach(promise=>promises.push(promise));
     return [...new Set(promises.filter(promise=>promise&&typeof promise.then==='function'))];
   }
-  async waitForSceneAssets(timeoutMs=10000,spec=BoothSpec,validateState=null){
+  async waitForSceneAssets(timeoutMs=10000){
     const deadline=Date.now()+Math.max(0,Number(timeoutMs)||0);
     for(let pass=0;pass<5;pass++){
       const pending=this.pendingSceneAssets();
@@ -5169,20 +5120,18 @@ class ThreeBoothRenderer{
       ]);
       if(timeoutId)clearTimeout(timeoutId);
       if(outcome==='timeout')break;
-      if(validateState)validateState();this.currentKey='';this.update(spec);
+      this.currentKey='';this.update(BoothSpec);
     }
-    if(validateState)validateState();this.currentKey='';this.update(spec);
+    this.currentKey='';this.update(BoothSpec);
     return this.pendingSceneAssets().length===0;
   }
-  cleanScreenshotFileName(spec=BoothSpec,packageId=''){
+  cleanScreenshotFileName(){
     const now=new Date(),pad=value=>String(value).padStart(2,'0');
     const stamp=now.getFullYear()+pad(now.getMonth()+1)+pad(now.getDate())+'-'+pad(now.getHours())+pad(now.getMinutes())+pad(now.getSeconds());
-    return 'YP-Booth-Clean-'+manifestNumber(spec.W)+'x'+manifestNumber(spec.D)+'-'+(packageId?packageId+'-':'')+stamp+'.png';
+    return 'YP-Booth-Clean-'+manifestNumber(BoothSpec.W)+'x'+manifestNumber(BoothSpec.D)+'-'+stamp+'.png';
   }
   async exportCleanScreenshot(options={}){
-    const spec=options.snapshot?.spec||options.spec||BoothSpec,validateState=typeof options.validateState==='function'?options.validateState:null;
-    if(validateState)validateState();this.currentKey='';this.update(spec);
-    await this.waitForSceneAssets(options.assetTimeoutMs??10000,spec,validateState);if(validateState)validateState();
+    await this.waitForSceneAssets(options.assetTimeoutMs??10000);
     const T=this.THREE,sourceWidth=Math.max(1,this.lastSize[0]||Math.floor(this.host.getBoundingClientRect().width)||16);
     const sourceHeight=Math.max(1,this.lastSize[1]||Math.floor(this.host.getBoundingClientRect().height)||9);
     const sourceAspect=sourceWidth/sourceHeight,minLongEdge=Math.max(1536,Math.floor(Number(options.minLongEdge)||1536));
@@ -5204,35 +5153,30 @@ class ThreeBoothRenderer{
     });
     if(this.raf)cancelAnimationFrame(this.raf);this.raf=0;this.controls.enabled=false;
     try{
-      if(options.camera)this.applyCameraManifest(options.camera);if(validateState)validateState();
       this.scene.background=new T.Color(options.background||'#e8eaee');
       this.renderer.setPixelRatio(1);this.renderer.setSize(width,height,false);
       this.camera.aspect=width/height;this.camera.updateProjectionMatrix();this.renderer.render(this.scene,this.camera);
       const canvas=this.renderer.domElement;
       const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(new Error('ไม่สามารถสร้างไฟล์ PNG ได้')),'image/png'));
-      if(validateState)validateState();
-      const fileName=String(options.fileName||this.cleanScreenshotFileName(spec,options.renderPackageId||'')).replace(/[\\/:*?"<>|]+/g,'-');
-      const camera=this.cameraManifest({width,height,pixelRatio:1}),manifest=buildGeometryManifest(spec);manifest.camera=camera;
-      manifest.renderPackage={intent:STRUCTURE_ENHANCEMENT_INTENT,renderPackageId:options.renderPackageId||null,stateHash:options.stateHash||null,sceneRevision:options.sceneRevision??null};
+      const fileName=String(options.fileName||this.cleanScreenshotFileName()).replace(/[\\/:*?"<>|]+/g,'-');
+      const camera=this.cameraManifest({width,height,pixelRatio:1}),manifest=buildGeometryManifest(BoothSpec);manifest.camera=camera;
       const maxBytes=Math.max(1,Math.floor(Number(options.maxBytes)||4*1024*1024));
       const preflight={mimeType:blob.type||'image/png',bytes:blob.size,width,height,aspect:manifestNumber(width/height,6),
         sourceAspect:manifestNumber(sourceAspect,6),longEdge,maxLongEdge,withinByteLimit:blob.size<=maxBytes};
       if(!preflight.withinByteLimit)console.warn('[AI Render] Clean Screenshot เกินขนาดแนะนำ',{bytes:blob.size,maxBytes,width,height});
-      const preview={kind:'clean-screenshot',width,height,aspect:preflight.aspect,fileName,bytes:blob.size,createdAt:new Date().toISOString(),camera,
-        renderPackageId:options.renderPackageId||null,stateHash:options.stateHash||null,sceneRevision:options.sceneRevision??null};
+      const preview={kind:'clean-screenshot',width,height,aspect:preflight.aspect,fileName,bytes:blob.size,createdAt:new Date().toISOString(),camera};
+      normalizeAIRenderingSettings(BoothSpec).preview=preview;
       const dataUrl=options.includeDataUrl?canvas.toDataURL('image/png'):null;
       if(options.download){
-        if(validateState)validateState();
         const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=fileName;link.hidden=true;
         document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
       }
-      return{blob,dataUrl,width,height,aspect:width/height,fileName,camera,manifest,preflight,preview,
-        renderPackageId:options.renderPackageId||null,stateHash:options.stateHash||null,sceneRevision:options.sceneRevision??null};
+      return{blob,dataUrl,width,height,aspect:width/height,fileName,camera,manifest,preflight};
     }finally{
       hidden.forEach(([object,visible])=>{object.visible=visible;});
       this.scene.background=oldBackground;this.renderer.setPixelRatio(oldPixelRatio);this.renderer.setSize(oldSize.x,oldSize.y,false);
       this.camera.aspect=oldAspect;this.camera.updateProjectionMatrix();this.controls.enabled=oldControlsEnabled;
-      this.currentKey='';this.update(BoothSpec);this.renderer.render(this.scene,this.camera);if(wasAnimating&&this.active)this.start();
+      this.renderer.render(this.scene,this.camera);if(wasAnimating&&this.active)this.start();
     }
   }
   setRayFromEvent(event){
@@ -7421,6 +7365,12 @@ function showDockPage(page,source){
 document.querySelectorAll('.dock-tool').forEach(b=>b.onclick=()=>showDockPage(b.dataset.dockPage,b));
 const promptCopyButton=document.getElementById('promptCopy');
 if(promptCopyButton)promptCopyButton.onclick=prepareRenderPackage;
+const promptCleanScreenshotButton=document.getElementById('promptCleanScreenshot');
+if(promptCleanScreenshotButton)promptCleanScreenshotButton.onclick=downloadCleanScreenshot;
+const promptRenderConceptButton=document.getElementById('promptRenderConcept');
+if(promptRenderConceptButton)promptRenderConceptButton.onclick=()=>setRenderIntent('concept');
+const promptRender3dButton=document.getElementById('promptRender3d');
+if(promptRender3dButton)promptRender3dButton.onclick=()=>setRenderIntent('precision');
 document.querySelectorAll('[data-render-quality]').forEach(button=>button.onclick=()=>setRenderQuality(button.dataset.renderQuality));
 const conceptAddAll=document.getElementById('conceptAddAll');if(conceptAddAll)conceptAddAll.onclick=()=>confirmAIConceptSuggestions('all');
 const conceptAddSelected=document.getElementById('conceptAddSelected');if(conceptAddSelected)conceptAddSelected.onclick=()=>confirmAIConceptSuggestions('selected');

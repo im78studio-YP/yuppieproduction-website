@@ -14,56 +14,66 @@ function load(source) {
   return globalThis;
 }
 
-test('Concept Prompt ไม่อ้าง Clean Screenshot และขอทั้งภาพกับ Scene Proposal', () => {
+test('Render Intent เหลือ structure_enhancement เพียงโหมดเดียว', () => {
   const api = load(intentSource).YPAIRenderIntent;
-  const prompt = api.buildConceptPrompt({ business: 'อาหาร', primary: '#f72585', booth: { type: 'Corner', width: 6, depth: 3, height: 2.4 } });
-  assert.match(prompt, /ไม่ใช้ Clean Screenshot/);
-  assert.match(prompt, /Scene Proposal JSON/);
-  assert.match(prompt, /Auto-Staging Freedom: สูง/);
-  assert.doesNotMatch(prompt, /Geometry Reference แบบบังคับ/);
+  for (const value of ['concept', 'precision', 'from3d', 'structure_enhancement', undefined]) assert.equal(api.normalizeIntent(value), 'structure_enhancement');
+  assert.equal(api.INTENTS.STRUCTURE_ENHANCEMENT, 'structure_enhancement');
 });
 
-test('Scene Proposal normalize สถานะ AI Suggested และ Render Staging แยกกัน', () => {
-  const api = load(intentSource).YPAIRenderIntent;
-  const proposal = api.normalizeSceneProposal({ sceneProposal: { summary: 'test', suggestedAssets: [
-    { id: 'chair', name: 'เก้าอี้', category: 'furniture', dimensions: { w: .5, d: .5, h: .85 } },
-    { id: 'guest', name: 'ผู้เข้าชม', category: 'people', dimensions: { w: .5, d: .5, h: 1.7 } }
-  ] } });
-  assert.equal(proposal.suggestedAssets[0].status, 'AI Suggested');
-  assert.equal(proposal.suggestedAssets[1].renderOnly, true);
-  assert.equal(proposal.suggestedAssets[1].status, 'Render Staging เท่านั้น');
-});
-
-test('Suggested Asset จับคู่คลังด้วย category และขนาด', () => {
-  const api = load(intentSource).YPAIRenderIntent;
-  const match = api.matchSuggestedAsset({ category: 'chair', dimensions: { w: .52, d: .48, h: .86 } }, [
-    { catalogId: 'counter', category: 'reception', type: 'counter', name: 'เคาน์เตอร์', size: { w: 1.2, d: .6, h: 1 } },
-    { catalogId: 'chair', category: 'hospitality', type: 'chair', name: 'เก้าอี้', size: { w: .5, d: .5, h: .85 } }
-  ]);
-  assert.equal(match.catalogId, 'chair');
-});
-
-test('Concept Pipeline ไม่เตรียมหรืออัปโหลด Reference แต่ส่ง API หนึ่งครั้ง', async () => {
-  const global = load(pipelineSource), api = global.YPAIRenderPipeline;
-  let sendCount = 0, prepareCount = 0, uploadCount = 0;
+test('Pipeline บังคับ structure_enhancement และส่ง Reference หนึ่งครั้ง', async () => {
+  const api = load(pipelineSource).YPAIRenderPipeline;
+  let prepareCount = 0, uploadCount = 0, sendCount = 0;
   const pipeline = api.create({ adapter: {
-    uploadReferenceImage: async () => { uploadCount += 1; },
-    sendRenderRequest: async payload => { sendCount += 1; assert.equal(payload.reference, null); assert.equal(payload.renderIntent, 'concept'); return { ok: true }; }
+    uploadReferenceImage: async reference => { uploadCount += 1; return { id: 'ref', reference }; },
+    sendRenderRequest: async payload => { sendCount += 1; assert.equal(payload.renderIntent, 'structure_enhancement'); assert.ok(payload.reference); return { ok: true }; }
   } });
-  const report = await pipeline.run({ renderIntent: 'concept', requiresReference: false, buildPrompt: () => 'concept', prepareReferenceImage: () => { prepareCount += 1; } });
-  assert.equal(prepareCount, 0);
-  assert.equal(uploadCount, 0);
-  assert.equal(sendCount, 1);
-  assert.equal(report.reference, null);
+  const report = await pipeline.run({ renderIntent: 'concept', requiresReference: true, buildPrompt: () => 'atomic prompt',
+    prepareReferenceImage: async () => { prepareCount += 1; return { blob: { size: 10 }, width: 1536, height: 900 }; } });
+  assert.equal(prepareCount, 1); assert.equal(uploadCount, 1); assert.equal(sendCount, 1); assert.equal(report.sentRequests, 1);
 });
 
-test('หน้า Prompt แยก Intent จาก Preview/Final และมี Workflow ยืนยัน Proposal', () => {
-  for (const id of ['promptRenderConcept', 'promptRender3d', 'conceptProposal', 'conceptAddAll', 'conceptAddSelected', 'conceptReject']) {
-    assert.match(html, new RegExp(`id=["']${id}["']`));
-  }
-  assert.match(html, /data-render-quality="preview"/);
-  assert.match(html, /AI Concept — ผังยังไม่ยืนยัน/);
-  assert.match(html, /3D-Based Render/);
-  assert.match(html, /aiConceptUI=\{proposal:null,suggestions:\[\]/);
-  assert.match(html, /recordObjectHistory\(before\)/);
+test('Customer Flow ไม่มี Concept/Precision และมีปุ่ม Atomic Render Package เดียว', () => {
+  assert.doesNotMatch(html, /id=["']promptRenderConcept["']|id=["']promptRender3d["']|id=["']promptConceptQuality["']/);
+  assert.match(html, /id="promptCopy">เตรียมชุดสร้างภาพ/);
+  assert.match(html, /STRUCTURE_ENHANCEMENT_INTENT='structure_enhancement'/);
+  assert.match(html, /promptCopyButton\.onclick=prepareRenderPackage/);
+});
+
+test('Atomic Snapshot ครบ State หลักและใช้ Hash Revision Package ID เดียวกัน', () => {
+  for (const token of ['boothType:', 'cornerSide:', 'activeWalls', 'openSides', 'floor:', 'room:', 'brand:', 'assets:', 'camera:', 'qualityMode:', 'aiEnhancementOptions:']) assert.match(html, new RegExp(token));
+  for (const token of ['sceneRevision', 'renderPackageId', 'stateHash']) assert.match(html, new RegExp(token));
+  assert.match(html, /buildStructureEnhancementPrompt\(snapshot\)/);
+  assert.match(html, /createCleanScreenshot\(\{snapshot,download:true/);
+  assert.match(html, /validateState:\(\)=>assertAtomicRenderSnapshot\(snapshot\)/);
+  assert.match(html, /manifest\.renderPackage=\{intent:STRUCTURE_ENHANCEMENT_INTENT/);
+  assert.match(html, /snapshot\.renderPackageId\+'-'\+snapshot\.stateHash\.slice\(0,12\)\+'\.png'/);
+  assert.match(html, /camera:stableRenderCameraSnapshot\(camera\)/);
+});
+
+test('State เปลี่ยนระหว่างเตรียมชุดต้องยกเลิกด้วยข้อความที่กำหนด', () => {
+  assert.match(html, /captureRenderDraft\(\)\.signature!==snapshot\.signature/);
+  assert.match(html, /throw new Error\('RENDER_STATE_CHANGED'\)/);
+  assert.match(html, /แบบ 3D มีการเปลี่ยนแปลง กรุณาเตรียมชุดสร้างภาพใหม่/);
+  assert.match(html, /invalidatePreparedRenderPackage/);
+  assert.match(html, /commitCameraState\(\)[\s\S]*syncSceneRevision\(\)/);
+});
+
+test('Prompt ล็อก Geometry และแยกสิ่งที่ AI เติมได้', () => {
+  for (const text of ['LAYER A — LOCKED 3D GEOMETRY', 'LAYER B — AI STRUCTURE ENHANCEMENT', 'วัสดุและแสง', 'สินค้าและเฟอร์นิเจอร์', 'คนและบรรยากาศ']) assert.match(html, new RegExp(text));
+  assert.match(html, /ห้ามเปลี่ยนขนาดหรือรูปทรงบูธ จำนวนและตำแหน่งผนัง ด้านเปิด ห้อง มุมกล้อง หรือ Asset/);
+  assert.match(html, /ห้ามสร้างพื้น ผนัง ห้อง หรือโครงสร้างถาวรใหม่/);
+});
+
+test('UI แสดง Summary และผลสำเร็จสองรายการแยกกัน', () => {
+  assert.match(html, /id="promptProjectSummary"/);
+  assert.match(html, /✓ คัดลอกคำสั่งสำหรับ AI แล้ว/);
+  assert.match(html, /✓ ดาวน์โหลดภาพอ้างอิงแล้ว/);
+  assert.match(html, /renderPackageSummary\(snapshot\)/);
+});
+
+test('Inline JavaScript ของหน้า Booth Editor parse ได้ครบ', () => {
+  const start = html.indexOf('<script>', html.indexOf('ai-render-pipeline.js'));
+  const end = html.indexOf('</script>', start);
+  assert.ok(start >= 0 && end > start);
+  assert.doesNotThrow(() => new Function(html.slice(start + '<script>'.length, end)));
 });
