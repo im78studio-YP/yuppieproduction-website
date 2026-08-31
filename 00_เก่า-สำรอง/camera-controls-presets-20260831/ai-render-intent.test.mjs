@@ -72,29 +72,17 @@ test('Prompt กำกับ AI Digital Display Placement โดยไม่เ�
   assert.match(html, /digitalDisplayLines=p\.aiEnhancementOptions\.enabled\?/);
 });
 
-test('Camera Controls มี Preset ครบตามลำดับและเลื่อนได้บนจอแคบ', () => {
-  assert.match(html, /\[\['perspective','Perspective'\],\['front','หน้า'\],\['front-left','เฉียงซ้าย'\],\['front-right','เฉียงขวา'\],\['left-dominant','ซ้าย'\],\['right-dominant','ขวา'\],\['top','บน'\]\]/);
-  assert.match(html, /\.three-tools\{[^}]*flex-wrap:nowrap[^}]*overflow-x:auto/s);
-  assert.match(html, /\.three-tools button\{[^}]*white-space:nowrap/s);
-});
-
-test('Camera Presets ใช้มุม Two-Point, 40 มม., ระดับ 1.60 ม. และ Top Orthographic', () => {
-  for (const text of ['Front Straight', 'Front-Left', 'Front-Right', 'Left-Dominant', 'Right-Dominant', 'Top Orthographic', 'Two-Point Perspective', 'Landscape 4:3']) assert.match(html, new RegExp(text));
+test('Render Package ใช้ Hero Front Right แบบ Two-Point และภาพ Landscape 4:3', () => {
+  for (const text of ['Hero Front Right', 'Two-Point Perspective', 'Camera Height:', 'Lens Equivalent:', 'Vertical Lines:', 'Straight', 'approximately ', 'of image width', 'Landscape 4:3']) assert.match(html, new RegExp(text));
   assert.match(html, /heightM:1\.6,lensEquivalentMm:40/);
   assert.match(html, /framingWidthRatio:\.85,aspectRatio:4\/3/);
-  assert.match(html, /angleDeg:-35/);assert.match(html, /angleDeg:35/);assert.match(html, /angleDeg:-70/);assert.match(html, /angleDeg:70/);
-  assert.match(html, /new THREE\.OrthographicCamera/);
-  assert.match(html, /setTwoPointCameraPreset/);assert.match(html, /setTopCameraPreset/);
+  assert.match(html, /camera\.heightM\.toFixed\(2\)\+' m'/);
+  assert.match(html, /camera\.lensEquivalentMm\+' mm'/);
+  assert.match(html, /setHeroFrontRightCamera\(S,RENDER_CAMERA_PROFILE\)/);
+  assert.match(html, /aspectRatio:RENDER_CAMERA_PROFILE\.aspectRatio/);
+  assert.match(html, /target=new T\.Vector3\(Number\(spec\.W\)\/2,floorY\+Number\(profile\.heightM\|\|1\.6\),Number\(spec\.D\)\/2\)/);
   assert.match(html, /this\.camera\.up\.set\(0,1,0\)/);
-  assert.match(html, /occlusionAdjusted/);
-});
-
-test('Camera Preset บันทึก Project State และ Render Package ใช้มุม Snapshot ปัจจุบัน', () => {
-  for (const token of ['cameraPresetId', 'cameraPosition', 'cameraTarget', 'fov', 'aspectRatio']) assert.match(html, new RegExp(token));
-  assert.match(html, /normalizeAIRenderingSettings\(BoothSpec\)\.camera=state/);
-  assert.match(html, /renderCameraPromptLines\(snapshot\)/);
-  assert.match(html, /aspectRatio:renderPackageAspectRatio\(snapshot\)/);
-  assert.doesNotMatch(html, /applyStandardRenderCamera|setHeroFrontRightCamera|RENDER_CAMERA_PROFILE/);
+  assert.match(html, /frameRatio\*2/);
 });
 
 test('UI แสดง Summary และผลสำเร็จสองรายการแยกกัน', () => {
