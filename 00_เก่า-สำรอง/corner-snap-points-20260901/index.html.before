@@ -2245,7 +2245,7 @@ function bindSceneAssetRegistryObjects(renderer,spec=S){
     const target=document.documentElement;target.dataset.sceneRegistryValid=String(report.valid);target.dataset.sceneRegistryAssets=String(report.stats.assets);
     target.dataset.sceneRegistryBoundObjects=String(report.stats.boundObjects);target.dataset.sceneRegistryPhysicalMeshes=String(report.stats.physicalMeshes);
     target.dataset.sceneRegistryErrors=String(report.errors.length);target.dataset.sceneRegistryErrorCodes=report.errors.map(error=>error.code).join(',');
-    target.dataset.smartSnapValid=String(snapReport.valid);target.dataset.smartSnapAnchors=String(snapReport.stats.anchors);target.dataset.smartSnapCorners=String(snapReport.stats.corners);target.dataset.smartSnapSurfaces=String(snapReport.stats.surfaces);
+    target.dataset.smartSnapValid=String(snapReport.valid);target.dataset.smartSnapAnchors=String(snapReport.stats.anchors);target.dataset.smartSnapSurfaces=String(snapReport.stats.surfaces);
     target.dataset.smartSnapErrors=String(snapReport.errors.length);
     target.dataset.attachmentGraphValid=String(attachmentReport.valid);target.dataset.attachments=String(attachmentReport.stats.attachments);target.dataset.invalidAttachments=String(attachmentReport.stats.invalid);
     if(!report.valid)console.warn('[SceneAssetRegistry] validation failed',report);
@@ -2880,32 +2880,16 @@ function sceneObjectSnapAnchors(obj){
   return snapAnchorOffsets(size).map(anchor=>({...anchor,targetId:String(obj.id),position:{
     x:(Number(p.x)||0)+anchor.x*c+anchor.z*s,y:(Number(p.y)||0)+anchor.y,z:(Number(p.z)||0)-anchor.x*s+anchor.z*c}}));
 }
-function snapAnchorKind(anchor){
-  return anchor?.anchorType==='corner'?'corner':anchor?.anchorType==='center'||anchor?.anchorType==='mount'?'center':'edge';
-}
-function snapAnchorLevel(anchor){
-  const id=String(anchor?.id||'');
-  return anchor?.anchorType==='top'||id.includes('.max-y.')?'top':'base';
-}
-function snapAnchorKindsCompatible(source,target){
-  return globalThis.YPSmartSnap.anchorKindsCompatible(source,target);
-}
-function registryAssetWorldSnapAnchors(asset,transformOverride=null){
-  if(!asset?.id)return[];
-  const transform=transformOverride||{...asset.transform,position:{...(asset.transform?.position||{})}};
-  if(!transformOverride&&asset.metadata?.system!==true&&Number(transform.scale?.y)<0)transform.position.y=(Number(transform.position.y)||0)+(Number(asset.bounds?.height)||0);
-  return smartSnapEngine.getAnchors(asset.id).map(anchor=>{
-    const world=globalThis.YPSmartSnap.worldAnchor(anchor,asset,transform);
-    return{id:anchor.id,anchorType:anchor.anchorType,kind:snapAnchorKind(anchor),level:snapAnchorLevel(anchor),targetId:asset.id,
-      localPosition:{...anchor.localPosition},localNormal:{...world.worldNormal},position:{...world.worldPosition}};
-  });
-}
 function registrySceneObjectSnapAnchors(obj){
   if(!obj?.id||!obj.position)return[];
-  const asset=sceneAssetRegistry.getAssetById(obj.id),rotation={x:0,y:(Number(obj.rotationY)||0)*Math.PI/180,z:0},
-    scale={x:obj.transform?.flipX===true?-1:1,y:obj.transform?.flipY===true?-1:1,z:1};
+  const asset=sceneAssetRegistry.getAssetById(obj.id),rotation={x:(Number(obj.rotationX)||0)*Math.PI/180,y:(Number(obj.rotationY)||0)*Math.PI/180,z:(Number(obj.rotationZ)||0)*Math.PI/180};
   if(!asset)return sceneObjectSnapAnchors(obj);
-  return registryAssetWorldSnapAnchors(asset,{position:{x:Number(obj.position.x)||0,y:(Number(obj.position.y)||0)+(scale.y<0?(Number(asset.bounds?.height)||0):0),z:Number(obj.position.z)||0},rotation,scale});
+  return smartSnapEngine.getAnchors(obj.id).map(anchor=>{
+    const local=globalThis.YPSmartSnap.rotateVector(anchor.localPosition,rotation),normal=globalThis.YPSmartSnap.rotateVector(anchor.localNormal,rotation);
+    return{id:anchor.id,anchorType:anchor.anchorType,kind:anchor.anchorType==='center'||anchor.anchorType==='mount'?'center':'edge',
+      level:anchor.anchorType==='top'?'top':'base',targetId:obj.id,localPosition:{...anchor.localPosition},localNormal:normal,
+      position:{x:(Number(obj.position.x)||0)+local.x,y:(Number(obj.position.y)||0)+local.y,z:(Number(obj.position.z)||0)+local.z}};
+  });
 }
 function rectangularSnapAnchors(targetId,size,position={x:0,y:0,z:0},rotationY=0){
   return sceneObjectSnapAnchors({id:targetId,size,position,rotationY});
@@ -2913,25 +2897,21 @@ function rectangularSnapAnchors(targetId,size,position={x:0,y:0,z:0},rotationY=0
 function boothSnapAnchors(spec=S,ignoreId=''){
   const anchors=rectangularSnapAnchors('booth-floor',{w:Number(spec.W)||0,d:Number(spec.D)||0,h:0},{x:(Number(spec.W)||0)/2,y:0,z:(Number(spec.D)||0)/2},0)
     .filter(anchor=>anchor.level==='base');
-  const floorY=(Number(spec.raise)||0)/100;
-  sceneAssetRegistry.listAssets().filter(asset=>asset.id!==ignoreId&&asset.id!==SCENE_ASSET_IDS.floor&&asset.metadata?.system===true&&
-    (asset.category==='structure'||asset.category==='surface')).forEach(asset=>anchors.push(...registryAssetWorldSnapAnchors(asset,{...asset.transform,
-      position:{...(asset.transform?.position||{}),y:(Number(asset.transform?.position?.y)||0)-floorY}})));
   if(hasStore()){
     const G=storeGeom(boothWallThickness(spec));anchors.push(...rectangularSnapAnchors('storage-room',{w:G.w,d:G.d,h:G.h},{x:G.x+G.w/2,y:0,z:G.y+G.d/2},0));
   }
   const platform=photo360PlatformLayout(spec);if(platform)anchors.push(...rectangularSnapAnchors('photo360-platform',
     {w:platform.diameter,d:platform.diameter,h:platform.height},{x:platform.x,y:0,z:platform.z},0));
-  (spec.objects||[]).forEach(other=>{if(other?.id&&other.id!==ignoreId)anchors.push(...registrySceneObjectSnapAnchors(other));});
+  (spec.objects||[]).forEach(other=>{if(other?.id&&other.id!==ignoreId)anchors.push(...sceneObjectSnapAnchors(other));});
   return anchors;
 }
 function magneticSnapPlacement(obj,candidate,mode='plane',preferredSourceId='',spec=S){
   if(spec.magneticSnap===false||obj?.placement?.anchorSnap===false||mode==='surface')return null;
   const proxy={...obj,position:{...obj.position,...candidate}},threshold=Number(obj?.placement?.anchorSnapDistance)||MAGNETIC_SNAP_DISTANCE;
-  let sources=registrySceneObjectSnapAnchors(proxy);if(preferredSourceId)sources=sources.filter(anchor=>anchor.id===preferredSourceId);
+  let sources=sceneObjectSnapAnchors(proxy);if(preferredSourceId)sources=sources.filter(anchor=>anchor.id===preferredSourceId);
   const targets=boothSnapAnchors(spec,obj.id);let best=null;
   sources.forEach(source=>targets.forEach(target=>{
-    if(!snapAnchorKindsCompatible(source.kind,target.kind))return;
+    if(source.kind!==target.kind)return;
     const dx=target.position.x-source.position.x,dy=target.position.y-source.position.y,dz=target.position.z-source.position.z;
     const planar=Math.hypot(dx,dz),distance=mode==='height'?Math.abs(dy):mode==='smart'?Math.hypot(dx,dy,dz):planar;
     if(mode==='plane'&&Math.abs(dy)>.06)return;
@@ -5785,11 +5765,11 @@ class ThreeBoothRenderer{
   }
   screenAnchorSnap(event,obj,drag){
     if(!drag.sourceAnchorId||S.magneticSnap===false||obj.placement?.anchorSnap===false)return null;
-    const source=registrySceneObjectSnapAnchors(obj).find(anchor=>anchor.id===drag.sourceAnchorId);if(!source)return null;
+    const source=sceneObjectSnapAnchors(obj).find(anchor=>anchor.id===drag.sourceAnchorId);if(!source)return null;
     const T=this.THREE,rect=this.renderer.domElement.getBoundingClientRect(),floorY=BoothSpec.raise/100,
       threshold=event.pointerType==='touch'?36:24,offset=drag.sourceAnchorOffset||{x:0,y:0,z:0};let best=null;
     boothSnapAnchors(S,obj.id).forEach(target=>{
-      if(!snapAnchorKindsCompatible(source.kind,target.kind))return;
+      if(target.kind!==source.kind)return;
       const projected=new T.Vector3(target.position.x,floorY+target.position.y,target.position.z).project(this.camera);
       if(projected.z < -1||projected.z > 1)return;
       const clientX=rect.left+(projected.x+1)*rect.width/2,clientY=rect.top+(1-projected.y)*rect.height/2,
@@ -8645,10 +8625,8 @@ window.AssetAttachmentGraphAPI={
 };
 window.SmartSnapEngineAPI={
   listAnchors(assetId=''){const anchors=assetId?smartSnapEngine.getAnchors(assetId):smartSnapEngine.listAnchors();return JSON.parse(JSON.stringify(anchors));},
-  listWorldAnchors(assetId){const asset=sceneAssetRegistry.getAssetById(assetId);return asset?JSON.parse(JSON.stringify(registryAssetWorldSnapAnchors(asset))):[];},
   listSurfaces(assetId=''){const surfaces=assetId?smartSnapEngine.getSurfaces(assetId):smartSnapEngine.listSurfaces();return JSON.parse(JSON.stringify(surfaces));},
   getWorldSurfaces(assetId){return JSON.parse(JSON.stringify(smartSnapEngine.getWorldSurfaces(assetId)));},
-  anchorKindsCompatible(sourceKind,targetKind){return globalThis.YPSmartSnap.anchorKindsCompatible(sourceKind,targetKind);},
   solve(options){const result=smartSnapEngine.solve(options);return result?JSON.parse(JSON.stringify(result)):null;},
   validate(){return smartSnapEngine.validate();},
   config(){return{gridStep:smartSnapEngine.gridStep,detectionDistance:smartSnapEngine.detectionDistance,screenThreshold:smartSnapEngine.screenThreshold,

@@ -7,7 +7,7 @@
   const SCREEN_THRESHOLD=14;
   const SNAP_RELEASE_DISTANCE=.22;
   const SNAP_RELEASE_SCREEN_THRESHOLD=22;
-  const ANCHOR_TYPES=Object.freeze(['bottom','back','front','left','right','top','center','mount','corner']);
+  const ANCHOR_TYPES=Object.freeze(['bottom','back','front','left','right','top','center','mount']);
   const SURFACE_TYPES=Object.freeze(['floor-top','wall-inside','wall-outside','vertical-face','horizontal-top','horizontal-bottom','edge','center-line']);
   const ROTATION_POLICIES=Object.freeze(['preserve','align-normal','align-horizontal','align-vertical']);
   const SNAP_PRIORITIES=Object.freeze({'anchor-surface':1,'face-face':2,'edge-edge':3,'center-center':4,grid:5});
@@ -60,29 +60,6 @@
     return normalizeSnapAnchor({id:asset.id+'.anchor.'+anchorType,ownerAssetId:asset.id,anchorType,localPosition:positions[anchorType],localNormal:normals[anchorType],compatibleSurfaceTypes,rotationPolicy});
   }
 
-  function createCornerAnchorsForAsset(asset={}){
-    if(asset.snapEnabled===false)return[];
-    const b=asset.bounds||{},w=finite(b.width),h=finite(b.height),d=finite(b.depth),base=assetOriginMode(asset)==='base',
-      xs=[['min-x',-w/2],['max-x',w/2]],ys=base?[['min-y',0],['max-y',h]]:[['min-y',-h/2],['max-y',h/2]],zs=[['min-z',-d/2],['max-z',d/2]];
-    const anchors=[];
-    xs.forEach(([xId,x])=>ys.forEach(([yId,y])=>zs.forEach(([zId,z])=>{
-      anchors.push(normalizeSnapAnchor({id:asset.id+'.anchor.corner.'+[xId,yId,zId].join('.'),ownerAssetId:asset.id,anchorType:'corner',
-        localPosition:{x,y,z},localNormal:normalize({x:x<0?-1:1,y:y===ys[0][1]?-1:1,z:z<0?-1:1}),compatibleSurfaceTypes:['edge','center-line'],rotationPolicy:'preserve'}));
-    })));
-    return anchors;
-  }
-
-  function worldAnchor(anchor,asset,transformOverride=null){
-    const transform=transformOverride||asset?.transform||{},position=transform.position||{},rotation=transform.rotation||{},transformScale=transform.scale||{},
-      scaledPosition={x:finite(anchor?.localPosition?.x)*finite(transformScale.x,1),y:finite(anchor?.localPosition?.y)*finite(transformScale.y,1),z:finite(anchor?.localPosition?.z)*finite(transformScale.z,1)},
-      scaledNormal={x:finite(anchor?.localNormal?.x)*Math.sign(finite(transformScale.x,1)||1),y:finite(anchor?.localNormal?.y)*Math.sign(finite(transformScale.y,1)||1),z:finite(anchor?.localNormal?.z)*Math.sign(finite(transformScale.z,1)||1)};
-    return{...clone(anchor),worldPosition:add(position,rotateVector(scaledPosition,rotation)),worldNormal:normalize(rotateVector(scaledNormal,rotation))};
-  }
-
-  function anchorKindsCompatible(sourceKind,targetKind){
-    return sourceKind===targetKind||(sourceKind==='corner'&&targetKind==='edge')||(sourceKind==='edge'&&targetKind==='corner');
-  }
-
   function createAnchorsForAsset(asset={}){
     if(asset.snapEnabled===false)return[];
     const type=(String(asset.assetType||'')+' '+String(asset.name||'')+' '+String(asset.metadata?.fixtureType||'')).toLowerCase(),anchors=[];
@@ -97,7 +74,6 @@
     add('front',['vertical-face','wall-inside','wall-outside'],'align-normal');
     add('left',['vertical-face'],'align-normal');add('right',['vertical-face'],'align-normal');
     add('top',['horizontal-bottom'],'align-horizontal');add('center',['center-line'],'preserve');
-    anchors.push(...createCornerAnchorsForAsset(asset));
     return anchors;
   }
 
@@ -237,13 +213,11 @@
       if(!this.registry?.getAssetById?.(anchor.ownerAssetId))errors.push({code:'anchor-owner-missing',id:anchor.id});
     });this.listSurfaces().forEach(surface=>{if(!surface.id||surfaceIds.has(surface.id))errors.push({code:'invalid-surface-id',id:surface.id});surfaceIds.add(surface.id);
       if(!this.registry?.getAssetById?.(surface.ownerAssetId))errors.push({code:'surface-owner-missing',id:surface.id});});
-      let corners=0;(this.registry?.listAssets?.()||[]).filter(asset=>asset.snapEnabled!==false).forEach(asset=>{const count=this.getAnchors(asset.id).filter(anchor=>anchor.anchorType==='corner').length;
-        corners+=count;if(count!==8)errors.push({code:'corner-anchor-count',id:asset.id,expected:8,actual:count});});
-      return{valid:errors.length===0,errors,stats:{anchors:anchorIds.size,corners,surfaces:surfaceIds.size}};}
+      return{valid:errors.length===0,errors,stats:{anchors:anchorIds.size,surfaces:surfaceIds.size}};}
   }
 
   const createEngine=(registry,options)=>new SmartSnapEngine(registry,options);
   global.YPSmartSnap=Object.freeze({SMART_SNAP_VERSION,GRID_STEP,SURFACE_DETECTION_DISTANCE,SCREEN_THRESHOLD,SNAP_RELEASE_DISTANCE,SNAP_RELEASE_SCREEN_THRESHOLD,
     ANCHOR_TYPES,SURFACE_TYPES,ROTATION_POLICIES,SNAP_PRIORITIES,SmartSnapEngine,createEngine,normalizeSnapAnchor,normalizeSnapSurface,
-    createAnchorsForAsset,createCornerAnchorsForAsset,createSurfacesForAsset,worldAnchor,worldSurface,quantizeSurfacePoint,rotateVector,anchorKindsCompatible});
+    createAnchorsForAsset,createSurfacesForAsset,worldSurface,quantizeSurfacePoint,rotateVector});
 })(typeof globalThis!=='undefined'?globalThis:window);

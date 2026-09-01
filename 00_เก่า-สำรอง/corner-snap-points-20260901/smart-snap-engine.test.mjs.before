@@ -19,42 +19,13 @@ const asset=(id,assetType,category,bounds,position={x:0,y:0,z:0},extra={})=>({id
 const setup=(records)=>{const registry=registryApi.createRegistry();records.forEach(record=>registry.registerAsset(record));return{registry,engine:snapApi.createEngine(registry)};};
 
 test('SnapAnchor และ SnapSurface schema/enums ตรงตาม Task 2',()=>{
-  assert.deepEqual(Array.from(snapApi.ANCHOR_TYPES),['bottom','back','front','left','right','top','center','mount','corner']);
+  assert.deepEqual(Array.from(snapApi.ANCHOR_TYPES),['bottom','back','front','left','right','top','center','mount']);
   assert.deepEqual(Array.from(snapApi.SURFACE_TYPES),['floor-top','wall-inside','wall-outside','vertical-face','horizontal-top','horizontal-bottom','edge','center-line']);
   assert.deepEqual(Array.from(snapApi.ROTATION_POLICIES),['preserve','align-normal','align-horizontal','align-vertical']);
   const anchor=snapApi.normalizeSnapAnchor({id:'a',ownerAssetId:'x',anchorType:'mount',localPosition:{x:0,y:1,z:-.1},localNormal:{x:0,y:0,z:-1},compatibleSurfaceTypes:['wall-inside'],rotationPolicy:'align-normal'});
   assert.deepEqual(Object.keys(anchor),['id','ownerAssetId','anchorType','localPosition','localNormal','compatibleSurfaceTypes','rotationPolicy']);
   const surface=snapApi.normalizeSnapSurface({id:'s',ownerAssetId:'wall',surfaceType:'wall-inside',localOrigin:{},localNormal:{z:1},width:6,height:2.4,allowedAssetTypes:[],padding:.001,enabled:true});
   assert.deepEqual(Object.keys(surface),['id','ownerAssetId','surfaceType','localOrigin','localNormal','width','height','allowedAssetTypes','padding','enabled']);
-});
-
-test('ทุก Physical Asset มี Corner Anchor แยกครบ 8 จุดตาม min/max ของ Bounding Box',()=>{
-  const record=asset('box','Furniture','furniture',{width:2,height:1,depth:.8},{x:1,y:0,z:2}),anchors=snapApi.createAnchorsForAsset(record),corners=anchors.filter(item=>item.anchorType==='corner');
-  assert.equal(corners.length,8);assert.equal(new Set(corners.map(item=>item.id)).size,8);
-  assert.deepEqual([...new Set(corners.map(item=>item.localPosition.x))].sort((a,b)=>a-b),[-1,1]);
-  assert.deepEqual([...new Set(corners.map(item=>item.localPosition.y))].sort((a,b)=>a-b),[0,1]);
-  assert.deepEqual([...new Set(corners.map(item=>item.localPosition.z))].sort((a,b)=>a-b),[-.4,.4]);
-  assert.ok(anchors.some(item=>item.anchorType==='bottom'));assert.ok(anchors.some(item=>item.anchorType==='center'));
-});
-
-test('Corner Anchor แปลงเป็น World Space ถูกต้องหลัง Move, Rotate และ Flip',()=>{
-  const record=asset('box','Furniture','furniture',{width:2,height:1,depth:1},{x:10,y:2,z:20}),corner=snapApi.createAnchorsForAsset(record).find(item=>item.id.endsWith('min-x.min-y.min-z')),
-    world=snapApi.worldAnchor(corner,record,{position:{x:10,y:2,z:20},rotation:{x:0,y:Math.PI/2,z:0},scale:{x:-1,y:1,z:1}});
-  assert.ok(Math.abs(world.worldPosition.x-9.5)<1e-9);assert.equal(world.worldPosition.y,2);assert.ok(Math.abs(world.worldPosition.z-19)<1e-9);
-  assert.ok(Math.abs(Math.hypot(world.worldNormal.x,world.worldNormal.y,world.worldNormal.z)-1)<1e-9);
-  assert.equal(snapApi.anchorKindsCompatible('corner','corner'),true);assert.equal(snapApi.anchorKindsCompatible('corner','edge'),true);
-  assert.equal(snapApi.anchorKindsCompatible('edge','corner'),true);assert.equal(snapApi.anchorKindsCompatible('corner','center'),false);
-});
-
-test('Corner → Corner ของ Asset สองชิ้นให้ตำแหน่งปลายตรงกันโดยไม่เปลี่ยน Rotation/Scale',()=>{
-  const source=asset('source','Furniture','furniture',{width:1,height:1,depth:1},{x:0,y:0,z:0}),target=asset('target','Furniture','furniture',{width:2,height:2,depth:2},{x:4,y:0,z:3}),
-    sourceAnchor=snapApi.createCornerAnchorsForAsset(source).find(item=>item.id.endsWith('max-x.max-y.max-z')),
-    targetAnchor=snapApi.createCornerAnchorsForAsset(target).find(item=>item.id.endsWith('min-x.min-y.min-z')),
-    rotation={x:0,y:Math.PI/4,z:0},scale={x:-1,y:1,z:1},beforeTransform={position:{...source.transform.position},rotation:{...rotation},scale:{...scale}},
-    from=snapApi.worldAnchor(sourceAnchor,source,beforeTransform).worldPosition,to=snapApi.worldAnchor(targetAnchor,target).worldPosition,
-    snappedTransform={...beforeTransform,position:{x:beforeTransform.position.x+to.x-from.x,y:beforeTransform.position.y+to.y-from.y,z:beforeTransform.position.z+to.z-from.z}},
-    after=snapApi.worldAnchor(sourceAnchor,source,snappedTransform).worldPosition;
-  assert.ok(Math.hypot(after.x-to.x,after.y-to.y,after.z-to.z)<1e-9);assert.deepEqual(snappedTransform.rotation,rotation);assert.deepEqual(snappedTransform.scale,scale);
 });
 
 test('สร้าง Anchor ตามประเภท Logo/TV, Counter/Shelf, Furniture และ Lighting',()=>{
@@ -128,7 +99,7 @@ test('Priority และ Validation ไม่มี ID ซ้ำ',()=>{
   const floor=asset('floor','Floor','surface',{width:3,height:.003,depth:3},{x:1.5,y:-.0015,z:1.5},{system:true});
   const chair=asset('chair','Furniture','furniture',{width:.5,height:.8,depth:.5});const {engine}=setup([floor,chair]);
   assert.deepEqual(plain(engine.rankCandidates([{priority:5,id:'grid'},{priority:3,id:'edge'},{priority:1,id:'anchor'}]).map(item=>item.id)),['anchor','edge','grid']);
-  const report=engine.validate();assert.equal(report.valid,true);assert.equal(report.stats.corners,16);assert.ok(report.stats.anchors>0);assert.ok(report.stats.surfaces>0);
+  const report=engine.validate();assert.equal(report.valid,true);assert.ok(report.stats.anchors>0);assert.ok(report.stats.surfaces>0);
 });
 
 test('หน้า Editor เชื่อม Registry, Raycast, Collision, Ghost Preview, Candidate และ Clean Screenshot cleanup',()=>{
@@ -139,11 +110,6 @@ test('หน้า Editor เชื่อม Registry, Raycast, Collision, Ghost
   assert.match(html,/restoreObjectSnapshot\(drag\.before\)/);
   assert.match(html,/touchesLeft=surfaceTarget===SCENE_ASSET_IDS\.wallLeft/);
   assert.match(html,/touchesBack\?0:edge/);
-  assert.match(html,/snapAnchorKindsCompatible\(source\.kind,target\.kind\)/);
-  assert.match(html,/registrySceneObjectSnapAnchors\(proxy\)/);
-  assert.match(html,/const source=registrySceneObjectSnapAnchors\(obj\)/);
-  assert.match(html,/clearMagneticSnapPreview\(\)/);
-  assert.match(html,/dataset\.smartSnapCorners=String\(snapReport\.stats\.corners\)/);
 });
 
 test('Selection ให้ Asset ด้านหน้าก่อน Structure และรองรับ Alt Cycle Selection',()=>{
