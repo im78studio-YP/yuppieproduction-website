@@ -119,31 +119,6 @@ test('Logo/TV → Back/Left Wall แนบหน้าผิวและ Align R
   assert.equal(side.valid,true);assert.ok(Math.abs(side.transform.rotation.y-Math.PI/2)<1e-9);assert.ok(side.transform.position.x>.1);
 });
 
-test('สำเนาโลโก้ภาษาไทยมี Mount Anchor และติดตั้งบน Asset อื่นได้',()=>{
-  const counter=asset('counter','Counter','furniture',{width:1.2,height:1,depth:.6},{x:2,y:0,z:1}),copy=asset('logo-copy','Approved Asset','equipment',{width:.8,height:.35,depth:.03},{x:2,y:.4,z:2});
-  copy.name='สำเนาโลโก้';const {engine}=setup([counter,copy]),mount=engine.getAnchors(copy.id).find(item=>item.anchorType==='mount'),face=engine.getWorldSurfaces(counter.id).find(item=>item.id.endsWith('.front'));
-  assert.ok(mount);assert.equal(mount.rotationPolicy,'align-normal');
-  const result=engine.solve({sourceAssetId:copy.id,anchorId:mount.id,surface:face,targetAssetId:counter.id,surfacePoint:{x:2,y:.65,z:1.3},currentTransform:copy.transform});
-  assert.equal(result.valid,true);assert.equal(result.targetAssetId,counter.id);assert.equal(result.anchor.anchorType,'mount');assert.ok(result.transform.position.z>1.3);
-});
-
-test('โลโก้ติดกรอบทางเข้าได้ก่อนแม้ใหญ่กว่าหน้าตัด เพื่อให้ผู้ใช้ปรับขนาดภายหลัง',()=>{
-  const frame=asset('entrance','Overhead Structure','structure',{width:1,height:2.4,depth:2.4},{x:5.5,y:0,z:1.2}),logo=asset('logo-copy','Logo','branding',{width:1.4,height:.7,depth:.03},{x:3,y:1,z:1});
-  const {engine}=setup([frame,logo]),face=engine.getWorldSurfaces(frame.id).find(item=>item.id.endsWith('.front'));
-  const mounted=engine.solve({sourceAssetId:logo.id,surface:face,targetAssetId:frame.id,surfacePoint:{x:5.5,y:1.5,z:2.4},currentTransform:logo.transform});
-  assert.equal(mounted.valid,true);assert.equal(mounted.anchor.anchorType,'mount');
-  const hugeLogo=asset('huge-logo','Logo','branding',{width:2.2,height:.7,depth:.03},{x:3,y:1,z:1}),hugeSetup=setup([frame,hugeLogo]),hugeFace=hugeSetup.engine.getWorldSurfaces(frame.id).find(item=>item.id.endsWith('.front')),
-    oversized=hugeSetup.engine.solve({sourceAssetId:hugeLogo.id,surface:hugeFace,targetAssetId:frame.id,surfacePoint:{x:5.5,y:1.5,z:2.4},currentTransform:hugeLogo.transform});
-  assert.equal(oversized.valid,true);assert.equal(oversized.anchor.anchorType,'mount');
-});
-
-test('สำเนา Asset ทุกประเภท Snap ลง Surface เล็กกว่าได้เมื่อเป็น Free Install',()=>{
-  const target=asset('small-display','Product Display','display',{width:.5,height:.5,depth:.4},{x:2,y:0,z:1}),copy=asset('large-copy','Furniture','furniture',{width:3,height:2,depth:1},{x:2,y:0,z:2});copy.metadata.installFreely=true;
-  const {engine}=setup([target,copy]),face=engine.getWorldSurfaces(target.id).find(item=>item.id.endsWith('.front')),
-    result=engine.solve({sourceAssetId:copy.id,surface:face,targetAssetId:target.id,surfacePoint:{x:2,y:.25,z:1.2},currentTransform:copy.transform});
-  assert.equal(result.valid,true);assert.equal(result.targetAssetId,target.id);
-});
-
 test('Counter/Shelf → Wall รักษา Floor Contact ระหว่าง Snap ผนัง',()=>{
   const wall=asset('structure.wall.back','Back Wall','surface',{width:6,height:2.4,depth:.1},{x:3,y:1.2,z:.05},{system:true,locked:true,movable:false});
   const counter=asset('counter','Counter','furniture',{width:1.2,height:1,depth:.6},{x:2,y:0,z:1});
@@ -210,67 +185,6 @@ test('Smart Move ใช้ Handle Drag Module กับ Anchor Point และ C
   assert.match(html,/window\.HandleDragAPI=/);
   assert.match(html,/movePass&&scalePass&&flipPass&&singularPass&&cornerCount===8/);
   assert.match(html,/dataset\.handleDragPass=String\(report\.pass===true\)/);
-});
-
-test('Resize และ Scale เป็น Transform Mode คนละโหมด ล็อกโหมดที่ pointerdown และ Commit เป็น History เดียว',()=>{
-  for(const token of ['id="btnResizeObject"','id="btnScaleObject"',"transformMode:'move'",'setObjectTransformMode(mode)','buildResizeHandles(id)','object-resize-handles','objectLocalBounds(root)',
-    "this.handleDrag.getBoxCorner(bounds,x,y,z)","this.handleDrag.beginHandleDrag({object:root,mode:'scale',handleLocal,oppositeLocal})",
-    "kind:'transform-handle'",'transformMode,pointerId:event.pointerId','moveResizeDrag(event,drag)','finishResizeDrag(event,drag)','cancelActiveResizeDrag()','recordObjectHistory(drag.before)'])assert.ok(html.includes(token),token);
-  assert.match(html,/selectedObjectIds\(\)\.length!==1/);
-  assert.match(html,/MIN_ASSET_DIMENSION\/drag\.initialSize\.w/);
-  assert.match(html,/MAX_ASSET_DIMENSION\/drag\.initialSize\.w/);
-  assert.match(html,/group\.userData\.systemHelper=true/);
-  assert.match(html,/event\.type==='pointercancel'\|\|!drag\.moved\|\|!drag\.valid/);
-  assert.match(html,/if\(primaryId&&objectById\(primaryId\)&&\['resize','scale'\]\.includes\(objectEditor\.transformMode\)\)this\.buildResizeHandles/);
-  assert.doesNotMatch(html,/resizeMode/);
-});
-
-test('Transform Policy รวมศูนย์ แยก Parametric Resize จาก Uniform Transform Scale และรองรับ Migration',()=>{
-  for(const token of ['ASSET_TRANSFORM_POLICY_VERSION=1','defaultAssetTransformPolicy(obj,item','normalizeAssetTransformPolicy(obj,item',
-    "family:parametric?'parametric'",'canMove:explicit.canMove!==false','canResize','canScale','productionSensitive',
-    'transform.scale={x:uniformScale,y:uniformScale,z:uniformScale}','transform.uniformScale=uniformScale','SCENE_OBJECT_SCHEMA_VERSION=4'])assert.ok(html.includes(token),token);
-  assert.match(html,/graphic\|\|decorative\|\|custom\|\|parametric/);
-  assert.match(html,/\(graphic\|\|decorative\|\|readyMade\)&&canScale\?'scale'/);
-  assert.match(html,/transformPolicy:\{canResize:false,canScale:true,defaultMode:'scale'/);
-});
-
-test('Scale เปลี่ยน Transform ครบ XYZ แต่ไม่เขียนทับ Dimensions และเตือน Production/BOQ',()=>{
-  for(const token of ["drag.transformMode==='scale'",'nextScale=drag.transformMode',
-    'scale:{x:nextScale,y:nextScale,z:nextScale}','obj.transform={...(obj.transform||{}),scale:{x:scale,y:scale,z:scale},uniformScale:scale}',
-    "reviewRequired:true,reviewReason:'uniform-transform-scale'",'Dimensions เดิม ','ขนาดปลายทาง ','setSelectedObjectScale(value)'])assert.ok(html.includes(token),token);
-  assert.match(html,/bounds:\{width:oriented\.w,height:oriented\.h,depth:oriented\.d\}/);
-  assert.match(html,/\{x:flipX,y:flipY,z:uniformScale\}/);
-  assert.match(html,/finalSize:sceneObjectWorldSize\(obj\)/);
-});
-
-test('Resize อัปเดต Dimensions/Parametric Production โดยรักษาความหนา Structure',()=>{
-  for(const token of ["drag.transformMode==='resize'?{w:","thickness:Number(obj.structure?.thickness)||.2",'geometryMode=\'parametric\'',
-    'parametricDimensions:{...obj.size}','boqRevision:(Number(obj.production?.boqRevision)||0)+1'])assert.ok(html.includes(token),token);
-  assert.match(html,/obj\.size=\{\.\.\.drag\.candidate\.size\}/);
-  assert.match(html,/if\(isEntranceFrameObject\(obj\)\)\{obj\.structure=/);
-});
-
-test('Scale Snap ใช้ Fixed Pivot, Threshold และ Preview เดิม โดยแก้ Scale Factor เท่านั้น',()=>{
-  for(const token of ['scaleHandleSnap(event,drag,rawFactor,minFactor,maxFactor)','smartSnapEngine.screenThreshold','smartSnapEngine.releaseScreenThreshold',
-    "kind:'Scale Grid 5 ซม.'",'state.fixedPivotWorld','state.initialHandleWorld','this.showMagneticSnapPreview(scaleSnap)',
-    'this.clearMagneticSnapPreview()'])assert.ok(html.includes(token),token);
-  assert.match(html,/factor=clampNumber\(scaleSnap\?\.factor\?\?rawFactor,minFactor,maxFactor\)/);
-  assert.match(html,/previewFrom:\{x:rawWorld\.x,y:rawWorld\.y-floorY,z:rawWorld\.z\},previewTo:/);
-});
-
-test('Scale Handle คงขนาดบนหน้าจอ และ Lock/Esc/Undo/Redo ใช้ State กลาง',()=>{
-  for(const token of ['updateResizeHandleScreenSize()','marker.scale.setScalar(worldPerPixel*desiredPixels','event.pointerType===\'touch\'?30:22',
-    "if(objectLocked(obj)){announceCatalog('ปลดล็อก Asset ก่อนปรับขนาด'",'cancelActiveResizeDrag()','restoreObjectSnapshot(objectEditor.past.pop())',
-    'restoreObjectSnapshot(objectEditor.future.pop())'])assert.ok(html.includes(token),token);
-});
-
-test('Scale และ Resize ของ Asset บนพื้นรักษา Floor Contact ไม่จมใต้พื้น',()=>{
-  for(const token of ['sceneObjectPreservesFloorContact(obj)','preserveResizeFloorContact(root,floorY)',
-    'new this.THREE.Box3().setFromObject(root)','Number(floorY)-bounds.min.y',
-    'if(drag.preserveFloorContact)this.preserveResizeFloorContact(root,BoothSpec.raise/100)',
-    'this.pointerDrag.preserveFloorContact=sceneObjectPreservesFloorContact(obj)'])assert.ok(html.includes(token),token);
-  assert.match(html,/\(Number\(obj\.position\?\.y\)\|\|0\)>\.001/);
-  assert.match(html,/\['wall','ceiling','vertical-face','horizontal-bottom'\]\.includes\(surface\)/);
 });
 
 test('Logo Selection, Registry และ Geometry ใช้ Visible Bounds ชุดเดียวกัน',()=>{

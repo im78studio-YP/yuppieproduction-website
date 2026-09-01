@@ -87,7 +87,7 @@
     if(asset.snapEnabled===false)return[];
     const type=(String(asset.assetType||'')+' '+String(asset.name||'')+' '+String(asset.metadata?.fixtureType||'')).toLowerCase(),anchors=[];
     const add=(kind,surfaces,policy='preserve')=>{if(!anchors.some(anchor=>anchor.anchorType===kind))anchors.push(anchorDefinition(asset,kind,surfaces,policy));};
-    if(/logo|graphic|screen|tv|จอ|ป้าย/.test(type))add('mount',['wall-inside','wall-outside','vertical-face'],'align-normal');
+    if(/logo|โลโก้|brandcopy|graphic|screen|tv|จอ|ป้าย/.test(type))add('mount',['wall-inside','wall-outside','vertical-face'],'align-normal');
     else if(/arm light|wall light|ไฟกิ่ง|โคมติดผนัง/.test(type))add('mount',['wall-inside','wall-outside','vertical-face'],'align-normal');
     else if(/clear light|downlight|ceiling light|ไฟดาวน์ไลท์|โคมใต้คาน/.test(type))add('top',['horizontal-bottom'],'align-horizontal');
     else if(/counter|shelf|เคาน์เตอร์|ชั้น/.test(type)){
@@ -175,11 +175,24 @@
     return{u:extent(basis.u),v:extent(basis.v)};
   }
 
-  function fitsSurface(asset,rotation,point,surface){
+  function allowsFreeInstallOverhang(asset,surface){
+    return asset?.metadata?.installFreely===true&&!['edge','center-line'].includes(surface?.surfaceType);
+  }
+
+  function allowsBrandingOverhang(asset,owner,surface){
+    const source=(String(asset?.assetType||'')+' '+String(asset?.name||'')+' '+String(asset?.category||'')).toLowerCase(),target=String(owner?.assetType||'').toLowerCase();
+    if(!/logo|โลโก้|brandcopy|graphic|branding|ป้าย/.test(source)||owner?.metadata?.system===true||/floor|wall|room|door/.test(target)||
+      !['vertical-face','wall-inside','wall-outside'].includes(surface?.surfaceType))return false;
+    return true;
+  }
+
+  function fitsSurface(asset,rotation,point,surface,owner=null){
     if(surface.surfaceType==='edge'||surface.surfaceType==='center-line')return true;
     const origin=surface.worldOrigin||surface.localOrigin,normal=surface.worldNormal||surface.localNormal,basis=surfaceBasis(normal),delta=subtract(point,origin),ext=projectedHalfExtents(asset,rotation,basis),padding=finite(surface.padding),
-      maxU=Math.max(0,finite(surface.width)/2-ext.u-padding),maxV=Math.max(0,finite(surface.height)/2-ext.v-padding);
-    return Math.abs(dot(delta,basis.u))<=maxU+.0001&&Math.abs(dot(delta,basis.v))<=maxV+.0001;
+      rawMaxU=finite(surface.width)/2-ext.u-padding,rawMaxV=finite(surface.height)/2-ext.v-padding;
+    if(allowsFreeInstallOverhang(asset,surface)||allowsBrandingOverhang(asset,owner,surface))return Math.abs(dot(delta,basis.u))<=finite(surface.width)/2-padding+.0001&&Math.abs(dot(delta,basis.v))<=finite(surface.height)/2-padding+.0001;
+    if(rawMaxU<0||rawMaxV<0)return false;
+    return Math.abs(dot(delta,basis.u))<=rawMaxU+.0001&&Math.abs(dot(delta,basis.v))<=rawMaxV+.0001;
   }
 
   function surfaceAcceptsAsset(surface,asset){
@@ -226,7 +239,7 @@
         rotatedAnchor=rotateVector(scaledAnchor,rotation),keepFloorContact=anchor.anchorType==='back'&&Math.abs(world.worldNormal.y)<.7&&(/counter|shelf|furniture|เคาน์เตอร์|ชั้น/.test((asset.assetType+' '+asset.name).toLowerCase())||asset.category==='furniture');
       let point=quantizeSurfacePoint(surfacePoint,world,this.gridStep);
       if(keepFloorContact)point={...point,y:finite(currentTransform?.position?.y,finite(asset.transform.position?.y))+rotatedAnchor.y};
-      const desiredAnchor=add(point,scale(world.worldNormal,Math.max(.001,finite(world.padding)))),position=subtract(desiredAnchor,rotatedAnchor),valid=fitsSurface(asset,rotation,point,keepFloorContact?{...world,padding:0}:world);
+      const desiredAnchor=add(point,scale(world.worldNormal,Math.max(.001,finite(world.padding)))),position=subtract(desiredAnchor,rotatedAnchor),valid=fitsSurface(asset,rotation,point,keepFloorContact?{...world,padding:0}:world,owner);
       return{valid,reason:valid?'':'out-of-surface-bounds',priority:SNAP_PRIORITIES['anchor-surface'],snapType:'anchor-surface',sourceAssetId:asset.id,anchor:clone(anchor),surface:clone(world),targetAssetId:targetAssetId||world.ownerAssetId,
         transform:{position,rotation,scale:clone(asset.transform.scale)},surfacePoint:point,requiredOffset:Math.max(.001,finite(world.padding))};
     }
