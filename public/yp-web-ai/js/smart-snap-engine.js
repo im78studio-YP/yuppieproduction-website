@@ -236,7 +236,7 @@
       const world=worldSurface(surface,owner),available=anchorsForSurface(this.getAnchors(asset.id),world),anchors=anchorId?available.filter(anchor=>anchor.id===anchorId):available;
       if(!anchors.length)return null;
       const anchor=anchors[0],rotation=alignRotation(anchor,world,currentTransform?.rotation||asset.transform.rotation),scaledAnchor={x:anchor.localPosition.x*finite(asset.transform.scale?.x,1),y:anchor.localPosition.y*finite(asset.transform.scale?.y,1),z:anchor.localPosition.z*finite(asset.transform.scale?.z,1)},
-        rotatedAnchor=rotateVector(scaledAnchor,rotation),keepFloorContact=anchor.anchorType==='back'&&Math.abs(world.worldNormal.y)<.7&&(/counter|shelf|furniture|เคาน์เตอร์|ชั้น/.test((asset.assetType+' '+asset.name).toLowerCase())||asset.category==='furniture');
+        rotatedAnchor=rotateVector(scaledAnchor,rotation),keepFloorContact=asset.metadata?.installFreely!==true&&anchor.anchorType==='back'&&Math.abs(world.worldNormal.y)<.7&&(/counter|shelf|furniture|เคาน์เตอร์|ชั้น/.test((asset.assetType+' '+asset.name).toLowerCase())||asset.category==='furniture');
       let point=quantizeSurfacePoint(surfacePoint,world,this.gridStep);
       if(keepFloorContact)point={...point,y:finite(currentTransform?.position?.y,finite(asset.transform.position?.y))+rotatedAnchor.y};
       const desiredAnchor=add(point,scale(world.worldNormal,Math.max(.001,finite(world.padding)))),position=subtract(desiredAnchor,rotatedAnchor),valid=fitsSurface(asset,rotation,point,keepFloorContact?{...world,padding:0}:world,owner);

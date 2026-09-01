@@ -35,7 +35,7 @@ test('โลโก้หลักทำสำเนาเป็น Branding Asse
   assert.match(html,/copyNumber=\(S\.objects\|\|\[\]\)\.filter\(obj=>obj\.catalogId==='brand-artwork-copy'\)\.length\+2,label='โลโก้ '\+copyNumber/);
   assert.match(html,/ลากจุด Mount สีเขียวไปติดผนังหรือ Asset อื่น/);
   assert.match(html,/brandSelected&&\['btnRotateObject','btnDuplicateObject'\]\.includes\(id\)/);
-  assert.match(html,/copy\.placement=\{\.\.\.\(source\.placement\|\|\{\}\),mode:'free',surface:'free',targetId:null,anchorAttachment:null,snapCandidate:null\}/);
+  assert.match(html,/copy\.placement=\{\.\.\.\(source\.placement\|\|\{\}\),mode:'free',surface:'free',targetId:null,anchorAttachment:null,snapCandidate:null,installFreely:true,duplicateSourceId:source\.id\}/);
   assert.doesNotMatch(html,/function duplicateBrandSceneAsset\(\)[\s\S]{0,1800}sideLogo\s*=\s*true/);
 });
 
@@ -55,6 +55,7 @@ test('สำเนา Asset ทุกชนิดใช้ Free Install โด�
   assert.match(html,/installFreely:obj\.placement\?\.installFreely===true/);
   assert.match(html,/if\(obj\?\.placement\?\.installFreely===true\)return true/);
   assert.match(html,/if\(objectOverride\?\.placement\?\.installFreely===true\)return true/);
+  assert.match(html,/if\(obj\.placement\?\.installFreely===true\)return\{valid:true,reason:''\}/);
 });
 
 test('Asset List ใช้ Selection กลางและ Project State เดิม',()=>{

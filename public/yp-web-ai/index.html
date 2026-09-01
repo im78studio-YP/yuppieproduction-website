@@ -3043,6 +3043,7 @@ function smartSnapCandidateCollision(obj,candidate,targetAssetId=''){
   if(targetObject&&sceneObjectAllowsOutsideBooth(targetItem,targetObject))proxy.placement.allowOutsideBooth=true;
   normalizeSceneObjectModel(proxy,item);
   if(!isCatalogPlacementValid(obj.catalogId,proxy.position.x,proxy.position.z,rotationY,obj.id,obj.size,true,proxy))return{valid:false,reason:'booth-boundary-or-structure'};
+  if(obj.placement?.installFreely===true)return{valid:true,reason:''};
   const sourceVolumes=worldCollisionVolumes(item,obj.size,proxy.position.x,proxy.position.z,rotationY,proxy),tolerance=Math.max(.003,Number(obj.collision?.tolerance)||.002);
   const collision=(S.objects||[]).find(other=>{
     if(!other?.id||other.id===obj.id||other.id===mountTargetId)return false;

@@ -48,7 +48,7 @@ test('Smart Snap commit สร้าง Parent/Child graph และ Serialize/R
 });
 
 test('Free Install Attachment คง Valid แม้ Child ใหญ่กว่า Parent Surface',()=>{
-  const parent=asset('display','Product Display','display',{width:.5,height:.5,depth:.4},{x:2,y:.25,z:1}),child=asset('large-copy','Furniture','furniture',{width:3,height:2,depth:1},{x:2,y:0,z:1.701},{installFreely:true}),setup=createSetup([parent,child]),
+  const parent=asset('display','Product Display','display',{width:.5,height:.5,depth:.4},{x:2,y:.25,z:1}),child=asset('large-copy','Furniture','furniture',{width:3,height:2,depth:1},{x:2,y:-.5,z:1.701},{installFreely:true}),setup=createSetup([parent,child]),
     surface=setup.engine.getWorldSurfaces(parent.id).find(item=>item.id.endsWith('.front')),anchor=setup.engine.getAnchors(child.id).find(item=>item.anchorType==='back');
   const result=setup.graph.attachFromCurrent(child.id,{targetAssetId:parent.id,targetSurfaceId:surface.id,sourceAnchorId:anchor.id,snapMode:'surface'});
   assert.equal(result.ok,true);assert.equal(result.valid,true);assert.equal(setup.graph.getParent(child.id),parent.id);
