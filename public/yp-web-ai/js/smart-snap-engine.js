@@ -72,6 +72,16 @@
     return anchors;
   }
 
+  function remapAnchorToLocalBounds(anchor,asset,targetBounds={}){
+    const b=asset?.bounds||{},base=assetOriginMode(asset)==='base',source={
+      min:{x:-finite(b.width)/2,y:base?0:-finite(b.height)/2,z:-finite(b.depth)/2},
+      max:{x:finite(b.width)/2,y:base?finite(b.height):finite(b.height)/2,z:finite(b.depth)/2}
+    },target={min:vector(targetBounds.min),max:vector(targetBounds.max)},position=anchor?.localPosition||{};
+    const map=axis=>{const span=source.max[axis]-source.min[axis],ratio=Math.abs(span)>.0000001?(finite(position[axis])-source.min[axis])/span:.5;
+      return target.min[axis]+(target.max[axis]-target.min[axis])*ratio;};
+    return{x:map('x'),y:map('y'),z:map('z')};
+  }
+
   function worldAnchor(anchor,asset,transformOverride=null){
     const transform=transformOverride||asset?.transform||{},position=transform.position||{},rotation=transform.rotation||{},transformScale=transform.scale||{},
       scaledPosition={x:finite(anchor?.localPosition?.x)*finite(transformScale.x,1),y:finite(anchor?.localPosition?.y)*finite(transformScale.y,1),z:finite(anchor?.localPosition?.z)*finite(transformScale.z,1)},
@@ -258,5 +268,5 @@
   const createEngine=(registry,options)=>new SmartSnapEngine(registry,options);
   global.YPSmartSnap=Object.freeze({SMART_SNAP_VERSION,GRID_STEP,SURFACE_DETECTION_DISTANCE,SCREEN_THRESHOLD,SNAP_RELEASE_DISTANCE,SNAP_RELEASE_SCREEN_THRESHOLD,
     ANCHOR_TYPES,SURFACE_TYPES,ROTATION_POLICIES,SNAP_PRIORITIES,SmartSnapEngine,createEngine,normalizeSnapAnchor,normalizeSnapSurface,
-    createAnchorsForAsset,createCornerAnchorsForAsset,createSurfacesForAsset,worldAnchor,worldSurface,quantizeSurfacePoint,rotateVector,anchorKindsCompatible});
+    createAnchorsForAsset,createCornerAnchorsForAsset,createSurfacesForAsset,remapAnchorToLocalBounds,worldAnchor,worldSurface,quantizeSurfacePoint,rotateVector,anchorKindsCompatible});
 })(typeof globalThis!=='undefined'?globalThis:window);

@@ -4,17 +4,18 @@
   const INTENTS=['balanced','brand','product','counter'];
   const TEMPERATURES=[3000,4000,5000];
   const BRIGHTNESS=['soft','standard','bright'];
-  const PREFERENCES=['auto','clear','arm','mixed','invisible'];
+  const PREFERENCES=['auto','clear','arm','side-wall','downlight','mixed','invisible'];
   const FIXTURE_STATUSES=['preview','suggested','approved'];
-  const FIXTURE_TYPES=['clear','arm','invisible'];
-  const TARGET_TYPES=['logo','graphic','product','counter','screen','meeting','general'];
+  const FIXTURE_TYPES=['clear','arm','downlight','invisible'];
+  const TARGET_TYPES=['logo','graphic','product','counter','screen','meeting','entrance','general'];
   const INTENSITY={soft:.72,standard:1,bright:1.32};
   const AUTO_RENDER_BASE_INTENSITY=16;
+  const AUTO_BEAM_ANGLE=.68;
   const INTENT_PRIORITY={
-    balanced:['logo','graphic','product','counter','screen','meeting','general'],
-    brand:['logo','graphic','screen','product','counter','meeting','general'],
-    product:['product','screen','counter','logo','graphic','meeting','general'],
-    counter:['counter','logo','graphic','product','screen','meeting','general']
+    balanced:['logo','entrance','graphic','product','counter','screen','meeting','general'],
+    brand:['logo','graphic','screen','product','counter','meeting','entrance','general'],
+    product:['product','screen','counter','logo','graphic','meeting','entrance','general'],
+    counter:['counter','logo','graphic','product','screen','meeting','entrance','general']
   };
 
   const num=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
@@ -24,6 +25,15 @@
   const slug=value=>String(value||'item').toLowerCase().replace(/[^a-z0-9\u0E00-\u0E7F]+/g,'-').replace(/^-|-$/g,'')||'item';
   const vec=(x=0,y=0,z=0)=>({x:round(x),y:round(y),z:round(z)});
   const fixtureId=(revision,index,target)=>'auto-light-r'+revision+'-'+String(index+1).padStart(2,'0')+'-'+slug(target?.id||target?.type);
+  const fixtureName=type=>({clear:'Clear Light',arm:'Arm Light',downlight:'Downlight',invisible:'Invisible Preview Light'})[type]||'Invisible Preview Light';
+
+  function normalizeMountAttachment(value){
+    if(!value||typeof value!=='object')return null;
+    const parentAssetId=String(value.parentAssetId||'');if(!parentAssetId)return null;
+    const uv=value.surfaceUV||{};
+    return{parentAssetId,mountRole:String(value.mountRole||''),surfaceUV:{u:round(clamp(num(uv.u,.5),0,1)),v:round(clamp(num(uv.v,.5),0,1))},
+      normalOffset:round(num(value.normalOffset,0)),aimMode:value.aimMode==='world-down'?'world-down':'surface-normal'};
+  }
 
   function defaultLightingState(){
     return{
@@ -38,11 +48,12 @@
     const type=FIXTURE_TYPES.includes(input.fixtureType)?input.fixtureType:'invisible';
     const status=FIXTURE_STATUSES.includes(input.status)?input.status:'suggested';
     return{
-      id:String(input.id||'lighting-fixture-'+(index+1)),name:String(input.name||({clear:'Clear Light',arm:'Arm Light',invisible:'Invisible Preview Light'})[type]),
+      id:String(input.id||'lighting-fixture-'+(index+1)),name:String(input.name||fixtureName(type)),
       status,source:input.source==='manual'?'manual':'auto',fixtureType:type,
       targetType:TARGET_TYPES.includes(input.targetType)?input.targetType:'general',targetAssetId:input.targetAssetId||null,targetZoneId:input.targetZoneId||null,
       mountSurfaceId:type==='invisible'?null:(input.mountSurfaceId||null),position:vec(position.x,position.y,position.z),
       rotation:vec(rotation.x,rotation.y,rotation.z),mountRotation:vec(mountRotation.x,mountRotation.y,mountRotation.z),aimTarget:vec(aim.x,aim.y,aim.z),
+      mountAttachment:normalizeMountAttachment(input.mountAttachment),
       temperatureK:TEMPERATURES.includes(Number(input.temperatureK))?Number(input.temperatureK):4000,
       intensity:round(clamp(num(input.intensity,1),.05,5)),beamAngle:round(clamp(num(input.beamAngle,.65),.15,1.35)),
       valid:input.valid!==false,validationWarnings:Array.isArray(input.validationWarnings)?input.validationWarnings.map(String):[]
@@ -72,8 +83,9 @@
     if(Array.isArray(spec.activeWalls))return [...new Set(spec.activeWalls)];
     if(Array.isArray(spec.walls))return [...new Set(spec.walls)];
     if(spec.type==='island')return[];
+    if(spec.type==='inline')return['back','left','right'];
     if(spec.type==='corner')return spec.cornerSide==='left'?['back','right']:['back','left'];
-    if(spec.type==='peninsular')return['back'];
+    if(spec.type==='penin'||spec.type==='peninsular')return['back'];
     return['back'];
   }
 
@@ -81,7 +93,11 @@
     const size=object.size||{},position=object.position||{},catalog=String(object.catalogId||''),name=String(object.label||object.name||object.type||catalog||'Asset '+(index+1));
     return{id:String(object.id||catalog||'asset-'+(index+1)),name,catalogId:catalog,type:String(object.type||''),
       position:vec(position.x,position.y,position.z),size:{w:Math.max(.01,num(size.w,1)),d:Math.max(.01,num(size.d,1)),h:Math.max(.01,num(size.h,1))},
-      rotationY:num(object.rotationY),visible:object.visible!==false};
+      structure:object.structure&&typeof object.structure==='object'?object.structure:{},rotationY:num(object.rotationY),visible:object.visible!==false};
+  }
+
+  function isEntranceFrame(item={}){
+    return /entranceframe|entrance-frame|entrance frame|กรอบทางเข้า/.test((item.name+' '+item.type+' '+item.catalogId).toLowerCase());
   }
 
   function classifyTarget(object){
@@ -108,6 +124,11 @@
       targets.push({id:'wall-graphic-'+face,type:'graphic',name:'กราฟิกผนัง '+face,assetId:'system-wall-sticker-'+face,zoneId:null,position:p,width:num(sticker.w,W*.5)});
     });
     (spec.objects||[]).map(objectInfo).filter(item=>item.visible).forEach(item=>{
+      if(isEntranceFrame(item)){
+        const projection=Math.max(.2,num(item.structure.projection,item.size.d)),pierWidth=Math.max(.2,num(item.structure.pierWidth,item.size.w));
+        targets.push({id:'entrance-zone-'+item.id,type:'entrance',name:'พื้นที่ทางเข้ากรอบ',assetId:item.id,zoneId:'entrance-'+item.id,
+          position:vec(item.position.x,.05,item.position.z),width:pierWidth,size:{w:pierWidth,d:projection,h:.05}});return;
+      }
       const type=classifyTarget(item);if(!type)return;
       targets.push({id:item.id,type,name:item.name,assetId:item.id,zoneId:null,
         position:vec(item.position.x,item.position.y+item.size.h*.55,item.position.z),width:item.size.w,size:item.size});
@@ -127,6 +148,12 @@
     inferWalls(spec).forEach(face=>surfaces.push({id:'wall-'+face,type:'wall',face,compatible:['arm','clear'],
       position:face==='left'?vec(0,H/2,D/2):face==='right'?vec(W,H/2,D/2):vec(W/2,H/2,0),size:face==='back'?{w:W,h:H}:{w:D,h:H}}));
     (spec.objects||[]).map(objectInfo).filter(item=>item.visible&&isMountStructure(item)).forEach(item=>{
+      if(isEntranceFrame(item)){
+        const height=Math.max(.2,num(item.structure.height,item.size.h)),thickness=Math.max(.02,num(item.structure.thickness,.15)),
+          projection=Math.max(.2,num(item.structure.projection,item.size.d)),pierWidth=Math.max(.2,num(item.structure.pierWidth,item.size.w)),undersideY=item.position.y+height-thickness;
+        surfaces.push({id:'asset-'+item.id,type:'overhead',face:null,assetId:item.id,mountRole:'entrance-canopy',compatible:['downlight','clear'],flushMount:true,undersideY,
+          position:vec(item.position.x,undersideY+thickness/2,item.position.z),size:{w:pierWidth,d:projection,h:thickness}});return;
+      }
       const overhead=item.position.y+item.size.h>=H*.72||/beam|fascia|overhead|คาน/.test((item.name+' '+item.type).toLowerCase());
       surfaces.push({id:'asset-'+item.id,type:overhead?'overhead':'structure',face:null,assetId:item.id,compatible:overhead?['clear']:['arm','clear'],
         position:vec(item.position.x,item.position.y+item.size.h/2,item.position.z),size:item.size});
@@ -141,24 +168,28 @@
 
   function preferredFixtureType(preference,mount){
     if(preference==='invisible')return'invisible';
-    if(preference==='clear')return mount?.compatible?.includes('clear')?'clear':'invisible';
-    if(preference==='arm')return mount?.compatible?.includes('arm')?'arm':'invisible';
-    if(preference==='mixed')return mount?.type==='wall'&&mount.compatible.includes('arm')?'arm':mount?.compatible?.includes('clear')?'clear':'invisible';
+    if(!mount)return'invisible';
+    if(preference==='clear'&&mount.compatible.includes('clear'))return'clear';
+    if(preference==='arm'&&mount.compatible.includes('arm'))return'arm';
+    if(preference==='downlight'&&mount.compatible.includes('downlight'))return'downlight';
+    if(preference==='mixed')return mount.mountRole==='entrance-canopy'&&mount.compatible.includes('downlight')?'downlight':mount.type==='wall'&&mount.compatible.includes('arm')?'arm':mount.compatible.includes('clear')?'clear':'invisible';
+    if(mount?.mountRole==='entrance-canopy'&&mount.compatible.includes('downlight'))return'downlight';
     if(mount?.type==='overhead')return'clear';
     if(mount?.type==='wall')return'arm';
-    return mount?.compatible?.includes('clear')?'clear':'invisible';
+    return mount.compatible.includes('clear')?'clear':mount.compatible.includes('downlight')?'downlight':mount.compatible.includes('arm')?'arm':'invisible';
   }
 
   function mountForTarget(target,mounts,preference){
     if(preference==='invisible')return null;
-    const compatible=mounts.filter(mount=>{
-      if(preference==='clear')return mount.compatible.includes('clear');
-      if(preference==='arm')return mount.compatible.includes('arm');
-      return mount.compatible.length>0;
-    });
+    const scoped=target.type==='entrance'
+      ?mounts.filter(mount=>mount.mountRole==='entrance-canopy'&&mount.assetId===target.assetId)
+      :mounts.filter(mount=>mount.mountRole!=='entrance-canopy');
+    const compatible=scoped.filter(mount=>mount.compatible.length>0);
     if(!compatible.length)return null;
     const tx=target.position.x,tz=target.position.z;
     return compatible.slice().sort((a,b)=>{
+      const af=preference!=='auto'&&preference!=='mixed'&&a.compatible.includes(preference)?0:1,bf=preference!=='auto'&&preference!=='mixed'&&b.compatible.includes(preference)?0:1;
+      if(af!==bf)return af-bf;
       const ap=a.type==='overhead'?0:a.type==='structure'?1:2,bp=b.type==='overhead'?0:b.type==='structure'?1:2;
       if(ap!==bp)return ap-bp;
       const ad=Math.hypot(a.position.x-tx,a.position.z-tz),bd=Math.hypot(b.position.x-tx,b.position.z-tz);return ad-bd;
@@ -168,7 +199,7 @@
   function fixturePosition(target,mount,spec,offset=0){
     const W=num(spec.W||spec.width,6),D=num(spec.D||spec.depth,3),H=num(spec.H||spec.height,2.4),x=clamp(target.position.x+offset,.08,W-.08),z=clamp(target.position.z,.08,D-.08);
     if(!mount)return vec(x,Math.max(.2,H-.12),z);
-    if(mount.type==='overhead'||mount.type==='structure')return vec(clamp(x,mount.position.x-mount.size.w/2+.08,mount.position.x+mount.size.w/2-.08),Math.max(.1,mount.position.y-mount.size.h/2+.02),clamp(z,mount.position.z-mount.size.d/2+.05,mount.position.z+mount.size.d/2-.05));
+    if(mount.type==='overhead'||mount.type==='structure')return vec(clamp(x,mount.position.x-mount.size.w/2+.08,mount.position.x+mount.size.w/2-.08),Math.max(.1,Number.isFinite(Number(mount.undersideY))?Number(mount.undersideY)-(mount.flushMount?0:.02):mount.position.y-mount.size.h/2+.02),clamp(z,mount.position.z-mount.size.d/2+.05,mount.position.z+mount.size.d/2-.05));
     /* Wall-mounted fixtures use the wall's top edge as their physical mount
        datum.  The previous 0.12 m inset made every lamp sit visibly below the
        top line even though the fixture template is already anchored at its
@@ -185,6 +216,7 @@
   }
 
   function mountRotationForSurface(mount){
+    if(mount?.type==='overhead')return vec(Math.PI/2,0,0);
     if(mount?.face==='left')return vec(0,Math.PI/2,0);
     if(mount?.face==='right')return vec(0,-Math.PI/2,0);
     return vec(0,0,0);
@@ -224,6 +256,7 @@
   function fixtureLightWorldPosition(fixture={}){
     const position=fixture.position||{},source={x:num(position.x),y:num(position.y),z:num(position.z)};
     if(fixture.fixtureType==='invisible')return source;
+    if(fixture.fixtureType==='downlight'){source.y-=.015;return source;}
     const mount=String(fixture.mountSurfaceId||''),headOffset=fixture.fixtureType==='arm'?.33:.16;
     source.y-=fixture.fixtureType==='arm'?.07:.12;
     if(mount==='wall-back')source.z+=headOffset;
@@ -263,20 +296,73 @@
     return validateFixture(preview,spec,existing);
   }
 
+  function collectWallObstructions(spec={},face='back'){
+    const W=Math.max(1,num(spec.W||spec.width,6)),D=Math.max(1,num(spec.D||spec.depth,3)),H=Math.max(.5,num(spec.H||spec.height,2.4)),clearance=.12,span=face==='back'?W:D;
+    const intervals=(spec.objects||[]).map(objectInfo).filter(item=>item.visible).flatMap(item=>{
+      const radians=num(item.rotationY)*Math.PI/180,cos=Math.abs(Math.cos(radians)),sin=Math.abs(Math.sin(radians)),
+        halfX=(cos*item.size.w+sin*item.size.d)/2,halfZ=(sin*item.size.w+cos*item.size.d)/2,
+        /* Arm Light projects about .33 m in front of the wall.  A tall object
+           entering that envelope blocks the fixture even when its mesh does
+           not literally touch z=0. */
+        entranceSide=isEntranceFrame(item)?(item.position.x<W/2?'left':'right'):null,
+        touchesWall=face!=='back'&&face===entranceSide?true:face==='left'?item.position.x-halfX<=.36:face==='right'?W-(item.position.x+halfX)<=.36:item.position.z-halfZ<=.36,
+        reachesMountBand=item.position.y+item.size.h>=H-.22;
+      if(!touchesWall||!reachesMountBand)return[];
+      const center=face==='back'?item.position.x:item.position.z,half=face==='back'?halfX:halfZ,
+        min=clamp(center-half-clearance,0,span),max=clamp(center+half+clearance,0,span);
+      return max-min>.02?[{assetId:item.id,min:round(min),max:round(max)}]:[];
+    }).sort((a,b)=>a.min-b.min);
+    return intervals.reduce((merged,item)=>{
+      const last=merged[merged.length-1];
+      if(last&&item.min<=last.max){last.max=Math.max(last.max,item.max);last.assetIds.push(item.assetId);}
+      else merged.push({min:item.min,max:item.max,assetIds:[item.assetId]});
+      return merged;
+    },[]);
+  }
+
+  function collectBackWallObstructions(spec={}){return collectWallObstructions(spec,'back');}
+
+  function applyBackWallObstructions(fixtures,spec={}){
+    const W=Math.max(1,num(spec.W||spec.width,6)),blocked=collectBackWallObstructions(spec),wall=fixtures.filter(item=>item.mountSurfaceId==='wall-back');
+    let output=fixtures;
+    const removedFixtureIds=[];
+    if(blocked.length&&wall.length){
+    const usableWidth=Math.max(0,W-blocked.reduce((sum,item)=>sum+(item.max-item.min),0)),desiredWallCount=Math.max(1,Math.round(usableWidth/1.55)),
+      obstructed=new Set(wall.filter(item=>blocked.some(interval=>item.position.x>=interval.min&&item.position.x<=interval.max)).map(item=>item.id)),
+      available=wall.filter(item=>!obstructed.has(item.id)),priority={logo:0,graphic:0,product:1,counter:1,screen:1,meeting:2,general:3},
+      keep=new Set(available.slice().sort((a,b)=>(priority[a.targetType]??2)-(priority[b.targetType]??2)).slice(0,desiredWallCount).map(item=>item.id)),
+      removedBack=wall.filter(item=>!keep.has(item.id)).map(item=>item.id);
+    removedFixtureIds.push(...removedBack);output=output.filter(item=>!removedBack.includes(item.id));
+    }
+    const sideLayouts={};
+    ['left','right'].forEach(face=>{
+      const sideBlocked=collectWallObstructions(spec,face),sideFixtures=output.filter(item=>item.mountSurfaceId==='wall-'+face),
+        removed=sideFixtures.filter(item=>sideBlocked.some(interval=>item.position.z>=interval.min&&item.position.z<=interval.max)).map(item=>item.id);
+      if(removed.length){removedFixtureIds.push(...removed);output=output.filter(item=>!removed.includes(item.id));}
+      sideLayouts[face]={blocked:sideBlocked,removedFixtureIds:removed};
+    });
+    return{fixtures:output,blocked,desiredWallCount:output.filter(item=>item.mountSurfaceId==='wall-back').length,removedFixtureIds,sideLayouts};
+  }
+
   function generateLightingPlan({spec={},sceneRevision=0,lighting=null}={}){
     const state=normalizeLightingState(lighting||spec.lighting||defaultLightingState()),targets=collectTargets(spec).sort((a,b)=>targetScore(a,state.intent)-targetScore(b,state.intent));
-    const mounts=collectMountSurfaces(spec),nextRevision=state.lightingRevision+1,fixtures=[];
+    const mounts=collectMountSurfaces(spec),sideWallMounts=mounts.filter(mount=>mount.type==='wall'&&(mount.face==='left'||mount.face==='right')),nextRevision=state.lightingRevision+1,fixtures=[];
     const important=targets.filter(target=>target.type!=='general').slice(0,state.intent==='balanced'?5:6);
     const selected=important.length?important:targets.slice(-1);
     selected.forEach(target=>{
-      const pairedBrand=target.type==='logo'&&num(spec.W||spec.width,6)>=4.5&&target.width>=Math.max(1.2,num(spec.W||spec.width,6)*.2),count=pairedBrand?2:1;
+      const pairedBrand=target.type==='logo'&&num(spec.W||spec.width,6)>=4.5&&target.width>=Math.max(1.2,num(spec.W||spec.width,6)*.2),
+        entrancePair=target.type==='entrance'&&num(target.size?.d,0)>=1.8,count=entrancePair||pairedBrand?2:1;
       for(let copyIndex=0;copyIndex<count;copyIndex++){
-        const mount=mountForTarget(target,mounts,state.fixturePreference),type=preferredFixtureType(state.fixturePreference,mount),offset=count===2?(copyIndex===0?-target.width*.32:target.width*.32):0;
-        const position=fixturePosition(target,mount,spec,offset),aim=aimOnMountSurface(mount,spec,vec(position.x,target.position.y,position.z)),fixture=normalizeFixture({
-          id:fixtureId(nextRevision,fixtures.length,target),name:type==='clear'?'Clear Light':type==='arm'?'Arm Light':'Invisible Preview Light',
+        const mount=mountForTarget(target,mounts,state.fixturePreference),type=preferredFixtureType(state.fixturePreference,mount),
+          offset=pairedBrand?(copyIndex===0?-target.width*.32:target.width*.32):0,zOffset=entrancePair?(copyIndex===0?-target.size.d*.22:target.size.d*.22):0,
+          entranceV=entrancePair?(copyIndex===0?.28:.72):.5,
+          placementTarget=zOffset?{...target,position:vec(target.position.x,target.position.y,target.position.z+zOffset)}:target,
+          position=fixturePosition(placementTarget,mount,spec,offset),aim=target.type==='entrance'?vec(position.x,.05,position.z):aimOnMountSurface(mount,spec,vec(position.x,target.position.y,position.z)),fixture=normalizeFixture({
+          id:fixtureId(nextRevision,fixtures.length,target),name:fixtureName(type),
           status:type==='invisible'?'preview':'suggested',source:'auto',fixtureType:type,targetType:target.type,targetAssetId:target.assetId,targetZoneId:target.zoneId,
           mountSurfaceId:mount?.id||null,position,rotation:rotationToward(position,aim),mountRotation:mountRotationForSurface(mount),aimTarget:aim,temperatureK:state.temperatureK,
-          intensity:INTENSITY[state.brightness]||1,beamAngle:target.type==='general'?.9:target.type==='meeting'?.82:target.type==='logo'?.56:.66
+          mountAttachment:target.type==='entrance'&&mount?.mountRole==='entrance-canopy'?{parentAssetId:target.assetId,mountRole:'entrance-canopy',surfaceUV:{u:.5,v:entranceV},normalOffset:0,aimMode:'world-down'}:null,
+          intensity:INTENSITY[state.brightness]||1,beamAngle:AUTO_BEAM_ANGLE
         },fixtures.length);
         validateFixture(fixture,spec,fixtures);fixtures.push(fallbackToPreview(fixture,spec,fixtures));
       }
@@ -285,14 +371,26 @@
        the logo.  When the first pair is dedicated to branding on a wide wall,
        add an outer pair that aims into the left/right usable zones. */
     const generalTarget=targets.find(target=>target.type==='general'),W=num(spec.W||spec.width,6),D=num(spec.D||spec.depth,3),H=num(spec.H||spec.height,2.4);
-    if(state.intent==='balanced'&&W>=4.5&&generalTarget&&fixtures.length===2&&fixtures.every(item=>item.targetType==='logo'||item.targetType==='graphic')){
+    const brandFixtures=fixtures.filter(item=>item.targetType==='logo'||item.targetType==='graphic');
+    if(state.intent==='balanced'&&W>=4.5&&generalTarget&&brandFixtures.length===2&&!fixtures.some(item=>item.targetType==='general')){
       const mount=mountForTarget(generalTarget,mounts,state.fixturePreference),type=preferredFixtureType(state.fixturePreference,mount);
       [-1,1].forEach((side,index)=>{
         const position=fixturePosition(generalTarget,mount,spec,side*W*.35),aim=aimOnMountSurface(mount,spec,vec(position.x,Math.min(1.25,H*.52),position.z)),fixture=normalizeFixture({
-          id:fixtureId(nextRevision,fixtures.length,generalTarget),name:type==='invisible'?'Invisible Preview Light':type==='arm'?'Arm Light':'Clear Light',
+          id:fixtureId(nextRevision,fixtures.length,generalTarget),name:fixtureName(type),
           status:type==='invisible'?'preview':'suggested',source:'auto',fixtureType:type,targetType:'general',targetZoneId:'general-'+(index?'right':'left'),
           mountSurfaceId:mount?.id||null,position,rotation:rotationToward(position,aim),mountRotation:mountRotationForSurface(mount),aimTarget:aim,
-          temperatureK:state.temperatureK,intensity:(INTENSITY[state.brightness]||1)*.8,beamAngle:.68
+          temperatureK:state.temperatureK,intensity:(INTENSITY[state.brightness]||1)*.8,beamAngle:AUTO_BEAM_ANGLE
+        },fixtures.length);
+        validateFixture(fixture,spec,fixtures);fixtures.push(fallbackToPreview(fixture,spec,fixtures));
+      });
+    }
+    if(state.fixturePreference==='side-wall'){
+      sideWallMounts.forEach(mount=>{
+        if(fixtures.some(item=>item.mountSurfaceId===mount.id))return;
+        const sideTarget={id:'zone-side-'+mount.face,type:'general',position:vec(W/2,Math.min(1.25,H*.52),D*.55)},position=fixturePosition(sideTarget,mount,spec),aim=aimOnMountSurface(mount,spec,vec(position.x,Math.min(1.25,H*.52),position.z)),fixture=normalizeFixture({
+          id:fixtureId(nextRevision,fixtures.length,sideTarget),name:'Arm Light',status:'suggested',source:'auto',fixtureType:'arm',targetType:'general',targetZoneId:'side-wall-'+mount.face,
+          mountSurfaceId:mount.id,position,rotation:rotationToward(position,aim),mountRotation:mountRotationForSurface(mount),aimTarget:aim,
+          temperatureK:state.temperatureK,intensity:(INTENSITY[state.brightness]||1)*.8,beamAngle:AUTO_BEAM_ANGLE
         },fixtures.length);
         validateFixture(fixture,spec,fixtures);fixtures.push(fallbackToPreview(fixture,spec,fixtures));
       });
@@ -300,18 +398,23 @@
     if(fixtures.length<2&&targets.some(target=>target.type==='general')){
       const target=targets.find(item=>item.type==='general'),mount=mountForTarget(target,mounts,state.fixturePreference),type=preferredFixtureType(state.fixturePreference,mount);
       let fixture=null;for(const offset of [0,num(spec.W||spec.width,6)*.2,-num(spec.W||spec.width,6)*.2]){
-        const position=fixturePosition(target,mount,spec,offset);fixture=normalizeFixture({id:fixtureId(nextRevision,fixtures.length,target),name:type==='invisible'?'Invisible Preview Light':type==='arm'?'Arm Light':'Clear Light',status:type==='invisible'?'preview':'suggested',source:'auto',fixtureType:type,targetType:'general',targetZoneId:'general',mountSurfaceId:mount?.id||null,position,rotation:rotationToward(position,target.position),mountRotation:mountRotationForSurface(mount),aimTarget:target.position,temperatureK:state.temperatureK,intensity:(INTENSITY[state.brightness]||1)*.8,beamAngle:.92},fixtures.length);
+        const position=fixturePosition(target,mount,spec,offset);fixture=normalizeFixture({id:fixtureId(nextRevision,fixtures.length,target),name:fixtureName(type),status:type==='invisible'?'preview':'suggested',source:'auto',fixtureType:type,targetType:'general',targetZoneId:'general',mountSurfaceId:mount?.id||null,position,rotation:rotationToward(position,target.position),mountRotation:mountRotationForSurface(mount),aimTarget:target.position,temperatureK:state.temperatureK,intensity:(INTENSITY[state.brightness]||1)*.8,beamAngle:AUTO_BEAM_ANGLE},fixtures.length);
         validateFixture(fixture,spec,fixtures);if(fixture.valid||type==='invisible')break;
       }
       fixtures.push(fallbackToPreview(fixture,spec,fixtures));
     }
-    return{...state,suggestions:fixtures,lightingRevision:nextRevision,lastCalculatedSceneRevision:sceneRevision,stale:false,
-      validationWarnings:fixtures.flatMap(item=>item.validationWarnings.map(warning=>item.name+': '+warning)),diagnostics:{targetCount:targets.length,mountSurfaceCount:mounts.length,targets,mounts}};
+    const wallLayout=applyBackWallObstructions(fixtures,spec),finalFixtures=wallLayout.fixtures;
+    return{...state,suggestions:finalFixtures,lightingRevision:nextRevision,lastCalculatedSceneRevision:sceneRevision,stale:false,
+      validationWarnings:finalFixtures.flatMap(item=>item.validationWarnings.map(warning=>item.name+': '+warning)),diagnostics:{targetCount:targets.length,mountSurfaceCount:mounts.length,targets,mounts,wallLayout}};
   }
 
   function recalculateLightingPlan(args={}){
     const current=normalizeLightingState(args.lighting||args.spec?.lighting),approved=current.approvedFixtures;
-    const next=generateLightingPlan({...args,lighting:{...current,suggestions:[]}});next.approvedFixtures=approved;return next;
+    const next=generateLightingPlan({...args,lighting:{...current,suggestions:[]}}),approvedLayout=applyBackWallObstructions(approved,args.spec||{}),keptApproved=approvedLayout.fixtures;
+    next.approvedFixtures=keptApproved;
+    next.suggestions=next.suggestions.filter(candidate=>!keptApproved.some(existing=>existing.mountSurfaceId===candidate.mountSurfaceId&&Math.hypot(existing.position.x-candidate.position.x,existing.position.y-candidate.position.y,existing.position.z-candidate.position.z)<.18));
+    next.validationWarnings=next.suggestions.flatMap(item=>item.validationWarnings.map(warning=>item.name+': '+warning));
+    next.diagnostics={...next.diagnostics,approvedWallLayout:approvedLayout};return next;
   }
 
   function approveSuggestions(lighting){
@@ -338,7 +441,7 @@
 
   global.YPAutoLighting={
     INTENTS,TEMPERATURES,BRIGHTNESS,PREFERENCES,FIXTURE_TYPES,TARGET_TYPES,defaultLightingState,normalizeLightingState,normalizeFixture,
-    inferWalls,collectTargets,collectMountSurfaces,mountRotationForSurface,aimOnMountSurface,fixtureWorldPointLocalOffset,fixtureAimLocalOffset,fixtureLightWorldPosition,fixtureLightLocalOffset,fixtureRenderIntensity,applyPhotometricSettings,
+    inferWalls,collectTargets,collectMountSurfaces,isEntranceFrame,collectWallObstructions,collectBackWallObstructions,applyBackWallObstructions,mountRotationForSurface,aimOnMountSurface,fixtureWorldPointLocalOffset,fixtureAimLocalOffset,fixtureLightWorldPosition,fixtureLightLocalOffset,fixtureRenderIntensity,applyPhotometricSettings,
     generateLightingPlan,recalculateLightingPlan,approveSuggestions,markStale,promptLines
   };
 })(typeof globalThis!=='undefined'?globalThis:window);

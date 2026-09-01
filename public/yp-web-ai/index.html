@@ -1120,7 +1120,7 @@ select:focus{border-color:var(--acc)}
           <div class="auto-lighting-fine"><b>X</b><button type="button" data-light-axis="x" data-light-delta="-0.05">−</button><output id="autoLightX">0.00</output><button type="button" data-light-axis="x" data-light-delta="0.05">+</button><span>ม.</span></div>
           <div class="auto-lighting-fine"><b>Y</b><button type="button" data-light-axis="y" data-light-delta="-0.05">−</button><output id="autoLightY">0.00</output><button type="button" data-light-axis="y" data-light-delta="0.05">+</button><span>ม.</span></div>
           <div class="auto-lighting-fine"><b>Z</b><button type="button" data-light-axis="z" data-light-delta="-0.05">−</button><output id="autoLightZ">0.00</output><button type="button" data-light-axis="z" data-light-delta="0.05">+</button><span>ม.</span></div>
-          <select id="autoLightingFixtureType" aria-label="ประเภทโคม"><option value="clear">Clear Light</option><option value="arm">Arm Light</option><option value="invisible">Invisible Preview Light</option></select>
+          <select id="autoLightingFixtureType" aria-label="ประเภทโคม"><option value="clear">Clear Light</option><option value="arm">Arm Light</option><option value="downlight">Downlight</option><option value="invisible">Invisible Preview Light</option></select>
           <div class="auto-lighting-editor-actions"><button id="autoLightRotate" type="button">หมุน 15°</button><button id="autoLightAim" type="button">เล็งจุดกลาง</button><button id="autoLightDelete" class="danger" type="button">ลบไฟ</button></div>
         </div>
       </details>
@@ -1692,9 +1692,9 @@ select:focus{border-color:var(--acc)}
 <script src="js/ai-staging.js?v=20260830-1"></script>
 <script src="js/ai-render-intent.js?v=20260831-1"></script>
 <script src="js/ai-render-pipeline.js?v=20260830-1"></script>
-<script src="js/auto-lighting.js?v=20260902-8"></script>
+<script src="js/auto-lighting.js?v=20260902-17"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
-<script src="js/smart-snap-engine.js?v=20260901-1"></script>
+<script src="js/smart-snap-engine.js?v=20260902-2"></script>
 <script src="js/asset-attachment-graph.js?v=20260901-1"></script>
 <script src="js/brand-visible-bounds.js?v=20260902-1"></script>
 <script>
@@ -1816,15 +1816,26 @@ const LIGHT_MODELS=[
      เป็นระนาบอ้างอิง แล้วกลับแนวก้านให้หัวโคมหันออกทางเดิน */
   {k:'arm',n:'Arm Light',s:'เลือกทรงโคม · คิด 10W',url:'./assets/lights/Arm-Light-V4.glb?v=20260824-v4',scale:1,spacing:1.0,backWallClearance:1.0,wallRotationX:Math.PI/2,baseMeshIndex:10,baseAxis:'z',baseSide:'min',templateRotationY:Math.PI,mountMode:'ceiling',modelFlipZ:true,lightSource:[0,-.07,.33],beamMode:'downwash',beamTargetHeightRatio:.83,beamTargetDepth:.04,beamAngle:.58,beamPenumbra:.88,beamDecay:1.6,beamDistanceFactor:2.5,beamMix:.72,beamDiffuseMix:.20,beamDiffuseAngle:.80,beamDiffusePenumbra:1,beamDiffuseDecay:1.15,
     /* ฐานติดขอบผนัง แล้วก้านยื่นเข้าทางเดินเสมอ: หลัง = +Z · ซ้าย = +X · ขวา = -X */
-    wallRotations:{back:0,left:Math.PI/2,right:-Math.PI/2}}];
-const OFFLINE_LIGHT_MODELS_SCRIPT='./assets/lights/embedded-light-models.js?v=20260824-clear-v2';
+    wallRotations:{back:0,left:Math.PI/2,right:-Math.PI/2}},
+  /* Downlight V1: mesh 0 คือขอบหน้าโคม ระนาบ Z สูงสุดต้องเสมอใต้ฝ้า
+     ตัวเรือนที่เหลือจึงซ่อนอยู่เหนือ Canopy และแกนแสงยิงลงตรง */
+  {k:'downlight',n:'Downlight',s:'โคมฝังใต้ฝ้า',url:'./assets/lights/Downlight_V1.glb?v=20260902-v1',scale:1,spacing:1.2,baseMeshIndex:0,baseAxis:'z',baseSide:'max',templateRotationY:0,mountMode:'ceiling-recessed',lightSource:[0,-.015,0],beamMode:'downlight',beamAngle:.52,beamPenumbra:.9,beamDecay:1.55,beamDistanceFactor:2.4}];
+/* Downlight_V1.glb ไม่มีข้อมูลกำลังไฟและราคาขาย จึงไม่เดาเป็น 100W แบบ Clear Light */
+const AUTO_FIXTURE_SPECS={arm:{watts:10,price:1800},clear:{watts:100,price:3200},downlight:{watts:0,price:0},invisible:{watts:0,price:0}};
+const OFFLINE_LIGHT_MODELS_SCRIPT='./assets/lights/embedded-light-models.js?v=20260902-downlight-v1';
+const OFFLINE_DOWNLIGHT_MODEL_SCRIPT='./assets/lights/embedded-downlight-model.js?v=20260902-v1';
 let offlineLightModelsPromise=null;
 function fixtureModelSource(def){
   if(location.protocol!=='file:')return Promise.resolve(def.url);
   const cached=globalThis.OFFLINE_LIGHT_MODELS?.[def.k];if(cached)return Promise.resolve(cached);
   if(!offlineLightModelsPromise)offlineLightModelsPromise=new Promise((resolve,reject)=>{
     const script=document.createElement('script');script.src=OFFLINE_LIGHT_MODELS_SCRIPT;
-    script.onload=()=>globalThis.OFFLINE_LIGHT_MODELS?resolve(globalThis.OFFLINE_LIGHT_MODELS):reject(new Error('Embedded light models are unavailable'));
+    script.onload=()=>{
+      const downlight=document.createElement('script');downlight.src=OFFLINE_DOWNLIGHT_MODEL_SCRIPT;
+      downlight.onload=()=>globalThis.OFFLINE_LIGHT_MODELS?resolve(globalThis.OFFLINE_LIGHT_MODELS):reject(new Error('Embedded light models are unavailable'));
+      downlight.onerror=()=>reject(new Error('Embedded downlight model failed to load'));
+      document.head.appendChild(downlight);
+    };
     script.onerror=()=>reject(new Error('Embedded light model bundle failed to load'));
     document.head.appendChild(script);
   });
@@ -2180,8 +2191,9 @@ function buildSceneAssetRecords(spec=S){
     records.push(make({id,name:'สติ๊กเกอร์'+({back:'ผนังหลัง',left:'ผนังซ้าย',right:'ผนังขวา'}[face]||'ผนัง'),assetType:'Graphic',category:'branding',system:true,listGroup:'branding',icon:'IMG',legacyId:'system-wall-sticker-'+face,transform:sceneAssetTransform({x:spec.W/2,y:floorY+spec.H/2,z:spec.D/2}),bounds:{width:sticker.w,height:sticker.h,depth:.002},locked:true,selectable:true,movable:false,snapEnabled:false}));});
   const lighting=globalThis.YPAutoLighting.normalizeLightingState(spec.lighting,{legacyProject:false});
   if(lighting.mode==='manual'&&spec.lights)records.push(make({id:SCENE_ASSET_IDS.manualLighting,name:'ชุดไฟบูธ (Manual)',assetType:'Lighting Fixture',category:'lighting',system:true,listGroup:'lighting',icon:'LIGHT',transform:sceneAssetTransform(),bounds:{width:spec.W,height:.3,depth:.3},locked:true,selectable:true,movable:false,snapEnabled:true,metadata:{status:'Approved'}}));
-  lighting.approvedFixtures.forEach(fixture=>records.push(make({id:'lighting-'+fixture.id,name:fixture.name,assetType:'Lighting Fixture',category:'lighting',system:true,listGroup:'lighting',icon:'LIGHT',transform:sceneAssetTransform(fixture.position,fixture.mountRotation||fixture.rotation),bounds:{width:.2,height:.2,depth:.2},locked:true,selectable:true,movable:false,snapEnabled:true,metadata:{lightingFixtureId:fixture.id,status:'Approved'}})));
-  lighting.suggestions.filter(fixture=>fixture.fixtureType!=='invisible').forEach(fixture=>records.push(make({id:'lighting-'+fixture.id,name:fixture.name,assetType:'Suggested Asset',category:'lighting',system:true,listGroup:'suggested',icon:'AI',transform:sceneAssetTransform(fixture.position,fixture.mountRotation||fixture.rotation),bounds:{width:.2,height:.2,depth:.2},locked:true,selectable:true,movable:false,snapEnabled:true,metadata:{lightingFixtureId:fixture.id,status:'Suggested'}})));
+  const lightingFixtures=lighting.approvedFixtures.concat(lighting.suggestions);
+  lighting.approvedFixtures.forEach(fixture=>{const resolved=resolvedAutoLightingFixtureForView(fixture,lightingFixtures,spec);records.push(make({id:'lighting-'+fixture.id,name:fixture.name,assetType:'Lighting Fixture',category:'lighting',system:true,listGroup:'lighting',icon:'LIGHT',transform:sceneAssetTransform(resolved.position,resolved.mountRotation||resolved.rotation),bounds:{width:.2,height:.2,depth:.2},locked:true,selectable:true,movable:false,snapEnabled:true,metadata:{lightingFixtureId:fixture.id,status:'Approved'}}));});
+  lighting.suggestions.filter(fixture=>fixture.fixtureType!=='invisible').forEach(fixture=>{const resolved=resolvedAutoLightingFixtureForView(fixture,lightingFixtures,spec);records.push(make({id:'lighting-'+fixture.id,name:fixture.name,assetType:'Suggested Asset',category:'lighting',system:true,listGroup:'suggested',icon:'AI',transform:sceneAssetTransform(resolved.position,resolved.mountRotation||resolved.rotation),bounds:{width:.2,height:.2,depth:.2},locked:true,selectable:true,movable:false,snapEnabled:true,metadata:{lightingFixtureId:fixture.id,status:'Suggested'}}));});
   if(spec.type==='photo360')records.push(make({id:SCENE_ASSET_IDS.photo360,name:'แท่นถ่ายภาพ 360',assetType:'Product Display',category:'display',system:true,listGroup:'display',icon:'360',transform:sceneAssetTransform({x:spec.W/2,y:floorY+.05,z:spec.D/2}),bounds:{width:1,height:.1,depth:1},locked:true,selectable:true,movable:false,snapEnabled:true}));
   (spec.objects||[]).forEach(obj=>records.push(sceneAssetRecordForObject(obj)));
   return records;
@@ -2615,7 +2627,7 @@ function assetDimensionValue(value,fallback=MIN_ASSET_DIMENSION){
   return+clampNumber(resolved,MIN_ASSET_DIMENSION,MAX_ASSET_DIMENSION).toFixed(2);
 }
 const SCENE_CAPABILITY_KEYS=Object.freeze(['floorPlaceable','wallMountable','ceilingMountable','free3DPlaceable','surfaceSnappable','attachable','resizable','scalable','rotatable','repeatable','styleable','compound']);
-const ASSET_TRANSFORM_POLICY_VERSION=1,TRANSFORM_MODES=Object.freeze(['move','resize','scale']);
+const ASSET_TRANSFORM_POLICY_VERSION=3,TRANSFORM_MODES=Object.freeze(['move','resize','scale']);
 const SCENE_COLLISION_LAYERS=Object.freeze(['structure','furniture','decoration','surface','optional-prop']);
 const SCENE_PLACEMENT_TARGETS=Object.freeze(['floor','wall','ceiling','storage-room','structure','asset','free']);
 const SCENE_APPEARANCE_MODES=Object.freeze(['original','tint','solid']);
@@ -2676,8 +2688,8 @@ function defaultAssetTransformPolicy(obj,item=objectCatalogDef(obj?.catalogId)){
     structural=isEntranceFrameObject(obj)||isDownlightBeamObject(obj)||category==='structure',
     parametric=structural||['counter','shelf','display','screen','sign'].includes(type)||(['table','chair'].includes(type)&&!item?.modelUrl),
     graphic=['logo','graphic','brand'].includes(type)||category==='media',decorative=category==='decor',readyMade=custom||!!item?.modelUrl&&!parametric,
-    explicit=item?.transformPolicy&&typeof item.transformPolicy==='object'?item.transformPolicy:{};
-  const canResize=typeof explicit.canResize==='boolean'?explicit.canResize:parametric,
+    explicit=item?.transformPolicy&&typeof item.transformPolicy==='object'?item.transformPolicy:{},declaredResizable=Array.isArray(item?.capabilities)&&item.capabilities.includes('resizable');
+  const canResize=typeof explicit.canResize==='boolean'?explicit.canResize:(parametric||custom||declaredResizable),
     /* Ready-made GLB products scale only when their catalogue metadata allows it.
        Custom uploads keep legacy Scale support; parametric assets may still Scale
        with the Production/BOQ review warning. */
@@ -2689,9 +2701,14 @@ function defaultAssetTransformPolicy(obj,item=objectCatalogDef(obj?.catalogId)){
     productionSensitive:typeof explicit.productionSensitive==='boolean'?explicit.productionSensitive:parametric};
 }
 function normalizeAssetTransformPolicy(obj,item=objectCatalogDef(obj?.catalogId)){
-  const defaults=defaultAssetTransformPolicy(obj,item),declared=obj?.transformPolicy&&typeof obj.transformPolicy==='object'?obj.transformPolicy:{};
+  const defaults=defaultAssetTransformPolicy(obj,item),declared=obj?.transformPolicy&&typeof obj.transformPolicy==='object'?obj.transformPolicy:{},
+    stalePolicy=(Number(declared.version)||0)<ASSET_TRANSFORM_POLICY_VERSION;
   const policy={...defaults,...declared,version:ASSET_TRANSFORM_POLICY_VERSION};
-  policy.canMove=declared.canMove!==false&&defaults.canMove;policy.canResize=typeof declared.canResize==='boolean'?declared.canResize:defaults.canResize;policy.canScale=typeof declared.canScale==='boolean'?declared.canScale:defaults.canScale;
+  /* Older policies persisted the derived canResize value on every object.  That
+     stale value can incorrectly keep Resize disabled after an Asset is
+     reclassified or a GLB declares the resizable capability.  Recompute only
+     Resize during migration; current explicit policies still win. */
+  policy.canMove=declared.canMove!==false&&defaults.canMove;policy.canResize=!stalePolicy&&typeof declared.canResize==='boolean'?declared.canResize:defaults.canResize;policy.canScale=typeof declared.canScale==='boolean'?declared.canScale:defaults.canScale;
   policy.defaultMode=TRANSFORM_MODES.includes(declared.defaultMode)?declared.defaultMode:defaults.defaultMode;policy.minScale=clampNumber(Number(declared.minScale)||defaults.minScale,.01,1);policy.maxScale=clampNumber(Number(declared.maxScale)||defaults.maxScale,1,20);
   policy.productionSensitive=typeof declared.productionSensitive==='boolean'?declared.productionSensitive:defaults.productionSensitive;obj.transformPolicy=policy;return policy;
 }
@@ -2995,6 +3012,16 @@ function registrySceneObjectSnapAnchors(obj){
   const asset=sceneAssetRegistry.getAssetById(obj.id),rotation={x:0,y:(Number(obj.rotationY)||0)*Math.PI/180,z:0},uniformScale=sceneObjectScaleValue(obj),
     scale={x:obj.transform?.flipX===true?-uniformScale:uniformScale,y:obj.transform?.flipY===true?-uniformScale:uniformScale,z:uniformScale};
   if(!asset)return sceneObjectSnapAnchors(obj);
+  const liveObject=objectById(obj.id),root=liveObject===obj?threeRenderer?.objectMeshes?.get(obj.id):null,bounds=root&&threeRenderer?.objectLocalBounds?.(root);
+  if(bounds){
+    const T=threeRenderer.THREE,floorY=BoothSpec.raise/100;root.updateWorldMatrix(true,true);
+    return smartSnapEngine.getAnchors(asset.id).map(anchor=>{
+      const local=globalThis.YPSmartSnap.remapAnchorToLocalBounds(anchor,asset,{min:{x:bounds.min.x,y:bounds.min.y,z:bounds.min.z},max:{x:bounds.max.x,y:bounds.max.y,z:bounds.max.z}}),
+        world=root.localToWorld(new T.Vector3(local.x,local.y,local.z)),worldNormal=new T.Vector3(anchor.localNormal.x,anchor.localNormal.y,anchor.localNormal.z).transformDirection(root.matrixWorld).normalize();
+      return{id:anchor.id,anchorType:anchor.anchorType,kind:snapAnchorKind(anchor),level:snapAnchorLevel(anchor),targetId:asset.id,
+        localPosition:local,localNormal:{x:worldNormal.x,y:worldNormal.y,z:worldNormal.z},position:{x:world.x,y:world.y-floorY,z:world.z}};
+    });
+  }
   return registryAssetWorldSnapAnchors(asset,{position:{x:Number(obj.position.x)||0,y:(Number(obj.position.y)||0)+(scale.y<0?(Number(asset.bounds?.height)||0)*Math.abs(scale.y):0),z:Number(obj.position.z)||0},rotation,scale});
 }
 function rectangularSnapAnchors(targetId,size,position={x:0,y:0,z:0},rotationY=0){
@@ -5019,7 +5046,7 @@ function lightCounts(t){
 const lightTotal=()=>normalizeAutoLighting().mode==='auto'?normalizeAutoLighting().approvedFixtures.filter(item=>item.fixtureType!=='invisible').length:(S.lights?lightCounts(boothWallThickness(S)).total:0);
 const lightModelDef=()=>LIGHT_MODELS.find(x=>x.k===S.lightFixture)||LIGHT_MODELS[0];
 const lightWattDef=()=>LIGHT_WATTS.find(x=>x.k===S.lightWatts)||LIGHT_WATTS[0];
-const lightTotalWatts=()=>normalizeAutoLighting().mode==='auto'?normalizeAutoLighting().approvedFixtures.reduce((sum,item)=>sum+(item.fixtureType==='arm'?10:item.fixtureType==='invisible'?0:100),0):lightTotal()*lightWattDef().k;
+const lightTotalWatts=()=>normalizeAutoLighting().mode==='auto'?normalizeAutoLighting().approvedFixtures.reduce((sum,item)=>sum+(AUTO_FIXTURE_SPECS[item.fixtureType]?.watts||0),0):lightTotal()*lightWattDef().k;
 const lightPriceTotal=()=>normalizeAutoLighting().mode==='auto'?autoLightingPriceTotal():lightTotal()*lightWattDef().price;
 function lightPoints(t){
   if(!S.lights)return[];
@@ -5181,14 +5208,14 @@ function build(){
   mk('oLightIntent',[{k:'balanced',n:'สมดุล'},{k:'brand',n:'เน้นแบรนด์'},{k:'product',n:'เน้นสินค้า'},{k:'counter',n:'เน้นเคาน์เตอร์'}],v=>updateAutoLightingOption(state=>state.intent=v));
   mk('oLightTemperature',[{k:3000,n:'3000K',s:'วอร์ม'},{k:4000,n:'4000K',s:'กลาง'},{k:5000,n:'5000K',s:'ขาว'}],v=>updateAutoLightingOption(state=>{state.temperatureK=Number(v);globalThis.YPAutoLighting.applyPhotometricSettings(state);},false));
   mk('oLightBrightness',[{k:'soft',n:'นุ่ม'},{k:'standard',n:'มาตรฐาน'},{k:'bright',n:'สว่าง'}],v=>updateAutoLightingOption(state=>{state.brightness=v;globalThis.YPAutoLighting.applyPhotometricSettings(state);},false));
-  mk('oLightPreference',[{k:'auto',n:'อัตโนมัติ',s:'เลือกตามจุดติดตั้ง'},{k:'clear',n:'Clear Light',s:'โครงสร้างเหนือศีรษะ'},{k:'arm',n:'Arm Light',s:'ติดผนัง'},{k:'mixed',n:'ผสม',s:'เลือกตามพื้นผิว'},{k:'invisible',n:'Invisible',s:'Preview ไม่มีตัวโคม'}],v=>updateAutoLightingOption(state=>state.fixturePreference=v));
+  mk('oLightPreference',[{k:'auto',n:'อัตโนมัติ',s:'เลือกตามจุดติดตั้ง'},{k:'clear',n:'Clear Light',s:'โครงสร้างเหนือศีรษะ'},{k:'arm',n:'Arm Light',s:'ติดผนัง'},{k:'side-wall',n:'ผนังด้านข้าง',s:'เพิ่มไฟผนังซ้าย–ขวา'}],v=>updateAutoLightingOption(state=>state.fixturePreference=v,true,true));
   document.getElementById('btnAutoLightGenerate').onclick=()=>calculateAutoLighting(false);
   document.getElementById('btnAutoLightRecalculate').onclick=()=>calculateAutoLighting(true);
   document.getElementById('btnAutoLightApprove').onclick=approveAutoLighting;
   document.getElementById('btnAutoLightManual').onclick=()=>{const editor=document.getElementById('autoLightingFixtureEditor'),state=normalizeAutoLighting();if(!state.approvedFixtures.length&&!state.suggestions.some(item=>item.fixtureType!=='invisible'))return announceCatalog('จัดแสงอัตโนมัติก่อนปรับโคมทีละจุด','error');editor.hidden=false;editor.open=true;editor.scrollIntoView({block:'nearest',behavior:'smooth'});};
   document.getElementById('autoLightingFixtureSelect').onchange=event=>{selectedAutoLightingFixtureId=event.target.value||null;syncAutoLightingFixtureEditor();};
   document.querySelectorAll('[data-light-axis]').forEach(button=>button.onclick=()=>moveApprovedLightingFixture(button.dataset.lightAxis,Number(button.dataset.lightDelta)));
-  document.getElementById('autoLightingFixtureType').onchange=event=>editApprovedLightingFixture(fixture=>{fixture.fixtureType=event.target.value;fixture.name=event.target.value==='arm'?'Arm Light':event.target.value==='clear'?'Clear Light':'Invisible Preview Light';},'เปลี่ยนประเภทโคม');
+  document.getElementById('autoLightingFixtureType').onchange=event=>editApprovedLightingFixture(fixture=>{fixture.fixtureType=event.target.value;fixture.name=({arm:'Arm Light',clear:'Clear Light',downlight:'Downlight',invisible:'Invisible Preview Light'})[event.target.value]||'Invisible Preview Light';},'เปลี่ยนประเภทโคม');
   document.getElementById('autoLightRotate').onclick=()=>editApprovedLightingFixture(fixture=>{fixture.mountRotation=fixture.mountRotation||{x:0,y:0,z:0};fixture.mountRotation.y=(Number(fixture.mountRotation.y)||0)+Math.PI/12;},'หมุนไฟ 15°');
   document.getElementById('autoLightAim').onclick=()=>editApprovedLightingFixture(fixture=>{fixture.aimTarget={x:Number(S.W)/2,y:Math.max(.8,Number(S.H)*.55),z:Number(S.D)/2};},'เล็งไฟเข้ากึ่งกลางบูธ');
   document.getElementById('autoLightDelete').onclick=()=>{const fixture=selectedAutoLightingFixture();if(!fixture)return;const before=objectSnapshot(),state=normalizeAutoLighting();state.approvedFixtures=state.approvedFixtures.filter(item=>item.id!==fixture.id);state.suggestions=state.suggestions.filter(item=>item.id!==fixture.id);selectedAutoLightingFixtureId=null;recordObjectHistory(before);sync();announceCatalog('ลบโคมที่เลือกแล้ว','success');};
@@ -6572,6 +6599,7 @@ class ThreeBoothRenderer{
       fixture.id,fixture.status,fixture.fixtureType,fixture.position?.x,fixture.position?.y,fixture.position?.z,
       fixture.rotation?.x,fixture.rotation?.y,fixture.rotation?.z,fixture.mountRotation?.x,fixture.mountRotation?.y,fixture.mountRotation?.z,
       fixture.aimTarget?.x,fixture.aimTarget?.y,fixture.aimTarget?.z,
+      fixture.mountAttachment?.parentAssetId,fixture.mountAttachment?.mountRole,fixture.mountAttachment?.surfaceUV?.u,fixture.mountAttachment?.surfaceUV?.v,
       fixture.temperatureK,fixture.intensity,fixture.beamAngle,fixture.valid!==false];
     const lightingKey=[lighting.enabled,lighting.mode,lighting.intent,lighting.temperatureK,lighting.brightness,lighting.fixturePreference,
       lighting.approvedFixtures.map(fixtureKey),lighting.suggestions.map(fixtureKey)];
@@ -7111,8 +7139,9 @@ class ThreeBoothRenderer{
       this.fixtureTemplates.set(key,template);return template;
     }).catch(error=>{this.fixtureErrors.set(key,error);return null;}).finally(()=>{
       this.fixtureLoads.delete(key);syncLightModelStatus();
-      const autoState=globalThis.YPAutoLighting.normalizeLightingState(BoothSpec.lighting,{legacyProject:!BoothSpec.lighting}),autoUsesKey=autoState.mode==='auto'&&autoState.approvedFixtures.concat(autoState.suggestions).some(fixture=>(fixture.fixtureType==='arm'?'arm':'clear100')===key);
-      if(this.fixtureTemplates.has(key)&&(BoothSpec.lightFixture===key||autoUsesKey)){this.currentKey='';this.update(BoothSpec);}
+      const autoState=globalThis.YPAutoLighting.normalizeLightingState(BoothSpec.lighting,{legacyProject:!BoothSpec.lighting}),autoUsesKey=autoState.mode==='auto'&&autoState.approvedFixtures.concat(autoState.suggestions).some(fixture=>(fixture.fixtureType==='arm'?'arm':fixture.fixtureType==='downlight'?'downlight':'clear100')===key);
+      const structureUsesKey=key==='downlight'&&S.objects.some(isDownlightBeamObject);
+      if(this.fixtureTemplates.has(key)&&(BoothSpec.lightFixture===key||autoUsesKey||structureUsesKey)){this.currentKey='';this.update(BoothSpec);}
     });
     this.fixtureLoads.set(key,load);syncLightModelStatus();
   }
@@ -7150,22 +7179,10 @@ class ThreeBoothRenderer{
     this.requestFurnitureTemplate(item);return null;
   }
   requestDownlightTemplate(){
-    if(this.downlightTemplate||this.downlightLoad||this.downlightError)return;
-    const T=this.THREE;
-    this.downlightLoad=this.modelLoader.loadAsync(DOWNLIGHT_MODEL_URL).then(gltf=>{
-      const model=gltf.scene,template=new T.Group();template.add(model);template.updateMatrixWorld(true);
-      let box=new T.Box3().setFromObject(template);if(box.isEmpty())throw new Error('Empty downlight model');
-      const size=box.getSize(new T.Vector3()),diameter=Math.max(size.x,size.z,.0001),scale=.12/diameter;
-      model.scale.setScalar(scale);template.updateMatrixWorld(true);box=new T.Box3().setFromObject(template);
-      const center=box.getCenter(new T.Vector3());model.position.x-=center.x;model.position.z-=center.z;model.position.y-=box.max.y;
-      template.updateMatrixWorld(true);template.traverse(part=>{part.userData.sharedAsset=true;if(part.isMesh){part.castShadow=true;part.receiveShadow=true;}});
-      this.downlightTemplate=template;return template;
-    }).catch(error=>{this.downlightError=error;return null;}).finally(()=>{
-      this.downlightLoad=null;if(this.downlightTemplate&&S.objects.some(isDownlightBeamObject)){this.currentKey='';this.update(BoothSpec);}
-    });
+    this.requestFixtureTemplate('downlight');
   }
   downlightModel(){
-    if(this.downlightTemplate)return this.downlightTemplate.clone(true);
+    const model=this.fixtureModel('downlight');if(model)return model;
     this.requestDownlightTemplate();return null;
   }
   fixtureMountTransform(point,spec,t,def){
@@ -7370,7 +7387,7 @@ class ThreeBoothRenderer{
       const spacing=cfg.length/(cfg.lightCount+1),underside=cfg.height-cfg.thickness-.006;
       for(let index=0;index<cfg.lightCount;index++){
         const x=-cfg.length/2+spacing*(index+1),model=this.downlightModel();
-        if(model){model.position.set(x,underside,0);model.name='downlight-model';root.add(model);}
+        if(model){model.position.set(x,underside,0);model.rotation.x=Math.PI/2;model.name='downlight-model';root.add(model);}
         const light=new T.SpotLight(cfg.lightColor,42,Math.max(2,cfg.height*1.7),.52,.72,1.55);light.position.set(x,underside-.025,0);light.castShadow=false;light.name='downlight-light';
         const target=new T.Object3D();target.position.set(x,0,Math.min(.35,cfg.depth));target.name='downlight-target';light.target=target;root.add(target,light);
       }
@@ -7424,25 +7441,45 @@ class ThreeBoothRenderer{
       root.visible=obj.visible!==false;group.add(root);this.objectMeshes.set(obj.id,root);
     });
   }
+  resolveAutoLightingFixture(data,spec,allFixtures=[]){
+    const T=this.THREE,attachment=data.mountAttachment,parentId=String(attachment?.parentAssetId||data.targetAssetId||''),obj=(spec.objects||[]).find(item=>item.id===parentId);
+    if(data.fixtureType!=='downlight'||data.targetType!=='entrance'||!isEntranceFrameObject(obj))return{fixture:data,mountQuaternion:null};
+    normalizeEntranceFrameObject(obj,spec);normalizeSceneObjectModel(obj);const cfg=obj.structure,
+      siblings=allFixtures.filter(item=>item.fixtureType==='downlight'&&item.targetType==='entrance'&&String(item.mountAttachment?.parentAssetId||item.targetAssetId||'')===parentId),
+      siblingIndex=Math.max(0,siblings.indexOf(data)),legacyV=siblings.length>1?(siblingIndex===0?.28:siblingIndex===siblings.length-1?.72:(siblingIndex+1)/(siblings.length+1)):.5,
+      uv=attachment?.mountRole==='entrance-canopy'?attachment.surfaceUV||{}:{u:.5,v:legacyV},u=clampNumber(Number(uv.u),0,1),v=clampNumber(Number(uv.v),0,1),scale=sceneObjectScaleValue(obj),
+      signedScale=new T.Vector3(obj.transform?.flipX===true?-scale:scale,obj.transform?.flipY===true?-scale:scale,scale),
+      heading=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),T.MathUtils.degToRad(Number(obj.rotationY)||0)),
+      localRotation=new T.Quaternion().setFromEuler(new T.Euler(T.MathUtils.degToRad(Number(obj.rotationX)||0),0,T.MathUtils.degToRad(Number(obj.rotationZ)||0),'XYZ')),
+      parentQuaternion=heading.multiply(localRotation),parentPosition=new T.Vector3(Number(obj.position?.x)||0,(Number(obj.position?.y)||0)+sceneObjectOrientationLift(obj),Number(obj.position?.z)||0),
+      localMount=new T.Vector3((u-.5)*cfg.pierWidth,cfg.height-cfg.thickness-(Number(attachment?.normalOffset)||0),(v-.5)*cfg.projection),
+      worldMount=localMount.multiply(signedScale).applyQuaternion(parentQuaternion).add(parentPosition),mountRotation=data.mountRotation||{x:Math.PI/2,y:0,z:0},
+      mountQuaternion=parentQuaternion.clone().multiply(new T.Quaternion().setFromEuler(new T.Euler(Number(mountRotation.x)||0,Number(mountRotation.y)||0,Number(mountRotation.z)||0,'XYZ'))),
+      worldEuler=new T.Euler().setFromQuaternion(mountQuaternion,'XYZ'),position={x:worldMount.x,y:worldMount.y,z:worldMount.z},aimTarget={x:worldMount.x,y:.05,z:worldMount.z};
+    /* Downlight is attached to the current canopy dimensions in local UV space.
+       Only its mount position/orientation follows the Asset transform; the lamp
+       model keeps its physical size instead of inheriting the frame's Scale. */
+    return{fixture:{...data,position,aimTarget,mountRotation:{x:worldEuler.x,y:worldEuler.y,z:worldEuler.z}},mountQuaternion};
+  }
   addAutoLightingFixtures(group,spec,floorY,state){
     if(!state.enabled)return;
     const T=this.THREE,fixtures=state.approvedFixtures.concat(state.suggestions),span=Math.max(spec.W,spec.D,spec.H),temperatureColor=k=>k<=3200?0xffc17a:k>=4800?0xdbe8ff:0xffefd2;
     fixtures.forEach((data,index)=>{
-      const approved=data.status==='approved',root=new T.Group();root.name='auto-light-root-'+data.id;root.userData.lightingFixtureId=data.id;root.userData.status=data.status;
-      root.position.set(Number(data.position.x)||0,floorY+(Number(data.position.y)||0),Number(data.position.z)||0);
-      const mountRotation=data.mountRotation||{x:0,y:0,z:0};root.rotation.set(Number(mountRotation.x)||0,Number(mountRotation.y)||0,Number(mountRotation.z)||0);
-      const modelKey=data.fixtureType==='arm'?'arm':'clear100',visibleFixture=data.fixtureType!=='invisible';
+      const runtime=this.resolveAutoLightingFixture(data,spec,fixtures),fixture=runtime.fixture,approved=fixture.status==='approved',root=new T.Group();root.name='auto-light-root-'+fixture.id;root.userData.lightingFixtureId=fixture.id;root.userData.status=fixture.status;
+      root.position.set(Number(fixture.position.x)||0,floorY+(Number(fixture.position.y)||0),Number(fixture.position.z)||0);
+      const mountRotation=fixture.mountRotation||{x:0,y:0,z:0};if(runtime.mountQuaternion)root.quaternion.copy(runtime.mountQuaternion);else root.rotation.set(Number(mountRotation.x)||0,Number(mountRotation.y)||0,Number(mountRotation.z)||0);
+      const modelKey=fixture.fixtureType==='arm'?'arm':fixture.fixtureType==='downlight'?'downlight':'clear100',visibleFixture=fixture.fixtureType!=='invisible';
       if(visibleFixture){
         if(!this.fixtureTemplates.has(modelKey))this.requestFixtureTemplate(modelKey);
-        const modelDef=LIGHT_MODELS.find(item=>item.k===modelKey),model=this.fixtureModel(modelKey),fixtureVisual=new T.Group();fixtureVisual.name='auto-light-visual-'+data.id;
-        if(model){model.name='auto-light-model-'+data.id;fixtureVisual.add(model);if(modelDef?.mountMode==='ceiling'&&modelDef.modelFlipZ)fixtureVisual.rotation.z=Math.PI;}
-        else{const fallback=new T.Mesh(new T.CylinderGeometry(.055,.075,.14,12),new T.MeshStandardMaterial({color:0x343941,roughness:.38,metalness:.7}));fallback.name='auto-light-fallback-'+data.id;fallback.rotation.x=Math.PI/2;fallback.castShadow=approved;fixtureVisual.add(fallback);}
+        const modelDef=LIGHT_MODELS.find(item=>item.k===modelKey),model=this.fixtureModel(modelKey),fixtureVisual=new T.Group();fixtureVisual.name='auto-light-visual-'+fixture.id;
+        if(model){model.name='auto-light-model-'+fixture.id;fixtureVisual.add(model);if(modelDef?.mountMode==='ceiling'&&modelDef.modelFlipZ)fixtureVisual.rotation.z=Math.PI;}
+        else{const fallback=new T.Mesh(new T.CylinderGeometry(.055,.075,.14,12),new T.MeshStandardMaterial({color:0x343941,roughness:.38,metalness:.7}));fallback.name='auto-light-fallback-'+fixture.id;fallback.rotation.x=Math.PI/2;fallback.castShadow=approved;fixtureVisual.add(fallback);}
         root.add(fixtureVisual);
       }
-      const renderFixture={...data,rotation:mountRotation},source=globalThis.YPAutoLighting.fixtureLightLocalOffset(renderFixture),light=new T.SpotLight(temperatureColor(Number(data.temperatureK)||4000),globalThis.YPAutoLighting.fixtureRenderIntensity(data),span*3,Number(data.beamAngle)||.65,.84,1.5);
-      light.name='auto-light-source-'+data.id;light.position.set(source.x,source.y,source.z);light.castShadow=approved&&index<4;
+      const renderFixture={...fixture,rotation:mountRotation},source=globalThis.YPAutoLighting.fixtureLightLocalOffset(renderFixture),light=new T.SpotLight(temperatureColor(Number(fixture.temperatureK)||4000),globalThis.YPAutoLighting.fixtureRenderIntensity(fixture),span*3,Number(fixture.beamAngle)||.65,.84,1.5);
+      light.name='auto-light-source-'+fixture.id;light.position.set(source.x,source.y,source.z);light.castShadow=approved&&index<4;
       if(light.castShadow){light.shadow.mapSize.set(512,512);light.shadow.bias=-.0005;light.shadow.normalBias=.012;}
-      const target=new T.Object3D(),localAim=globalThis.YPAutoLighting.fixtureAimLocalOffset(renderFixture);target.name='auto-light-target-'+data.id;target.position.set(localAim.x,localAim.y,localAim.z);
+      const target=new T.Object3D(),localAim=globalThis.YPAutoLighting.fixtureAimLocalOffset(renderFixture);target.name='auto-light-target-'+fixture.id;target.position.set(localAim.x,localAim.y,localAim.z);
       root.add(light,target);light.target=target;group.add(root);
     });
   }
@@ -8211,8 +8248,13 @@ function refreshAutoLightingStale(){
   if(state.lastCalculatedSceneSignature===autoLightingSceneSignature())return;
   const stale=globalThis.YPAutoLighting.markStale(state,Math.max(sceneRevision,state.lastCalculatedSceneRevision||0)+1);stale.lastCalculatedSceneSignature=state.lastCalculatedSceneSignature;S.lighting=stale;
 }
-function updateAutoLightingOption(mutator,markPlanStale=true){
-  const before=objectSnapshot(),state=normalizeAutoLighting();mutator(state);if(markPlanStale)invalidateAutoLighting();recordObjectHistory(before);sync();
+function updateAutoLightingOption(mutator,markPlanStale=true,recalculateSuggestions=false){
+  const before=objectSnapshot(),state=normalizeAutoLighting();mutator(state);
+  if(recalculateSuggestions&&state.mode==='auto'&&(state.suggestions.length||state.approvedFixtures.length)){
+    const targetRevision=Math.max(1,sceneRevision+1),next=globalThis.YPAutoLighting.recalculateLightingPlan({spec:S,sceneRevision:targetRevision,lighting:state});
+    next.lastCalculatedSceneSignature=autoLightingSceneSignature();next.lastCalculatedSceneRevision=targetRevision;next.stale=false;S.lighting=next;
+  }else if(markPlanStale)invalidateAutoLighting();
+  recordObjectHistory(before);sync();
 }
 function calculateAutoLighting(recalculate=false){
   const state=normalizeAutoLighting();if(!state.enabled)return announceCatalog('กรุณาเปิดระบบแสงก่อนสร้าง Auto Lighting','error');
@@ -8238,15 +8280,24 @@ function autoLightingSummaryText(){
   return'แนะนำ <b>'+suggested+' จุด</b> · อนุมัติแล้ว <b>'+approved+' จุด</b>'+(invisible?' · Invisible Preview '+invisible+' จุด':'')+(invalid?' · ตรวจสอบ '+invalid+' จุด':'')+(state.stale?' · แบบเปลี่ยนแล้ว กรุณาคำนวณใหม่':'');
 }
 function autoLightingFixtureCount(){const state=normalizeAutoLighting();return state.approvedFixtures.length+state.suggestions.length;}
-function autoLightingPriceTotal(){return normalizeAutoLighting().approvedFixtures.filter(item=>item.fixtureType!=='invisible').reduce((sum,item)=>sum+(item.fixtureType==='arm'?1800:3200),0);}
+function autoLightingPriceTotal(){return normalizeAutoLighting().approvedFixtures.reduce((sum,item)=>sum+(AUTO_FIXTURE_SPECS[item.fixtureType]?.price||0),0);}
+function resolvedAutoLightingFixtureForView(fixture,allFixtures=[],spec=S){return threeRenderer?.resolveAutoLightingFixture?threeRenderer.resolveAutoLightingFixture(fixture,spec,allFixtures).fixture:fixture;}
 function selectedAutoLightingFixture(){
   const state=normalizeAutoLighting(),fixtures=state.approvedFixtures.concat(state.suggestions.filter(item=>item.fixtureType!=='invisible'));
   if(!fixtures.some(item=>item.id===selectedAutoLightingFixtureId))selectedAutoLightingFixtureId=fixtures[0]?.id||null;
   return fixtures.find(item=>item.id===selectedAutoLightingFixtureId)||null;
 }
 function editApprovedLightingFixture(mutator,label='แก้ไขไฟ'){
-  const fixture=selectedAutoLightingFixture();if(!fixture)return announceCatalog('ยังไม่มีโคมให้แก้ไข','error');
-  const before=objectSnapshot();mutator(fixture);fixture.source='manual';fixture.valid=true;fixture.validationWarnings=[];recordObjectHistory(before);sync();announceCatalog(label+'แล้ว','success');
+  const state=normalizeAutoLighting(),allFixtures=state.approvedFixtures.concat(state.suggestions),fixture=allFixtures.find(item=>item.id===selectedAutoLightingFixtureId)||allFixtures[0];if(!fixture)return announceCatalog('ยังไม่มีโคมให้แก้ไข','error');
+  selectedAutoLightingFixtureId=fixture.id;const before=objectSnapshot();
+  /* A deliberate per-fixture edit switches from parent-driven placement to an
+     absolute manual transform.  Materialise the current resolved position first
+     so the lamp does not jump back to its pre-Resize coordinates on detach. */
+  if(fixture.mountAttachment&&threeRenderer?.resolveAutoLightingFixture){
+    const runtime=threeRenderer.resolveAutoLightingFixture(fixture,S,allFixtures).fixture;
+    fixture.position={...runtime.position};fixture.aimTarget={...runtime.aimTarget};fixture.mountRotation={...runtime.mountRotation};fixture.mountAttachment=null;
+  }
+  mutator(fixture);fixture.source='manual';fixture.valid=true;fixture.validationWarnings=[];recordObjectHistory(before);sync();announceCatalog(label+'แล้ว','success');
 }
 function moveApprovedLightingFixture(axis,delta){
   editApprovedLightingFixture(fixture=>{const limit=axis==='x'?Number(S.W):axis==='z'?Number(S.D):5;fixture.position[axis]=Math.max(0,Math.min(limit,Number(fixture.position[axis]||0)+Number(delta||0)));},'ปรับตำแหน่งไฟ');
@@ -8256,7 +8307,7 @@ function syncAutoLightingFixtureEditor(){
   const fixtures=state.approvedFixtures.concat(state.suggestions.filter(item=>item.fixtureType!=='invisible'));if(!fixtures.some(item=>item.id===selectedAutoLightingFixtureId))selectedAutoLightingFixtureId=fixtures[0]?.id||null;
   select.innerHTML=fixtures.length?fixtures.map(item=>'<option value="'+esc(item.id)+'">'+esc(item.name)+' · '+esc(item.targetType)+' · '+(item.status==='approved'?'ยืนยันแล้ว':'แนะนำ')+'</option>').join(''):'<option value="">ยังไม่มีโคมที่แก้ไขได้</option>';
   select.value=selectedAutoLightingFixtureId||'';select.disabled=!fixtures.length;editor.hidden=!fixtures.length;
-  const fixture=selectedAutoLightingFixture();['x','y','z'].forEach(axis=>{const out=document.getElementById('autoLight'+axis.toUpperCase());if(out)out.textContent=fixture?Number(fixture.position[axis]||0).toFixed(2):'—';});
+  const fixture=selectedAutoLightingFixture(),resolved=fixture?resolvedAutoLightingFixtureForView(fixture,fixtures,S):null;['x','y','z'].forEach(axis=>{const out=document.getElementById('autoLight'+axis.toUpperCase());if(out)out.textContent=resolved?Number(resolved.position[axis]||0).toFixed(2):'—';});
   const type=document.getElementById('autoLightingFixtureType');if(type){type.disabled=!fixture;if(fixture)type.value=fixture.fixtureType;}
   editor.querySelectorAll('button').forEach(button=>button.disabled=!fixture);
 }

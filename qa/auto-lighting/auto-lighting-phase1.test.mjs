@@ -53,8 +53,8 @@ test('9. Intent brand จัดโลโก้ก่อน general',()=>{
   const spec=baseSpec();spec.lighting={...api.defaultLightingState(),intent:'brand'};const plan=api.generateLightingPlan({spec,sceneRevision:3});assert.equal(plan.suggestions[0].targetType,'logo');
 });
 
-test('10. คำนวณใหม่ลบ Suggested เดิมแต่รักษา Approved',()=>{
-  const spec=baseSpec();let plan=api.generateLightingPlan({spec,sceneRevision:1});plan=api.approveSuggestions(plan);const approvedIds=plan.approvedFixtures.map(item=>item.id);const recalculated=api.recalculateLightingPlan({spec,sceneRevision:2,lighting:plan});assert.deepEqual(recalculated.approvedFixtures.map(item=>item.id),approvedIds);assert.ok(recalculated.suggestions.length);
+test('10. คำนวณใหม่รักษา Approved และไม่สร้าง Suggested ซ้ำตำแหน่งเดิม',()=>{
+  const spec=baseSpec();let plan=api.generateLightingPlan({spec,sceneRevision:1});plan=api.approveSuggestions(plan);const approvedIds=plan.approvedFixtures.map(item=>item.id);const recalculated=api.recalculateLightingPlan({spec,sceneRevision:2,lighting:plan});assert.deepEqual(recalculated.approvedFixtures.map(item=>item.id),approvedIds);assert.equal(recalculated.suggestions.length,0);
 });
 
 test('11. Approve ย้ายเฉพาะ Fixture ที่ผ่าน Validation',()=>{
@@ -74,12 +74,45 @@ test('14. Fixture Preference invisible บังคับ Preview Light ไม�
   const spec=baseSpec();spec.lighting={...api.defaultLightingState(),fixturePreference:'invisible'};const plan=api.generateLightingPlan({spec,sceneRevision:1});assert.ok(plan.suggestions.every(item=>item.fixtureType==='invisible'&&item.status==='preview'));assert.equal(api.approveSuggestions(plan).approvedFixtures.length,0);
 });
 
+test('14.1 เมนูรูปแบบโคมเลือกชนิดที่ต้องการและใช้โคมที่ติดตั้งได้แทนโดยไม่ทำให้จุดไฟหาย',()=>{
+  const spec=baseSpec();spec.objects=[{id:'entrance-1',type:'entranceFrame',catalogId:'entrance-frame',position:{x:.5,y:0,z:1.5},size:{w:1,d:2.4,h:2.4},structure:{pierWidth:1,projection:2.4,height:2.4,thickness:.15}}];
+  for(const preference of ['auto','clear','arm','downlight','mixed']){
+    spec.lighting={...api.defaultLightingState(),fixturePreference:preference};const plan=api.generateLightingPlan({spec,sceneRevision:1});
+    assert.ok(plan.suggestions.length>0,preference);assert.ok(plan.suggestions.every(item=>item.fixtureType!=='invisible'),preference+' must keep compatible visible fixtures');
+  }
+  spec.lighting={...api.defaultLightingState(),fixturePreference:'mixed'};const mixed=api.generateLightingPlan({spec,sceneRevision:1});
+  assert.ok(mixed.suggestions.filter(item=>item.mountSurfaceId==='wall-back').every(item=>item.fixtureType==='arm'));
+  assert.ok(mixed.suggestions.filter(item=>item.targetType==='entrance').every(item=>item.fixtureType==='downlight'));
+});
+
+test('14.2 ผนังด้านข้างเพิ่ม Arm Light ซ้าย–ขวาโดยรักษาชุดไฟผนังหลังเดิม',()=>{
+  const inline=baseSpec();inline.lighting={...api.defaultLightingState(),fixturePreference:'side-wall'};const sidePlan=api.generateLightingPlan({spec:inline,sceneRevision:1}),sideFixtures=sidePlan.suggestions.filter(item=>item.fixtureType!=='invisible');
+  assert.deepEqual(Array.from(api.inferWalls(inline)),['back','left','right']);assert.equal(sideFixtures.filter(item=>item.mountSurfaceId==='wall-back').length,4);assert.equal(sideFixtures.filter(item=>item.mountSurfaceId==='wall-left').length,1);assert.equal(sideFixtures.filter(item=>item.mountSurfaceId==='wall-right').length,1);assert.equal(sideFixtures.length,6);
+  assert.ok(sideFixtures.filter(item=>item.targetZoneId?.startsWith('side-wall-')).every(item=>item.fixtureType==='arm'));
+  const penin={...baseSpec(),type:'penin',lighting:{...api.defaultLightingState(),fixturePreference:'side-wall'}},fallback=api.generateLightingPlan({spec:penin,sceneRevision:1});
+  assert.equal(fallback.suggestions.filter(item=>item.fixtureType!=='invisible').length,4);assert.ok(fallback.suggestions.filter(item=>item.fixtureType!=='invisible').every(item=>item.mountSurfaceId==='wall-back'));
+});
+
+test('14.3 Asset สูงที่ทับผนังข้างตัดเฉพาะโคมด้านที่ถูกบัง',()=>{
+  const spec=baseSpec();spec.lighting={...api.defaultLightingState(),fixturePreference:'side-wall'};spec.objects=[{id:'side-panel',type:'custom',catalogId:'opaque-panel',position:{x:.25,y:0,z:1.65},size:{w:.5,d:1.2,h:2.4}}];
+  const plan=api.generateLightingPlan({spec,sceneRevision:1}),visible=plan.suggestions.filter(item=>item.fixtureType!=='invisible');
+  assert.equal(visible.filter(item=>item.mountSurfaceId==='wall-back').length,4);assert.equal(visible.filter(item=>item.mountSurfaceId==='wall-left').length,0);assert.equal(visible.filter(item=>item.mountSurfaceId==='wall-right').length,1);
+  assert.equal(plan.diagnostics.wallLayout.sideLayouts.left.removedFixtureIds.length,1);assert.equal(plan.diagnostics.wallLayout.sideLayouts.right.removedFixtureIds.length,0);
+});
+
+test('14.4 กรอบทางเข้าสงวนพื้นที่ใต้กรอบให้ Downlight และไม่ซ้อน Approved กับ Suggested',()=>{
+  const spec=baseSpec();let state=api.approveSuggestions(api.generateLightingPlan({spec,sceneRevision:1}));state.fixturePreference='side-wall';spec.objects=[{id:'entrance-left',type:'entranceFrame',catalogId:'entrance-frame',position:{x:.75,y:0,z:1.5},size:{w:1,d:2.4,h:2.4},structure:{pierWidth:1,projection:2.4,height:2.4,thickness:.15}}];
+  const next=api.recalculateLightingPlan({spec,sceneRevision:2,lighting:state}),combined=next.approvedFixtures.concat(next.suggestions),positions=new Set(combined.map(item=>item.mountSurfaceId+'/'+item.position.x+'/'+item.position.y+'/'+item.position.z));
+  assert.equal(positions.size,combined.length);assert.equal(combined.filter(item=>item.mountSurfaceId==='wall-left').length,0);assert.equal(combined.filter(item=>item.targetType==='entrance'&&item.fixtureType==='downlight').length,2);assert.equal(combined.filter(item=>item.mountSurfaceId==='wall-right').length,1);
+});
+
 test('15. Validation ตรวจโคมซ้ำไม่วางจุดเดียวกัน',()=>{
   const spec=baseSpec();spec.logoWidth=4;const plan=api.generateLightingPlan({spec,sceneRevision:1});const positions=new Set(plan.suggestions.map(item=>`${item.position.x}/${item.position.y}/${item.position.z}`));assert.equal(positions.size,plan.suggestions.length);
 });
 
 test('UI, Renderer, Manifest และ Prompt เชื่อม Auto Lighting ครบ',()=>{
-  for(const token of ['id="oLightingMode"','id="btnAutoLightGenerate"','id="btnAutoLightRecalculate"','id="btnAutoLightApprove"','Manual Lighting · ขั้นสูง','addAutoLightingFixtures','BoothSpec.lighting.','lightingPromptForSpec','AI Suggested / Render Staging'])assert.ok(html.includes(token),token);
+  for(const token of ['id="oLightingMode"','id="btnAutoLightGenerate"','id="btnAutoLightRecalculate"','id="btnAutoLightApprove"','Manual Lighting · ขั้นสูง','addAutoLightingFixtures','BoothSpec.lighting.','lightingPromptForSpec','AI Suggested / Render Staging','recalculateSuggestions','fixturePreference=v,true,true'])assert.ok(html.includes(token),token);
+  const preferenceMenu=html.split('\n').find(line=>line.includes("mk('oLightPreference'"))||'';assert.match(preferenceMenu,/k:'side-wall'.*ผนังด้านข้าง.*เพิ่มไฟผนังซ้าย–ขวา/);for(const removed of ["k:'downlight'","k:'mixed'","k:'invisible'"])assert.ok(!preferenceMenu.includes(removed),removed);
 });
 
 test('16. Peninsular ใช้ผนังหลังเป็น Mount Surface',()=>{
@@ -107,6 +140,13 @@ test('20. ย้าย Counter แล้วคำนวณใหม่รัก�
 
 test('21. Save และ Reload รักษา Lighting Fixture schema ครบ',()=>{
   const spec=baseSpec();const saved=JSON.stringify(api.generateLightingPlan({spec,sceneRevision:1}));const loaded=api.normalizeLightingState(JSON.parse(saved));assert.equal(loaded.suggestions.length,JSON.parse(saved).suggestions.length);assert.ok(loaded.suggestions.every(item=>item.id&&item.position&&item.rotation&&item.aimTarget&&Array.isArray(item.validationWarnings)));
+});
+
+test('21.1 Save และ Reload รักษา Local Canopy Attachment ของ Downlight',()=>{
+  const spec=baseSpec();spec.objects=[{id:'entrance-save',type:'entranceFrame',catalogId:'entrance-frame',position:{x:.5,y:0,z:1.5},size:{w:1,d:2.4,h:2.4},structure:{pierWidth:1,projection:2.4,height:2.4,thickness:.15}}];
+  const saved=JSON.stringify(api.generateLightingPlan({spec,sceneRevision:1})),loaded=api.normalizeLightingState(JSON.parse(saved)),fixtures=loaded.suggestions.filter(item=>item.targetType==='entrance');
+  assert.equal(fixtures.length,2);assert.deepEqual(fixtures.map(item=>item.mountAttachment.surfaceUV.v),[.28,.72]);
+  assert.ok(fixtures.every(item=>item.mountAttachment.parentAssetId==='entrance-save'&&item.mountAttachment.mountRole==='entrance-canopy'&&item.mountAttachment.aimMode==='world-down'));
 });
 
 test('22. UI รองรับ Undo/Redo และแก้ Fixture รายจุด',()=>{
@@ -140,13 +180,20 @@ test('27. Lighting State เป็นส่วนหนึ่งของ Render
   assert.match(html,/lightingKey/);assert.match(html,/sceneItemState\|\|\{\},lightingKey/);assert.match(html,/fixtureAimLocalOffset\(renderFixture\)/);
 });
 
+test('27.1 Renderer แก้ Local Canopy Attachment ตาม Resize, Scale, Rotate และ Flip โดยไม่ Scale ตัวโคม',()=>{
+  for(const token of ['resolveAutoLightingFixture(data,spec,allFixtures=[])','attachment.surfaceUV','sceneObjectScaleValue(obj)','sceneObjectOrientationLift(obj)','obj.transform?.flipX===true?-scale:scale','obj.transform?.flipY===true?-scale:scale','parentQuaternion=heading.multiply(localRotation)','localMount.multiply(signedScale).applyQuaternion(parentQuaternion)','if(runtime.mountQuaternion)root.quaternion.copy(runtime.mountQuaternion)'])assert.ok(html.includes(token),token);
+  assert.ok(!/auto-light-visual-[^\n]+\.scale\.set/.test(html),'ตัวโคมต้องไม่รับ Scale ของกรอบทางเข้า');
+  assert.match(html,/fixture\.mountAttachment=null/,'การปรับโคมด้วยตนเองต้อง detach หลัง materialise world transform');
+  assert.ok(html.includes('resolvedAutoLightingFixtureForView(fixture,lightingFixtures,spec)'),'Asset Registry ต้องใช้ตำแหน่งที่ resolve แล้ว');
+});
+
 test('28. Auto Lighting ปล่อยแสงจากหน้าหัวโคมเข้าหาผนังและใช้ความเข้มที่มองเห็นได้',()=>{
   const back=api.normalizeFixture({fixtureType:'arm',mountSurfaceId:'wall-back',position:{x:3,y:2.28,z:.03},aimTarget:{x:3,y:1.6,z:.04},intensity:1}),source=api.fixtureLightWorldPosition(back);
   assert.ok(source.z>back.position.z,'หัวโคมผนังหลังต้องยื่นเข้าบูธ');assert.ok(source.y<back.position.y,'หัวโคมต้องอยู่ต่ำกว่าฐานติดตั้ง');
   assert.ok(back.aimTarget.z-source.z<0,'ลำแสงต้องย้อนเข้าหาพื้นผิวผนัง');assert.equal(api.fixtureRenderIntensity(back),16);
   const left=api.fixtureLightWorldPosition({...back,mountSurfaceId:'wall-left'}),right=api.fixtureLightWorldPosition({...back,mountSurfaceId:'wall-right'});
   assert.ok(left.x>back.position.x);assert.ok(right.x<back.position.x);
-  assert.match(html,/fixtureLightLocalOffset\(renderFixture\)/);assert.match(html,/fixtureRenderIntensity\(data\)/);
+  assert.match(html,/fixtureLightLocalOffset\(renderFixture\)/);assert.match(html,/fixtureRenderIntensity\(fixture\)/);
 });
 
 test('29. บูธ 6 เมตรจัด Arm Light คู่เหนือโลโก้อย่างสมมาตร',()=>{
@@ -156,7 +203,7 @@ test('29. บูธ 6 เมตรจัด Arm Light คู่เหนือ�
 });
 
 test('30. Renderer แยก Mount Rotation ออกจาก Beam Aim และใช้การวางโมเดลแบบ Manual',()=>{
-  for(const token of ['const mountRotation=data.mountRotation','rotation:mountRotation','auto-light-visual-','modelDef?.mountMode','modelDef.modelFlipZ','autoUsesKey'])assert.ok(html.includes(token),token);
+  for(const token of ['const mountRotation=fixture.mountRotation','rotation:mountRotation','auto-light-visual-','modelDef?.mountMode','modelDef.modelFlipZ','autoUsesKey'])assert.ok(html.includes(token),token);
   assert.match(html,/fixture\.mountRotation=fixture\.mountRotation\|\|/);
 });
 
@@ -166,9 +213,10 @@ test('31. อุณหภูมิสีและความสว่างอ�
   assert.match(html,/applyPhotometricSettings\(state\)/);
 });
 
-test('32. ลำแสงคู่ของโลโก้ยิงลงตรงใต้โคมและไม่ใช้ Beam กว้างเกินไป',()=>{
-  const plan=api.generateLightingPlan({spec:baseSpec(),sceneRevision:1}),logo=plan.suggestions.filter(item=>item.targetType==='logo');assert.equal(logo.length,2);
-  assert.ok(logo[0].aimTarget.x<3&&logo[1].aimTarget.x>3);assert.ok(logo.every(item=>Math.abs(item.aimTarget.x-item.position.x)<1e-9&&item.beamAngle<=.56));
+test('32. ลำแสงทุกดวงใช้ขนาดกรวยมาตรฐานเดียวกัน รวมถึงโคมที่ส่องโลโก้',()=>{
+  const plan=api.generateLightingPlan({spec:baseSpec(),sceneRevision:1}),visible=plan.suggestions.filter(item=>item.fixtureType!=='invisible'),logo=visible.filter(item=>item.targetType==='logo');assert.equal(logo.length,2);
+  assert.ok(logo[0].aimTarget.x<3&&logo[1].aimTarget.x>3);assert.ok(logo.every(item=>Math.abs(item.aimTarget.x-item.position.x)<1e-9));
+  assert.deepEqual([...new Set(visible.map(item=>item.beamAngle))],[.68]);
 });
 
 test('33. โหมดสมดุลกระจาย Brand Pair และ General Pair แบบสมมาตรตลอดความกว้างบูธ',()=>{
@@ -200,4 +248,26 @@ test('35. โคมคู่ General เล็งกลับเข้าผิ�
     assert.ok(fixture.aimTarget.z<=.05,'Aim ต้องอยู่บนผิวผนังหลัง');
     assert.ok(fixture.aimTarget.z<source.z,'ลำแสงต้องยิงจากหัวโคมกลับเข้าหาผนัง');
   }
+});
+
+test('36. กรอบทางเข้าใช้ Downlight ฝังเสมอใต้ Canopy และตัดโคมผนังที่ถูกโครงสร้างบัง',()=>{
+  const spec=baseSpec();spec.objects=[{id:'entrance-1',type:'entranceFrame',catalogId:'entrance-frame',position:{x:.5,y:0,z:1.5},size:{w:1,d:2.4,h:2.4},structure:{pierWidth:1,projection:2.4,height:2.4,thickness:.15}}];
+  const targets=api.collectTargets(spec),mounts=api.collectMountSurfaces(spec),canopy=mounts.find(item=>item.mountRole==='entrance-canopy'),plan=api.generateLightingPlan({spec,sceneRevision:2}),entrance=plan.suggestions.filter(item=>item.targetType==='entrance'),logo=plan.suggestions.filter(item=>item.targetType==='logo'),general=plan.suggestions.filter(item=>item.targetType==='general');
+  assert.ok(targets.some(item=>item.type==='entrance'&&item.assetId==='entrance-1'));assert.ok(canopy);assert.ok(Math.abs(canopy.undersideY-2.25)<1e-9);
+  assert.equal(entrance.length,2);assert.ok(entrance.every(item=>item.fixtureType==='downlight'&&item.mountSurfaceId==='asset-entrance-1'&&Math.abs(item.position.y-2.25)<1e-9&&item.aimTarget.y===.05&&Math.abs(item.mountRotation.x-Math.PI/2)<.001));
+  assert.deepEqual(Array.from(entrance,item=>item.mountAttachment.surfaceUV.v),[.28,.72]);assert.ok(entrance.every(item=>item.mountAttachment.parentAssetId==='entrance-1'));
+  assert.notEqual(entrance[0].position.z,entrance[1].position.z);assert.ok(entrance.every(item=>item.aimTarget.x===item.position.x&&item.aimTarget.z===item.position.z));
+  assert.ok(entrance.every(item=>api.fixtureLightWorldPosition(item).y<item.position.y),'จุดกำเนิดแสงต้องอยู่ใต้ขอบหน้าโคม');
+  assert.equal(logo.length,2);assert.ok(logo.every(item=>item.fixtureType==='arm'&&item.mountSurfaceId==='wall-back'));
+  assert.equal(general.length,1);assert.ok(general.every(item=>item.fixtureType==='arm'&&item.mountSurfaceId==='wall-back'&&item.position.x>spec.W/2));assert.equal(plan.suggestions.length,5);
+  assert.deepEqual([...new Set(plan.suggestions.map(item=>item.beamAngle))],[.68]);
+  assert.equal(plan.diagnostics.wallLayout.desiredWallCount,3);assert.equal(plan.diagnostics.wallLayout.removedFixtureIds.length,1);
+});
+
+test('37. Downlight_V1 ใช้ระนาบหน้า Mesh 0 และมี Offline bundle ตรงกับไฟล์ GLB',()=>{
+  for(const token of ["k:'downlight'","baseMeshIndex:0","baseAxis:'z'","baseSide:'max'","mountMode:'ceiling-recessed'","fixture.fixtureType==='downlight'?'downlight'","this.requestFixtureTemplate('downlight')","model.rotation.x=Math.PI/2"])assert.ok(html.includes(token),token);
+  assert.ok(api.PREFERENCES.includes('downlight'));assert.ok(api.FIXTURE_TYPES.includes('downlight'));
+  const source=fs.readFileSync(path.join(root,'public/yp-web-ai/assets/lights/embedded-downlight-model.js'),'utf8'),offline={globalThis:{OFFLINE_LIGHT_MODELS:{}}};vm.createContext(offline);vm.runInContext(source,offline);
+  const data=offline.globalThis.OFFLINE_LIGHT_MODELS.downlight;assert.ok(data.startsWith('data:model/gltf-binary;base64,'));
+  const decoded=Buffer.from(data.slice(data.indexOf(',')+1),'base64'),original=fs.readFileSync(path.join(root,'public/yp-web-ai/assets/lights/Downlight_V1.glb'));assert.deepEqual(decoded,original);
 });

@@ -67,6 +67,13 @@ test('Corner Anchor แปลงเป็น World Space ถูกต้อง�
   assert.equal(snapApi.anchorKindsCompatible('edge','corner'),true);assert.equal(snapApi.anchorKindsCompatible('corner','center'),false);
 });
 
+test('Snap Point rebase จาก Registry Bounds ไปยัง Local Bounds จริงก่อนใช้ Object3D matrixWorld',()=>{
+  const record=asset('rotated','Furniture','furniture',{width:2,height:1,depth:1}),anchors=snapApi.createAnchorsForAsset(record),corner=anchors.find(item=>item.id.endsWith('max-x.max-y.min-z')),
+    local=snapApi.remapAnchorToLocalBounds(corner,record,{min:{x:-.4,y:-1.2,z:-2},max:{x:.8,y:1.6,z:3}}),center=anchors.find(item=>item.anchorType==='center'),localCenter=snapApi.remapAnchorToLocalBounds(center,record,{min:{x:-.4,y:-1.2,z:-2},max:{x:.8,y:1.6,z:3}});
+  assert.ok(Math.hypot(local.x-.8,local.y-1.6,local.z+2)<1e-9);assert.ok(Math.hypot(localCenter.x-.2,localCenter.y-.2,localCenter.z-.5)<1e-9);
+  for(const token of ['liveObject===obj','threeRenderer?.objectMeshes?.get(obj.id)','threeRenderer?.objectLocalBounds?.(root)','root.updateWorldMatrix(true,true)','root.localToWorld(new T.Vector3(local.x,local.y,local.z))','transformDirection(root.matrixWorld)','world.y-floorY'])assert.ok(html.includes(token),token);
+});
+
 test('Corner → Corner ของ Asset สองชิ้นให้ตำแหน่งปลายตรงกันโดยไม่เปลี่ยน Rotation/Scale',()=>{
   const source=asset('source','Furniture','furniture',{width:1,height:1,depth:1},{x:0,y:0,z:0}),target=asset('target','Furniture','furniture',{width:2,height:2,depth:2},{x:4,y:0,z:3}),
     sourceAnchor=snapApi.createCornerAnchorsForAsset(source).find(item=>item.id.endsWith('max-x.max-y.max-z')),
@@ -226,9 +233,12 @@ test('Resize และ Scale เป็น Transform Mode คนละโหม�
 });
 
 test('Transform Policy รวมศูนย์ แยก Parametric Resize จาก Uniform Transform Scale และรองรับ Migration',()=>{
-  for(const token of ['ASSET_TRANSFORM_POLICY_VERSION=1','defaultAssetTransformPolicy(obj,item','normalizeAssetTransformPolicy(obj,item',
+  for(const token of ['ASSET_TRANSFORM_POLICY_VERSION=3','defaultAssetTransformPolicy(obj,item','normalizeAssetTransformPolicy(obj,item','stalePolicy=(Number(declared.version)||0)<ASSET_TRANSFORM_POLICY_VERSION',
     "family:parametric?'parametric'",'canMove:explicit.canMove!==false','canResize','canScale','productionSensitive',
     'transform.scale={x:uniformScale,y:uniformScale,z:uniformScale}','transform.uniformScale=uniformScale','SCENE_OBJECT_SCHEMA_VERSION=4'])assert.ok(html.includes(token),token);
+  assert.match(html,/policy\.canResize=!stalePolicy&&typeof declared\.canResize==='boolean'\?declared\.canResize:defaults\.canResize/);
+  assert.match(html,/declaredResizable=Array\.isArray\(item\?\.capabilities\)&&item\.capabilities\.includes\('resizable'\)/);
+  assert.match(html,/canResize=typeof explicit\.canResize==='boolean'\?explicit\.canResize:\(parametric\|\|custom\|\|declaredResizable\)/);
   assert.match(html,/graphic\|\|decorative\|\|custom\|\|parametric/);
   assert.match(html,/\(graphic\|\|decorative\|\|readyMade\)&&canScale\?'scale'/);
   assert.match(html,/transformPolicy:\{canResize:false,canScale:true,defaultMode:'scale'/);
