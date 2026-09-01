@@ -25,7 +25,7 @@ const asset=(id='asset-1',category='furniture')=>({id,name:'Asset',assetType:'Fu
 
 test('SceneAsset schema มีข้อมูลบังคับและ category มาตรฐาน',()=>{
   const normalized=api.normalizeSceneAsset(asset());
-  assert.deepEqual(Object.keys(normalized),['id','name','assetType','category','object3DId','transform','bounds','locked','selectable','movable','snapEnabled','metadata']);
+  assert.deepEqual(Object.keys(normalized),['id','name','assetType','category','object3DId','transform','bounds','locked','selectable','movable','snapEnabled','attachment','parentAssetId','childAssetIds','metadata']);
   assert.deepEqual(Array.from(api.ASSET_CATEGORIES),['structure','surface','furniture','branding','display','lighting','equipment','custom']);
 });
 
@@ -57,7 +57,7 @@ test('System Helper ไม่ถูกนับเป็น Physical Asset แ�
 
 test('หน้า Editor เชื่อม Stable Structure IDs, Project State, Object3D binding และ Asset List groups',()=>{
   for(const token of [
-    'js/scene-asset-registry.js','sceneAssetRegistry:{version:1,assets:[]}','structure.floor.main','structure.wall.back','structure.wall.left','structure.wall.right',
+    'js/scene-asset-registry.js','sceneAssetRegistry:{version:2,assets:[]}','structure.floor.main','structure.wall.back','structure.wall.left','structure.wall.right',
     'structure.room.main','structure.door.main','bindSceneAssetRegistryObjects','syncSceneAssetRegistryState',
     "{key:'surface',label:'ผนังและพื้น'}","{key:'room-door',label:'ห้องและประตู'}","{key:'suggested',label:'Suggested'}","{key:'custom',label:'Custom'}",
     'window.SceneAssetRegistryAPI','window.validateSceneAssetRegistry'

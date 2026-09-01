@@ -1,7 +1,7 @@
 (function(global){
   'use strict';
 
-  const REGISTRY_VERSION=2;
+  const REGISTRY_VERSION=1;
   const ASSET_CATEGORIES=Object.freeze(['structure','surface','furniture','branding','display','lighting','equipment','custom']);
   const HELPER_NAME_PATTERN=/(^|[-_])(grid|dimension|bounding|selection|outline|transform|snap|raycast|light-helper|debug|anchor-guide|magnetic-snap-preview)([-_]|$)/i;
 
@@ -52,9 +52,6 @@
       selectable:input.selectable!==false,
       movable:input.movable!==false,
       snapEnabled:input.snapEnabled!==false,
-      attachment:input.attachment&&typeof input.attachment==='object'?clone(input.attachment):null,
-      parentAssetId:input.parentAssetId?String(input.parentAssetId):null,
-      childAssetIds:[...new Set((Array.isArray(input.childAssetIds)?input.childAssetIds:[]).map(String).filter(Boolean))],
       metadata:input.metadata&&typeof input.metadata==='object'&&!Array.isArray(input.metadata)?clone(input.metadata):{}
     };
   }

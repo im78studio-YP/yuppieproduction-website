@@ -603,10 +603,6 @@ select:focus{border-color:var(--acc)}
 .asset-settings-head small{display:block;color:var(--acc2);font-weight:700;letter-spacing:.12em}.asset-settings-head h2{margin:2px 0 0;font-size:22px}
 .asset-settings-section{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.018)}
 .asset-settings-section h3{margin:0 0 11px;font-size:13px}.asset-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.asset-attachment-grid{display:grid;grid-template-columns:1fr;gap:8px}.asset-attachment-grid label{display:grid;gap:5px;color:var(--tx3);font-size:10.5px}
-.asset-attachment-grid select{width:100%;min-height:38px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);color:var(--tx);padding:0 9px}
-.asset-attachment-status{padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);color:var(--tx2);font-size:11px;line-height:1.45}
-.asset-attachment-status.invalid{border-color:#d45454;color:#ffaaa2}.asset-attachment-status.valid{border-color:#37865e;color:#8be1b1}
 .asset-settings-field{display:grid;gap:5px}.asset-settings-field label{color:var(--tx3);font-size:10.5px}.asset-settings-field input[type=number],
 .asset-settings-name,.asset-settings-color input[type=text]{width:100%;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);color:var(--tx)}
 .asset-settings-color{display:grid;grid-template-columns:44px 1fr;gap:8px}.asset-settings-color input[type=color]{width:44px;height:38px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
@@ -614,7 +610,7 @@ select:focus{border-color:var(--acc)}
 .asset-appearance-options .btn{min-width:0;padding:9px 5px;font-size:10.5px}.asset-appearance-options .btn.on{border-color:var(--acc);color:var(--acc2);background:var(--accbg)}
 .asset-settings-color.is-disabled{opacity:.42}.asset-settings-color.is-disabled input{cursor:not-allowed}
 .asset-settings-preview{display:none;margin-top:10px;width:100%;height:112px;object-fit:contain;border:1px solid var(--line);border-radius:9px;background:#eef0f3}
-.asset-settings-preview.show{display:block}.asset-settings-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.asset-settings-actions[hidden]{display:none!important}
+.asset-settings-preview.show{display:block}.asset-settings-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
 .asset-settings-check{display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--tx2);font-size:11px}
 .asset-settings-done{width:100%;margin-top:18px}
 
@@ -1455,24 +1451,6 @@ select:focus{border-color:var(--acc)}
       <div class="note">ปรับขนาด Asset และ My Asset (.glb) ได้จริงทั้ง 3 แกน ตั้งแต่ 0.01–5.00 ม. และกำหนดความสูงเกินผนังบูธได้</div>
       <div class="asset-settings-actions"><button class="btn sm" id="assetResetSize" type="button">คืนขนาดเดิม</button></div>
     </section>
-    <section class="asset-settings-section" id="assetAttachmentSection">
-      <h3>Persistent Attachment</h3>
-      <div class="asset-attachment-status" id="assetAttachmentStatus">ยังไม่ได้ติดกับพื้นผิว</div>
-      <div class="asset-attachment-grid" style="margin-top:10px">
-        <label for="assetAttachmentSurface">Target Surface<select id="assetAttachmentSurface"></select></label>
-        <label for="assetAttachmentAnchor">Snap Anchor<select id="assetAttachmentAnchor"></select></label>
-      </div>
-      <div class="asset-settings-actions">
-        <button class="btn sm" id="assetAttachmentDetach" type="button">Detach</button>
-        <button class="btn sm" id="assetAttachmentReattach" type="button">Reattach</button>
-        <button class="btn sm" id="assetAttachmentChangeSurface" type="button">Change Target Surface</button>
-        <button class="btn sm" id="assetAttachmentChangeAnchor" type="button">Change Snap Anchor</button>
-      </div>
-      <div class="asset-settings-actions" id="assetAttachmentInvalidActions" hidden>
-        <button class="btn sm" id="assetAttachmentMove" type="button">ย้ายใหม่ด้วย Smart Move</button>
-        <button class="btn sm danger" id="assetAttachmentDelete" type="button">ลบ Asset</button>
-      </div>
-    </section>
     <section class="asset-settings-section">
       <h3>พื้นผิว</h3>
       <div class="asset-appearance-options" id="assetAppearanceOptions" role="group" aria-label="รูปแบบพื้นผิว Asset">
@@ -1695,8 +1673,6 @@ select:focus{border-color:var(--acc)}
 <script src="js/ai-render-pipeline.js?v=20260830-1"></script>
 <script src="js/auto-lighting.js?v=20260831-1"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
-<script src="js/smart-snap-engine.js?v=20260901-1"></script>
-<script src="js/asset-attachment-graph.js?v=20260901-1"></script>
 <script>
 /* ================= ข้อมูล ================= */
 const CATGROUPS=[
@@ -1934,7 +1910,7 @@ const BoothSpec={version:3,cat:'food',customBusinessCategory:'',primary:'#2e7d4f
   logoType:'diecut',logoShape:'cutout',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
   logoMount:'wall',logoWall:'back',logoWidth:2,logoDepth:.05,logoBaseWidth:0,logoBaseDepth:0,logoBaseColor:'#20252d',logoColor:'#2e7d4f',logoColorTouched:false,logoWallU:3,logoWallY:1.6,
   logoFloorX:3,logoFloorZ:1.5,logoFloorRotation:0,
-  logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,brand:'',view:'three',photo:null,objects:[],sceneItemState:{},sceneAssetRegistry:{version:2,assets:[]},sceneSnapData:{version:1,anchors:[],surfaces:[]},assetAttachmentGraph:{version:1,attachments:[]},promptFidelity:6,wallRadius:3.5,
+  logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,brand:'',view:'three',photo:null,objects:[],sceneItemState:{},sceneAssetRegistry:{version:1,assets:[]},promptFidelity:6,wallRadius:3.5,
   placementSnap:true,magneticSnap:true,geometryFidelity:10,stagingFreedom:6,aiStaging:defaultAIStagingSettings(),aiRendering:defaultAIRenderingSettings(),
   lighting:globalThis.YPAutoLighting.defaultLightingState()};
 const S=BoothSpec;
@@ -2077,14 +2053,7 @@ const SCENE_ASSET_LEGACY_IDS=Object.freeze({
   [SCENE_ASSET_IDS.floorGraphic]:'system-floor-sticker',[SCENE_ASSET_IDS.manualLighting]:'system-lights',[SCENE_ASSET_IDS.photo360]:'system-photo360'
 });
 const sceneAssetRegistry=globalThis.YPSceneAssetRegistry.createRegistry();
-const smartSnapEngine=globalThis.YPSmartSnap.createEngine(sceneAssetRegistry,{gridStep:.05,detectionDistance:.14,screenThreshold:14,releaseDistance:.22,releaseScreenThreshold:22});
-const assetAttachmentGraph=globalThis.YPAssetAttachmentGraph.createGraph(sceneAssetRegistry,smartSnapEngine,{
-  applyTransform:(assetId,transform)=>applyPersistentAttachmentTransform(assetId,transform),
-  onChange:({state})=>{S.assetAttachmentGraph=state;},
-  onWarning:(message,assetId)=>announceCatalog((selectedAssetName(objectById(assetId))||'Asset')+' · '+message,'error')
-});
-const persistentAttachmentWarningKeys=new Set();
-const objectSnapshot=()=>JSON.stringify({objects:S.objects,sceneItemState:S.sceneItemState||{},sceneAssetRegistry:S.sceneAssetRegistry||null,sceneSnapData:S.sceneSnapData||null,assetAttachmentGraph:S.assetAttachmentGraph||null,lighting:S.lighting||null,lights:S.lights,lightFixture:S.lightFixture,lightCol:S.lightCol,lightWall:S.lightWall,lightWatts:S.lightWatts,lightAdj:S.lightAdj});
+const objectSnapshot=()=>JSON.stringify({objects:S.objects,sceneItemState:S.sceneItemState||{},sceneAssetRegistry:S.sceneAssetRegistry||null,lighting:S.lighting||null,lights:S.lights,lightFixture:S.lightFixture,lightCol:S.lightCol,lightWall:S.lightWall,lightWatts:S.lightWatts,lightAdj:S.lightAdj});
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
 const objectLocked=obj=>obj?.locked===true;
 const ASSET_LIST_CATEGORIES=[
@@ -2109,9 +2078,7 @@ const sceneAssetTransform=(position={},rotation={},scale={x:1,y:1,z:1})=>({posit
 function sceneAssetRecord(input){
   const stateSpec=input.stateSpec||S,legacyId=input.legacyId||SCENE_ASSET_LEGACY_IDS[input.id]||'',state=input.system?sceneAssetState(stateSpec,input.id,legacyId):{};
   const {stateSpec:unusedStateSpec,...recordInput}=input;
-  const persistent=assetAttachmentGraph?.getAttachment?.(input.id)||null;
-  return globalThis.YPSceneAssetRegistry.normalizeSceneAsset({...recordInput,name:state.name||input.name,object3DId:input.object3DId||('scene.'+input.id),
-    attachment:persistent,parentAssetId:persistent?.attached?persistent.targetAssetId:null,childAssetIds:assetAttachmentGraph?.getChildren?.(input.id)||[],metadata:{
+  return globalThis.YPSceneAssetRegistry.normalizeSceneAsset({...recordInput,name:state.name||input.name,object3DId:input.object3DId||('scene.'+input.id),metadata:{
     ...(input.metadata||{}),system:input.system===true,legacyId,listGroup:input.listGroup||input.metadata?.listGroup||input.category,
     icon:input.icon||input.metadata?.icon||'OBJ',visible:input.system?state.visible!==false:input.metadata?.visible!==false
   }});
@@ -2176,81 +2143,24 @@ function migrateLegacySceneAssetState(spec=S){
   Object.entries(SCENE_ASSET_LEGACY_IDS).forEach(([id,legacyId])=>{if(spec.sceneItemState[legacyId]&&!spec.sceneItemState[id])spec.sceneItemState[id]={...spec.sceneItemState[legacyId]};});
   if(spec.sceneItemState['system-storage']&&!spec.sceneItemState[SCENE_ASSET_IDS.door])spec.sceneItemState[SCENE_ASSET_IDS.door]={visible:spec.sceneItemState['system-storage'].visible!==false};
   const legacy=!spec.sceneAssetRegistry||!Array.isArray(spec.sceneAssetRegistry.assets);
-  if(legacy)spec.sceneAssetRegistry={version:2,assets:[]};
-  /* Project เก่าไม่ถูกเดาความสัมพันธ์จากระยะใกล้หรือ snapCandidate เดิม */
-  if(!spec.assetAttachmentGraph||!Array.isArray(spec.assetAttachmentGraph.attachments))spec.assetAttachmentGraph={version:1,attachments:[]};
-  if(!spec.sceneSnapData||!Array.isArray(spec.sceneSnapData.anchors)||!Array.isArray(spec.sceneSnapData.surfaces))spec.sceneSnapData={version:1,anchors:[],surfaces:[]};
+  if(legacy)spec.sceneAssetRegistry={version:1,assets:[]};
   return legacy;
 }
-function applyPersistentAttachmentTransform(assetId,transform){
-  const obj=objectById(assetId);if(!obj||!transform)return false;
-  obj.position={x:+Number(transform.position?.x||0).toFixed(3),y:+Number(transform.position?.y||0).toFixed(3),z:+Number(transform.position?.z||0).toFixed(3)};
-  obj.rotationX=+((Number(transform.rotation?.x)||0)*180/Math.PI).toFixed(4);obj.rotationY=+((Number(transform.rotation?.y)||0)*180/Math.PI).toFixed(4);obj.rotationZ=+((Number(transform.rotation?.z)||0)*180/Math.PI).toFixed(4);
-  normalizeSceneObjectModel(obj);return true;
-}
-function persistAttachmentGraph(spec=S){
-  spec.assetAttachmentGraph=assetAttachmentGraph.serialize();
-  assetAttachmentGraph.syncRegistryFields();
-  spec.sceneAssetRegistry=sceneAssetRegistry.serialize();
-  return spec.assetAttachmentGraph;
-}
-function detachPersistentAttachment(assetId,options={}){
-  const detached=assetAttachmentGraph.detach(assetId,{reason:options.reason||'manual',invalid:options.invalid===true,warning:options.warning||''});
-  if(detached){const obj=objectById(assetId);if(obj?.placement){obj.placement.mode='free';obj.placement.surface='free';obj.placement.targetId=null;obj.placement.snapCandidate=null;}persistAttachmentGraph(S);}
-  return detached;
-}
-function removePersistentAttachment(assetId){const removed=assetAttachmentGraph.removeAttachment(assetId);if(removed)persistAttachmentGraph(S);return removed;}
-function commitPersistentAttachmentFromSnap(obj,candidate){
-  if(!obj||!candidate?.valid||!candidate.targetAssetId||!candidate.surfaceId||!candidate.anchorId)return null;
-  const transform=sceneAssetTransform(obj.position,{x:(Number(obj.rotationX)||0)*Math.PI/180,y:(Number(obj.rotationY)||0)*Math.PI/180,z:(Number(obj.rotationZ)||0)*Math.PI/180},{x:obj.transform?.flipX===true?-1:1,y:obj.transform?.flipY===true?-1:1,z:1});
-  sceneAssetRegistry.updateAssetTransform(obj.id,transform,{applyToObject3D:false,notifyWorkflow:false});
-  const result=assetAttachmentGraph.attachFromCurrent(obj.id,{targetAssetId:candidate.targetAssetId,targetSurfaceId:candidate.surfaceId,sourceAnchorId:candidate.anchorId,
-    snapMode:candidate.snapType==='edge-edge'?'edge':candidate.snapType==='center-center'?'center':'surface',transform});
-  persistAttachmentGraph(S);return result;
-}
-function propagatePersistentAttachmentChildren(parentId,renderer=null){
-  const parent=objectById(parentId);if(!parent||!assetAttachmentGraph.getChildren(parentId).length)return[];
-  const transform=sceneAssetTransform(parent.position,{x:(Number(parent.rotationX)||0)*Math.PI/180,y:(Number(parent.rotationY)||0)*Math.PI/180,z:(Number(parent.rotationZ)||0)*Math.PI/180},
-    {x:parent.transform?.flipX===true?-1:1,y:parent.transform?.flipY===true?-1:1,z:1});
-  sceneAssetRegistry.updateAssetTransform(parentId,transform,{applyToObject3D:false,notifyWorkflow:false,attachmentPropagation:true});
-  const results=assetAttachmentGraph.propagateFrom(parentId,{apply:true});
-  if(renderer)results.filter(result=>result.valid).forEach(result=>{const child=objectById(result.childAssetId),root=renderer.objectMeshes?.get(result.childAssetId);if(child&&root)renderer.applyCatalogObjectTransform(root,child,BoothSpec.raise/100);});
-  persistAttachmentGraph(S);return results;
-}
-function reconcilePersistentAttachments(options={}){
-  assetAttachmentGraph.load(S.assetAttachmentGraph||{version:1,attachments:[]},{resolve:false});
-  const results=assetAttachmentGraph.reconcile({apply:options.apply!==false,warn:options.warn===true});persistAttachmentGraph(S);return results;
-}
-function notifyInvalidPersistentAttachments(){
-  const active=new Set();assetAttachmentGraph.listAttachments().forEach(({childAssetId,attachment})=>{if(attachment.valid!==false)return;const message=(attachment.validationWarnings||[])[0]||'Attachment ไม่ถูกต้อง',key=childAssetId+'|'+message;active.add(key);
-    if(!persistentAttachmentWarningKeys.has(key))announceCatalog((selectedAssetName(objectById(childAssetId))||'Asset')+' · '+message,'error');});
-  [...persistentAttachmentWarningKeys].filter(key=>!active.has(key)).forEach(key=>persistentAttachmentWarningKeys.delete(key));active.forEach(key=>persistentAttachmentWarningKeys.add(key));
-}
-function preparePersistentAttachmentDeletion(ids=[]){
-  const deleting=new Set(ids);ids.forEach(id=>assetAttachmentGraph.getChildren(id).filter(childId=>!deleting.has(childId)).forEach(childId=>
-    assetAttachmentGraph.detach(childId,{reason:'parent-removed',invalid:true,warning:globalThis.YPAssetAttachmentGraph.PARENT_REMOVED_WARNING})));
-  ids.forEach(id=>assetAttachmentGraph.removeAttachment(id));persistAttachmentGraph(S);
-}
 function syncSceneAssetRegistryState(spec=S){
-  const migrated=migrateLegacySceneAssetState(spec);assetAttachmentGraph.load(spec.assetAttachmentGraph,{resolve:false});const records=buildSceneAssetRecords(spec);
+  const migrated=migrateLegacySceneAssetState(spec),records=buildSceneAssetRecords(spec);
   if(migrated)records.forEach(record=>{record.metadata.migratedFromLegacy=true;});
-  sceneAssetRegistry.syncAssets(records);smartSnapEngine.syncFromRegistry();spec.sceneSnapData={version:1,anchors:JSON.parse(JSON.stringify(smartSnapEngine.listAnchors())),surfaces:JSON.parse(JSON.stringify(smartSnapEngine.listSurfaces()))};assetAttachmentGraph.reconcile({apply:true,warn:false});persistAttachmentGraph(spec);return sceneAssetRegistry.listAssets();
+  sceneAssetRegistry.syncAssets(records);spec.sceneAssetRegistry=sceneAssetRegistry.serialize();return records;
 }
 function bindSceneAssetRegistryObjects(renderer,spec=S){
   const records=syncSceneAssetRegistryState(spec);sceneAssetRegistry.clearObjectBindings();sceneAssetRegistry.syncAssets(records);
   records.forEach(record=>{const targets=renderer.sceneObjectTargets(record.id);if(targets.length)sceneAssetRegistry.bindObject3D(record.id,targets[0],targets.slice(1));});
-  smartSnapEngine.syncFromRegistry();assetAttachmentGraph.reconcile({apply:true,warn:false});persistAttachmentGraph(spec);
-  const report=sceneAssetRegistry.validateRegistry(renderer.boothGroup,{requireObject3D:true}),snapReport=smartSnapEngine.validate(),attachmentReport=assetAttachmentGraph.validate();
+  spec.sceneAssetRegistry=sceneAssetRegistry.serialize();
+  const report=sceneAssetRegistry.validateRegistry(renderer.boothGroup,{requireObject3D:true});
   if(location.hostname==='127.0.0.1'||location.hostname==='localhost'){
     const target=document.documentElement;target.dataset.sceneRegistryValid=String(report.valid);target.dataset.sceneRegistryAssets=String(report.stats.assets);
     target.dataset.sceneRegistryBoundObjects=String(report.stats.boundObjects);target.dataset.sceneRegistryPhysicalMeshes=String(report.stats.physicalMeshes);
     target.dataset.sceneRegistryErrors=String(report.errors.length);target.dataset.sceneRegistryErrorCodes=report.errors.map(error=>error.code).join(',');
-    target.dataset.smartSnapValid=String(snapReport.valid);target.dataset.smartSnapAnchors=String(snapReport.stats.anchors);target.dataset.smartSnapSurfaces=String(snapReport.stats.surfaces);
-    target.dataset.smartSnapErrors=String(snapReport.errors.length);
-    target.dataset.attachmentGraphValid=String(attachmentReport.valid);target.dataset.attachments=String(attachmentReport.stats.attachments);target.dataset.invalidAttachments=String(attachmentReport.stats.invalid);
     if(!report.valid)console.warn('[SceneAssetRegistry] validation failed',report);
-    if(!snapReport.valid)console.warn('[SmartSnapEngine] validation failed',snapReport);
-    if(!attachmentReport.valid)console.warn('[AssetAttachmentGraph] validation failed',attachmentReport);
   }
   return report;
 }
@@ -2292,10 +2202,7 @@ function setObjectSelection(ids=[],primaryId=null){
 function restoreObjectSnapshot(snapshot){
   const parsed=JSON.parse(snapshot);if(Array.isArray(parsed)){S.objects=parsed;return;}
   S.objects=Array.isArray(parsed?.objects)?parsed.objects:[];S.sceneItemState=parsed?.sceneItemState&&typeof parsed.sceneItemState==='object'?parsed.sceneItemState:{};
-  S.sceneAssetRegistry=parsed?.sceneAssetRegistry&&Array.isArray(parsed.sceneAssetRegistry.assets)?parsed.sceneAssetRegistry:{version:2,assets:[]};
-  S.sceneSnapData=parsed?.sceneSnapData&&Array.isArray(parsed.sceneSnapData.anchors)&&Array.isArray(parsed.sceneSnapData.surfaces)?parsed.sceneSnapData:{version:1,anchors:[],surfaces:[]};
-  S.assetAttachmentGraph=parsed?.assetAttachmentGraph&&Array.isArray(parsed.assetAttachmentGraph.attachments)?parsed.assetAttachmentGraph:{version:1,attachments:[]};
-  assetAttachmentGraph.load(S.assetAttachmentGraph,{resolve:false});
+  S.sceneAssetRegistry=parsed?.sceneAssetRegistry&&Array.isArray(parsed.sceneAssetRegistry.assets)?parsed.sceneAssetRegistry:{version:1,assets:[]};
   if(parsed?.lighting)S.lighting=globalThis.YPAutoLighting.normalizeLightingState(parsed.lighting);
   ['lights','lightFixture','lightCol','lightWall','lightWatts','lightAdj'].forEach(key=>{if(parsed&&Object.prototype.hasOwnProperty.call(parsed,key))S[key]=parsed[key];});
 }
@@ -2472,16 +2379,6 @@ function manifestSceneAttachment(obj){
   return{targetId:attachment.targetId,sourcePort:attachment.sourcePort,targetPort:attachment.targetPort,
     syncDimensions:[...(attachment.syncDimensions||[])],offset:manifestVector(attachment.offset?.x,attachment.offset?.y,attachment.offset?.z),status:attachment.status};
 }
-function persistentAttachmentForSpec(spec,assetId){
-  const row=(spec?.assetAttachmentGraph?.attachments||[]).find(item=>String(item.childAssetId||item.assetId||'')===String(assetId||''));return row?JSON.parse(JSON.stringify(row.attachment||row)):null;
-}
-function manifestPersistentAttachment(spec,assetId){
-  const attachment=persistentAttachmentForSpec(spec,assetId);if(!attachment)return null;
-  return{targetAssetId:attachment.targetAssetId,targetSurfaceId:attachment.targetSurfaceId,sourceAnchorId:attachment.sourceAnchorId,
-    localSurfacePosition:{u:manifestNumber(attachment.localSurfacePosition?.u),v:manifestNumber(attachment.localSurfacePosition?.v),normalOffset:manifestNumber(attachment.localSurfacePosition?.normalOffset)},
-    rotationOffset:manifestVector(attachment.rotationOffset?.x,attachment.rotationOffset?.y,attachment.rotationOffset?.z),snapMode:attachment.snapMode,
-    attached:attachment.attached!==false,valid:attachment.valid!==false,validationWarnings:[...(attachment.validationWarnings||[])]};
-}
 function buildGeometryManifest(spec=S){
   const typeDef=manifestBoothType(spec),walls=typeDef.walls||[],thickness=boothWallThickness(spec),floorY=(Number(spec.raise)||0)/100;
   const objects=[],push=node=>{objects.push(node);return node;};
@@ -2539,19 +2436,18 @@ function buildGeometryManifest(spec=S){
     classification:{status:fixture.status==='approved'?'Customer Approved Lighting':'AI Suggested / Render Staging',confirmed:fixture.status==='approved',countsAsSelectedAsset:fixture.status==='approved',includedInBOQ:fixture.status==='approved'&&fixture.fixtureType!=='invisible',includedInProductionScope:fixture.status==='approved'&&fixture.fixtureType!=='invisible',includedInConfirmedGeometry:fixture.status==='approved'},
     source:{kind:fixture.source,path:'BoothSpec.lighting.'+(fixture.status==='approved'?'approvedFixtures':'suggestions')+'['+index+']'}}));
   (Array.isArray(spec.objects)?spec.objects:[]).forEach((obj,index)=>{
-    const item=objectCatalogDef(obj.catalogId),size=obj.size||item?.size||{},position=obj.position||{},rule=normalizeObjectAIRule(obj,item),persistent=manifestPersistentAttachment(spec,obj.id),suggested=obj.ai?.status==='suggested'||obj.status==='suggested';normalizeSceneObjectModel(obj,item);
-    push({id:String(obj.id||'asset-'+(index+1)),type:String(obj.type||item?.type||'asset'),name:obj.label||item?.name||String(obj.catalogId||'Asset'),parentId:persistent?.attached?persistent.targetAssetId:'booth-root',
+    const item=objectCatalogDef(obj.catalogId),size=obj.size||item?.size||{},position=obj.position||{},rule=normalizeObjectAIRule(obj,item);normalizeSceneObjectModel(obj,item);
+    push({id:String(obj.id||'asset-'+(index+1)),type:String(obj.type||item?.type||'asset'),name:obj.label||item?.name||String(obj.catalogId||'Asset'),parentId:'booth-root',
       catalogId:obj.catalogId||null,geometry:{kind:isEntranceFrameObject(obj)?'entrance-frame':isDownlightBeamObject(obj)?'downlight-beam':'catalog-object',structure:obj.structure?JSON.parse(JSON.stringify(obj.structure)):null},
       dimensions:manifestSize(size.w,size.d,size.h),orientedBounds:(()=>{const oriented=sceneObjectOrientedSize(obj);return manifestSize(oriented.w,oriented.d,oriented.h);})(),
       transform:{position:manifestVector(position.x,floorY+(Number(position.y)||0),position.z),rotationDeg:manifestVector(obj.rotationX,obj.rotationY,obj.rotationZ),orientation:obj.orientation,
         scale:manifestVector(obj.transform?.flipX?-1:1,obj.transform?.flipY?-1:1,1),mirror:{leftRight:obj.transform?.flipX===true,topBottom:obj.transform?.flipY===true}},
-      capabilities:{...obj.capabilities},placement:{...obj.placement},attachment:persistent,legacyPortAttachment:manifestSceneAttachment(obj),collision:manifestSceneCollision(obj,item),
+      capabilities:{...obj.capabilities},placement:{...obj.placement},attachment:manifestSceneAttachment(obj),collision:manifestSceneCollision(obj,item),
       ports:localScenePorts(obj).map(port=>({id:port.id,role:port.role,localPosition:manifestVector(port.position.x,port.position.y,port.position.z)})),
       editorLocked:obj.locked===true,groupId:obj.groupId||null,appearance:{color:obj.appearance?.color||null,textureName:obj.appearance?.textureName||null},
       materialIntent:obj.appearance?.textureData?'asset-sticker: '+String(obj.appearance.textureName||'uploaded image'):(obj.appearance?.color||rule.materialIntent),
       semantics:{...JSON.parse(JSON.stringify(rule)),allowedChanges:rule.allowedChanges.filter(change=>!rule.geometryLocked||!['position','rotation','scale'].includes(change))},
-      classification:suggested?{status:'AI Suggested / Render Staging',confirmed:false,countsAsSelectedAsset:false,includedInBOQ:false,includedInProductionScope:false,includedInConfirmedGeometry:false}:
-        {status:'Customer Selected / Confirmed Geometry',confirmed:true,countsAsSelectedAsset:true,includedInBOQ:true,includedInProductionScope:true,includedInConfirmedGeometry:true,lockedGeometry:!!persistent?.attached},
+      classification:{status:'Customer Selected / Confirmed Geometry',confirmed:true,countsAsSelectedAsset:true,includedInBOQ:true,includedInProductionScope:true,includedInConfirmedGeometry:true},
       source:{kind:'BoothSpec',path:'objects['+index+']'}});
   });
   const ai=normalizeAIRenderingSettings(spec),staging=normalizeAIStagingSettings(spec);
@@ -2645,8 +2541,7 @@ function normalizeSceneObjectModel(obj,item=objectCatalogDef(obj?.catalogId)){
   collision.shapeMode=collision.shapeMode||catalogCollision.shapeMode||(isEntranceFrameObject(obj)?'compound':'box');
   collision.tolerance=clampNumber(Number(collision.tolerance)||.002,0,.05);obj.collision=collision;
   const placement=obj.placement&&typeof obj.placement==='object'?obj.placement:{};
-  const persistentAttachment=assetAttachmentGraph?.getAttachment?.(obj.id);
-  placement.mode=obj.attachment?.targetId||persistentAttachment?.attached?'attached':(placement.mode==='surface'?'surface':'free');
+  placement.mode=obj.attachment?.targetId?'attached':(placement.mode==='surface'?'surface':'free');
   placement.surface=String(placement.surface||item?.mount||'floor');placement.snapGrid=PLACEMENT_GRID;
   placement.axes=['x','y','z'];placement.snapSurfaces=['floor','wall','ceiling','structure','asset'];
   const policyDefaults=defaultScenePlacementPolicy(item),declaredPolicy=placement.policy&&typeof placement.policy==='object'?placement.policy:{};
@@ -2662,11 +2557,6 @@ function normalizeSceneObjectModel(obj,item=objectCatalogDef(obj?.catalogId)){
     placement.anchorAttachment={sourceAnchorId:String(placement.anchorAttachment.sourceAnchorId||''),targetId:String(placement.anchorAttachment.targetId),
       targetAnchorId:String(placement.anchorAttachment.targetAnchorId||''),kind:String(placement.anchorAttachment.kind||'corner')};
   }else placement.anchorAttachment=null;
-  if(placement.snapCandidate&&typeof placement.snapCandidate==='object'&&placement.snapCandidate.surfaceId){
-    placement.snapCandidate={anchorId:String(placement.snapCandidate.anchorId||''),surfaceId:String(placement.snapCandidate.surfaceId),
-      targetAssetId:String(placement.snapCandidate.targetAssetId||''),snapType:String(placement.snapCandidate.snapType||'anchor-surface'),
-      offset:Number(placement.snapCandidate.offset)||0,valid:placement.snapCandidate.valid!==false};
-  }else placement.snapCandidate=null;
   if(typeof placement.allowOutsideBooth!=='boolean')placement.allowOutsideBooth=placement.policy.allowOutsideBooth;
   obj.placement=placement;
   if(obj.attachment&&typeof obj.attachment==='object'&&obj.attachment.targetId){
@@ -2880,17 +2770,6 @@ function sceneObjectSnapAnchors(obj){
   return snapAnchorOffsets(size).map(anchor=>({...anchor,targetId:String(obj.id),position:{
     x:(Number(p.x)||0)+anchor.x*c+anchor.z*s,y:(Number(p.y)||0)+anchor.y,z:(Number(p.z)||0)-anchor.x*s+anchor.z*c}}));
 }
-function registrySceneObjectSnapAnchors(obj){
-  if(!obj?.id||!obj.position)return[];
-  const asset=sceneAssetRegistry.getAssetById(obj.id),rotation={x:(Number(obj.rotationX)||0)*Math.PI/180,y:(Number(obj.rotationY)||0)*Math.PI/180,z:(Number(obj.rotationZ)||0)*Math.PI/180};
-  if(!asset)return sceneObjectSnapAnchors(obj);
-  return smartSnapEngine.getAnchors(obj.id).map(anchor=>{
-    const local=globalThis.YPSmartSnap.rotateVector(anchor.localPosition,rotation),normal=globalThis.YPSmartSnap.rotateVector(anchor.localNormal,rotation);
-    return{id:anchor.id,anchorType:anchor.anchorType,kind:anchor.anchorType==='center'||anchor.anchorType==='mount'?'center':'edge',
-      level:anchor.anchorType==='top'?'top':'base',targetId:obj.id,localPosition:{...anchor.localPosition},localNormal:normal,
-      position:{x:(Number(obj.position.x)||0)+local.x,y:(Number(obj.position.y)||0)+local.y,z:(Number(obj.position.z)||0)+local.z}};
-  });
-}
 function rectangularSnapAnchors(targetId,size,position={x:0,y:0,z:0},rotationY=0){
   return sceneObjectSnapAnchors({id:targetId,size,position,rotationY});
 }
@@ -2923,22 +2802,6 @@ function magneticSnapPlacement(obj,candidate,mode='plane',preferredSourceId='',s
   }));
   if(best){best.position.x=+best.position.x.toFixed(3);best.position.y=+best.position.y.toFixed(3);best.position.z=+best.position.z.toFixed(3);}
   return best;
-}
-function smartSnapCandidateCollision(obj,candidate,targetAssetId=''){
-  const item=objectCatalogDef(obj?.catalogId);if(!obj||!item||!candidate?.transform)return{valid:false,reason:'missing-asset'};
-  const rotationY=+((Number(candidate.transform.rotation?.y)||0)*180/Math.PI).toFixed(3),position=candidate.transform.position||{},
-    proxy={...obj,position:{x:Number(position.x)||0,y:Number(position.y)||0,z:Number(position.z)||0},rotationY,
-      placement:{...(obj.placement||{}),mode:'surface',targetId:targetAssetId||candidate.targetAssetId||null}};
-  normalizeSceneObjectModel(proxy,item);
-  if(!isCatalogPlacementValid(obj.catalogId,proxy.position.x,proxy.position.z,rotationY,obj.id,obj.size,true,proxy))return{valid:false,reason:'booth-boundary-or-structure'};
-  const sourceVolumes=worldCollisionVolumes(item,obj.size,proxy.position.x,proxy.position.z,rotationY,proxy),tolerance=Math.max(.003,Number(obj.collision?.tolerance)||.002);
-  const collision=(S.objects||[]).find(other=>{
-    if(!other?.id||other.id===obj.id)return false;
-    const otherItem=objectCatalogDef(other.catalogId);if(!otherItem)return false;
-    const otherVolumes=worldCollisionVolumes(otherItem,other.size,other.position.x,other.position.z,other.rotationY||0,other);
-    return sourceVolumes.some(volume=>otherVolumes.some(otherVolume=>collisionVolumesOverlap(volume,otherVolume,-tolerance)));
-  });
-  return collision?{valid:false,reason:'asset-collision',collisionAssetId:collision.id}:{valid:true,reason:''};
 }
 function shapesOverlap(a,b,gap=0){
   return [...a.axes,...b.axes].every(axis=>{
@@ -3054,20 +2917,18 @@ function sceneObjectAllowsOutsideBooth(item,obj=null){
   if(typeof obj?.placement?.policy?.allowOutsideBooth==='boolean')return obj.placement.policy.allowOutsideBooth;
   return defaultScenePlacementPolicy(item).allowOutsideBooth;
 }
-function placementLimits(item,rotationY=0,sizeOverride=null,objectOverride=null){
-  const footprint=footprintSize(sizeOverride||item.size,rotationY),walls=typ().walls,edge=item.clearance??.05,t=boothWallThickness(S),ceiling=item.mount==='ceiling',
-    surfaceTarget=objectOverride?.placement?.mode==='surface'?String(objectOverride.placement.targetId||''):'',
-    touchesLeft=surfaceTarget===SCENE_ASSET_IDS.wallLeft,touchesRight=surfaceTarget===SCENE_ASSET_IDS.wallRight,touchesBack=surfaceTarget===SCENE_ASSET_IDS.wallBack;
-  const edgeMinX=ceiling?edge:(walls.includes('left')?t:0)+(touchesLeft?0:edge),edgeMaxX=ceiling?S.W-edge:S.W-(walls.includes('right')?t:0)-(touchesRight?0:edge);
+function placementLimits(item,rotationY=0,sizeOverride=null){
+  const footprint=footprintSize(sizeOverride||item.size,rotationY),walls=typ().walls,edge=item.clearance??.05,t=boothWallThickness(S),ceiling=item.mount==='ceiling';
+  const edgeMinX=ceiling?edge:(walls.includes('left')?t:0)+edge,edgeMaxX=ceiling?S.W-edge:S.W-(walls.includes('right')?t:0)-edge;
   const backBoundary=ceiling?0:(walls.includes('back')?(isCurvedWallType(S)?t/2:t):0);
-  const edgeMinZ=backBoundary+(touchesBack?0:edge),edgeMaxZ=S.D-edge;
+  const edgeMinZ=backBoundary+edge,edgeMaxZ=S.D-edge;
   const minX=edgeMinX+footprint.w/2,maxX=edgeMaxX-footprint.w/2;
   const minZ=edgeMinZ+footprint.d/2,maxZ=edgeMaxZ-footprint.d/2;
   return minX<=maxX&&minZ<=maxZ?{minX,maxX,minZ,maxZ,edgeMinX,edgeMaxX,edgeMinZ,edgeMaxZ,footprint}:null;
 }
 function isCatalogPlacementValid(catalogId,x,z,rotationY=0,ignoreId=null,sizeOverride=null,allowOverlap=ALLOW_ASSET_OVERLAP,objectOverride=null){
   const item=objectCatalogDef(catalogId),sourceSize=sizeOverride||item?.size,size=objectOverride?sceneObjectOrientedSize(objectOverride,sourceSize):sourceSize,
-    limits=item&&placementLimits(item,rotationY,size,objectOverride),allowOutside=sceneObjectAllowsOutsideBooth(item,objectOverride);
+    limits=item&&placementLimits(item,rotationY,size),allowOutside=sceneObjectAllowsOutsideBooth(item,objectOverride);
   if(!item||!size||(!limits&&!allowOutside))return false;
   const epsilon=.0001,shape=placementShape(size,x,z,rotationY),volumes=worldCollisionVolumes(item,sourceSize,x,z,rotationY,objectOverride);
   if(!allowOutside&&shape.corners.some(corner=>corner.x<limits.edgeMinX-epsilon||corner.x>limits.edgeMaxX+epsilon||
@@ -3336,9 +3197,6 @@ function reconcileCatalogLayout(){
   return true;
 }
 function recordObjectHistory(before){
-  /* Finalize Registry + Attachment Graph ก่อนบันทึก เพื่อให้หนึ่ง User Action
-     (Snap/Detach/Resize/Parent transform) เป็น History Transaction เดียว */
-  syncSceneAssetRegistryState(S);
   const after=objectSnapshot();if(before===after)return false;
   objectEditor.past.push(before);if(objectEditor.past.length>50)objectEditor.past.shift();
   objectEditor.future.length=0;return true;
@@ -3433,7 +3291,7 @@ function deleteSceneSelection(){
   if(items.some(item=>item.system))return announceCatalog('พื้น ผนัง ห้อง และ Geometry หลักลบจาก Asset List ไม่ได้ แต่สามารถซ่อนได้','error');
   if(items.some(item=>item.locked))return announceCatalog('มี Asset ที่ล็อกอยู่ กรุณา Unlock ก่อนลบ','error');
   if(!window.confirm('ลบ Asset ที่เลือก '+items.length+' รายการ?'))return;
-  const ids=new Set(items.map(item=>item.id));mutateObjects(()=>{preparePersistentAttachmentDeletion([...ids]);S.objects=S.objects.filter(obj=>!ids.has(obj.id));},null);
+  const ids=new Set(items.map(item=>item.id));mutateObjects(()=>{S.objects=S.objects.filter(obj=>!ids.has(obj.id));},null);
 }
 function assetListFilteredItems(){
   const query=assetListUI.query.trim().toLocaleLowerCase('th'),selected=new Set(selectedSceneItemIds());let items=sceneItems();
@@ -3449,7 +3307,7 @@ function renderAssetList(){
   else body.innerHTML=ASSET_LIST_CATEGORIES.map(category=>{const rows=items.filter(item=>item.category===category.key);if(!rows.length)return'';
     return'<section class="asset-list-category"><div class="asset-list-category-title"><span>'+esc(category.label)+'</span><span>'+rows.length+'</span></div>'+rows.map(item=>{
       const thumb=item.thumb?'<img src="'+esc(item.thumb)+'" alt="">':esc(item.icon||'OBJ'),states=[];
-      if(item.locked)states.push('Locked');if(!item.visible)states.push('Hidden');if(item.registryAsset?.attachment?.valid===false)states.push('Invalid Attachment');else if(item.registryAsset?.attachment?.attached)states.push('Attached');
+      if(item.locked)states.push('Locked');if(!item.visible)states.push('Hidden');
       if(item.aiSuggested||item.status==='Suggested')states.push('Suggested');else if(!item.system||item.status==='Approved')states.push('Approved');
       if(item.system)states.push('System');const systemLabel=states.length?' · '+[...new Set(states)].join(' · '):'';
       return'<div class="asset-list-row'+(selected.has(item.id)?' selected':'')+(item.visible?'':' hidden-item')+(item.aiSuggested?' ai-suggested':'')+'" data-scene-item="'+esc(item.id)+'" tabindex="0" role="option" aria-selected="'+selected.has(item.id)+'">'+
@@ -3667,41 +3525,6 @@ function selectedAssetName(obj=objectById(objectEditor.selectedId)){
 function closeAssetSettings(){
   const modal=document.getElementById('mAssetSettings');if(!modal)return;modal.classList.remove('show');modal.setAttribute('aria-hidden','true');
 }
-function attachmentSurfaceLabel(surface){
-  const owner=sceneAssetRegistry.getAssetById(surface.ownerAssetId);return(owner?.name||surface.ownerAssetId)+' · '+surface.surfaceType;
-}
-function syncAssetAttachmentForm(obj){
-  const status=document.getElementById('assetAttachmentStatus'),surfaceSelect=document.getElementById('assetAttachmentSurface'),anchorSelect=document.getElementById('assetAttachmentAnchor'),invalidActions=document.getElementById('assetAttachmentInvalidActions');if(!status||!surfaceSelect||!anchorSelect)return;
-  const attachment=assetAttachmentGraph.getAttachment(obj.id),anchors=smartSnapEngine.getAnchors(obj.id),selectedAnchorId=attachment?.sourceAnchorId||anchors[0]?.id||'';
-  anchorSelect.innerHTML=anchors.map(anchor=>'<option value="'+esc(anchor.id)+'"'+(anchor.id===selectedAnchorId?' selected':'')+'>'+esc(anchor.anchorType+' · '+anchor.rotationPolicy)+'</option>').join('');
-  const anchor=anchors.find(item=>item.id===selectedAnchorId)||anchors[0],surfaces=smartSnapEngine.listSurfaces().filter(surface=>surface.ownerAssetId!==obj.id&&surface.enabled!==false&&(!anchor||anchor.compatibleSurfaceTypes.includes(surface.surfaceType)));
-  const selectedSurfaceKey=attachment?attachment.targetAssetId+'|'+attachment.targetSurfaceId:'';
-  surfaceSelect.innerHTML=surfaces.map(surface=>{const value=surface.ownerAssetId+'|'+surface.id;return'<option value="'+esc(value)+'"'+(value===selectedSurfaceKey?' selected':'')+'>'+esc(attachmentSurfaceLabel(surface))+'</option>';}).join('');
-  if(!attachment){status.className='asset-attachment-status';status.textContent='ยังไม่ได้ติดกับพื้นผิว · ใช้ Smart Move เพื่อ Snap หรือเลือก Surface/Anchor แล้ว Change Target Surface';}
-  else if(attachment.attached&&attachment.valid){status.className='asset-attachment-status valid';status.textContent='Attached · '+attachment.targetSurfaceId+' · '+attachment.sourceAnchorId;}
-  else{status.className='asset-attachment-status invalid';status.textContent=(attachment.attached?'Attachment ไม่ถูกต้อง':'Detached')+' · '+((attachment.validationWarnings||[]).join(' · ')||attachment.detachedReason||'กรุณาจัดตำแหน่งใหม่');}
-  invalidActions.hidden=!attachment||attachment.valid!==false;
-  const locked=objectLocked(obj);['assetAttachmentDetach','assetAttachmentReattach','assetAttachmentChangeSurface','assetAttachmentChangeAnchor'].forEach(id=>{const node=document.getElementById(id);if(node)node.disabled=locked||!attachment&&id==='assetAttachmentDetach';});
-  document.getElementById('assetAttachmentDetach').disabled=locked||!attachment?.attached;
-  document.getElementById('assetAttachmentReattach').disabled=locked||!attachment||attachment.attached&&attachment.valid;
-  surfaceSelect.disabled=locked||!surfaces.length;anchorSelect.disabled=locked||!anchors.length;
-}
-function selectedAttachmentSurfaceValue(){const raw=String(document.getElementById('assetAttachmentSurface')?.value||''),divider=raw.indexOf('|');return divider<0?null:{targetAssetId:raw.slice(0,divider),targetSurfaceId:raw.slice(divider+1)};}
-function attachmentHistoryAction(action,label){
-  const obj=objectById(objectEditor.selectedId);if(!obj||objectLocked(obj))return false;syncSceneAssetRegistryState(S);const before=objectSnapshot(),result=action(obj);
-  if(result===false||result?.ok===false){announceCatalog(label+'ไม่สำเร็จ'+(result?.reason?' · '+result.reason:''),'error');return false;}
-  persistAttachmentGraph(S);recordObjectHistory(before);sync();syncAssetSettingsForm();announceCatalog(label+'แล้ว','success');return true;
-}
-function detachSelectedPersistentAttachment(){return attachmentHistoryAction(obj=>detachPersistentAttachment(obj.id,{reason:'manual'}),'Detach '+selectedAssetName());}
-function reattachSelectedPersistentAttachment(){return attachmentHistoryAction(obj=>assetAttachmentGraph.reattach(obj.id),'Reattach '+selectedAssetName());}
-function changeSelectedAttachmentSurface(){
-  const target=selectedAttachmentSurfaceValue();if(!target)return announceCatalog('เลือก Target Surface ก่อน','error'),false;
-  return attachmentHistoryAction(obj=>{const attachment=assetAttachmentGraph.getAttachment(obj.id),anchorId=attachment?.sourceAnchorId||document.getElementById('assetAttachmentAnchor')?.value;return assetAttachmentGraph.attachFromCurrent(obj.id,{...target,sourceAnchorId:anchorId,snapMode:'surface'});},'เปลี่ยน Target Surface');
-}
-function changeSelectedAttachmentAnchor(){
-  const anchorId=document.getElementById('assetAttachmentAnchor')?.value,target=selectedAttachmentSurfaceValue();if(!anchorId||!target)return announceCatalog('เลือก Snap Anchor และ Target Surface ก่อน','error'),false;
-  return attachmentHistoryAction(obj=>assetAttachmentGraph.attachFromCurrent(obj.id,{...target,sourceAnchorId:anchorId,snapMode:'surface'}),'เปลี่ยน Snap Anchor');
-}
 function syncAssetSettingsForm(){
   const obj=objectById(objectEditor.selectedId),modal=document.getElementById('mAssetSettings');if(!obj||!modal){closeAssetSettings();return;}
   const item=objectCatalogDef(obj.catalogId);normalizeSceneObjectModel(obj,item);document.getElementById('assetSettingsTitle').textContent='ตั้งค่า '+selectedAssetName(obj);
@@ -3717,7 +3540,6 @@ function syncAssetSettingsForm(){
   ['assetSurfaceColor','assetSurfaceHex'].forEach(id=>{const node=document.getElementById(id);if(node)node.disabled=locked||mode==='original';});
   const notes={original:'ใช้ Material และ Texture เดิมจากไฟล์'+(item?.customAsset?' GLB':' Asset'),tint:'ย้อมสีทับ Material เดิม โดยยังคงลายและรายละเอียดเดิม',solid:'แทน Material เดิมด้วยพื้นผิวสีล้วนแบบ PBR'};
   document.getElementById('assetSurfaceNote').textContent=(notes[mode]||notes.original)+(obj.appearance.textureData?' · มีสติ๊กเกอร์ภาพซ้อนอยู่':'');
-  syncAssetAttachmentForm(obj);
 }
 function openAssetSettings(){
   const obj=objectById(objectEditor.selectedId);if(!obj)return;syncAssetSettingsForm();
@@ -3852,7 +3674,7 @@ function parseFinePositionDraft(value){
   const numeric=Number(normalized);return Number.isFinite(numeric)?numeric:null;
 }
 function releaseObjectAttachment(obj){
-  obj.attachment=null;detachPersistentAttachment(obj.id,{reason:'manual-move'});if(obj.placement){obj.placement.mode='free';obj.placement.surface='free';obj.placement.targetId=null;obj.placement.anchorAttachment=null;obj.placement.snapCandidate=null;}
+  obj.attachment=null;if(obj.placement){obj.placement.mode='free';obj.placement.surface='free';obj.placement.targetId=null;obj.placement.anchorAttachment=null;}
 }
 function commitFinePositionInput(axis){
   const objects=selectedObjects(),input=finePositionInput(axis);if(objects.length!==1||!input)return false;
@@ -3913,7 +3735,7 @@ function alignSelectedObjects(mode){
     else if(mode==='front')position.z+=(ref.maxZ-bounds.maxZ);
     else if(mode==='back')position.z+=(ref.minZ-bounds.minZ);
     position.x=+Number(position.x).toFixed(3);position.y=+Number(position.y).toFixed(3);position.z=+Number(position.z).toFixed(3);
-    releaseObjectAttachment(obj);
+    if(sceneAttachmentActive(obj))obj.attachment=null;
     normalizeSceneObjectModel(obj);
   });
   recordObjectHistory(before);sync();
@@ -4379,17 +4201,14 @@ function renderFloorSnapshot(spec){
   return{type:spec.floor||'',material,detail,raiseCm:Number(spec.raise)||0,levelM:(Number(spec.raise)||0)/100};
 }
 function renderAssetSnapshot(spec){
-  return(Array.isArray(spec.objects)?spec.objects:[]).map((object,index)=>{const attachment=manifestPersistentAttachment(spec,object.id),suggested=object.ai?.status==='suggested'||object.status==='suggested';return{
+  return(Array.isArray(spec.objects)?spec.objects:[]).map((object,index)=>({
     id:String(object.id||object.catalogId||'asset-'+(index+1)),name:String(object.label||objectCatalogDef(object.catalogId)?.name||'Asset '+(index+1)),
     type:String(object.type||objectCatalogDef(object.catalogId)?.type||'asset'),catalogId:object.catalogId||'',
     position:{x:Number(object.position?.x)||0,y:Number(object.position?.y)||0,z:Number(object.position?.z)||0},
     rotation:{x:Number(object.rotationX)||0,y:Number(object.rotationY)||0,z:Number(object.rotationZ)||0},
     scale:{x:Number(object.scale?.x)||1,y:Number(object.scale?.y)||1,z:Number(object.scale?.z)||1},
-    size:cloneRenderValue(object.size||objectCatalogDef(object.catalogId)?.size||{}),locked:object.locked===true||!!attachment?.attached&&!suggested,visible:object.visible!==false,
-    parentAssetId:attachment?.attached?attachment.targetAssetId:null,targetSurfaceId:attachment?.targetSurfaceId||null,sourceAnchorId:attachment?.sourceAnchorId||null,
-    localSurfacePosition:cloneRenderValue(attachment?.localSurfacePosition||null),attachment,approvalStatus:suggested?'Suggested':'Approved',validationStatus:attachment?(attachment.valid?'valid':'invalid'):'unattached',
-    renderClassification:suggested?'AI Suggested / Render Staging':'Locked Geometry'
-  };});
+    size:cloneRenderValue(object.size||objectCatalogDef(object.catalogId)?.size||{}),locked:object.locked===true,visible:object.visible!==false
+  }));
 }
 function stableRenderCameraSnapshot(camera){
   if(!camera||typeof camera!=='object')return null;
@@ -5085,12 +4904,6 @@ function build(){
   document.getElementById('btnDeleteObject').onclick=deleteSelectedObject;
   document.getElementById('assetSettingsClose').onclick=closeAssetSettings;
   document.getElementById('assetSettingsDone').onclick=closeAssetSettings;
-  document.getElementById('assetAttachmentDetach').onclick=detachSelectedPersistentAttachment;
-  document.getElementById('assetAttachmentReattach').onclick=reattachSelectedPersistentAttachment;
-  document.getElementById('assetAttachmentChangeSurface').onclick=changeSelectedAttachmentSurface;
-  document.getElementById('assetAttachmentChangeAnchor').onclick=changeSelectedAttachmentAnchor;
-  document.getElementById('assetAttachmentMove').onclick=()=>{detachSelectedPersistentAttachment();closeAssetSettings();setObjectMoveMode('smart');};
-  document.getElementById('assetAttachmentDelete').onclick=()=>{closeAssetSettings();deleteSelectedObject();};
   document.getElementById('assetSettingsName').onchange=event=>updateSelectedObjectName(event.target.value);
   ['W','D','H'].forEach(key=>document.getElementById('assetSize'+key).onchange=event=>updateSelectedObjectSize(key.toLowerCase(),event.target.value));
   document.getElementById('assetResetSize').onclick=resetSelectedObjectSize;
@@ -5493,7 +5306,7 @@ class ThreeBoothRenderer{
     };
     this.controls.addEventListener('change',this.onControlsChange);
 
-    this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.selectionHelpers=[];this.pointerDrag=null;this.selectionCycle=null;
+    this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.selectionHelpers=[];this.pointerDrag=null;
     this.anchorGuideGroup=null;this.snapPreviewGroup=null;this.hoveredAnchorMarker=null;this.activeAnchorMarker=null;
     this.raycaster=new THREE.Raycaster();this.pointer=new THREE.Vector2();
     this.anchorScreenPoint=new THREE.Vector3();
@@ -5658,7 +5471,7 @@ class ThreeBoothRenderer{
     this.boothGroup.traverse(object=>{
       const name=object.name||'';
       if(name==='scene-ground'||name==='object-selection'||name==='brand-selection'||name==='brand-selection-proxy'||
-        name==='object-anchor-guides'||name==='magnetic-snap-preview'||name==='attachment-invalid-warning'||name==='attachment-surface-highlight'||
+        name==='object-anchor-guides'||name==='magnetic-snap-preview'||
         name==='booth-wall-back-curved-edge'||name.startsWith('booth-dimension-')){
         hidden.push([object,object.visible]);object.visible=false;
       }
@@ -5718,30 +5531,13 @@ class ThreeBoothRenderer{
     this.setRayFromEvent(event);return this.raycaster.ray.intersectPlane(this.verticalDragPlane,this.verticalDragPoint);
   }
   surfaceSnapTargets(selectedRoot){
-    const targets=[],selectedAssetId=selectedRoot&&sceneAssetRegistry.getAssetByObject3D(selectedRoot)?.id;
+    const targets=[],ignoredName=/^(object-selection|brand-|spotlight|booth-dimension-|floor-sticker-|wall-sticker-)/;
     this.boothGroup.traverse(node=>{
-      if(!node.isMesh||!node.visible||node===this.selectionHelper||node.userData?.brandPlacement||node.userData?.anchorGuide||node.userData?.systemHelper)return;
-      const asset=sceneAssetRegistry.getAssetByObject3D(node);if(!asset||asset.snapEnabled===false||asset.id===selectedAssetId)return;
-      targets.push(node);
+      if(!node.isMesh||!node.visible||node===this.selectionHelper||node.userData?.brandPlacement||node.userData?.anchorGuide)return;
+      let parent=node,insideSelected=false;while(parent){if(parent===selectedRoot){insideSelected=true;break;}parent=parent.parent;}
+      if(insideSelected||ignoredName.test(String(node.name||'')))return;targets.push(node);
     });
     return targets;
-  }
-  smartSnapSurfaceFromHit(hit){
-    const owner=sceneAssetRegistry.getAssetByObject3D(hit?.object);if(!owner||owner.snapEnabled===false||!hit?.face)return null;
-    const floorY=BoothSpec.raise/100,normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize(),point={x:hit.point.x,y:hit.point.y-floorY,z:hit.point.z};
-    let best=null;
-    smartSnapEngine.getWorldSurfaces(owner.id).forEach(surface=>{
-      const origin={...surface.worldOrigin,y:surface.worldOrigin.y-(owner.metadata?.system===true?floorY:0)},dot=surface.worldNormal.x*normal.x+surface.worldNormal.y*normal.y+surface.worldNormal.z*normal.z,
-        distance=Math.abs((point.x-origin.x)*surface.worldNormal.x+(point.y-origin.y)*surface.worldNormal.y+(point.z-origin.z)*surface.worldNormal.z);
-      if(dot<.5||best&&(dot<best.dot-.02||Math.abs(dot-best.dot)<=.02&&distance>=best.distance))return;
-      best={dot,distance,surface:{...surface,worldOrigin:origin,worldNormal:{x:normal.x,y:normal.y,z:normal.z}}};
-    });
-    if(best)return{owner,surface:best.surface,point,normal};
-    const vertical=Math.abs(normal.y)<.58,surfaceType=vertical?'vertical-face':normal.y>0?'horizontal-top':'horizontal-bottom',
-      width=vertical?(Math.abs(normal.z)>=Math.abs(normal.x)?owner.bounds.width:owner.bounds.depth):owner.bounds.width,
-      height=vertical?owner.bounds.height:owner.bounds.depth;
-    return{owner,point,normal,surface:{id:owner.id+'.surface.raycast',ownerAssetId:owner.id,surfaceType,localOrigin:{x:0,y:0,z:0},localNormal:{x:normal.x,y:normal.y,z:normal.z},
-      worldOrigin:{...point},worldNormal:{x:normal.x,y:normal.y,z:normal.z},width,height,allowedAssetTypes:[],padding:.001,enabled:true}};
   }
   surfacePlacement(event,obj,root,drag){
     this.setRayFromEvent(event);const hit=this.raycaster.intersectObjects(this.surfaceSnapTargets(root),false)[0];
@@ -5782,33 +5578,17 @@ class ThreeBoothRenderer{
     return best;
   }
   smartSurfacePlacement(event,obj,root,drag){
-    if(obj.placement?.surfaceSnap===false)return null;
-    this.setRayFromEvent(event);const hit=this.raycaster.intersectObjects(this.surfaceSnapTargets(root),false)[0];
-    if(!hit||!hit.face){
-      const latched=drag.lastSmartSnap;if(!latched)return null;
-      const rect=this.renderer.domElement.getBoundingClientRect(),target=new this.THREE.Vector3(latched.preview.previewTo.x,(BoothSpec.raise/100)+latched.preview.previewTo.y,latched.preview.previewTo.z).project(this.camera),
-        x=rect.left+(target.x+1)*rect.width/2,y=rect.top+(1-target.y)*rect.height/2;
-      if(smartSnapEngine.shouldRelease(0,Math.hypot(event.clientX-x,event.clientY-y))){drag.lastSmartSnap=null;return null;}
-      return latched;
-    }
-    const hitSurface=this.smartSnapSurfaceFromHit(hit);if(!hitSurface)return null;
-    let point={...hitSurface.point};
-    if(!drag.sourceAnchorId&&drag.grabOffset){
-      const normal=hitSurface.surface.worldNormal,grab={x:drag.grabOffset.x,y:drag.grabOffset.y,z:drag.grabOffset.z},normalPart=grab.x*normal.x+grab.y*normal.y+grab.z*normal.z;
-      point={x:point.x-(grab.x-normal.x*normalPart),y:point.y-(grab.y-normal.y*normalPart),z:point.z-(grab.z-normal.z*normalPart)};
-    }
-    const currentTransform={position:{...obj.position},rotation:{x:(Number(obj.rotationX)||0)*Math.PI/180,y:(Number(obj.rotationY)||0)*Math.PI/180,z:(Number(obj.rotationZ)||0)*Math.PI/180},scale:{x:1,y:1,z:1}},
-      solved=smartSnapEngine.solve({sourceAssetId:obj.id,anchorId:drag.sourceAnchorId,surface:hitSurface.surface,targetAssetId:hitSurface.owner.id,surfacePoint:point,currentTransform});
-    if(!solved)return null;
-    const collision=solved.valid?smartSnapCandidateCollision(obj,solved,hitSurface.owner.id):{valid:false,reason:solved.reason},valid=solved.valid&&collision.valid,
-      source=registrySceneObjectSnapAnchors(obj).find(anchor=>anchor.id===solved.anchor.id),position=solved.transform.position,surface=hitSurface.surface.surfaceType,
-      result={x:+position.x.toFixed(3),y:+clampNumber(position.y,-(BoothSpec.raise/100),Math.max(10,BoothSpec.H*3)).toFixed(3),z:+position.z.toFixed(3),
-        rotationY:+((solved.transform.rotation.y||0)*180/Math.PI).toFixed(3),surface,targetId:hitSurface.owner.id,snapValid:valid,snapReason:valid?'':collision.reason,
-        snapCandidate:{anchorId:solved.anchor.id,surfaceId:hitSurface.surface.id,targetAssetId:hitSurface.owner.id,snapType:solved.snapType,offset:solved.requiredOffset,valid},
-        preview:{sourceAnchorId:solved.anchor.id,targetId:hitSurface.owner.id,targetAnchorId:hitSurface.surface.id,kind:solved.snapType,valid,reason:valid?'':collision.reason,requiredOffset:solved.requiredOffset,
-          previewFrom:source?{...source.position}:{x:obj.position.x,y:obj.position.y,z:obj.position.z},previewTo:{...solved.surfacePoint},surface:solved.surface,
-          candidateBounds:{width:sceneObjectOrientedSize(obj).w,height:sceneObjectOrientedSize(obj).h,depth:sceneObjectOrientedSize(obj).d},candidatePosition:{...position},rotationY:+((solved.transform.rotation.y||0)*180/Math.PI).toFixed(3)}};
-    drag.lastSmartSnap=result;return result;
+    if(!drag.sourceAnchorId||obj.placement?.surfaceSnap===false)return null;
+    this.setRayFromEvent(event);const hit=this.raycaster.intersectObjects(this.surfaceSnapTargets(root),false)[0];if(!hit||!hit.face)return null;
+    const normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize(),floorY=BoothSpec.raise/100,
+      offset=drag.sourceAnchorOffset||{x:0,y:0,z:0},point=hit.point.clone();
+    if(hit.object.name==='scene-ground')point.y=floorY;
+    let surface='structure';if(Math.abs(normal.y)>=.58)surface=normal.y>0?(hit.object.name==='booth-floor'||hit.object.name==='scene-ground'?'floor':'top'):'ceiling';else surface='wall';
+    const targetObjectId=hit.object.userData?.objectId,targetId=targetObjectId||(String(hit.object.name||'').startsWith('storage-')?'storage-room':String(hit.object.name||'surface')),
+      position={x:+(point.x-offset.x).toFixed(3),y:+clampNumber(point.y-floorY-offset.y,-floorY,Math.max(10,BoothSpec.H*3)).toFixed(3),z:+(point.z-offset.z).toFixed(3)},
+      source=sceneObjectSnapAnchors(obj).find(anchor=>anchor.id===drag.sourceAnchorId);
+    return{...position,surface,targetId,preview:{sourceAnchorId:drag.sourceAnchorId,targetId,targetAnchorId:'surface-point',kind:'surface',
+      previewFrom:source?{...source.position}:{x:obj.position.x,y:obj.position.y,z:obj.position.z},previewTo:{x:point.x,y:point.y-floorY,z:point.z}}};
   }
   clearAnchorGuides(){
     this.hoveredAnchorMarker=null;this.activeAnchorMarker=null;
@@ -5870,7 +5650,7 @@ class ThreeBoothRenderer{
     this.clearAnchorGuides();const obj=objectById(id);if(!obj||objectLocked(obj)||S.magneticSnap===false||obj.placement?.anchorSnap===false||objectEditor.moveMode==='surface')return;
     const T=this.THREE,group=new T.Group();group.name='object-anchor-guides';group.renderOrder=28;
     const radius=clampNumber(Math.max(S.W,S.D,S.H)*.008,.035,.065),floorY=BoothSpec.raise/100;
-    registrySceneObjectSnapAnchors(obj).filter(anchor=>objectEditor.moveMode==='smart'?true:objectEditor.moveMode==='plane'?anchor.level==='base':
+    sceneObjectSnapAnchors(obj).filter(anchor=>objectEditor.moveMode==='smart'?true:objectEditor.moveMode==='plane'?anchor.level==='base':
       objectEditor.moveMode==='height'?(anchor.kind==='corner'||anchor.kind==='center'):false).forEach(anchor=>{
       const color=anchor.kind==='corner'?0xf0b53a:anchor.kind==='edge'?0x62b9ff:0xffffff,
         material=new T.MeshBasicMaterial({color,transparent:true,opacity:anchor.level==='base'?.96:.7,depthTest:false});
@@ -5883,7 +5663,7 @@ class ThreeBoothRenderer{
   }
   updateObjectAnchorGuides(id){
     if(!this.anchorGuideGroup)return;const obj=objectById(id),floorY=BoothSpec.raise/100;if(!obj)return;
-    const anchors=new Map(registrySceneObjectSnapAnchors(obj).map(anchor=>[anchor.id,anchor]));
+    const anchors=new Map(sceneObjectSnapAnchors(obj).map(anchor=>[anchor.id,anchor]));
     this.anchorGuideGroup.children.forEach(marker=>{const anchor=anchors.get(marker.userData.snapAnchorId);if(anchor)marker.position.set(anchor.position.x,floorY+anchor.position.y,anchor.position.z);});
   }
   clearMagneticSnapPreview(){
@@ -5893,29 +5673,12 @@ class ThreeBoothRenderer{
   showMagneticSnapPreview(match){
     this.clearMagneticSnapPreview();if(!match)return;
     const T=this.THREE,group=new T.Group(),floorY=BoothSpec.raise/100,from=new T.Vector3(match.previewFrom.x,floorY+match.previewFrom.y,match.previewFrom.z),
-      to=new T.Vector3(match.previewTo.x,floorY+match.previewTo.y,match.previewTo.z),valid=match.valid!==false,color=valid?0x46d79a:0xff3b30;
-    group.name='magnetic-snap-preview';group.userData.anchorGuide=true;group.userData.systemHelper=true;
+      to=new T.Vector3(match.previewTo.x,floorY+match.previewTo.y,match.previewTo.z),color=0x46d79a;
+    group.name='magnetic-snap-preview';group.userData.anchorGuide=true;
     const marker=new T.Mesh(new T.SphereGeometry(.075,16,10),new T.MeshBasicMaterial({color,transparent:true,opacity:.9,depthTest:false}));
-    marker.position.copy(to);marker.renderOrder=30;marker.userData.anchorGuide=true;marker.userData.systemHelper=true;group.add(marker);
+    marker.position.copy(to);marker.renderOrder=30;marker.userData.anchorGuide=true;group.add(marker);
     const line=new T.Line(new T.BufferGeometry().setFromPoints([from,to]),new T.LineBasicMaterial({color,transparent:true,opacity:.95,depthTest:false}));
-    line.renderOrder=30;line.userData.anchorGuide=true;line.userData.systemHelper=true;group.add(line);
-    if(match.surface?.worldOrigin&&match.surface.width>0&&match.surface.height>0){
-      const normal=match.surface.worldNormal||match.surface.localNormal||{x:0,y:1,z:0},surface=new T.Mesh(new T.PlaneGeometry(match.surface.width,match.surface.height),
-        new T.MeshBasicMaterial({color,transparent:true,opacity:valid ? .13 : .18,side:T.DoubleSide,depthTest:false,depthWrite:false}));
-      surface.name='smart-snap-surface-highlight';surface.position.set(match.surface.worldOrigin.x+normal.x*.003,floorY+match.surface.worldOrigin.y+normal.y*.003,match.surface.worldOrigin.z+normal.z*.003);
-      if(Math.abs(normal.y)>.7)surface.rotation.x=normal.y>0?-Math.PI/2:Math.PI/2;
-      else if(Math.abs(normal.x)>.7)surface.rotation.y=normal.x>0?Math.PI/2:-Math.PI/2;
-      else if(normal.z<0)surface.rotation.y=Math.PI;
-      surface.renderOrder=27;surface.userData.anchorGuide=true;surface.userData.systemHelper=true;group.add(surface);
-    }
-    if(match.candidateBounds&&match.candidatePosition){
-      const bounds=match.candidateBounds,ghost=new T.Mesh(new T.BoxGeometry(Math.max(.01,bounds.width),Math.max(.01,bounds.height),Math.max(.01,bounds.depth)),
-        new T.MeshBasicMaterial({color,transparent:true,opacity:valid ? .22 : .28,wireframe:true,depthTest:false,depthWrite:false}));
-      ghost.name='smart-snap-ghost-preview';ghost.position.set(match.candidatePosition.x,floorY+match.candidatePosition.y+bounds.height/2,match.candidatePosition.z);
-      ghost.rotation.y=(Number(match.rotationY)||0)*Math.PI/180;ghost.renderOrder=29;ghost.userData.anchorGuide=true;ghost.userData.systemHelper=true;group.add(ghost);
-    }
-    const status=document.getElementById('objectLayoutStatus');if(status)status.textContent=valid?'Snap '+String(match.kind||'Surface')+' · ระยะ '+placementMeters(match.requiredOffset||.001)+' ม. · ปล่อยเมาส์ได้':'วางไม่ได้ · '+(match.reason==='asset-collision'?'ชน Asset':match.reason==='out-of-surface-bounds'?'ล้นขอบ Surface':'ชนหรือล้นขอบ');
-    this.snapPreviewGroup=group;this.boothGroup.add(group);
+    line.renderOrder=30;line.userData.anchorGuide=true;group.add(line);this.snapPreviewGroup=group;this.boothGroup.add(group);
   }
   logoPoint(event,face=BoothSpec.logoWall){
     if(BoothSpec.logoMount==='floor')return this.floorPoint(event);
@@ -5953,25 +5716,15 @@ class ThreeBoothRenderer{
     const preferredUnavailable=item.backWallOnly&&(!typ().walls.includes('back')||isCurvedWallType(BoothSpec));
     announceCatalog('เพิ่ม'+item.name+'ลงในบูธแล้ว'+(preferredUnavailable?' · ใช้โหมดวางอิสระ':''),'success');return true;
   }
-  sceneSelectionHits(event){
-    this.setRayFromEvent(event);const meshes=[];
-    this.boothGroup.traverse(node=>{if(!node.isMesh||!node.visible||node.userData?.systemHelper||node.userData?.anchorGuide)return;
-      const asset=sceneAssetRegistry.getAssetByObject3D(node);if(asset?.selectable!==false)meshes.push(node);});
-    const unique=[],seen=new Set();this.raycaster.intersectObjects(meshes,false).forEach(hit=>{const asset=sceneAssetRegistry.getAssetByObject3D(hit.object);if(!asset||seen.has(asset.id))return;seen.add(asset.id);unique.push({asset,hit});});
-    if(!unique.length)return[];
-    const front=unique.filter(entry=>entry.asset.metadata?.system!==true),system=unique.filter(entry=>entry.asset.metadata?.system===true),ordered=front.concat(system);
-    if(!event.altKey)return ordered;
-    const signature=ordered.map(entry=>entry.asset.id).join('|'),same=this.selectionCycle&&this.selectionCycle.signature===signature&&Math.hypot(event.clientX-this.selectionCycle.x,event.clientY-this.selectionCycle.y)<=8,
-      index=same?(this.selectionCycle.index+1)%ordered.length:0;
-    this.selectionCycle={signature,x:event.clientX,y:event.clientY,index};return ordered.slice(index).concat(ordered.slice(0,index));
-  }
   beginObjectDrag(event){
-    if(!sceneAssetRegistry.listAssets().length||event.isPrimary===false)return;
+    if((!this.objectMeshes.size&&!this.brandingHitTarget)||event.isPrimary===false)return;
     if(event.pointerType!=='touch'&&event.button!==0)return;
+    this.setRayFromEvent(event);
     const anchorMarker=this.pickAnchorMarker(event);
-    const sceneHits=anchorMarker?[]:this.sceneSelectionHits(event);
-    if(!anchorMarker&&!sceneHits.length){selectObject(null);return;}
-    const hit=anchorMarker?{object:anchorMarker,point:anchorMarker.getWorldPosition(new this.THREE.Vector3())}:sceneHits[0].hit;
+    const targets=Array.from(this.objectMeshes.values());if(this.brandingHitTarget)targets.push(this.brandingHitTarget);if(this.anchorGuideGroup)targets.push(this.anchorGuideGroup);
+    const hits=this.raycaster.intersectObjects(targets,true);
+    if(!anchorMarker&&!hits.length){selectObject(null);return;}
+    const hit=anchorMarker?{object:anchorMarker,point:anchorMarker.getWorldPosition(new this.THREE.Vector3())}:hits[0];
     if(hit.object.userData.brandPlacement){
       const face=BoothSpec.logoWall||'back',point=this.logoPoint(event,face),coords=this.logoCoordinates(point,face);if(!coords)return;
       event.preventDefault();event.stopImmediatePropagation();selectLogoPlacement(true);this.controls.enabled=false;
@@ -5981,10 +5734,9 @@ class ThreeBoothRenderer{
         offsetV:(BoothSpec.logoMount==='floor'?BoothSpec.logoFloorZ:BoothSpec.logoWallY)-coords.v,moved:false};
       return;
     }
-    const hitAsset=anchorMarker?sceneAssetRegistry.getAssetById(hit.object.userData.objectId):sceneHits[0].asset,id=hitAsset?.id||hit.object.userData.objectId,
-      obj=objectById(id),root=this.objectMeshes.get(id),mode=objectEditor.moveMode,
+    const id=hit.object.userData.objectId,obj=objectById(id),root=this.objectMeshes.get(id),mode=objectEditor.moveMode,
       sourceAnchorId=String(hit.object.userData.snapAnchorId||'');
-    if(!obj||!root){if(hitAsset){event.preventDefault();event.stopImmediatePropagation();selectSceneItem(hitAsset.id);if(event.altKey)announceCatalog('เลือกวัตถุซ้อนลำดับถัดไป: '+hitAsset.name,'success');}return;}
+    if(!obj||!root)return;
     event.preventDefault();event.stopImmediatePropagation();positionObjectToolbar(event.clientX,event.clientY);
     const additive=objectEditor.multiSelect||event.shiftKey||event.ctrlKey||event.metaKey;
     selectObject(id,{additive});
@@ -5995,16 +5747,16 @@ class ThreeBoothRenderer{
     const smartAnchor=mode==='smart'&&!!sourceAnchorId,
       point=mode==='plane'?this.floorPoint(event):mode==='smart'&&!smartAnchor?this.horizontalPoint(event,obj.position.y):hit.point;if(!point)return;
     if(mode==='height'||smartAnchor)this.prepareVerticalDrag(hit.point);
-    const sourceAnchor=sourceAnchorId&&registrySceneObjectSnapAnchors(obj).find(anchor=>anchor.id===sourceAnchorId),
+    const sourceAnchor=sourceAnchorId&&sceneObjectSnapAnchors(obj).find(anchor=>anchor.id===sourceAnchorId),
       sourceAnchorOffset=sourceAnchor?{x:sourceAnchor.position.x-obj.position.x,y:sourceAnchor.position.y-(Number(obj.position.y)||0),z:sourceAnchor.position.z-obj.position.z}:null;
     this.controls.enabled=false;
     if(smartAnchor)this.setActiveAnchorMarker(this.anchorGuideGroup?.children.find(marker=>marker.userData.snapAnchorId===sourceAnchorId)||null);
     this.renderer.domElement.setPointerCapture(event.pointerId);
     document.getElementById('objectToolbar')?.classList.add('context-dragging');
-    this.pointerDrag={kind:'asset',pointerId:event.pointerId,id,memberIds,memberStarts:Object.fromEntries(members.map(member=>[member.id,{x:Number(member.position.x)||0,y:Number(member.position.y)||0,z:Number(member.position.z)||0,rotationY:Number(member.rotationY)||0}])),mode,before:objectSnapshot(),startX:obj.position.x,startY:Number(obj.position.y)||0,startZ:obj.position.z,startRotationY:Number(obj.rotationY)||0,
+    this.pointerDrag={kind:'asset',pointerId:event.pointerId,id,memberIds,memberStarts:Object.fromEntries(members.map(member=>[member.id,{x:Number(member.position.x)||0,y:Number(member.position.y)||0,z:Number(member.position.z)||0}])),mode,before:objectSnapshot(),startX:obj.position.x,startY:Number(obj.position.y)||0,startZ:obj.position.z,
       startClientY:event.clientY,
       offsetX:root.position.x-point.x,offsetY:root.position.y-point.y,offsetZ:root.position.z-point.z,
-      grabOffset:hit.point.clone().sub(root.position),sourceAnchorId,sourceAnchorOffset,lastSmartSnap:null,invalidSnap:false,moved:false};
+      grabOffset:hit.point.clone().sub(root.position),sourceAnchorId,sourceAnchorOffset,moved:false};
   }
   moveObjectDrag(event){
     const drag=this.pointerDrag;if(!drag){this.updateAnchorHover(event);return;}if(drag.pointerId!==event.pointerId)return;
@@ -6033,11 +5785,11 @@ class ThreeBoothRenderer{
     event.preventDefault();let next=null,anchorMatch=null,snapPreview=null;
     if(drag.mode==='smart'){
       if(drag.sourceAnchorId){
-        const surfaceSnap=this.smartSurfacePlacement(event,obj,root,drag);
-        if(surfaceSnap){next=surfaceSnap;snapPreview=surfaceSnap.preview;}
+        anchorMatch=this.screenAnchorSnap(event,obj,drag);
+        if(anchorMatch)next={...anchorMatch.position,surface:null,targetId:null};
         else{
-          anchorMatch=this.screenAnchorSnap(event,obj,drag);
-          if(anchorMatch)next={...anchorMatch.position,surface:null,targetId:null};
+          const surfaceSnap=this.smartSurfacePlacement(event,obj,root,drag);
+          if(surfaceSnap){next=surfaceSnap;snapPreview=surfaceSnap.preview;}
           else{
             const point=this.verticalPoint(event);if(point)next={x:+(point.x+drag.offsetX).toFixed(3),
               y:+clampNumber(point.y+drag.offsetY-(BoothSpec.raise/100),-(BoothSpec.raise/100),Math.max(10,BoothSpec.H*3)).toFixed(3),
@@ -6045,10 +5797,8 @@ class ThreeBoothRenderer{
           }
         }
       }else{
-        const surfaceSnap=this.smartSurfacePlacement(event,obj,root,drag);
-        if(surfaceSnap){next=surfaceSnap;snapPreview=surfaceSnap.preview;}
-        else{const point=this.horizontalPoint(event,drag.startY);if(point)next={x:+placementValue(point.x+drag.offsetX).toFixed(3),y:drag.startY,
-          z:+placementValue(point.z+drag.offsetZ).toFixed(3),surface:null,targetId:null};}
+        const point=this.horizontalPoint(event,drag.startY);if(point)next={x:+placementValue(point.x+drag.offsetX).toFixed(3),y:drag.startY,
+          z:+placementValue(point.z+drag.offsetZ).toFixed(3),surface:null,targetId:null};
       }
     }else if(drag.mode==='surface')next=this.surfacePlacement(event,obj,root,drag);
     else if(drag.mode==='height'){
@@ -6061,32 +5811,25 @@ class ThreeBoothRenderer{
         z:+placementValue(point.z+drag.offsetZ).toFixed(3),surface:null,targetId:null};
     }
     if(!next)return;
-    if(next.snapValid===false){drag.invalidSnap=true;this.setActiveAnchorSnapped(false);this.showMagneticSnapPreview(snapPreview);this.renderer.render(this.scene,this.camera);return;}
-    drag.invalidSnap=false;
     if(!anchorMatch&&!next.surface){const magneticMode=drag.mode==='smart'?(drag.sourceAnchorId?'smart':'plane'):drag.mode;
       anchorMatch=magneticSnapPlacement(obj,next,magneticMode,drag.sourceAnchorId);if(anchorMatch)next={...next,...anchorMatch.position};}
-    if(drag.mode==='smart'&&drag.sourceAnchorId)this.setActiveAnchorSnapped(!!(anchorMatch||snapPreview&&snapPreview.valid!==false));
+    if(drag.mode==='smart'&&drag.sourceAnchorId)this.setActiveAnchorSnapped(!!(anchorMatch||snapPreview));
     const distance=Math.hypot(next.x-drag.startX,next.y-drag.startY,next.z-drag.startZ);
     if(sceneAttachmentActive(obj)&&distance>.003)obj.attachment=null;
     const delta={x:next.x-drag.startX,y:next.y-drag.startY,z:next.z-drag.startZ};
     (drag.memberIds||[drag.id]).forEach(memberId=>{
       const member=objectById(memberId),start=drag.memberStarts?.[memberId],memberRoot=this.objectMeshes.get(memberId);if(!member||!start||!memberRoot)return;
       member.position.x=+(start.x+delta.x).toFixed(3);member.position.y=+(start.y+delta.y).toFixed(3);member.position.z=+(start.z+delta.z).toFixed(3);
-      if(member.id===drag.id&&drag.memberIds.length===1&&Number.isFinite(Number(next.rotationY)))member.rotationY=Number(next.rotationY);
       if(sceneAttachmentActive(member)&&distance>.003)member.attachment=null;
       normalizeSceneObjectModel(member);member.placement.mode=next.surface?'surface':'free';member.placement.surface=next.surface||'free';member.placement.targetId=next.targetId||null;
-      member.placement.snapCandidate=member.id===drag.id&&next.snapCandidate?{...next.snapCandidate}:null;
       if(member.id===drag.id)member.placement.anchorAttachment=anchorMatch?{sourceAnchorId:anchorMatch.sourceAnchorId,targetId:anchorMatch.targetId,targetAnchorId:anchorMatch.targetAnchorId,kind:anchorMatch.kind}:null;
       else member.placement.anchorAttachment=null;
       if(isDownlightBeamObject(member)&&member.structure)member.structure.wallAttached=false;
       this.applyCatalogObjectTransform(memberRoot,member,BoothSpec.raise/100);
-      propagatePersistentAttachmentChildren(member.id,this);
     });
     obj.position.x=next.x;obj.position.y=next.y;obj.position.z=next.z;
-    if(drag.memberIds.length===1&&Number.isFinite(Number(next.rotationY)))obj.rotationY=Number(next.rotationY);
     normalizeSceneObjectModel(obj);obj.placement.mode=next.surface?'surface':'free';obj.placement.surface=next.surface||'free';
     obj.placement.targetId=next.targetId||null;
-    obj.placement.snapCandidate=next.snapCandidate?{...next.snapCandidate}:null;
     obj.placement.anchorAttachment=anchorMatch?{sourceAnchorId:anchorMatch.sourceAnchorId,targetId:anchorMatch.targetId,
       targetAnchorId:anchorMatch.targetAnchorId,kind:anchorMatch.kind}:null;
     if(isDownlightBeamObject(obj)&&obj.structure)obj.structure.wallAttached=false;
@@ -6102,7 +5845,6 @@ class ThreeBoothRenderer{
       if(drag.moved){this.currentKey='';sync();const status=document.getElementById('objectLayoutStatus');if(status)status.textContent='ย้ายโลโก้แล้ว';}
       return;
     }
-    if(drag.invalidSnap){restoreObjectSnapshot(drag.before);announceCatalog('วางไม่ได้ เพราะ Asset ชนวัตถุอื่นหรือล้นขอบ Surface','error');this.currentKey='';sync();return;}
     if(drag.moved){
       const obj=objectById(drag.id),item=obj&&objectCatalogDef(obj.catalogId),members=(drag.memberIds||[drag.id]).map(objectById).filter(Boolean),invalid=members.find(member=>
         !isCatalogPlacementValid(member.catalogId,member.position.x,member.position.z,member.rotationY||0,member.id,member.size,ALLOW_ASSET_OVERLAP,member));
@@ -6112,11 +5854,6 @@ class ThreeBoothRenderer{
         restoreObjectSnapshot(drag.before);
         announceCatalog('ย้าย '+(item?.name||'วัตถุ')+' ไม่ได้ เพราะ'+(storageCollision?storageRoomCollisionLabel(storageCollision):'ชนโครงสร้างหลักหรือตำแหน่งไม่รองรับ'),'error');this.currentKey='';sync();return;
       }
-      /* Smart Snap commit และ Attachment Graph อยู่ใน History Transaction เดียวกับการลาก */
-      members.forEach(member=>{
-        if(member.id===obj.id&&member.placement?.snapCandidate?.valid)commitPersistentAttachmentFromSnap(member,member.placement.snapCandidate);
-        else detachPersistentAttachment(member.id,{reason:'manual-move'});
-      });
       recordObjectHistory(drag.before);this.currentKey='';sync();announceCatalog((drag.mode==='smart'?'Smart Move ':drag.mode==='height'?'ปรับระดับ ':drag.mode==='surface'?'Snap ':'ย้าย ')+item.name+'แล้ว','success');
     }
   }
@@ -7860,10 +7597,6 @@ function sync(){
   if(S.stHmode===0)S.stHv=Math.max(1.5,Math.min(MAX_BOOTH_HEIGHT,S.stHv||2.4));
   reconcileCatalogLayout();
   resolveSceneAttachments(S);
-  /* Layout/legacy-port resolution อาจขยับ Parent หลัง registry รอบแรก จึง resolve
-     Persistent Attachment จาก Local Surface Coordinates อีกครั้งก่อน render */
-  syncSceneAssetRegistryState(S);
-  notifyInvalidPersistentAttachments();
   const retainedSelection=selectedSceneItemIds().filter(sceneItemExists);setObjectSelection(retainedSelection,sceneItemExists(objectEditor.selectedId)?objectEditor.selectedId:(retainedSelection.at(-1)||null));
   syncObjectControls();
 
@@ -8595,7 +8328,7 @@ window.SceneAssetRegistryAPI={
   registerAsset(asset,object3D=null){const registered=sceneAssetRegistry.registerAsset(asset,object3D,{replace:false});S.sceneAssetRegistry=sceneAssetRegistry.serialize();return JSON.parse(JSON.stringify(registered));},
   unregisterAsset(assetId){
     const item=sceneItemById(assetId);if(item?.system)return false;
-    if(item?.object){const before=objectSnapshot();preparePersistentAttachmentDeletion([assetId]);S.objects=S.objects.filter(object=>object.id!==assetId);sceneAssetRegistry.unregisterAsset(assetId,{notifyWorkflow:false});recordObjectHistory(before);setObjectSelection([]);sync();return true;}
+    if(item?.object){const before=objectSnapshot();S.objects=S.objects.filter(object=>object.id!==assetId);sceneAssetRegistry.unregisterAsset(assetId,{notifyWorkflow:false});recordObjectHistory(before);setObjectSelection([]);sync();return true;}
     const removed=sceneAssetRegistry.unregisterAsset(assetId,{removeObject3D:true,notifyWorkflow:false});S.sceneAssetRegistry=sceneAssetRegistry.serialize();return removed;
   },
   getAssetById(assetId){const asset=sceneAssetRegistry.getAssetById(assetId);return asset?JSON.parse(JSON.stringify(asset)):null;},
@@ -8613,25 +8346,6 @@ window.SceneAssetRegistryAPI={
 };
 window.getSceneAssetRegistry=()=>JSON.parse(JSON.stringify(sceneAssetRegistry.serialize()));
 window.validateSceneAssetRegistry=()=>window.SceneAssetRegistryAPI.validateRegistry();
-window.AssetAttachmentGraphAPI={
-  getAttachment(assetId){return assetAttachmentGraph.getAttachment(assetId);},
-  listAttachments(){return assetAttachmentGraph.listAttachments();},
-  getChildren(assetId){return assetAttachmentGraph.getChildren(assetId);},getParent(assetId){return assetAttachmentGraph.getParent(assetId);},
-  detach(assetId){const obj=objectById(assetId);if(!obj||objectLocked(obj))return false;const before=objectSnapshot(),ok=detachPersistentAttachment(assetId,{reason:'api'});if(ok){recordObjectHistory(before);sync();}return ok;},
-  reattach(assetId){const obj=objectById(assetId);if(!obj||objectLocked(obj))return{ok:false,reason:'asset-missing-or-locked'};const before=objectSnapshot(),result=assetAttachmentGraph.reattach(assetId);persistAttachmentGraph(S);if(result.ok){recordObjectHistory(before);sync();}return JSON.parse(JSON.stringify(result));},
-  changeTargetSurface(assetId,targetAssetId,targetSurfaceId){const before=objectSnapshot(),result=assetAttachmentGraph.changeTargetSurface(assetId,targetAssetId,targetSurfaceId);persistAttachmentGraph(S);if(result.ok){recordObjectHistory(before);sync();}return JSON.parse(JSON.stringify(result));},
-  changeSnapAnchor(assetId,sourceAnchorId){const before=objectSnapshot(),result=assetAttachmentGraph.changeSnapAnchor(assetId,sourceAnchorId);persistAttachmentGraph(S);if(result.ok){recordObjectHistory(before);sync();}return JSON.parse(JSON.stringify(result));},
-  validate(){return assetAttachmentGraph.validate();},serialize(){return JSON.parse(JSON.stringify(assetAttachmentGraph.serialize()));}
-};
-window.SmartSnapEngineAPI={
-  listAnchors(assetId=''){const anchors=assetId?smartSnapEngine.getAnchors(assetId):smartSnapEngine.listAnchors();return JSON.parse(JSON.stringify(anchors));},
-  listSurfaces(assetId=''){const surfaces=assetId?smartSnapEngine.getSurfaces(assetId):smartSnapEngine.listSurfaces();return JSON.parse(JSON.stringify(surfaces));},
-  getWorldSurfaces(assetId){return JSON.parse(JSON.stringify(smartSnapEngine.getWorldSurfaces(assetId)));},
-  solve(options){const result=smartSnapEngine.solve(options);return result?JSON.parse(JSON.stringify(result)):null;},
-  validate(){return smartSnapEngine.validate();},
-  config(){return{gridStep:smartSnapEngine.gridStep,detectionDistance:smartSnapEngine.detectionDistance,screenThreshold:smartSnapEngine.screenThreshold,
-    releaseDistance:smartSnapEngine.releaseDistance,releaseScreenThreshold:smartSnapEngine.releaseScreenThreshold};}
-};
 window.getAIRenderingState=()=>JSON.parse(JSON.stringify({...normalizeAIRenderingSettings(S),aiStaging:normalizeAIStagingSettings(S),
   geometryFidelity:S.geometryFidelity,stagingFreedom:S.stagingFreedom}));
 window.getCameraManifest=()=>currentCameraManifest(S);

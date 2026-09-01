@@ -603,10 +603,6 @@ select:focus{border-color:var(--acc)}
 .asset-settings-head small{display:block;color:var(--acc2);font-weight:700;letter-spacing:.12em}.asset-settings-head h2{margin:2px 0 0;font-size:22px}
 .asset-settings-section{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.018)}
 .asset-settings-section h3{margin:0 0 11px;font-size:13px}.asset-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.asset-attachment-grid{display:grid;grid-template-columns:1fr;gap:8px}.asset-attachment-grid label{display:grid;gap:5px;color:var(--tx3);font-size:10.5px}
-.asset-attachment-grid select{width:100%;min-height:38px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);color:var(--tx);padding:0 9px}
-.asset-attachment-status{padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);color:var(--tx2);font-size:11px;line-height:1.45}
-.asset-attachment-status.invalid{border-color:#d45454;color:#ffaaa2}.asset-attachment-status.valid{border-color:#37865e;color:#8be1b1}
 .asset-settings-field{display:grid;gap:5px}.asset-settings-field label{color:var(--tx3);font-size:10.5px}.asset-settings-field input[type=number],
 .asset-settings-name,.asset-settings-color input[type=text]{width:100%;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);color:var(--tx)}
 .asset-settings-color{display:grid;grid-template-columns:44px 1fr;gap:8px}.asset-settings-color input[type=color]{width:44px;height:38px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
@@ -614,7 +610,7 @@ select:focus{border-color:var(--acc)}
 .asset-appearance-options .btn{min-width:0;padding:9px 5px;font-size:10.5px}.asset-appearance-options .btn.on{border-color:var(--acc);color:var(--acc2);background:var(--accbg)}
 .asset-settings-color.is-disabled{opacity:.42}.asset-settings-color.is-disabled input{cursor:not-allowed}
 .asset-settings-preview{display:none;margin-top:10px;width:100%;height:112px;object-fit:contain;border:1px solid var(--line);border-radius:9px;background:#eef0f3}
-.asset-settings-preview.show{display:block}.asset-settings-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.asset-settings-actions[hidden]{display:none!important}
+.asset-settings-preview.show{display:block}.asset-settings-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
 .asset-settings-check{display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--tx2);font-size:11px}
 .asset-settings-done{width:100%;margin-top:18px}
 
@@ -1455,24 +1451,6 @@ select:focus{border-color:var(--acc)}
       <div class="note">ปรับขนาด Asset และ My Asset (.glb) ได้จริงทั้ง 3 แกน ตั้งแต่ 0.01–5.00 ม. และกำหนดความสูงเกินผนังบูธได้</div>
       <div class="asset-settings-actions"><button class="btn sm" id="assetResetSize" type="button">คืนขนาดเดิม</button></div>
     </section>
-    <section class="asset-settings-section" id="assetAttachmentSection">
-      <h3>Persistent Attachment</h3>
-      <div class="asset-attachment-status" id="assetAttachmentStatus">ยังไม่ได้ติดกับพื้นผิว</div>
-      <div class="asset-attachment-grid" style="margin-top:10px">
-        <label for="assetAttachmentSurface">Target Surface<select id="assetAttachmentSurface"></select></label>
-        <label for="assetAttachmentAnchor">Snap Anchor<select id="assetAttachmentAnchor"></select></label>
-      </div>
-      <div class="asset-settings-actions">
-        <button class="btn sm" id="assetAttachmentDetach" type="button">Detach</button>
-        <button class="btn sm" id="assetAttachmentReattach" type="button">Reattach</button>
-        <button class="btn sm" id="assetAttachmentChangeSurface" type="button">Change Target Surface</button>
-        <button class="btn sm" id="assetAttachmentChangeAnchor" type="button">Change Snap Anchor</button>
-      </div>
-      <div class="asset-settings-actions" id="assetAttachmentInvalidActions" hidden>
-        <button class="btn sm" id="assetAttachmentMove" type="button">ย้ายใหม่ด้วย Smart Move</button>
-        <button class="btn sm danger" id="assetAttachmentDelete" type="button">ลบ Asset</button>
-      </div>
-    </section>
     <section class="asset-settings-section">
       <h3>พื้นผิว</h3>
       <div class="asset-appearance-options" id="assetAppearanceOptions" role="group" aria-label="รูปแบบพื้นผิว Asset">
@@ -1696,7 +1674,6 @@ select:focus{border-color:var(--acc)}
 <script src="js/auto-lighting.js?v=20260831-1"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
 <script src="js/smart-snap-engine.js?v=20260901-1"></script>
-<script src="js/asset-attachment-graph.js?v=20260901-1"></script>
 <script>
 /* ================= ข้อมูล ================= */
 const CATGROUPS=[
@@ -1934,7 +1911,7 @@ const BoothSpec={version:3,cat:'food',customBusinessCategory:'',primary:'#2e7d4f
   logoType:'diecut',logoShape:'cutout',lockup:'stack',logoPos:'center',sideLogo:false,sidePos:'outer',
   logoMount:'wall',logoWall:'back',logoWidth:2,logoDepth:.05,logoBaseWidth:0,logoBaseDepth:0,logoBaseColor:'#20252d',logoColor:'#2e7d4f',logoColorTouched:false,logoWallU:3,logoWallY:1.6,
   logoFloorX:3,logoFloorZ:1.5,logoFloorRotation:0,
-  logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,brand:'',view:'three',photo:null,objects:[],sceneItemState:{},sceneAssetRegistry:{version:2,assets:[]},sceneSnapData:{version:1,anchors:[],surfaces:[]},assetAttachmentGraph:{version:1,attachments:[]},promptFidelity:6,wallRadius:3.5,
+  logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,brand:'',view:'three',photo:null,objects:[],sceneItemState:{},sceneAssetRegistry:{version:1,assets:[]},promptFidelity:6,wallRadius:3.5,
   placementSnap:true,magneticSnap:true,geometryFidelity:10,stagingFreedom:6,aiStaging:defaultAIStagingSettings(),aiRendering:defaultAIRenderingSettings(),
   lighting:globalThis.YPAutoLighting.defaultLightingState()};
 const S=BoothSpec;
@@ -2078,13 +2055,7 @@ const SCENE_ASSET_LEGACY_IDS=Object.freeze({
 });
 const sceneAssetRegistry=globalThis.YPSceneAssetRegistry.createRegistry();
 const smartSnapEngine=globalThis.YPSmartSnap.createEngine(sceneAssetRegistry,{gridStep:.05,detectionDistance:.14,screenThreshold:14,releaseDistance:.22,releaseScreenThreshold:22});
-const assetAttachmentGraph=globalThis.YPAssetAttachmentGraph.createGraph(sceneAssetRegistry,smartSnapEngine,{
-  applyTransform:(assetId,transform)=>applyPersistentAttachmentTransform(assetId,transform),
-  onChange:({state})=>{S.assetAttachmentGraph=state;},
-  onWarning:(message,assetId)=>announceCatalog((selectedAssetName(objectById(assetId))||'Asset')+' · '+message,'error')
-});
-const persistentAttachmentWarningKeys=new Set();
-const objectSnapshot=()=>JSON.stringify({objects:S.objects,sceneItemState:S.sceneItemState||{},sceneAssetRegistry:S.sceneAssetRegistry||null,sceneSnapData:S.sceneSnapData||null,assetAttachmentGraph:S.assetAttachmentGraph||null,lighting:S.lighting||null,lights:S.lights,lightFixture:S.lightFixture,lightCol:S.lightCol,lightWall:S.lightWall,lightWatts:S.lightWatts,lightAdj:S.lightAdj});
+const objectSnapshot=()=>JSON.stringify({objects:S.objects,sceneItemState:S.sceneItemState||{},sceneAssetRegistry:S.sceneAssetRegistry||null,lighting:S.lighting||null,lights:S.lights,lightFixture:S.lightFixture,lightCol:S.lightCol,lightWall:S.lightWall,lightWatts:S.lightWatts,lightAdj:S.lightAdj});
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
 const objectLocked=obj=>obj?.locked===true;
 const ASSET_LIST_CATEGORIES=[
@@ -2109,9 +2080,7 @@ const sceneAssetTransform=(position={},rotation={},scale={x:1,y:1,z:1})=>({posit
 function sceneAssetRecord(input){
   const stateSpec=input.stateSpec||S,legacyId=input.legacyId||SCENE_ASSET_LEGACY_IDS[input.id]||'',state=input.system?sceneAssetState(stateSpec,input.id,legacyId):{};
   const {stateSpec:unusedStateSpec,...recordInput}=input;
-  const persistent=assetAttachmentGraph?.getAttachment?.(input.id)||null;
-  return globalThis.YPSceneAssetRegistry.normalizeSceneAsset({...recordInput,name:state.name||input.name,object3DId:input.object3DId||('scene.'+input.id),
-    attachment:persistent,parentAssetId:persistent?.attached?persistent.targetAssetId:null,childAssetIds:assetAttachmentGraph?.getChildren?.(input.id)||[],metadata:{
+  return globalThis.YPSceneAssetRegistry.normalizeSceneAsset({...recordInput,name:state.name||input.name,object3DId:input.object3DId||('scene.'+input.id),metadata:{
     ...(input.metadata||{}),system:input.system===true,legacyId,listGroup:input.listGroup||input.metadata?.listGroup||input.category,
     icon:input.icon||input.metadata?.icon||'OBJ',visible:input.system?state.visible!==false:input.metadata?.visible!==false
   }});
@@ -2176,81 +2145,28 @@ function migrateLegacySceneAssetState(spec=S){
   Object.entries(SCENE_ASSET_LEGACY_IDS).forEach(([id,legacyId])=>{if(spec.sceneItemState[legacyId]&&!spec.sceneItemState[id])spec.sceneItemState[id]={...spec.sceneItemState[legacyId]};});
   if(spec.sceneItemState['system-storage']&&!spec.sceneItemState[SCENE_ASSET_IDS.door])spec.sceneItemState[SCENE_ASSET_IDS.door]={visible:spec.sceneItemState['system-storage'].visible!==false};
   const legacy=!spec.sceneAssetRegistry||!Array.isArray(spec.sceneAssetRegistry.assets);
-  if(legacy)spec.sceneAssetRegistry={version:2,assets:[]};
-  /* Project เก่าไม่ถูกเดาความสัมพันธ์จากระยะใกล้หรือ snapCandidate เดิม */
-  if(!spec.assetAttachmentGraph||!Array.isArray(spec.assetAttachmentGraph.attachments))spec.assetAttachmentGraph={version:1,attachments:[]};
-  if(!spec.sceneSnapData||!Array.isArray(spec.sceneSnapData.anchors)||!Array.isArray(spec.sceneSnapData.surfaces))spec.sceneSnapData={version:1,anchors:[],surfaces:[]};
+  if(legacy)spec.sceneAssetRegistry={version:1,assets:[]};
   return legacy;
 }
-function applyPersistentAttachmentTransform(assetId,transform){
-  const obj=objectById(assetId);if(!obj||!transform)return false;
-  obj.position={x:+Number(transform.position?.x||0).toFixed(3),y:+Number(transform.position?.y||0).toFixed(3),z:+Number(transform.position?.z||0).toFixed(3)};
-  obj.rotationX=+((Number(transform.rotation?.x)||0)*180/Math.PI).toFixed(4);obj.rotationY=+((Number(transform.rotation?.y)||0)*180/Math.PI).toFixed(4);obj.rotationZ=+((Number(transform.rotation?.z)||0)*180/Math.PI).toFixed(4);
-  normalizeSceneObjectModel(obj);return true;
-}
-function persistAttachmentGraph(spec=S){
-  spec.assetAttachmentGraph=assetAttachmentGraph.serialize();
-  assetAttachmentGraph.syncRegistryFields();
-  spec.sceneAssetRegistry=sceneAssetRegistry.serialize();
-  return spec.assetAttachmentGraph;
-}
-function detachPersistentAttachment(assetId,options={}){
-  const detached=assetAttachmentGraph.detach(assetId,{reason:options.reason||'manual',invalid:options.invalid===true,warning:options.warning||''});
-  if(detached){const obj=objectById(assetId);if(obj?.placement){obj.placement.mode='free';obj.placement.surface='free';obj.placement.targetId=null;obj.placement.snapCandidate=null;}persistAttachmentGraph(S);}
-  return detached;
-}
-function removePersistentAttachment(assetId){const removed=assetAttachmentGraph.removeAttachment(assetId);if(removed)persistAttachmentGraph(S);return removed;}
-function commitPersistentAttachmentFromSnap(obj,candidate){
-  if(!obj||!candidate?.valid||!candidate.targetAssetId||!candidate.surfaceId||!candidate.anchorId)return null;
-  const transform=sceneAssetTransform(obj.position,{x:(Number(obj.rotationX)||0)*Math.PI/180,y:(Number(obj.rotationY)||0)*Math.PI/180,z:(Number(obj.rotationZ)||0)*Math.PI/180},{x:obj.transform?.flipX===true?-1:1,y:obj.transform?.flipY===true?-1:1,z:1});
-  sceneAssetRegistry.updateAssetTransform(obj.id,transform,{applyToObject3D:false,notifyWorkflow:false});
-  const result=assetAttachmentGraph.attachFromCurrent(obj.id,{targetAssetId:candidate.targetAssetId,targetSurfaceId:candidate.surfaceId,sourceAnchorId:candidate.anchorId,
-    snapMode:candidate.snapType==='edge-edge'?'edge':candidate.snapType==='center-center'?'center':'surface',transform});
-  persistAttachmentGraph(S);return result;
-}
-function propagatePersistentAttachmentChildren(parentId,renderer=null){
-  const parent=objectById(parentId);if(!parent||!assetAttachmentGraph.getChildren(parentId).length)return[];
-  const transform=sceneAssetTransform(parent.position,{x:(Number(parent.rotationX)||0)*Math.PI/180,y:(Number(parent.rotationY)||0)*Math.PI/180,z:(Number(parent.rotationZ)||0)*Math.PI/180},
-    {x:parent.transform?.flipX===true?-1:1,y:parent.transform?.flipY===true?-1:1,z:1});
-  sceneAssetRegistry.updateAssetTransform(parentId,transform,{applyToObject3D:false,notifyWorkflow:false,attachmentPropagation:true});
-  const results=assetAttachmentGraph.propagateFrom(parentId,{apply:true});
-  if(renderer)results.filter(result=>result.valid).forEach(result=>{const child=objectById(result.childAssetId),root=renderer.objectMeshes?.get(result.childAssetId);if(child&&root)renderer.applyCatalogObjectTransform(root,child,BoothSpec.raise/100);});
-  persistAttachmentGraph(S);return results;
-}
-function reconcilePersistentAttachments(options={}){
-  assetAttachmentGraph.load(S.assetAttachmentGraph||{version:1,attachments:[]},{resolve:false});
-  const results=assetAttachmentGraph.reconcile({apply:options.apply!==false,warn:options.warn===true});persistAttachmentGraph(S);return results;
-}
-function notifyInvalidPersistentAttachments(){
-  const active=new Set();assetAttachmentGraph.listAttachments().forEach(({childAssetId,attachment})=>{if(attachment.valid!==false)return;const message=(attachment.validationWarnings||[])[0]||'Attachment ไม่ถูกต้อง',key=childAssetId+'|'+message;active.add(key);
-    if(!persistentAttachmentWarningKeys.has(key))announceCatalog((selectedAssetName(objectById(childAssetId))||'Asset')+' · '+message,'error');});
-  [...persistentAttachmentWarningKeys].filter(key=>!active.has(key)).forEach(key=>persistentAttachmentWarningKeys.delete(key));active.forEach(key=>persistentAttachmentWarningKeys.add(key));
-}
-function preparePersistentAttachmentDeletion(ids=[]){
-  const deleting=new Set(ids);ids.forEach(id=>assetAttachmentGraph.getChildren(id).filter(childId=>!deleting.has(childId)).forEach(childId=>
-    assetAttachmentGraph.detach(childId,{reason:'parent-removed',invalid:true,warning:globalThis.YPAssetAttachmentGraph.PARENT_REMOVED_WARNING})));
-  ids.forEach(id=>assetAttachmentGraph.removeAttachment(id));persistAttachmentGraph(S);
-}
 function syncSceneAssetRegistryState(spec=S){
-  const migrated=migrateLegacySceneAssetState(spec);assetAttachmentGraph.load(spec.assetAttachmentGraph,{resolve:false});const records=buildSceneAssetRecords(spec);
+  const migrated=migrateLegacySceneAssetState(spec),records=buildSceneAssetRecords(spec);
   if(migrated)records.forEach(record=>{record.metadata.migratedFromLegacy=true;});
-  sceneAssetRegistry.syncAssets(records);smartSnapEngine.syncFromRegistry();spec.sceneSnapData={version:1,anchors:JSON.parse(JSON.stringify(smartSnapEngine.listAnchors())),surfaces:JSON.parse(JSON.stringify(smartSnapEngine.listSurfaces()))};assetAttachmentGraph.reconcile({apply:true,warn:false});persistAttachmentGraph(spec);return sceneAssetRegistry.listAssets();
+  sceneAssetRegistry.syncAssets(records);spec.sceneAssetRegistry=sceneAssetRegistry.serialize();return records;
 }
 function bindSceneAssetRegistryObjects(renderer,spec=S){
   const records=syncSceneAssetRegistryState(spec);sceneAssetRegistry.clearObjectBindings();sceneAssetRegistry.syncAssets(records);
   records.forEach(record=>{const targets=renderer.sceneObjectTargets(record.id);if(targets.length)sceneAssetRegistry.bindObject3D(record.id,targets[0],targets.slice(1));});
-  smartSnapEngine.syncFromRegistry();assetAttachmentGraph.reconcile({apply:true,warn:false});persistAttachmentGraph(spec);
-  const report=sceneAssetRegistry.validateRegistry(renderer.boothGroup,{requireObject3D:true}),snapReport=smartSnapEngine.validate(),attachmentReport=assetAttachmentGraph.validate();
+  smartSnapEngine.syncFromRegistry();
+  spec.sceneAssetRegistry=sceneAssetRegistry.serialize();
+  const report=sceneAssetRegistry.validateRegistry(renderer.boothGroup,{requireObject3D:true}),snapReport=smartSnapEngine.validate();
   if(location.hostname==='127.0.0.1'||location.hostname==='localhost'){
     const target=document.documentElement;target.dataset.sceneRegistryValid=String(report.valid);target.dataset.sceneRegistryAssets=String(report.stats.assets);
     target.dataset.sceneRegistryBoundObjects=String(report.stats.boundObjects);target.dataset.sceneRegistryPhysicalMeshes=String(report.stats.physicalMeshes);
     target.dataset.sceneRegistryErrors=String(report.errors.length);target.dataset.sceneRegistryErrorCodes=report.errors.map(error=>error.code).join(',');
     target.dataset.smartSnapValid=String(snapReport.valid);target.dataset.smartSnapAnchors=String(snapReport.stats.anchors);target.dataset.smartSnapSurfaces=String(snapReport.stats.surfaces);
     target.dataset.smartSnapErrors=String(snapReport.errors.length);
-    target.dataset.attachmentGraphValid=String(attachmentReport.valid);target.dataset.attachments=String(attachmentReport.stats.attachments);target.dataset.invalidAttachments=String(attachmentReport.stats.invalid);
     if(!report.valid)console.warn('[SceneAssetRegistry] validation failed',report);
     if(!snapReport.valid)console.warn('[SmartSnapEngine] validation failed',snapReport);
-    if(!attachmentReport.valid)console.warn('[AssetAttachmentGraph] validation failed',attachmentReport);
   }
   return report;
 }
@@ -2292,10 +2208,7 @@ function setObjectSelection(ids=[],primaryId=null){
 function restoreObjectSnapshot(snapshot){
   const parsed=JSON.parse(snapshot);if(Array.isArray(parsed)){S.objects=parsed;return;}
   S.objects=Array.isArray(parsed?.objects)?parsed.objects:[];S.sceneItemState=parsed?.sceneItemState&&typeof parsed.sceneItemState==='object'?parsed.sceneItemState:{};
-  S.sceneAssetRegistry=parsed?.sceneAssetRegistry&&Array.isArray(parsed.sceneAssetRegistry.assets)?parsed.sceneAssetRegistry:{version:2,assets:[]};
-  S.sceneSnapData=parsed?.sceneSnapData&&Array.isArray(parsed.sceneSnapData.anchors)&&Array.isArray(parsed.sceneSnapData.surfaces)?parsed.sceneSnapData:{version:1,anchors:[],surfaces:[]};
-  S.assetAttachmentGraph=parsed?.assetAttachmentGraph&&Array.isArray(parsed.assetAttachmentGraph.attachments)?parsed.assetAttachmentGraph:{version:1,attachments:[]};
-  assetAttachmentGraph.load(S.assetAttachmentGraph,{resolve:false});
+  S.sceneAssetRegistry=parsed?.sceneAssetRegistry&&Array.isArray(parsed.sceneAssetRegistry.assets)?parsed.sceneAssetRegistry:{version:1,assets:[]};
   if(parsed?.lighting)S.lighting=globalThis.YPAutoLighting.normalizeLightingState(parsed.lighting);
   ['lights','lightFixture','lightCol','lightWall','lightWatts','lightAdj'].forEach(key=>{if(parsed&&Object.prototype.hasOwnProperty.call(parsed,key))S[key]=parsed[key];});
 }
@@ -2472,16 +2385,6 @@ function manifestSceneAttachment(obj){
   return{targetId:attachment.targetId,sourcePort:attachment.sourcePort,targetPort:attachment.targetPort,
     syncDimensions:[...(attachment.syncDimensions||[])],offset:manifestVector(attachment.offset?.x,attachment.offset?.y,attachment.offset?.z),status:attachment.status};
 }
-function persistentAttachmentForSpec(spec,assetId){
-  const row=(spec?.assetAttachmentGraph?.attachments||[]).find(item=>String(item.childAssetId||item.assetId||'')===String(assetId||''));return row?JSON.parse(JSON.stringify(row.attachment||row)):null;
-}
-function manifestPersistentAttachment(spec,assetId){
-  const attachment=persistentAttachmentForSpec(spec,assetId);if(!attachment)return null;
-  return{targetAssetId:attachment.targetAssetId,targetSurfaceId:attachment.targetSurfaceId,sourceAnchorId:attachment.sourceAnchorId,
-    localSurfacePosition:{u:manifestNumber(attachment.localSurfacePosition?.u),v:manifestNumber(attachment.localSurfacePosition?.v),normalOffset:manifestNumber(attachment.localSurfacePosition?.normalOffset)},
-    rotationOffset:manifestVector(attachment.rotationOffset?.x,attachment.rotationOffset?.y,attachment.rotationOffset?.z),snapMode:attachment.snapMode,
-    attached:attachment.attached!==false,valid:attachment.valid!==false,validationWarnings:[...(attachment.validationWarnings||[])]};
-}
 function buildGeometryManifest(spec=S){
   const typeDef=manifestBoothType(spec),walls=typeDef.walls||[],thickness=boothWallThickness(spec),floorY=(Number(spec.raise)||0)/100;
   const objects=[],push=node=>{objects.push(node);return node;};
@@ -2539,19 +2442,18 @@ function buildGeometryManifest(spec=S){
     classification:{status:fixture.status==='approved'?'Customer Approved Lighting':'AI Suggested / Render Staging',confirmed:fixture.status==='approved',countsAsSelectedAsset:fixture.status==='approved',includedInBOQ:fixture.status==='approved'&&fixture.fixtureType!=='invisible',includedInProductionScope:fixture.status==='approved'&&fixture.fixtureType!=='invisible',includedInConfirmedGeometry:fixture.status==='approved'},
     source:{kind:fixture.source,path:'BoothSpec.lighting.'+(fixture.status==='approved'?'approvedFixtures':'suggestions')+'['+index+']'}}));
   (Array.isArray(spec.objects)?spec.objects:[]).forEach((obj,index)=>{
-    const item=objectCatalogDef(obj.catalogId),size=obj.size||item?.size||{},position=obj.position||{},rule=normalizeObjectAIRule(obj,item),persistent=manifestPersistentAttachment(spec,obj.id),suggested=obj.ai?.status==='suggested'||obj.status==='suggested';normalizeSceneObjectModel(obj,item);
-    push({id:String(obj.id||'asset-'+(index+1)),type:String(obj.type||item?.type||'asset'),name:obj.label||item?.name||String(obj.catalogId||'Asset'),parentId:persistent?.attached?persistent.targetAssetId:'booth-root',
+    const item=objectCatalogDef(obj.catalogId),size=obj.size||item?.size||{},position=obj.position||{},rule=normalizeObjectAIRule(obj,item);normalizeSceneObjectModel(obj,item);
+    push({id:String(obj.id||'asset-'+(index+1)),type:String(obj.type||item?.type||'asset'),name:obj.label||item?.name||String(obj.catalogId||'Asset'),parentId:'booth-root',
       catalogId:obj.catalogId||null,geometry:{kind:isEntranceFrameObject(obj)?'entrance-frame':isDownlightBeamObject(obj)?'downlight-beam':'catalog-object',structure:obj.structure?JSON.parse(JSON.stringify(obj.structure)):null},
       dimensions:manifestSize(size.w,size.d,size.h),orientedBounds:(()=>{const oriented=sceneObjectOrientedSize(obj);return manifestSize(oriented.w,oriented.d,oriented.h);})(),
       transform:{position:manifestVector(position.x,floorY+(Number(position.y)||0),position.z),rotationDeg:manifestVector(obj.rotationX,obj.rotationY,obj.rotationZ),orientation:obj.orientation,
         scale:manifestVector(obj.transform?.flipX?-1:1,obj.transform?.flipY?-1:1,1),mirror:{leftRight:obj.transform?.flipX===true,topBottom:obj.transform?.flipY===true}},
-      capabilities:{...obj.capabilities},placement:{...obj.placement},attachment:persistent,legacyPortAttachment:manifestSceneAttachment(obj),collision:manifestSceneCollision(obj,item),
+      capabilities:{...obj.capabilities},placement:{...obj.placement},attachment:manifestSceneAttachment(obj),collision:manifestSceneCollision(obj,item),
       ports:localScenePorts(obj).map(port=>({id:port.id,role:port.role,localPosition:manifestVector(port.position.x,port.position.y,port.position.z)})),
       editorLocked:obj.locked===true,groupId:obj.groupId||null,appearance:{color:obj.appearance?.color||null,textureName:obj.appearance?.textureName||null},
       materialIntent:obj.appearance?.textureData?'asset-sticker: '+String(obj.appearance.textureName||'uploaded image'):(obj.appearance?.color||rule.materialIntent),
       semantics:{...JSON.parse(JSON.stringify(rule)),allowedChanges:rule.allowedChanges.filter(change=>!rule.geometryLocked||!['position','rotation','scale'].includes(change))},
-      classification:suggested?{status:'AI Suggested / Render Staging',confirmed:false,countsAsSelectedAsset:false,includedInBOQ:false,includedInProductionScope:false,includedInConfirmedGeometry:false}:
-        {status:'Customer Selected / Confirmed Geometry',confirmed:true,countsAsSelectedAsset:true,includedInBOQ:true,includedInProductionScope:true,includedInConfirmedGeometry:true,lockedGeometry:!!persistent?.attached},
+      classification:{status:'Customer Selected / Confirmed Geometry',confirmed:true,countsAsSelectedAsset:true,includedInBOQ:true,includedInProductionScope:true,includedInConfirmedGeometry:true},
       source:{kind:'BoothSpec',path:'objects['+index+']'}});
   });
   const ai=normalizeAIRenderingSettings(spec),staging=normalizeAIStagingSettings(spec);
@@ -2645,8 +2547,7 @@ function normalizeSceneObjectModel(obj,item=objectCatalogDef(obj?.catalogId)){
   collision.shapeMode=collision.shapeMode||catalogCollision.shapeMode||(isEntranceFrameObject(obj)?'compound':'box');
   collision.tolerance=clampNumber(Number(collision.tolerance)||.002,0,.05);obj.collision=collision;
   const placement=obj.placement&&typeof obj.placement==='object'?obj.placement:{};
-  const persistentAttachment=assetAttachmentGraph?.getAttachment?.(obj.id);
-  placement.mode=obj.attachment?.targetId||persistentAttachment?.attached?'attached':(placement.mode==='surface'?'surface':'free');
+  placement.mode=obj.attachment?.targetId?'attached':(placement.mode==='surface'?'surface':'free');
   placement.surface=String(placement.surface||item?.mount||'floor');placement.snapGrid=PLACEMENT_GRID;
   placement.axes=['x','y','z'];placement.snapSurfaces=['floor','wall','ceiling','structure','asset'];
   const policyDefaults=defaultScenePlacementPolicy(item),declaredPolicy=placement.policy&&typeof placement.policy==='object'?placement.policy:{};
@@ -3336,9 +3237,6 @@ function reconcileCatalogLayout(){
   return true;
 }
 function recordObjectHistory(before){
-  /* Finalize Registry + Attachment Graph ก่อนบันทึก เพื่อให้หนึ่ง User Action
-     (Snap/Detach/Resize/Parent transform) เป็น History Transaction เดียว */
-  syncSceneAssetRegistryState(S);
   const after=objectSnapshot();if(before===after)return false;
   objectEditor.past.push(before);if(objectEditor.past.length>50)objectEditor.past.shift();
   objectEditor.future.length=0;return true;
@@ -3433,7 +3331,7 @@ function deleteSceneSelection(){
   if(items.some(item=>item.system))return announceCatalog('พื้น ผนัง ห้อง และ Geometry หลักลบจาก Asset List ไม่ได้ แต่สามารถซ่อนได้','error');
   if(items.some(item=>item.locked))return announceCatalog('มี Asset ที่ล็อกอยู่ กรุณา Unlock ก่อนลบ','error');
   if(!window.confirm('ลบ Asset ที่เลือก '+items.length+' รายการ?'))return;
-  const ids=new Set(items.map(item=>item.id));mutateObjects(()=>{preparePersistentAttachmentDeletion([...ids]);S.objects=S.objects.filter(obj=>!ids.has(obj.id));},null);
+  const ids=new Set(items.map(item=>item.id));mutateObjects(()=>{S.objects=S.objects.filter(obj=>!ids.has(obj.id));},null);
 }
 function assetListFilteredItems(){
   const query=assetListUI.query.trim().toLocaleLowerCase('th'),selected=new Set(selectedSceneItemIds());let items=sceneItems();
@@ -3449,7 +3347,7 @@ function renderAssetList(){
   else body.innerHTML=ASSET_LIST_CATEGORIES.map(category=>{const rows=items.filter(item=>item.category===category.key);if(!rows.length)return'';
     return'<section class="asset-list-category"><div class="asset-list-category-title"><span>'+esc(category.label)+'</span><span>'+rows.length+'</span></div>'+rows.map(item=>{
       const thumb=item.thumb?'<img src="'+esc(item.thumb)+'" alt="">':esc(item.icon||'OBJ'),states=[];
-      if(item.locked)states.push('Locked');if(!item.visible)states.push('Hidden');if(item.registryAsset?.attachment?.valid===false)states.push('Invalid Attachment');else if(item.registryAsset?.attachment?.attached)states.push('Attached');
+      if(item.locked)states.push('Locked');if(!item.visible)states.push('Hidden');
       if(item.aiSuggested||item.status==='Suggested')states.push('Suggested');else if(!item.system||item.status==='Approved')states.push('Approved');
       if(item.system)states.push('System');const systemLabel=states.length?' · '+[...new Set(states)].join(' · '):'';
       return'<div class="asset-list-row'+(selected.has(item.id)?' selected':'')+(item.visible?'':' hidden-item')+(item.aiSuggested?' ai-suggested':'')+'" data-scene-item="'+esc(item.id)+'" tabindex="0" role="option" aria-selected="'+selected.has(item.id)+'">'+
@@ -3667,41 +3565,6 @@ function selectedAssetName(obj=objectById(objectEditor.selectedId)){
 function closeAssetSettings(){
   const modal=document.getElementById('mAssetSettings');if(!modal)return;modal.classList.remove('show');modal.setAttribute('aria-hidden','true');
 }
-function attachmentSurfaceLabel(surface){
-  const owner=sceneAssetRegistry.getAssetById(surface.ownerAssetId);return(owner?.name||surface.ownerAssetId)+' · '+surface.surfaceType;
-}
-function syncAssetAttachmentForm(obj){
-  const status=document.getElementById('assetAttachmentStatus'),surfaceSelect=document.getElementById('assetAttachmentSurface'),anchorSelect=document.getElementById('assetAttachmentAnchor'),invalidActions=document.getElementById('assetAttachmentInvalidActions');if(!status||!surfaceSelect||!anchorSelect)return;
-  const attachment=assetAttachmentGraph.getAttachment(obj.id),anchors=smartSnapEngine.getAnchors(obj.id),selectedAnchorId=attachment?.sourceAnchorId||anchors[0]?.id||'';
-  anchorSelect.innerHTML=anchors.map(anchor=>'<option value="'+esc(anchor.id)+'"'+(anchor.id===selectedAnchorId?' selected':'')+'>'+esc(anchor.anchorType+' · '+anchor.rotationPolicy)+'</option>').join('');
-  const anchor=anchors.find(item=>item.id===selectedAnchorId)||anchors[0],surfaces=smartSnapEngine.listSurfaces().filter(surface=>surface.ownerAssetId!==obj.id&&surface.enabled!==false&&(!anchor||anchor.compatibleSurfaceTypes.includes(surface.surfaceType)));
-  const selectedSurfaceKey=attachment?attachment.targetAssetId+'|'+attachment.targetSurfaceId:'';
-  surfaceSelect.innerHTML=surfaces.map(surface=>{const value=surface.ownerAssetId+'|'+surface.id;return'<option value="'+esc(value)+'"'+(value===selectedSurfaceKey?' selected':'')+'>'+esc(attachmentSurfaceLabel(surface))+'</option>';}).join('');
-  if(!attachment){status.className='asset-attachment-status';status.textContent='ยังไม่ได้ติดกับพื้นผิว · ใช้ Smart Move เพื่อ Snap หรือเลือก Surface/Anchor แล้ว Change Target Surface';}
-  else if(attachment.attached&&attachment.valid){status.className='asset-attachment-status valid';status.textContent='Attached · '+attachment.targetSurfaceId+' · '+attachment.sourceAnchorId;}
-  else{status.className='asset-attachment-status invalid';status.textContent=(attachment.attached?'Attachment ไม่ถูกต้อง':'Detached')+' · '+((attachment.validationWarnings||[]).join(' · ')||attachment.detachedReason||'กรุณาจัดตำแหน่งใหม่');}
-  invalidActions.hidden=!attachment||attachment.valid!==false;
-  const locked=objectLocked(obj);['assetAttachmentDetach','assetAttachmentReattach','assetAttachmentChangeSurface','assetAttachmentChangeAnchor'].forEach(id=>{const node=document.getElementById(id);if(node)node.disabled=locked||!attachment&&id==='assetAttachmentDetach';});
-  document.getElementById('assetAttachmentDetach').disabled=locked||!attachment?.attached;
-  document.getElementById('assetAttachmentReattach').disabled=locked||!attachment||attachment.attached&&attachment.valid;
-  surfaceSelect.disabled=locked||!surfaces.length;anchorSelect.disabled=locked||!anchors.length;
-}
-function selectedAttachmentSurfaceValue(){const raw=String(document.getElementById('assetAttachmentSurface')?.value||''),divider=raw.indexOf('|');return divider<0?null:{targetAssetId:raw.slice(0,divider),targetSurfaceId:raw.slice(divider+1)};}
-function attachmentHistoryAction(action,label){
-  const obj=objectById(objectEditor.selectedId);if(!obj||objectLocked(obj))return false;syncSceneAssetRegistryState(S);const before=objectSnapshot(),result=action(obj);
-  if(result===false||result?.ok===false){announceCatalog(label+'ไม่สำเร็จ'+(result?.reason?' · '+result.reason:''),'error');return false;}
-  persistAttachmentGraph(S);recordObjectHistory(before);sync();syncAssetSettingsForm();announceCatalog(label+'แล้ว','success');return true;
-}
-function detachSelectedPersistentAttachment(){return attachmentHistoryAction(obj=>detachPersistentAttachment(obj.id,{reason:'manual'}),'Detach '+selectedAssetName());}
-function reattachSelectedPersistentAttachment(){return attachmentHistoryAction(obj=>assetAttachmentGraph.reattach(obj.id),'Reattach '+selectedAssetName());}
-function changeSelectedAttachmentSurface(){
-  const target=selectedAttachmentSurfaceValue();if(!target)return announceCatalog('เลือก Target Surface ก่อน','error'),false;
-  return attachmentHistoryAction(obj=>{const attachment=assetAttachmentGraph.getAttachment(obj.id),anchorId=attachment?.sourceAnchorId||document.getElementById('assetAttachmentAnchor')?.value;return assetAttachmentGraph.attachFromCurrent(obj.id,{...target,sourceAnchorId:anchorId,snapMode:'surface'});},'เปลี่ยน Target Surface');
-}
-function changeSelectedAttachmentAnchor(){
-  const anchorId=document.getElementById('assetAttachmentAnchor')?.value,target=selectedAttachmentSurfaceValue();if(!anchorId||!target)return announceCatalog('เลือก Snap Anchor และ Target Surface ก่อน','error'),false;
-  return attachmentHistoryAction(obj=>assetAttachmentGraph.attachFromCurrent(obj.id,{...target,sourceAnchorId:anchorId,snapMode:'surface'}),'เปลี่ยน Snap Anchor');
-}
 function syncAssetSettingsForm(){
   const obj=objectById(objectEditor.selectedId),modal=document.getElementById('mAssetSettings');if(!obj||!modal){closeAssetSettings();return;}
   const item=objectCatalogDef(obj.catalogId);normalizeSceneObjectModel(obj,item);document.getElementById('assetSettingsTitle').textContent='ตั้งค่า '+selectedAssetName(obj);
@@ -3717,7 +3580,6 @@ function syncAssetSettingsForm(){
   ['assetSurfaceColor','assetSurfaceHex'].forEach(id=>{const node=document.getElementById(id);if(node)node.disabled=locked||mode==='original';});
   const notes={original:'ใช้ Material และ Texture เดิมจากไฟล์'+(item?.customAsset?' GLB':' Asset'),tint:'ย้อมสีทับ Material เดิม โดยยังคงลายและรายละเอียดเดิม',solid:'แทน Material เดิมด้วยพื้นผิวสีล้วนแบบ PBR'};
   document.getElementById('assetSurfaceNote').textContent=(notes[mode]||notes.original)+(obj.appearance.textureData?' · มีสติ๊กเกอร์ภาพซ้อนอยู่':'');
-  syncAssetAttachmentForm(obj);
 }
 function openAssetSettings(){
   const obj=objectById(objectEditor.selectedId);if(!obj)return;syncAssetSettingsForm();
@@ -3852,7 +3714,7 @@ function parseFinePositionDraft(value){
   const numeric=Number(normalized);return Number.isFinite(numeric)?numeric:null;
 }
 function releaseObjectAttachment(obj){
-  obj.attachment=null;detachPersistentAttachment(obj.id,{reason:'manual-move'});if(obj.placement){obj.placement.mode='free';obj.placement.surface='free';obj.placement.targetId=null;obj.placement.anchorAttachment=null;obj.placement.snapCandidate=null;}
+  obj.attachment=null;if(obj.placement){obj.placement.mode='free';obj.placement.surface='free';obj.placement.targetId=null;obj.placement.anchorAttachment=null;}
 }
 function commitFinePositionInput(axis){
   const objects=selectedObjects(),input=finePositionInput(axis);if(objects.length!==1||!input)return false;
@@ -3913,7 +3775,7 @@ function alignSelectedObjects(mode){
     else if(mode==='front')position.z+=(ref.maxZ-bounds.maxZ);
     else if(mode==='back')position.z+=(ref.minZ-bounds.minZ);
     position.x=+Number(position.x).toFixed(3);position.y=+Number(position.y).toFixed(3);position.z=+Number(position.z).toFixed(3);
-    releaseObjectAttachment(obj);
+    if(sceneAttachmentActive(obj))obj.attachment=null;
     normalizeSceneObjectModel(obj);
   });
   recordObjectHistory(before);sync();
@@ -4379,17 +4241,14 @@ function renderFloorSnapshot(spec){
   return{type:spec.floor||'',material,detail,raiseCm:Number(spec.raise)||0,levelM:(Number(spec.raise)||0)/100};
 }
 function renderAssetSnapshot(spec){
-  return(Array.isArray(spec.objects)?spec.objects:[]).map((object,index)=>{const attachment=manifestPersistentAttachment(spec,object.id),suggested=object.ai?.status==='suggested'||object.status==='suggested';return{
+  return(Array.isArray(spec.objects)?spec.objects:[]).map((object,index)=>({
     id:String(object.id||object.catalogId||'asset-'+(index+1)),name:String(object.label||objectCatalogDef(object.catalogId)?.name||'Asset '+(index+1)),
     type:String(object.type||objectCatalogDef(object.catalogId)?.type||'asset'),catalogId:object.catalogId||'',
     position:{x:Number(object.position?.x)||0,y:Number(object.position?.y)||0,z:Number(object.position?.z)||0},
     rotation:{x:Number(object.rotationX)||0,y:Number(object.rotationY)||0,z:Number(object.rotationZ)||0},
     scale:{x:Number(object.scale?.x)||1,y:Number(object.scale?.y)||1,z:Number(object.scale?.z)||1},
-    size:cloneRenderValue(object.size||objectCatalogDef(object.catalogId)?.size||{}),locked:object.locked===true||!!attachment?.attached&&!suggested,visible:object.visible!==false,
-    parentAssetId:attachment?.attached?attachment.targetAssetId:null,targetSurfaceId:attachment?.targetSurfaceId||null,sourceAnchorId:attachment?.sourceAnchorId||null,
-    localSurfacePosition:cloneRenderValue(attachment?.localSurfacePosition||null),attachment,approvalStatus:suggested?'Suggested':'Approved',validationStatus:attachment?(attachment.valid?'valid':'invalid'):'unattached',
-    renderClassification:suggested?'AI Suggested / Render Staging':'Locked Geometry'
-  };});
+    size:cloneRenderValue(object.size||objectCatalogDef(object.catalogId)?.size||{}),locked:object.locked===true,visible:object.visible!==false
+  }));
 }
 function stableRenderCameraSnapshot(camera){
   if(!camera||typeof camera!=='object')return null;
@@ -5085,12 +4944,6 @@ function build(){
   document.getElementById('btnDeleteObject').onclick=deleteSelectedObject;
   document.getElementById('assetSettingsClose').onclick=closeAssetSettings;
   document.getElementById('assetSettingsDone').onclick=closeAssetSettings;
-  document.getElementById('assetAttachmentDetach').onclick=detachSelectedPersistentAttachment;
-  document.getElementById('assetAttachmentReattach').onclick=reattachSelectedPersistentAttachment;
-  document.getElementById('assetAttachmentChangeSurface').onclick=changeSelectedAttachmentSurface;
-  document.getElementById('assetAttachmentChangeAnchor').onclick=changeSelectedAttachmentAnchor;
-  document.getElementById('assetAttachmentMove').onclick=()=>{detachSelectedPersistentAttachment();closeAssetSettings();setObjectMoveMode('smart');};
-  document.getElementById('assetAttachmentDelete').onclick=()=>{closeAssetSettings();deleteSelectedObject();};
   document.getElementById('assetSettingsName').onchange=event=>updateSelectedObjectName(event.target.value);
   ['W','D','H'].forEach(key=>document.getElementById('assetSize'+key).onchange=event=>updateSelectedObjectSize(key.toLowerCase(),event.target.value));
   document.getElementById('assetResetSize').onclick=resetSelectedObjectSize;
@@ -5658,7 +5511,7 @@ class ThreeBoothRenderer{
     this.boothGroup.traverse(object=>{
       const name=object.name||'';
       if(name==='scene-ground'||name==='object-selection'||name==='brand-selection'||name==='brand-selection-proxy'||
-        name==='object-anchor-guides'||name==='magnetic-snap-preview'||name==='attachment-invalid-warning'||name==='attachment-surface-highlight'||
+        name==='object-anchor-guides'||name==='magnetic-snap-preview'||
         name==='booth-wall-back-curved-edge'||name.startsWith('booth-dimension-')){
         hidden.push([object,object.visible]);object.visible=false;
       }
@@ -6080,7 +5933,6 @@ class ThreeBoothRenderer{
       else member.placement.anchorAttachment=null;
       if(isDownlightBeamObject(member)&&member.structure)member.structure.wallAttached=false;
       this.applyCatalogObjectTransform(memberRoot,member,BoothSpec.raise/100);
-      propagatePersistentAttachmentChildren(member.id,this);
     });
     obj.position.x=next.x;obj.position.y=next.y;obj.position.z=next.z;
     if(drag.memberIds.length===1&&Number.isFinite(Number(next.rotationY)))obj.rotationY=Number(next.rotationY);
@@ -6112,11 +5964,6 @@ class ThreeBoothRenderer{
         restoreObjectSnapshot(drag.before);
         announceCatalog('ย้าย '+(item?.name||'วัตถุ')+' ไม่ได้ เพราะ'+(storageCollision?storageRoomCollisionLabel(storageCollision):'ชนโครงสร้างหลักหรือตำแหน่งไม่รองรับ'),'error');this.currentKey='';sync();return;
       }
-      /* Smart Snap commit และ Attachment Graph อยู่ใน History Transaction เดียวกับการลาก */
-      members.forEach(member=>{
-        if(member.id===obj.id&&member.placement?.snapCandidate?.valid)commitPersistentAttachmentFromSnap(member,member.placement.snapCandidate);
-        else detachPersistentAttachment(member.id,{reason:'manual-move'});
-      });
       recordObjectHistory(drag.before);this.currentKey='';sync();announceCatalog((drag.mode==='smart'?'Smart Move ':drag.mode==='height'?'ปรับระดับ ':drag.mode==='surface'?'Snap ':'ย้าย ')+item.name+'แล้ว','success');
     }
   }
@@ -7860,10 +7707,6 @@ function sync(){
   if(S.stHmode===0)S.stHv=Math.max(1.5,Math.min(MAX_BOOTH_HEIGHT,S.stHv||2.4));
   reconcileCatalogLayout();
   resolveSceneAttachments(S);
-  /* Layout/legacy-port resolution อาจขยับ Parent หลัง registry รอบแรก จึง resolve
-     Persistent Attachment จาก Local Surface Coordinates อีกครั้งก่อน render */
-  syncSceneAssetRegistryState(S);
-  notifyInvalidPersistentAttachments();
   const retainedSelection=selectedSceneItemIds().filter(sceneItemExists);setObjectSelection(retainedSelection,sceneItemExists(objectEditor.selectedId)?objectEditor.selectedId:(retainedSelection.at(-1)||null));
   syncObjectControls();
 
@@ -8595,7 +8438,7 @@ window.SceneAssetRegistryAPI={
   registerAsset(asset,object3D=null){const registered=sceneAssetRegistry.registerAsset(asset,object3D,{replace:false});S.sceneAssetRegistry=sceneAssetRegistry.serialize();return JSON.parse(JSON.stringify(registered));},
   unregisterAsset(assetId){
     const item=sceneItemById(assetId);if(item?.system)return false;
-    if(item?.object){const before=objectSnapshot();preparePersistentAttachmentDeletion([assetId]);S.objects=S.objects.filter(object=>object.id!==assetId);sceneAssetRegistry.unregisterAsset(assetId,{notifyWorkflow:false});recordObjectHistory(before);setObjectSelection([]);sync();return true;}
+    if(item?.object){const before=objectSnapshot();S.objects=S.objects.filter(object=>object.id!==assetId);sceneAssetRegistry.unregisterAsset(assetId,{notifyWorkflow:false});recordObjectHistory(before);setObjectSelection([]);sync();return true;}
     const removed=sceneAssetRegistry.unregisterAsset(assetId,{removeObject3D:true,notifyWorkflow:false});S.sceneAssetRegistry=sceneAssetRegistry.serialize();return removed;
   },
   getAssetById(assetId){const asset=sceneAssetRegistry.getAssetById(assetId);return asset?JSON.parse(JSON.stringify(asset)):null;},
@@ -8613,16 +8456,6 @@ window.SceneAssetRegistryAPI={
 };
 window.getSceneAssetRegistry=()=>JSON.parse(JSON.stringify(sceneAssetRegistry.serialize()));
 window.validateSceneAssetRegistry=()=>window.SceneAssetRegistryAPI.validateRegistry();
-window.AssetAttachmentGraphAPI={
-  getAttachment(assetId){return assetAttachmentGraph.getAttachment(assetId);},
-  listAttachments(){return assetAttachmentGraph.listAttachments();},
-  getChildren(assetId){return assetAttachmentGraph.getChildren(assetId);},getParent(assetId){return assetAttachmentGraph.getParent(assetId);},
-  detach(assetId){const obj=objectById(assetId);if(!obj||objectLocked(obj))return false;const before=objectSnapshot(),ok=detachPersistentAttachment(assetId,{reason:'api'});if(ok){recordObjectHistory(before);sync();}return ok;},
-  reattach(assetId){const obj=objectById(assetId);if(!obj||objectLocked(obj))return{ok:false,reason:'asset-missing-or-locked'};const before=objectSnapshot(),result=assetAttachmentGraph.reattach(assetId);persistAttachmentGraph(S);if(result.ok){recordObjectHistory(before);sync();}return JSON.parse(JSON.stringify(result));},
-  changeTargetSurface(assetId,targetAssetId,targetSurfaceId){const before=objectSnapshot(),result=assetAttachmentGraph.changeTargetSurface(assetId,targetAssetId,targetSurfaceId);persistAttachmentGraph(S);if(result.ok){recordObjectHistory(before);sync();}return JSON.parse(JSON.stringify(result));},
-  changeSnapAnchor(assetId,sourceAnchorId){const before=objectSnapshot(),result=assetAttachmentGraph.changeSnapAnchor(assetId,sourceAnchorId);persistAttachmentGraph(S);if(result.ok){recordObjectHistory(before);sync();}return JSON.parse(JSON.stringify(result));},
-  validate(){return assetAttachmentGraph.validate();},serialize(){return JSON.parse(JSON.stringify(assetAttachmentGraph.serialize()));}
-};
 window.SmartSnapEngineAPI={
   listAnchors(assetId=''){const anchors=assetId?smartSnapEngine.getAnchors(assetId):smartSnapEngine.listAnchors();return JSON.parse(JSON.stringify(anchors));},
   listSurfaces(assetId=''){const surfaces=assetId?smartSnapEngine.getSurfaces(assetId):smartSnapEngine.listSurfaces();return JSON.parse(JSON.stringify(surfaces));},
