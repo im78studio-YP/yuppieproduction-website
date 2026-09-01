@@ -1692,7 +1692,7 @@ select:focus{border-color:var(--acc)}
 <script src="js/ai-staging.js?v=20260830-1"></script>
 <script src="js/ai-render-intent.js?v=20260831-1"></script>
 <script src="js/ai-render-pipeline.js?v=20260830-1"></script>
-<script src="js/auto-lighting.js?v=20260831-1"></script>
+<script src="js/auto-lighting.js?v=20260902-8"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
 <script src="js/smart-snap-engine.js?v=20260901-1"></script>
 <script src="js/asset-attachment-graph.js?v=20260901-1"></script>
@@ -2180,8 +2180,8 @@ function buildSceneAssetRecords(spec=S){
     records.push(make({id,name:'สติ๊กเกอร์'+({back:'ผนังหลัง',left:'ผนังซ้าย',right:'ผนังขวา'}[face]||'ผนัง'),assetType:'Graphic',category:'branding',system:true,listGroup:'branding',icon:'IMG',legacyId:'system-wall-sticker-'+face,transform:sceneAssetTransform({x:spec.W/2,y:floorY+spec.H/2,z:spec.D/2}),bounds:{width:sticker.w,height:sticker.h,depth:.002},locked:true,selectable:true,movable:false,snapEnabled:false}));});
   const lighting=globalThis.YPAutoLighting.normalizeLightingState(spec.lighting,{legacyProject:false});
   if(lighting.mode==='manual'&&spec.lights)records.push(make({id:SCENE_ASSET_IDS.manualLighting,name:'ชุดไฟบูธ (Manual)',assetType:'Lighting Fixture',category:'lighting',system:true,listGroup:'lighting',icon:'LIGHT',transform:sceneAssetTransform(),bounds:{width:spec.W,height:.3,depth:.3},locked:true,selectable:true,movable:false,snapEnabled:true,metadata:{status:'Approved'}}));
-  lighting.approvedFixtures.forEach(fixture=>records.push(make({id:'lighting-'+fixture.id,name:fixture.name,assetType:'Lighting Fixture',category:'lighting',system:true,listGroup:'lighting',icon:'LIGHT',transform:sceneAssetTransform(fixture.position,fixture.rotation),bounds:{width:.2,height:.2,depth:.2},locked:true,selectable:true,movable:false,snapEnabled:true,metadata:{lightingFixtureId:fixture.id,status:'Approved'}})));
-  lighting.suggestions.filter(fixture=>fixture.fixtureType!=='invisible').forEach(fixture=>records.push(make({id:'lighting-'+fixture.id,name:fixture.name,assetType:'Suggested Asset',category:'lighting',system:true,listGroup:'suggested',icon:'AI',transform:sceneAssetTransform(fixture.position,fixture.rotation),bounds:{width:.2,height:.2,depth:.2},locked:true,selectable:true,movable:false,snapEnabled:true,metadata:{lightingFixtureId:fixture.id,status:'Suggested'}})));
+  lighting.approvedFixtures.forEach(fixture=>records.push(make({id:'lighting-'+fixture.id,name:fixture.name,assetType:'Lighting Fixture',category:'lighting',system:true,listGroup:'lighting',icon:'LIGHT',transform:sceneAssetTransform(fixture.position,fixture.mountRotation||fixture.rotation),bounds:{width:.2,height:.2,depth:.2},locked:true,selectable:true,movable:false,snapEnabled:true,metadata:{lightingFixtureId:fixture.id,status:'Approved'}})));
+  lighting.suggestions.filter(fixture=>fixture.fixtureType!=='invisible').forEach(fixture=>records.push(make({id:'lighting-'+fixture.id,name:fixture.name,assetType:'Suggested Asset',category:'lighting',system:true,listGroup:'suggested',icon:'AI',transform:sceneAssetTransform(fixture.position,fixture.mountRotation||fixture.rotation),bounds:{width:.2,height:.2,depth:.2},locked:true,selectable:true,movable:false,snapEnabled:true,metadata:{lightingFixtureId:fixture.id,status:'Suggested'}})));
   if(spec.type==='photo360')records.push(make({id:SCENE_ASSET_IDS.photo360,name:'แท่นถ่ายภาพ 360',assetType:'Product Display',category:'display',system:true,listGroup:'display',icon:'360',transform:sceneAssetTransform({x:spec.W/2,y:floorY+.05,z:spec.D/2}),bounds:{width:1,height:.1,depth:1},locked:true,selectable:true,movable:false,snapEnabled:true}));
   (spec.objects||[]).forEach(obj=>records.push(sceneAssetRecordForObject(obj)));
   return records;
@@ -2556,7 +2556,7 @@ function buildGeometryManifest(spec=S){
     source:{kind:'derived',path:'BoothSpec.lights/light*'}}));
   lightingState.approvedFixtures.concat(lightingState.suggestions).forEach((fixture,index)=>push({
     id:'auto-light-'+fixture.id,type:'light-fixture',name:fixture.name,parentId:'booth-root',geometry:{kind:'fixture',catalogId:fixture.fixtureType,attachmentSurfaceId:fixture.mountSurfaceId},
-    dimensions:null,transform:{position:manifestVector(fixture.position.x,floorY+fixture.position.y,fixture.position.z),rotationDeg:manifestVector(fixture.rotation.x*180/Math.PI,fixture.rotation.y*180/Math.PI,fixture.rotation.z*180/Math.PI)},
+    dimensions:null,transform:{position:manifestVector(fixture.position.x,floorY+fixture.position.y,fixture.position.z),rotationDeg:manifestVector((fixture.mountRotation||fixture.rotation).x*180/Math.PI,(fixture.mountRotation||fixture.rotation).y*180/Math.PI,(fixture.mountRotation||fixture.rotation).z*180/Math.PI)},
     aimTarget:manifestVector(fixture.aimTarget.x,floorY+fixture.aimTarget.y,fixture.aimTarget.z),temperatureK:fixture.temperatureK,intensity:fixture.intensity,beamAngle:fixture.beamAngle,
     target:{type:fixture.targetType,assetId:fixture.targetAssetId,zoneId:fixture.targetZoneId},valid:fixture.valid,validationWarnings:[...(fixture.validationWarnings||[])],
     semantics:manifestSemantics(fixture.status==='approved'?'LOCKED':'OPTIONAL',{materialIntent:'lighting',allowedChanges:fixture.status==='approved'?['intensity','temperature']:['lighting']}),
@@ -5179,8 +5179,8 @@ function build(){
   mk('oLightingMode',[{k:'auto',n:'Auto Lighting',s:'แนะนำ'},{k:'manual',n:'Manual Lighting',s:'ขั้นสูง'}],v=>updateAutoLightingOption(state=>state.mode=v,false));
   mk('oAutoLightingEnabled',[{k:'on',n:'เปิด',s:'ค่าเริ่มต้น'},{k:'off',n:'ปิด',s:''}],v=>updateAutoLightingOption(state=>state.enabled=v==='on',false));
   mk('oLightIntent',[{k:'balanced',n:'สมดุล'},{k:'brand',n:'เน้นแบรนด์'},{k:'product',n:'เน้นสินค้า'},{k:'counter',n:'เน้นเคาน์เตอร์'}],v=>updateAutoLightingOption(state=>state.intent=v));
-  mk('oLightTemperature',[{k:3000,n:'3000K',s:'วอร์ม'},{k:4000,n:'4000K',s:'กลาง'},{k:5000,n:'5000K',s:'ขาว'}],v=>updateAutoLightingOption(state=>state.temperatureK=Number(v)));
-  mk('oLightBrightness',[{k:'soft',n:'นุ่ม'},{k:'standard',n:'มาตรฐาน'},{k:'bright',n:'สว่าง'}],v=>updateAutoLightingOption(state=>state.brightness=v));
+  mk('oLightTemperature',[{k:3000,n:'3000K',s:'วอร์ม'},{k:4000,n:'4000K',s:'กลาง'},{k:5000,n:'5000K',s:'ขาว'}],v=>updateAutoLightingOption(state=>{state.temperatureK=Number(v);globalThis.YPAutoLighting.applyPhotometricSettings(state);},false));
+  mk('oLightBrightness',[{k:'soft',n:'นุ่ม'},{k:'standard',n:'มาตรฐาน'},{k:'bright',n:'สว่าง'}],v=>updateAutoLightingOption(state=>{state.brightness=v;globalThis.YPAutoLighting.applyPhotometricSettings(state);},false));
   mk('oLightPreference',[{k:'auto',n:'อัตโนมัติ',s:'เลือกตามจุดติดตั้ง'},{k:'clear',n:'Clear Light',s:'โครงสร้างเหนือศีรษะ'},{k:'arm',n:'Arm Light',s:'ติดผนัง'},{k:'mixed',n:'ผสม',s:'เลือกตามพื้นผิว'},{k:'invisible',n:'Invisible',s:'Preview ไม่มีตัวโคม'}],v=>updateAutoLightingOption(state=>state.fixturePreference=v));
   document.getElementById('btnAutoLightGenerate').onclick=()=>calculateAutoLighting(false);
   document.getElementById('btnAutoLightRecalculate').onclick=()=>calculateAutoLighting(true);
@@ -5189,7 +5189,7 @@ function build(){
   document.getElementById('autoLightingFixtureSelect').onchange=event=>{selectedAutoLightingFixtureId=event.target.value||null;syncAutoLightingFixtureEditor();};
   document.querySelectorAll('[data-light-axis]').forEach(button=>button.onclick=()=>moveApprovedLightingFixture(button.dataset.lightAxis,Number(button.dataset.lightDelta)));
   document.getElementById('autoLightingFixtureType').onchange=event=>editApprovedLightingFixture(fixture=>{fixture.fixtureType=event.target.value;fixture.name=event.target.value==='arm'?'Arm Light':event.target.value==='clear'?'Clear Light':'Invisible Preview Light';},'เปลี่ยนประเภทโคม');
-  document.getElementById('autoLightRotate').onclick=()=>editApprovedLightingFixture(fixture=>{fixture.rotation.y=(Number(fixture.rotation.y)||0)+Math.PI/12;},'หมุนไฟ 15°');
+  document.getElementById('autoLightRotate').onclick=()=>editApprovedLightingFixture(fixture=>{fixture.mountRotation=fixture.mountRotation||{x:0,y:0,z:0};fixture.mountRotation.y=(Number(fixture.mountRotation.y)||0)+Math.PI/12;},'หมุนไฟ 15°');
   document.getElementById('autoLightAim').onclick=()=>editApprovedLightingFixture(fixture=>{fixture.aimTarget={x:Number(S.W)/2,y:Math.max(.8,Number(S.H)*.55),z:Number(S.D)/2};},'เล็งไฟเข้ากึ่งกลางบูธ');
   document.getElementById('autoLightDelete').onclick=()=>{const fixture=selectedAutoLightingFixture();if(!fixture)return;const before=objectSnapshot(),state=normalizeAutoLighting();state.approvedFixtures=state.approvedFixtures.filter(item=>item.id!==fixture.id);state.suggestions=state.suggestions.filter(item=>item.id!==fixture.id);selectedAutoLightingFixtureId=null;recordObjectHistory(before);sync();announceCatalog('ลบโคมที่เลือกแล้ว','success');};
   mk('oLights',[{k:'on',n:'มีไฟ',s:'ค่าเริ่มต้น'},{k:'off',n:'ไม่มี',s:''}],v=>S.lights=(v==='on'));
@@ -6568,6 +6568,13 @@ class ThreeBoothRenderer{
   }
   visualKey(spec){
     const logoKey=spec.logo?spec.logo.length+':'+spec.logo.slice(-32):'';
+    const lighting=globalThis.YPAutoLighting.normalizeLightingState(spec.lighting,{legacyProject:!spec.lighting}),fixtureKey=fixture=>[
+      fixture.id,fixture.status,fixture.fixtureType,fixture.position?.x,fixture.position?.y,fixture.position?.z,
+      fixture.rotation?.x,fixture.rotation?.y,fixture.rotation?.z,fixture.mountRotation?.x,fixture.mountRotation?.y,fixture.mountRotation?.z,
+      fixture.aimTarget?.x,fixture.aimTarget?.y,fixture.aimTarget?.z,
+      fixture.temperatureK,fixture.intensity,fixture.beamAngle,fixture.valid!==false];
+    const lightingKey=[lighting.enabled,lighting.mode,lighting.intent,lighting.temperatureK,lighting.brightness,lighting.fixturePreference,
+      lighting.approvedFixtures.map(fixtureKey),lighting.suggestions.map(fixtureKey)];
     const wallStickers=WALL_FACES.map(({k})=>{const sticker=wallStickerFor(k,spec);return[k,sticker.id||0,sticker.w,sticker.h,sticker.rotation||0,
       sticker.mode,sticker.patternSize,sticker.offsetX,sticker.offsetY,!!sticker.data];});
     const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.locked===true,o.visible!==false,o.position.x,o.position.y,o.position.z,o.rotationX,o.rotationY,o.rotationZ,o.orientation,
@@ -6582,7 +6589,7 @@ class ThreeBoothRenderer{
       spec.logoFloorX,spec.logoFloorZ,spec.logoFloorRotation,spec.sideLogo,spec.sidePos,spec.wallRadius,spec.carpetTextureId||0,
       spec.carpetTextureMode||'builtin',spec.carpetTextureActiveId||'',spec.tileTextureId||0,
       spec.tileTextureMode||'builtin',spec.tileTextureActiveId||'',spec.floorStickerId||0,spec.floorStickerW,spec.floorStickerD,spec.floorStickerRotation||0,
-      spec.floorStickerMode,spec.floorStickerPatternSize,spec.floorStickerOffsetX,spec.floorStickerOffsetY,objects,spec.sceneItemState||{}]);
+      spec.floorStickerMode,spec.floorStickerPatternSize,spec.floorStickerOffsetX,spec.floorStickerOffsetY,objects,spec.sceneItemState||{},lightingKey]);
   }
   update(spec){
     const key=this.visualKey(spec);if(key===this.currentKey)return;
@@ -7104,7 +7111,8 @@ class ThreeBoothRenderer{
       this.fixtureTemplates.set(key,template);return template;
     }).catch(error=>{this.fixtureErrors.set(key,error);return null;}).finally(()=>{
       this.fixtureLoads.delete(key);syncLightModelStatus();
-      if(this.fixtureTemplates.has(key)&&BoothSpec.lightFixture===key){this.currentKey='';this.update(BoothSpec);}
+      const autoState=globalThis.YPAutoLighting.normalizeLightingState(BoothSpec.lighting,{legacyProject:!BoothSpec.lighting}),autoUsesKey=autoState.mode==='auto'&&autoState.approvedFixtures.concat(autoState.suggestions).some(fixture=>(fixture.fixtureType==='arm'?'arm':'clear100')===key);
+      if(this.fixtureTemplates.has(key)&&(BoothSpec.lightFixture===key||autoUsesKey)){this.currentKey='';this.update(BoothSpec);}
     });
     this.fixtureLoads.set(key,load);syncLightModelStatus();
   }
@@ -7418,22 +7426,23 @@ class ThreeBoothRenderer{
   }
   addAutoLightingFixtures(group,spec,floorY,state){
     if(!state.enabled)return;
-    const T=this.THREE,fixtures=state.approvedFixtures.concat(state.suggestions),span=Math.max(spec.W,spec.D,spec.H),temperatureColor=k=>k<=3200?0xffd4a3:k>=4800?0xddeaff:0xfff4df;
+    const T=this.THREE,fixtures=state.approvedFixtures.concat(state.suggestions),span=Math.max(spec.W,spec.D,spec.H),temperatureColor=k=>k<=3200?0xffc17a:k>=4800?0xdbe8ff:0xffefd2;
     fixtures.forEach((data,index)=>{
       const approved=data.status==='approved',root=new T.Group();root.name='auto-light-root-'+data.id;root.userData.lightingFixtureId=data.id;root.userData.status=data.status;
       root.position.set(Number(data.position.x)||0,floorY+(Number(data.position.y)||0),Number(data.position.z)||0);
-      root.rotation.set(Number(data.rotation.x)||0,Number(data.rotation.y)||0,Number(data.rotation.z)||0);
+      const mountRotation=data.mountRotation||{x:0,y:0,z:0};root.rotation.set(Number(mountRotation.x)||0,Number(mountRotation.y)||0,Number(mountRotation.z)||0);
       const modelKey=data.fixtureType==='arm'?'arm':'clear100',visibleFixture=data.fixtureType!=='invisible';
       if(visibleFixture){
         if(!this.fixtureTemplates.has(modelKey))this.requestFixtureTemplate(modelKey);
-        const model=this.fixtureModel(modelKey);
-        if(model){model.name='auto-light-model-'+data.id;root.add(model);}
-        else{const fallback=new T.Mesh(new T.CylinderGeometry(.055,.075,.14,12),new T.MeshStandardMaterial({color:0x343941,roughness:.38,metalness:.7}));fallback.name='auto-light-fallback-'+data.id;fallback.rotation.x=Math.PI/2;fallback.castShadow=approved;root.add(fallback);}
+        const modelDef=LIGHT_MODELS.find(item=>item.k===modelKey),model=this.fixtureModel(modelKey),fixtureVisual=new T.Group();fixtureVisual.name='auto-light-visual-'+data.id;
+        if(model){model.name='auto-light-model-'+data.id;fixtureVisual.add(model);if(modelDef?.mountMode==='ceiling'&&modelDef.modelFlipZ)fixtureVisual.rotation.z=Math.PI;}
+        else{const fallback=new T.Mesh(new T.CylinderGeometry(.055,.075,.14,12),new T.MeshStandardMaterial({color:0x343941,roughness:.38,metalness:.7}));fallback.name='auto-light-fallback-'+data.id;fallback.rotation.x=Math.PI/2;fallback.castShadow=approved;fixtureVisual.add(fallback);}
+        root.add(fixtureVisual);
       }
-      const light=new T.SpotLight(temperatureColor(Number(data.temperatureK)||4000),Math.max(.12,(Number(data.intensity)||1)*3.1),span*3,Number(data.beamAngle)||.65,.82,1.5);
-      light.name='auto-light-source-'+data.id;light.position.set(0,0,0);light.castShadow=approved&&index<4;
+      const renderFixture={...data,rotation:mountRotation},source=globalThis.YPAutoLighting.fixtureLightLocalOffset(renderFixture),light=new T.SpotLight(temperatureColor(Number(data.temperatureK)||4000),globalThis.YPAutoLighting.fixtureRenderIntensity(data),span*3,Number(data.beamAngle)||.65,.84,1.5);
+      light.name='auto-light-source-'+data.id;light.position.set(source.x,source.y,source.z);light.castShadow=approved&&index<4;
       if(light.castShadow){light.shadow.mapSize.set(512,512);light.shadow.bias=-.0005;light.shadow.normalBias=.012;}
-      const target=new T.Object3D();target.name='auto-light-target-'+data.id;target.position.set((Number(data.aimTarget.x)||0)-root.position.x,floorY+(Number(data.aimTarget.y)||0)-root.position.y,(Number(data.aimTarget.z)||0)-root.position.z);
+      const target=new T.Object3D(),localAim=globalThis.YPAutoLighting.fixtureAimLocalOffset(renderFixture);target.name='auto-light-target-'+data.id;target.position.set(localAim.x,localAim.y,localAim.z);
       root.add(light,target);light.target=target;group.add(root);
     });
   }

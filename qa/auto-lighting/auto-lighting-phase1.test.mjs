@@ -124,3 +124,80 @@ test('24. Clean Screenshot และ Render Package ใช้ Lighting State',()
 test('25. Prompt Approved ส่ง Mount, Aim, Temperature และ Intensity',()=>{
   const state=api.defaultLightingState();state.approvedFixtures=[api.normalizeFixture({id:'approved',status:'approved',fixtureType:'arm',mountSurfaceId:'wall-back',targetType:'logo',position:{x:1,y:2,z:0},aimTarget:{x:1,y:1,z:0},temperatureK:4000,intensity:1})];const prompt=api.promptLines(state).join('\n');for(const token of ['Mount wall-back','Aim 1.00,1.00,0.00','4000K','Intensity 1'])assert.match(prompt,new RegExp(token));
 });
+
+test('26. Aim Target แปลงจาก World Space เป็น Local Space โดยไม่ถูก Parent Rotation หมุนซ้ำ',()=>{
+  const fixture=api.normalizeFixture({position:{x:4.2,y:2.28,z:.03},rotation:{x:.468,y:-.685,z:.17},aimTarget:{x:3,y:1.32,z:1.5}}),local=api.fixtureAimLocalOffset(fixture);
+  const {x,y,z}=fixture.rotation,a=Math.cos(x),b=Math.sin(x),c=Math.cos(y),d=Math.sin(y),e=Math.cos(z),f=Math.sin(z);
+  const world={
+    x:fixture.position.x+(c*e)*local.x+(-c*f)*local.y+d*local.z,
+    y:fixture.position.y+(a*f+b*e*d)*local.x+(a*e-b*f*d)*local.y+(-b*c)*local.z,
+    z:fixture.position.z+(b*f-a*e*d)*local.x+(b*e+a*f*d)*local.y+(a*c)*local.z
+  };
+  for(const axis of ['x','y','z'])assert.ok(Math.abs(world[axis]-fixture.aimTarget[axis])<1e-9,axis+' must resolve to the intended world target');
+});
+
+test('27. Lighting State เป็นส่วนหนึ่งของ Renderer visual key และ Renderer ใช้ local aim offset',()=>{
+  assert.match(html,/lightingKey/);assert.match(html,/sceneItemState\|\|\{\},lightingKey/);assert.match(html,/fixtureAimLocalOffset\(renderFixture\)/);
+});
+
+test('28. Auto Lighting ปล่อยแสงจากหน้าหัวโคมเข้าหาผนังและใช้ความเข้มที่มองเห็นได้',()=>{
+  const back=api.normalizeFixture({fixtureType:'arm',mountSurfaceId:'wall-back',position:{x:3,y:2.28,z:.03},aimTarget:{x:3,y:1.6,z:.04},intensity:1}),source=api.fixtureLightWorldPosition(back);
+  assert.ok(source.z>back.position.z,'หัวโคมผนังหลังต้องยื่นเข้าบูธ');assert.ok(source.y<back.position.y,'หัวโคมต้องอยู่ต่ำกว่าฐานติดตั้ง');
+  assert.ok(back.aimTarget.z-source.z<0,'ลำแสงต้องย้อนเข้าหาพื้นผิวผนัง');assert.equal(api.fixtureRenderIntensity(back),16);
+  const left=api.fixtureLightWorldPosition({...back,mountSurfaceId:'wall-left'}),right=api.fixtureLightWorldPosition({...back,mountSurfaceId:'wall-right'});
+  assert.ok(left.x>back.position.x);assert.ok(right.x<back.position.x);
+  assert.match(html,/fixtureLightLocalOffset\(renderFixture\)/);assert.match(html,/fixtureRenderIntensity\(data\)/);
+});
+
+test('29. บูธ 6 เมตรจัด Arm Light คู่เหนือโลโก้อย่างสมมาตร',()=>{
+  const spec=baseSpec(),plan=api.generateLightingPlan({spec,sceneRevision:1}),logo=plan.suggestions.filter(item=>item.targetType==='logo');
+  assert.equal(logo.length,2);assert.ok(Math.abs((logo[0].position.x+logo[1].position.x)/2-spec.W/2)<1e-9);assert.ok(logo[0].position.x<spec.W/2&&logo[1].position.x>spec.W/2);
+  assert.ok(logo.every(item=>item.fixtureType==='arm'&&item.mountSurfaceId==='wall-back'&&item.mountRotation.y===0&&item.position.y===spec.H));
+});
+
+test('30. Renderer แยก Mount Rotation ออกจาก Beam Aim และใช้การวางโมเดลแบบ Manual',()=>{
+  for(const token of ['const mountRotation=data.mountRotation','rotation:mountRotation','auto-light-visual-','modelDef?.mountMode','modelDef.modelFlipZ','autoUsesKey'])assert.ok(html.includes(token),token);
+  assert.match(html,/fixture\.mountRotation=fixture\.mountRotation\|\|/);
+});
+
+test('31. อุณหภูมิสีและความสว่างอัปเดต Fixture เดิมทันทีโดยไม่ย้ายตำแหน่ง',()=>{
+  const state=api.generateLightingPlan({spec:baseSpec(),sceneRevision:1}),positions=JSON.stringify(state.suggestions.map(item=>item.position));state.temperatureK=3000;state.brightness='soft';api.applyPhotometricSettings(state);
+  assert.ok(state.suggestions.every(item=>item.temperatureK===3000));assert.ok(state.suggestions.filter(item=>item.targetType!=='general').every(item=>item.intensity===.72));assert.equal(JSON.stringify(state.suggestions.map(item=>item.position)),positions);
+  assert.match(html,/applyPhotometricSettings\(state\)/);
+});
+
+test('32. ลำแสงคู่ของโลโก้ยิงลงตรงใต้โคมและไม่ใช้ Beam กว้างเกินไป',()=>{
+  const plan=api.generateLightingPlan({spec:baseSpec(),sceneRevision:1}),logo=plan.suggestions.filter(item=>item.targetType==='logo');assert.equal(logo.length,2);
+  assert.ok(logo[0].aimTarget.x<3&&logo[1].aimTarget.x>3);assert.ok(logo.every(item=>Math.abs(item.aimTarget.x-item.position.x)<1e-9&&item.beamAngle<=.56));
+});
+
+test('33. โหมดสมดุลกระจาย Brand Pair และ General Pair แบบสมมาตรตลอดความกว้างบูธ',()=>{
+  const spec=baseSpec(),plan=api.generateLightingPlan({spec,sceneRevision:1}),brand=plan.suggestions.filter(item=>item.targetType==='logo'),general=plan.suggestions.filter(item=>item.targetType==='general');
+  assert.equal(brand.length,2);assert.equal(general.length,2);assert.equal(plan.suggestions.length,4);
+  assert.ok(general[0].position.x<brand[0].position.x&&general[1].position.x>brand[1].position.x);
+  assert.ok(Math.abs((general[0].position.x+general[1].position.x)/2-spec.W/2)<1e-9);assert.ok(general[0].aimTarget.z>0&&general[1].aimTarget.z>0);
+  assert.equal(general[0].targetZoneId,'general-left');assert.equal(general[1].targetZoneId,'general-right');
+});
+
+test('34. โคมติดผนังทุกด้านใช้ขอบบนของผนังเป็นระดับติดตั้ง',()=>{
+  const back=api.generateLightingPlan({spec:baseSpec(),sceneRevision:1});
+  assert.ok(back.suggestions.filter(item=>item.mountSurfaceId==='wall-back').every(item=>item.position.y===2.4));
+  for(const type of ['corner','inline']){
+    const spec={...baseSpec(),type};
+    for(const fixture of api.generateLightingPlan({spec,sceneRevision:1}).suggestions.filter(item=>String(item.mountSurfaceId||'').startsWith('wall-'))){
+      assert.equal(fixture.position.y,spec.H);
+    }
+  }
+});
+
+test('35. โคมคู่ General เล็งกลับเข้าผิวผนังเพื่อให้ทุกดวงเกิดลำแสง',()=>{
+  const plan=api.generateLightingPlan({spec:baseSpec(),sceneRevision:1}),fixtures=plan.suggestions.filter(item=>item.fixtureType!=='invisible');
+  assert.equal(fixtures.length,4);
+  for(const fixture of fixtures){
+    const source=api.fixtureLightWorldPosition(fixture);
+    assert.equal(fixture.mountSurfaceId,'wall-back');
+    assert.ok(Math.abs(fixture.aimTarget.x-fixture.position.x)<1e-9,'ลำแสงต้องลงตรงตามแนว X ของโคม');
+    assert.ok(fixture.aimTarget.z<=.05,'Aim ต้องอยู่บนผิวผนังหลัง');
+    assert.ok(fixture.aimTarget.z<source.z,'ลำแสงต้องยิงจากหัวโคมกลับเข้าหาผนัง');
+  }
+});
