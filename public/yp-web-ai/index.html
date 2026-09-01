@@ -688,6 +688,8 @@ select:focus{border-color:var(--acc)}
 .modal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
   padding:20px;background:rgba(5,6,8,.78);backdrop-filter:blur(6px)}
 .modal.show{display:flex}
+#mRelease{isolation:isolate;background-color:#050407;background-image:url('assets/wizard/yuppie-production-build-team.jpg');background-repeat:no-repeat;background-position:center 42%;background-size:cover}
+#mRelease:before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:rgba(5,3,8,.7)}
 .sheet{background:var(--bg2);border:1px solid var(--line);border-radius:18px;width:100%;max-width:440px;
   padding:26px;position:relative;text-align:center}
 .sheet.left{text-align:left;max-width:520px}
@@ -700,7 +702,7 @@ select:focus{border-color:var(--acc)}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .okic{width:50px;height:50px;border-radius:50%;background:rgba(78,168,122,.15);color:var(--ok);
   display:grid;place-items:center;font-size:23px;margin:0 auto 12px}
-.release-sheet{display:flex;flex-direction:column;width:min(640px,calc(100vw - 32px));max-width:640px;height:min(760px,90vh);max-height:90vh;padding:0;overflow:hidden;text-align:left}
+.release-sheet{z-index:1;display:flex;flex-direction:column;width:min(640px,calc(100vw - 32px));max-width:640px;height:min(760px,90vh);max-height:90vh;padding:0;overflow:hidden;text-align:left;background:rgba(13,9,15,.84);border-color:rgba(247,37,133,.24);box-shadow:0 28px 80px rgba(0,0,0,.62);backdrop-filter:blur(14px) saturate(.82)}
 .quick-setup-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:15px 54px 13px 24px;border-bottom:1px solid var(--line);background:rgba(9,7,10,.96)}
 .quick-progress-item{display:flex;align-items:center;gap:7px;min-width:0;color:var(--tx3);font-size:10.5px;font-weight:600;line-height:1.2}
 .quick-progress-dot{width:22px;height:22px;flex:none;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--bg3);font:700 9px Inter,sans-serif}
@@ -708,7 +710,7 @@ select:focus{border-color:var(--acc)}
 .quick-progress-item.current{color:var(--tx)}.quick-progress-item.current .quick-progress-dot{border-color:var(--acc);background:rgba(var(--acc-rgb),.16);color:var(--acc2);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.08)}
 .quick-progress-item.complete{color:var(--acc2)}.quick-progress-item.complete .quick-progress-dot{border-color:var(--acc);background:var(--acc);color:var(--acc-ink)}
 .quick-setup-stage{flex:1;min-height:0;position:relative;overflow:hidden}
-.quick-setup-step{height:100%;min-height:0;display:flex;flex-direction:column;background:var(--bg2)}
+.quick-setup-step{height:100%;min-height:0;display:flex;flex-direction:column;background:rgba(13,9,15,.86)}
 .quick-setup-step[hidden]{display:none}.quick-setup-step.is-entering{animation:quickStepIn .18s ease-out}
 @keyframes quickStepIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
 .quick-step-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:26px 30px 22px}

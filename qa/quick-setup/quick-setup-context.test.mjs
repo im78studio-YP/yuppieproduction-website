@@ -4,6 +4,7 @@ import test from 'node:test';
 import vm from 'node:vm';
 
 const source = await readFile(new URL('../../public/yp-web-ai/js/quick-setup.js', import.meta.url), 'utf8');
+const html = await readFile(new URL('../../public/yp-web-ai/index.html', import.meta.url), 'utf8');
 const sandbox = { globalThis: {} };
 vm.runInNewContext(source, sandbox, { filename: 'quick-setup.js' });
 const api = sandbox.globalThis.YPQuickSetupContext;
@@ -64,4 +65,10 @@ test('HEX สีแบรนด์ถูก normalize และมี fallback �
   assert.equal(api.normalizeHexColor('f72585'), '#F72585');
   assert.equal(api.normalizeHexColor('#12abEF'), '#12ABEF');
   assert.equal(api.normalizeHexColor('pink', '#F72585'), '#F72585');
+});
+
+test('Wizard ใช้ภาพทีมติดตั้งเป็นพื้นหลังพร้อมชั้นสีเข้มเพื่อรักษาความชัดของข้อความ', () => {
+  assert.match(html, /#mRelease\{[^}]*background-image:url\('assets\/wizard\/yuppie-production-build-team\.jpg'\)/);
+  assert.match(html, /#mRelease:before\{[^}]*background:rgba\(5,3,8,\.7\)/);
+  assert.match(html, /\.release-sheet\{[^}]*backdrop-filter:blur\(14px\)/);
 });
