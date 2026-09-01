@@ -148,7 +148,8 @@
       const basis=surfaceBasis(surface.worldNormal||surface.localNormal),local=attachment.localSurfacePosition,
         desiredAnchor=add(surface.worldOrigin||surface.localOrigin,add(scale(basis.u,local.u),add(scale(basis.v,local.v),scale(basis.normal,local.normalOffset)))),
         baseRotation=alignedRotation(anchor,surface,child.transform.rotation||{}),rotation={x:wrapAngle(baseRotation.x+attachment.rotationOffset.x),y:wrapAngle(baseRotation.y+attachment.rotationOffset.y),z:wrapAngle(baseRotation.z+attachment.rotationOffset.z)},
-        extents=projectedHalfExtents(child,rotation,basis),padding=finite(surface.padding),maxU=Math.max(0,finite(surface.width)/2-extents.u-padding),maxV=Math.max(0,finite(surface.height)/2-extents.v-padding),
+        extents=projectedHalfExtents(child,rotation,basis),padding=finite(surface.padding),freeInstall=child.metadata?.installFreely===true,
+        maxU=freeInstall?finite(surface.width)/2-padding:finite(surface.width)/2-extents.u-padding,maxV=freeInstall?finite(surface.height)/2-padding:finite(surface.height)/2-extents.v-padding,
         bounded=surface.surfaceType==='edge'||surface.surfaceType==='center-line'||(Math.abs(local.u)<=maxU+.0001&&Math.abs(local.v)<=maxV+.0001);
       if(!bounded)return{valid:false,warnings:[OUT_OF_BOUNDS_WARNING]};
       const scaledAnchor={x:anchor.localPosition.x*finite(child.transform.scale?.x,1),y:anchor.localPosition.y*finite(child.transform.scale?.y,1),z:anchor.localPosition.z*finite(child.transform.scale?.z,1)},

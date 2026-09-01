@@ -15,7 +15,7 @@ const registryApi=context.globalThis.YPSceneAssetRegistry,snapApi=context.global
 const plain=value=>JSON.parse(JSON.stringify(value));
 const asset=(id,assetType,category,bounds,position={x:0,y:0,z:0},extra={})=>({id,name:extra.name||id,assetType,category,object3DId:'scene.'+id,
   transform:{position:{...position},rotation:{x:extra.rx||0,y:extra.ry||0,z:extra.rz||0},scale:{x:1,y:1,z:1}},bounds:{...bounds},
-  locked:extra.locked===true,selectable:true,movable:extra.movable!==false,snapEnabled:extra.snapEnabled!==false,metadata:{system:extra.system===true,status:extra.status||'Approved'}});
+  locked:extra.locked===true,selectable:true,movable:extra.movable!==false,snapEnabled:extra.snapEnabled!==false,metadata:{system:extra.system===true,status:extra.status||'Approved',installFreely:extra.installFreely===true}});
 const createSetup=(records)=>{
   const registry=registryApi.createRegistry();records.forEach(record=>registry.registerAsset(record));
   const engine=snapApi.createEngine(registry),applied=[];
@@ -45,6 +45,13 @@ test('Smart Snap commit สร้าง Parent/Child graph และ Serialize/R
   assert.equal(setup.registry.getAssetById('asset.logo').parentAssetId,'structure.wall.back');
   const restored=createSetup([backWall(),logo()]);restored.graph.load(saved,{resolve:true});
   assert.deepEqual(plain(restored.graph.serialize()),saved);assert.equal(restored.graph.validate().valid,true);
+});
+
+test('Free Install Attachment คง Valid แม้ Child ใหญ่กว่า Parent Surface',()=>{
+  const parent=asset('display','Product Display','display',{width:.5,height:.5,depth:.4},{x:2,y:.25,z:1}),child=asset('large-copy','Furniture','furniture',{width:3,height:2,depth:1},{x:2,y:0,z:1.701},{installFreely:true}),setup=createSetup([parent,child]),
+    surface=setup.engine.getWorldSurfaces(parent.id).find(item=>item.id.endsWith('.front')),anchor=setup.engine.getAnchors(child.id).find(item=>item.anchorType==='back');
+  const result=setup.graph.attachFromCurrent(child.id,{targetAssetId:parent.id,targetSurfaceId:surface.id,sourceAnchorId:anchor.id,snapMode:'surface'});
+  assert.equal(result.ok,true);assert.equal(result.valid,true);assert.equal(setup.graph.getParent(child.id),parent.id);
 });
 
 test('Move Parent ใช้ Local Surface Position คำนวณ Child ใหม่โดยไม่สะสม error',()=>{
