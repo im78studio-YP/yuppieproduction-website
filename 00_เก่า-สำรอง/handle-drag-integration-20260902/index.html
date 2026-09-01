@@ -5491,8 +5491,8 @@ function disposeThreeObject(root){
 }
 
 class ThreeBoothRenderer{
-  constructor(THREE,OrbitControls,GLTFLoader,handleDrag){
-    this.THREE=THREE;this.handleDrag=handleDrag;
+  constructor(THREE,OrbitControls,GLTFLoader){
+    this.THREE=THREE;
     this.modelLoader=new GLTFLoader();this.fixtureTemplates=new Map();this.fixtureLoads=new Map();this.fixtureErrors=new Map();
     this.furnitureTemplates=new Map();this.furnitureLoads=new Map();this.furnitureErrors=new Map();
     this.downlightTemplate=null;this.downlightLoad=null;this.downlightError=null;
@@ -5964,22 +5964,6 @@ class ThreeBoothRenderer{
     if(this.activeAnchorMarker)this.styleAnchorMarker(this.activeAnchorMarker,'idle');
     this.activeAnchorMarker=null;if(this.renderer?.domElement)this.renderer.domElement.style.cursor='';
   }
-  beginTransformHandleDrag(root,handleWorld){
-    if(!this.handleDrag||!root||!handleWorld)return null;
-    root.updateWorldMatrix(true,false);
-    const handleLocal=root.worldToLocal(handleWorld.clone());
-    return this.handleDrag.beginHandleDrag({object:root,mode:'move',handleLocal});
-  }
-  resolveTransformHandleMove(drag,next,root,obj){
-    const state=drag.handleDragState;if(!state||!this.handleDrag||drag.memberIds?.length!==1)return next;
-    if(Number.isFinite(Number(next.rotationY))&&Math.abs(Number(next.rotationY)-Number(drag.startRotationY))>.0001)return next;
-    const T=this.THREE,target=state.initialHandleWorld.clone().add(new T.Vector3(next.x-drag.startX,next.y-drag.startY,next.z-drag.startZ));
-    try{this.handleDrag.updateHandleDrag(state,target);}
-    catch(error){drag.handleDragError=error instanceof Error?error.message:String(error);return null;}
-    root.updateWorldMatrix(true,false);this.boothGroup.updateWorldMatrix(true,false);
-    const worldOrigin=root.getWorldPosition(new T.Vector3()),boothLocal=this.boothGroup.worldToLocal(worldOrigin.clone()),floorY=BoothSpec.raise/100;
-    return{...next,x:+boothLocal.x.toFixed(3),y:+(boothLocal.y-floorY-sceneObjectOrientationLift(obj)).toFixed(3),z:+boothLocal.z.toFixed(3)};
-  }
   buildObjectAnchorGuides(id){
     this.clearAnchorGuides();const obj=objectById(id),asset=sceneAssetRegistry.getAssetById(id),brandAsset=id===SCENE_ASSET_IDS.brand&&!!asset;
     if(!obj&&!brandAsset||obj&&objectLocked(obj)||S.magneticSnap===false||obj?.placement?.anchorSnap===false||objectEditor.moveMode==='surface')return;
@@ -6117,17 +6101,12 @@ class ThreeBoothRenderer{
       sourceAnchorOffset=sourceAnchor?{x:sourceAnchor.position.x-obj.position.x,y:sourceAnchor.position.y-(Number(obj.position.y)||0),z:sourceAnchor.position.z-obj.position.z}:null;
     this.controls.enabled=false;
     if(smartAnchor)this.setActiveAnchorMarker(this.anchorGuideGroup?.children.find(marker=>marker.userData.snapAnchorId===sourceAnchorId)||null);
-    let handleDragState=null;
-    if(smartAnchor&&this.handleDrag){
-      try{handleDragState=this.beginTransformHandleDrag(root,hit.point);}
-      catch(error){this.controls.enabled=true;this.releaseActiveAnchorMarker();announceCatalog(error instanceof Error?error.message:String(error),'error');return;}
-    }
     this.renderer.domElement.setPointerCapture(event.pointerId);
     document.getElementById('objectToolbar')?.classList.add('context-dragging');
     this.pointerDrag={kind:'asset',pointerId:event.pointerId,id,memberIds,memberStarts:Object.fromEntries(members.map(member=>[member.id,{x:Number(member.position.x)||0,y:Number(member.position.y)||0,z:Number(member.position.z)||0,rotationY:Number(member.rotationY)||0}])),mode,before:objectSnapshot(),startX:obj.position.x,startY:Number(obj.position.y)||0,startZ:obj.position.z,startRotationY:Number(obj.rotationY)||0,
       startClientY:event.clientY,
       offsetX:root.position.x-point.x,offsetY:root.position.y-point.y,offsetZ:root.position.z-point.z,
-      grabOffset:hit.point.clone().sub(root.position),sourceAnchorId,sourceAnchorOffset,handleDragState,lastSmartSnap:null,invalidSnap:false,moved:false};
+      grabOffset:hit.point.clone().sub(root.position),sourceAnchorId,sourceAnchorOffset,lastSmartSnap:null,invalidSnap:false,moved:false};
   }
   moveObjectDrag(event){
     const drag=this.pointerDrag;if(!drag){this.updateAnchorHover(event);return;}if(drag.pointerId!==event.pointerId)return;
@@ -6180,7 +6159,6 @@ class ThreeBoothRenderer{
     drag.invalidSnap=false;
     if(!anchorMatch&&!next.surface){const magneticMode=drag.mode==='smart'?(drag.sourceAnchorId?'smart':'plane'):drag.mode;
       anchorMatch=magneticSnapPlacement(obj,next,magneticMode,drag.sourceAnchorId);if(anchorMatch)next={...next,...anchorMatch.position};}
-    if(drag.handleDragState){next=this.resolveTransformHandleMove(drag,next,root,obj);if(!next){drag.invalidSnap=true;this.setActiveAnchorSnapped(false);this.renderer.render(this.scene,this.camera);return;}}
     if(drag.mode==='smart'&&drag.sourceAnchorId)this.setActiveAnchorSnapped(!!(anchorMatch||snapPreview&&snapPreview.valid!==false));
     const distance=Math.hypot(next.x-drag.startX,next.y-drag.startY,next.z-drag.startZ);
     if(sceneAttachmentActive(obj)&&distance>.003)obj.attachment=null;
@@ -6214,15 +6192,11 @@ class ThreeBoothRenderer{
     const drag=this.pointerDrag;if(!drag||drag.pointerId!==event.pointerId)return;
     this.pointerDrag=null;this.controls.enabled=true;this.releaseActiveAnchorMarker();this.clearMagneticSnapPreview();document.getElementById('objectToolbar')?.classList.remove('context-dragging');
     if(this.renderer.domElement.hasPointerCapture(event.pointerId))this.renderer.domElement.releasePointerCapture(event.pointerId);
-    if(event.type==='pointercancel'&&drag.handleDragState){
-      try{this.handleDrag.cancelHandleDrag(drag.handleDragState);}catch{}
-      restoreObjectSnapshot(drag.before);this.currentKey='';sync();return;
-    }
     if(drag.kind==='logo'){
       if(drag.moved){recordObjectHistory(drag.before);this.currentKey='';sync();const status=document.getElementById('objectLayoutStatus');if(status)status.textContent='ย้ายโลโก้แล้ว';}
       return;
     }
-    if(drag.invalidSnap){restoreObjectSnapshot(drag.before);announceCatalog(drag.handleDragError||'วางไม่ได้ เพราะ Asset ชนวัตถุอื่นหรือล้นขอบ Surface','error');this.currentKey='';sync();return;}
+    if(drag.invalidSnap){restoreObjectSnapshot(drag.before);announceCatalog('วางไม่ได้ เพราะ Asset ชนวัตถุอื่นหรือล้นขอบ Surface','error');this.currentKey='';sync();return;}
     if(drag.moved){
       const obj=objectById(drag.id),item=obj&&objectCatalogDef(obj.catalogId),members=(drag.memberIds||[drag.id]).map(objectById).filter(Boolean),invalid=members.find(member=>
         !isCatalogPlacementValid(member.catalogId,member.position.x,member.position.z,member.rotationY||0,member.id,member.size,ALLOW_ASSET_OVERLAP,member));
@@ -7324,9 +7298,8 @@ function loadThreeRenderer(){
   threeRendererPromise=Promise.all([
     import('three'),
     import('three/addons/controls/OrbitControls.js'),
-    import('three/addons/loaders/GLTFLoader.js'),
-    import('./js/handle-drag.js?v=20260902-1')])
-    .then(([THREE,controls,gltf,handleDrag])=>threeRenderer=new ThreeBoothRenderer(THREE,controls.OrbitControls,gltf.GLTFLoader,handleDrag));
+    import('three/addons/loaders/GLTFLoader.js')])
+    .then(([THREE,controls,gltf])=>threeRenderer=new ThreeBoothRenderer(THREE,controls.OrbitControls,gltf.GLTFLoader));
   return threeRendererPromise;
 }
 let lightThumbRenderers=new Map();

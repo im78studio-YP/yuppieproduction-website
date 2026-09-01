@@ -10,7 +10,6 @@ const root=path.resolve(here,'../..');
 const registrySource=fs.readFileSync(path.join(root,'public/yp-web-ai/js/scene-asset-registry.js'),'utf8');
 const snapSource=fs.readFileSync(path.join(root,'public/yp-web-ai/js/smart-snap-engine.js'),'utf8');
 const brandBoundsSource=fs.readFileSync(path.join(root,'public/yp-web-ai/js/brand-visible-bounds.js'),'utf8');
-const handleDragSource=fs.readFileSync(path.join(root,'public/yp-web-ai/js/handle-drag.js'),'utf8');
 const html=fs.readFileSync(path.join(root,'public/yp-web-ai/index.html'),'utf8');
 const context={globalThis:{}};vm.createContext(context);vm.runInContext(registrySource,context);vm.runInContext(snapSource,context);vm.runInContext(brandBoundsSource,context);
 const registryApi=context.globalThis.YPSceneAssetRegistry,snapApi=context.globalThis.YPSmartSnap,brandBoundsApi=context.globalThis.YPBrandVisibleBounds;
@@ -165,23 +164,6 @@ test('หน้า Editor เชื่อม Registry, Raycast, Collision, Ghost
   assert.match(html,/const source=registrySceneObjectSnapAnchors\(obj\)/);
   assert.match(html,/clearMagneticSnapPreview\(\)/);
   assert.match(html,/dataset\.smartSnapCorners=String\(snapReport\.stats\.corners\)/);
-});
-
-test('Handle Drag Module ป้องกัน Matrix ค้างและรักษา Fixed Pivot',()=>{
-  for(const token of ["import * as THREE from 'three'",'updateWorldMatrix(true,false)','new THREE.Matrix3().setFromMatrix4','parentLinear.determinant()',
-    'initial.scale.x*factor','fixedPivotWorld.clone().sub(pivotAfterScale)','ห้าม Re-parent Asset ระหว่างลาก Handle','Bounding Box ว่าง'])assert.ok(handleDragSource.includes(token),token);
-  assert.match(handleDragSource,/export function beginHandleDrag/);
-  assert.match(handleDragSource,/export function updateHandleDrag/);
-  assert.match(handleDragSource,/export function cancelHandleDrag/);
-  assert.match(handleDragSource,/export function getBoxCorners/);
-});
-
-test('Smart Move ใช้ Handle Drag Module กับ Anchor Point และ Cleanup เมื่อ Cancel',()=>{
-  for(const token of ["import('./js/handle-drag.js?v=20260902-1')",'this.handleDrag=handleDrag','beginTransformHandleDrag(root,handleWorld)',
-    "this.handleDrag.beginHandleDrag({object:root,mode:'move',handleLocal})",'resolveTransformHandleMove(drag,next,root,obj)',
-    'this.handleDrag.updateHandleDrag(state,target)',"event.type==='pointercancel'&&drag.handleDragState",'this.handleDrag.cancelHandleDrag(drag.handleDragState)'])assert.ok(html.includes(token),token);
-  assert.match(html,/drag\.memberIds\?\.length!==1/);
-  assert.match(html,/sceneObjectOrientationLift\(obj\)/);
 });
 
 test('Logo Selection, Registry และ Geometry ใช้ Visible Bounds ชุดเดียวกัน',()=>{
