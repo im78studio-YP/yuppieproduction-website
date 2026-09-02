@@ -421,10 +421,12 @@ Studio</textarea>
       <div class="row" style="margin-top:10px"><label>รูปแบบงาน</label>
         <select id="buildMode" class="grow">
           <option value="full">พิมพ์ทั้งใบ — หน้า + กรอบ + ฝาหลัง</option>
+          <option value="raised">ชิ้นหน้ายกขอบ — ลาด 45° รอบรูปทรง</option>
           <option value="service">พิมพ์แยกฝาหน้าถอดเปลี่ยนได้ + กันแสงรั่ว — หน้า + ตัวกล่อง + ฝาหลัง</option>
           <option value="shell">พิมพ์เฉพาะตัวกล่อง — หน้าอะครีลิค · หลังพลาสวูด</option>
         </select></div>
       <p class="hint" id="modeHint" style="margin:6px 0 10px"></p>
+      <div class="row" id="raisedFrontRow"><label>ความสูงขอบนูน</label><input type="range" id="raisedFrontH" min="0.4" max="10" step="0.2" value="1.2"><span class="unit" id="raisedFrontHV">1.2 มม.</span></div>
       <div class="row"><label>ความลึกกล่อง</label><input type="range" id="bDepth" min="12" max="80" step="1" value="40"><span class="unit" id="bDepthV">40 มม.</span></div>
       <div id="fullThick">
       <div class="row"><label>ชั้นสีหน้า</label><input type="range" id="bColorT" min="0.4" max="2.4" step="0.1" value="0.6"><span class="unit" id="bColorTV">0.6 มม.</span></div>
@@ -604,7 +606,7 @@ function defaults(){ return {
        joint:'snap', lipH:10, lipW:1.6, lipCl:0.2, bossW:8, screwDepth:10,
        snapBarb:0.45, snapW:12 },
   /* โหมดงาน — service = ฝาหน้าถอดเปลี่ยนได้ มีแผ่นกันแสงรั่วเป็นลิ้นสวม (ค่าแนะนำ) */
-  build:{ mode:'service' },
+  build:{ mode:'service', raisedH:1.2 },
   /* ร่อง+คิ้วรับแผ่นในโหมด shell (มิลลิเมตร) */
   sheet:{ acrT:3, acrLedge:2, plsT:5, plsLedge:2, cl:0.2 },
   price:{ qty:1, fil:750, mach:25, laborMin:25, laborRate:300, led:150, waste:8, margin:45, flush:120,
@@ -2042,10 +2044,16 @@ const FRONT_LIP_HEIGHT=2.0;
              ที่ zA2 กับ zB2 เนื้อ "หด" เข้า = ผิวอิสระ พิมพ์ได้ไม่ต้องซัพพอร์ต */
 const SHELL_FACE=1.2;                    // ความสูงตัวคิ้ว (หน้าตั้ง) — พอให้แข็งแรงโดยไม่กินความลึกกล่อง
 function isShell(){ return !!(S.build && S.build.mode==='shell'); }
+function isRaisedFront(){ return !!(S.build && S.build.mode==='raised'); }
+function raisedFrontHeight(){ return isRaisedFront()?clamp(+(S.build.raisedH||1.2),0.4,10):0; }
 /* โปรเจกต์รุ่นก่อนที่เลือก layered ให้เปิดเป็น service อัตโนมัติ */
-function isLayered(){ return !!(S.build && (S.build.mode==='service'||S.build.mode==='layered')); }
+function isLayered(){ return !!(S.build && (S.build.mode==='service'||S.build.mode==='layered'||S.build.mode==='raised')); }
 function isService(){ return !!(S.build && (S.build.mode==='service'||S.build.mode==='layered')); }
-function frontModuleLabel(){ return 'ฝาหน้าถอดเปลี่ยนได้ + กันแสงรั่ว'; }
+function isFrontModule(){ return isService()||isRaisedFront(); }
+function frontModuleLabel(){ return isRaisedFront()?'ชิ้นหน้ายกขอบ 45°':'ฝาหน้าถอดเปลี่ยนได้ + กันแสงรั่ว'; }
+function buildModeLabel(){
+  return isShell()?'พิมพ์เฉพาะตัวกล่อง — หน้าอะครีลิค · หลังพลาสวูด':isRaisedFront()?'ชิ้นหน้ายกขอบ 45° สูง '+raisedFrontHeight().toFixed(1)+' มม.':isService()?frontModuleLabel():'พิมพ์ทั้งใบ';
+}
 function shellSpec(){
   const b=S.box, sh=S.sheet||{};
   const cl   = Math.max(0, +sh.cl||0);
@@ -2077,12 +2085,12 @@ function geomStack(){
      จึงไม่มีรอยต่อสีแบบปลายชนปลายที่แสงลอดได้ */
   /* หน้าแบบถอดเปลี่ยนได้: สีหน้ากับชั้นกระจายแสงมีความหนาเป็นอิสระ
      โดยค่าเริ่มต้นรวมกันเป็น 0.6 + 0.4 = 1.0 มม. */
-  const faceBaseT=isLayered()?diff:bgT;
+  const faceBaseT=isLayered()?diff:bgT, frontRaise=raisedFrontHeight();
    /* โมดูลถอดเปลี่ยนได้: กรอบเริ่มต่อจากผิวหน้าสีทันทีเพื่อรองรับหน้าแปลน
       แผ่นขาวนมอยู่เฉพาะช่องในของกรอบ ส่วนลิ้น/บ่ารับเป็นวงแหวนของฝาหน้า
       ที่ยื่นเข้าไปรับในช่องตัวกล่อง */
-  const frameZ0=isLayered()?colorT:bgT;
-  return {colorT,diff,bgT,faceBaseT,frameZ0,total:frameZ0+b.depth+b.back};
+  const frameZ0=(isLayered()?colorT:bgT)+frontRaise;
+  return {colorT,diff,bgT,faceBaseT,frontRaise,frameZ0,total:frameZ0+b.depth+b.back};
 }
 function bedSize(){ return Math.max(80, +S.exp.bed||256); }
 function bedHeight(){ return Math.max(80, +S.exp.bedH||bedSize()); }
@@ -2408,6 +2416,21 @@ function frameBandSpec(z0,z1){
   return out;
 }
 
+/* ชิ้นหน้ายกขอบ: ผิวหน้าด้านในยังแตะฐานพิมพ์ที่ z=0 แล้วขยายออก
+   ตามระยะ z ด้วยอัตรา 1:1 จึงได้ลาด 45° ก่อนต่อเข้าความหนาหน้าเต็ม
+   ใช้ช่วงย่อยไม่เกินราว 0.2 มม. เพื่อให้ Preview และไฟล์พิมพ์ใช้รูปทรงเดียวกัน */
+function addRaisedFrontSolid(M,mask,thickness){
+  const rise=raisedFrontHeight();
+  if(rise<=0){ addSolid(M,mask,0,thickness); return; }
+  const stepTarget=Math.max(.14,Math.min(.24,G.px||.2)),steps=clamp(Math.ceil(rise/stepTarget),3,64);
+  for(let j=0;j<steps;j++){
+    const za=rise*j/steps,zb=rise*(j+1)/steps,mid=(za+zb)/2,inset=Math.max(0,rise-mid),lim=inset/G.px;
+    const slice=maskWhere(i=>mask[i]&&G.edtIn[i]>lim);
+    addSolid(M,slice,M.noTri?za:(j?za-ZEPS:za),zb);
+  }
+  addSolid(M,mask,M.noTri?rise:rise-ZEPS,rise+thickness);
+}
+
 function buildParts(nt){
   if(!G||!G.panel) buildGrid();
   if(!G||!G.panel||G.empty) { PB=panelBounds(); return []; }
@@ -2423,15 +2446,15 @@ function buildParts(nt){
      และโพรงไฟตรงกลางยังเปิดโล่ง */
   const frontClear=0.2;
   const lipWidth=FRONT_LIP_WIDTH, lipHeight=FRONT_LIP_HEIGHT;
-  const frontFit=isService()?maskWhere(i=>P[i]&&DI[i]>frontClear/px):null;
-  const tongueFit=isService()?maskWhere(i=>P[i]&&DI[i]>(b.frame+frontClear)/px):null;
+  const frontFit=isFrontModule()?maskWhere(i=>P[i]&&DI[i]>frontClear/px):null;
+  const tongueFit=isFrontModule()?maskWhere(i=>P[i]&&DI[i]>(b.frame+frontClear)/px):null;
   // tongueFit is the complete diffuser aperture.  The lip belongs only on the
   // diffuser perimeter: keep it as a narrow ring just inside that aperture so
   // the light cavity remains open and no other edge is changed.
   const lipStart=b.frame+frontClear;
-  const lipFit=isService()?maskWhere(i=>P[i]&&DI[i]>lipStart/px&&DI[i]<=(lipStart+lipWidth)/px):null;
+  const lipFit=isFrontModule()?maskWhere(i=>P[i]&&DI[i]>lipStart/px&&DI[i]<=(lipStart+lipWidth)/px):null;
   const trimFront=mk=>{ if(!frontFit) return mk; const out=mk.slice(); for(let i=0;i<out.length;i++) if(!frontFit[i]) out[i]=0; return out; };
-  const frontPrefix=isService()?frontModuleLabel()+' · ':'';
+  const frontPrefix=isFrontModule()?frontModuleLabel()+' · ':'';
   /* --- 1. ชั้นสีทั้งหมด (พื้นใน · ลวดลาย · วงขอบ) ---
      โหมดหน้าซ้อนชั้นวางสีทุกสีเป็นผิวหน้าบาง ๆ เหนือแผ่นขาวนมต่อเนื่อง
      ไม่มีการให้สีสองสีชนกันจนเป็นแนวทะลุถึงโพรงไฟ */
@@ -2443,8 +2466,8 @@ function buildParts(nt){
     const mk=trimFront(maskOf(k));
     const M=Mesh(frontPrefix+(p.name||('สี '+k))+' · '+nearestFilament(p.hex), p.hex, nt);
     const layerT = isLayered()?st.colorT:(p.glow?st.colorT:st.bgT);
-    addSolid(M,mk,0,layerT);
-    M.kind='color'; M.module=isService()?'front':''; M.glow=!!p.glow;
+    if(isRaisedFront()) addRaisedFrontSolid(M,mk,layerT); else addSolid(M,mk,0,layerT);
+    M.kind='color'; M.module=isFrontModule()?'front':''; M.glow=!!p.glow;
     parts.push(M);
   }
 
@@ -2461,10 +2484,10 @@ function buildParts(nt){
     if(isLayered()){
       /* แผ่นขาวนมอยู่ในช่องในของกรอบ: หนาจาก colorT ถึง seatZ
          เท่ากับ st.diff เพียงอย่างเดียว */
-      const seatZ=st.colorT+st.faceBaseT;
-      addSolid(M,gm,st.colorT,seatZ);
-    }else addSolid(M,gm,st.colorT,st.colorT+st.diff);
-    M.kind='diffuser'; M.module=isService()?'front':''; M.glow=true;
+      const frontZ=st.frontRaise+st.colorT, seatZ=frontZ+st.faceBaseT;
+      addSolid(M,gm,frontZ,seatZ);
+    }else addSolid(M,gm,st.frontRaise+st.colorT,st.frontRaise+st.colorT+st.diff);
+    M.kind='diffuser'; M.module=isFrontModule()?'front':''; M.glow=true;
     parts.push(M);
   }
 
@@ -2473,7 +2496,7 @@ function buildParts(nt){
      - ยื่นจากด้านหลังแผ่นขึ้นไป 2 มม. เพื่อสวมเข้าร่องของตัวกล่อง
      - ใช้ module=front เพื่อให้ถูกรวมในไฟล์/แผ่นพิมพ์ฝาหน้าเดียวกัน */
   if(isLayered()){
-    const seatZ=st.colorT+st.faceBaseT;
+    const seatZ=st.frontRaise+st.colorT+st.faceBaseT;
     let hasLip=false;
     if(lipFit) for(let i=0;i<lipFit.length;i++) if(lipFit[i]){hasLip=true;break;}
     if(hasLip){
@@ -2501,7 +2524,7 @@ function buildParts(nt){
   const bandSpec=frameBandSpec(st.frameZ0,zTop);
   const bandRule=B=>B.i>0 ? (b.bandRules[B.i-1]||{}) : null;
   const FMs=bandSpec.map(B=>{
-    const M=Mesh((isService()?'ตัวกล่อง · ร่องรับฝาหน้า · ':'กรอบข้าง')+(bandSpec.length>1?'แถบสี '+(B.i+1):'')+(J.screw?' + เสาสกรู':'')+(SP.length?' + หลุมสแนป':''), '#'+B.hex.replace('#',''),nt);
+    const M=Mesh((isFrontModule()?'ตัวกล่อง · ร่องรับชิ้นหน้า · ':'กรอบข้าง')+(bandSpec.length>1?'แถบสี '+(B.i+1):'')+(J.screw?' + เสาสกรู':'')+(SP.length?' + หลุมสแนป':''), '#'+B.hex.replace('#',''),nt);
     M.glow=!!(bandRule(B)&&bandRule(B).sideGlow);
     return M;
   });
@@ -2567,7 +2590,7 @@ function buildParts(nt){
       addFrame(maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t), j? zA-ZEPS : zA, zB, false, boxesAt(BP,bwc), true);
     }
   }
-  FMs.forEach(FM=>{ FM.kind='frame'; FM.module=isService()?'box':''; FM.bossCount=BP.length; FM.snapCount=SP.length; parts.push(FM); });
+  FMs.forEach(FM=>{ FM.kind='frame'; FM.module=isFrontModule()?'box':''; FM.bossCount=BP.length; FM.snapCount=SP.length; parts.push(FM); });
 
   /* --- 4. แผ่นหลัง (+ บ่าล็อก) --- */
   const HP=S.hw.hang? hangPoints() : [];
@@ -2629,7 +2652,7 @@ function buildParts(nt){
       }
     }
   }
-  BM.module=isService()?'back':''; BM.place=PK.items.back; BM.kind='back'; BM.snapCount=SP.length;
+  BM.module=isFrontModule()?'back':''; BM.place=PK.items.back; BM.kind='back'; BM.snapCount=SP.length;
   parts.push(BM);
 
   return parts;
@@ -2640,7 +2663,7 @@ function platePack(){
   const BED=bedSize(), BEDH=bedHeight();
   const w=PB.w||S.box.W, h=PB.h||S.box.H;
   const items={panel:{x:0,y:0,w,h}};
-  if(isService()){
+  if(isFrontModule()){
     /* เรียง 3 ชิ้นแนวตั้งตามลำดับประกอบ: หน้า → กล่อง → ฐาน */
     items.box={x:0,y:h+PGAP,w,h};
     items.back={x:0,y:(h+PGAP)*2,w,h};
@@ -2754,7 +2777,7 @@ function make3mf(parts,title){
     id++;
   });
   let items='';
-  if(isService()){
+  if(isFrontModule()){
     const PK=platePack();
     const makeGroup=(key,label,place)=>{
       const ids=records.filter(r=>r.p.module===key).map(r=>r.id); if(!ids.length) return;
@@ -2797,7 +2820,7 @@ ${mats}${objs}${comps} </resources>
 /* OBJ ไม่เก็บสีในตัวไฟล์ จึงส่ง MTL คู่กันใน ZIP — ใช้ดูงานในโปรแกรม 3D ได้
    ไม่ใช่ไฟล์หลักสำหรับ slicer หลายสี; งานพิมพ์ยังใช้ 3MF */
 function objMtl(parts,base){
-  const PK=isService()?platePack():null;
+  const PK=isFrontModule()?platePack():null;
   const placeOf=p=>{
     if(!PK) return p.place||{x:0,y:0};
     if(p.module==='front') return PK.items.panel;
@@ -3083,11 +3106,11 @@ function drawPlate(c,cv,px){
   };
   box(PK.items.panel,'#ff2d8f26','#ff2d8f', isShell()
       ? `ตัวกล่อง ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} · สูง ${st.total.toFixed(1)} มม.`
-      : isService()
-      ? `ฝาหน้า ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} มม.`
+      : isFrontModule()
+      ? `${isRaisedFront()?'ชิ้นหน้า':'ฝาหน้า'} ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} มม.`
       : `แผ่นหน้า+กรอบ ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} · สูง ${(st.frameZ0+b.depth).toFixed(1)} มม.`);
-  if(isService()) box(PK.items.box,'#1a1a1a26','#1a1a1a',`ตัวกล่อง ${PK.items.box.w.toFixed(0)}×${PK.items.box.h.toFixed(0)} มม.`);
-  box(PK.items.back ,'#3ba0ff26','#3ba0ff',isService()?`ฐาน/ฝาหลัง หนา ${b.back} มม.`:`แผ่นหลัง หนา ${b.back} มม.`);
+  if(isFrontModule()) box(PK.items.box,'#1a1a1a26','#1a1a1a',`ตัวกล่อง ${PK.items.box.w.toFixed(0)}×${PK.items.box.h.toFixed(0)} มม.`);
+  box(PK.items.back ,'#3ba0ff26','#3ba0ff',isFrontModule()?`ฐาน/ฝาหลัง หนา ${b.back} มม.`:`แผ่นหลัง หนา ${b.back} มม.`);
   c.font='12px sans-serif'; c.textAlign='right';
   c.fillStyle=PK.fits?'#5b626d':'#c62b39';
   c.fillText(PK.fits?`ใช้พื้นที่ ${PK.maxX.toFixed(0)} × ${PK.maxY.toFixed(0)} จาก ${BED} × ${BEDH} มม.`
@@ -3233,10 +3256,18 @@ function runChecks(){
     if(S.hw.hang) add('ok','รูแขวนเจาะบนแผ่นพลาสวูด อยู่ในไฟล์ DXF/SVG ที่ส่งออก');
     add('ok','ส่งออกแล้วจะได้ไฟล์เส้นตัด DXF และ SVG ของทั้งอะครีลิคและพลาสวูดในชุด _ตัดแผ่น.zip');
   }
-  if(isService()){
-    add('ok','โหมดฝาหน้าถอดเปลี่ยนได้: ฝาหน้าร่น 0.2 มม. รอบด้าน · ถอดฝาหลังแล้วเปลี่ยนเฉพาะโมดูลหน้าได้');
+  if(isFrontModule()){
+    add('ok',`${frontModuleLabel()}: แยกพิมพ์เป็นชิ้นหน้า · ตัวกล่อง · ฝาหลัง และชิ้นหน้าร่น 0.2 มม. รอบด้านเพื่อประกอบได้`);
     if(b.frame<2) add('warn','กรอบข้างบางกว่า 2 มม. คิ้วบังแสงของฝาหน้าถอดเปลี่ยนได้อาจไม่พอ — แนะนำ 2 มม. ขึ้นไป');
     if(S.hw.joint==='butt') add('warn','ควรเลือกบ่าล็อกหรือสกรูสำหรับฝาหลัง เพื่อเปิดเปลี่ยนฝาหน้าได้โดยไม่ต้องแกะกาว');
+  }
+  if(isRaisedFront()&&G.panel&&G.edtIn){
+    const rise=raisedFrontHeight(), lim=rise/G.px; let face=0, flat=0;
+    for(let i=0;i<G.panel.length;i++) if(G.panel[i]){ face++; if(G.edtIn[i]>lim) flat++; }
+    const remain=face?flat/face:0;
+    if(!flat) add('err',`ขอบนูน ${rise.toFixed(1)} มม. กินพื้นที่เข้าด้านในจนไม่เหลือผิวหน้าราบ — ลดความสูงขอบนูน`);
+    else if(rise>5||remain<0.15) add('warn',`ขอบนูน ${rise.toFixed(1)} มม. ใช้ระยะลาดเข้าด้านในเท่ากัน เหลือผิวหน้าราบ ${(remain*100).toFixed(0)}% — แนะนำช่วง 1–5 มม.`);
+    else add('ok',`ขอบนูน 45° สูง ${rise.toFixed(1)} มม. · เหลือผิวหน้าราบ ${(remain*100).toFixed(0)}%`);
   }
   const used=S.pal.filter(p=>p.cells>0).length;
   if(!isShell()){
@@ -3434,6 +3465,7 @@ ${isShell()? (()=>{ const H=shellSpec(); return `
 <tr><td>แผ่นหลัง</td><td>พลาสวูด ${H.plsT} มม. ตัดตามรูปทรง</td></tr>
 <tr><td>รูสายไฟ</td><td>${S.hw.hole==='none'?'ไม่มี':S.hw.hole==='frame'?'บากที่ผนังด้านล่าง Ø'+S.hw.dia+' มม.':'รูกลมแผ่นพลาสวูด Ø'+S.hw.dia+' มม.'}</td></tr>
 <tr><td>การยึดแผ่น</td><td>คิ้วรับรอบด้าน + ซิลิโคน/กาว (เผื่อสวมข้างละ ${H.cl} มม.)</td></tr>`; })() : `
+<tr><td>รูปแบบงาน</td><td>${buildModeLabel()}</td></tr>
 <tr><td>โครงสร้าง</td><td>ชั้นสี ${b.colorT} · กระจายแสง ${st.diff} · พื้นทึบ ${st.bgT.toFixed(1)} · กรอบ ${b.frame} · หลัง ${b.back} มม.</td></tr>
 <tr><td>รูสายไฟ</td><td>${S.hw.hole==='none'?'ไม่มี':S.hw.hole==='frame'?'บากที่กรอบล่างด้านหลัง Ø'+S.hw.dia+' มม.':'รูกลมแผ่นหลัง Ø'+S.hw.dia+' มม.'}</td></tr>
 <tr><td>การประกบฝาหลัง</td><td>${ (()=>{ const M=Math.round(S.box.back+Math.min(S.hw.screwDepth,S.box.depth-3));
@@ -3533,10 +3565,18 @@ function exportMeshIssues(parts){
       const st=geomStack(), need=Math.max(0.1,st.faceBaseT);
       if(!d||d.n<12){
         issues.push('ฝาหน้าไม่มีแผ่นกระจายแสงต่อเนื่อง — ยกเลิกการส่งออกเพื่อป้องกันชั้นว่างใน slicer');
-      }else if(d.z0>st.colorT+0.02||d.z1<st.colorT+need-0.02){
-        issues.push(`แผ่นกระจายแสงมีช่วงความหนาไม่ครบ (${Number.isFinite(d.z0)?d.z0.toFixed(2):'—'}–${Number.isFinite(d.z1)?d.z1.toFixed(2):'—'} มม.)`);
+      }else{
+        const base=st.frontRaise+st.colorT;
+        if(d.z0>base+0.02||d.z1<base+need-0.02)
+          issues.push(`แผ่นกระจายแสงมีช่วงความหนาไม่ครบ (${Number.isFinite(d.z0)?d.z0.toFixed(2):'—'}–${Number.isFinite(d.z1)?d.z1.toFixed(2):'—'} มม.)`);
       }
     }
+  }
+  if(isRaisedFront()&&G&&G.panel&&G.edtIn){
+    const lim=raisedFrontHeight()/G.px;
+    let flat=false;
+    for(let i=0;i<G.panel.length;i++) if(G.panel[i]&&G.edtIn[i]>lim){ flat=true; break; }
+    if(!flat) issues.push('ขอบนูน 45° กินพื้นที่เข้าด้านในจนชิ้นหน้าไม่มีผิวสัมผัสฐานพิมพ์ — ลดความสูงขอบนูน');
   }
   return issues;
 }
@@ -3555,12 +3595,16 @@ async function doExport(){
     if(fmt==='3mf'||fmt==='both'||fmt==='all'){
       busy(true,'กำลังเขียนไฟล์ 3MF…'); await new Promise(r=>setTimeout(r,20));
       const blob=await make3mf(pr,S.name);
-      download(blob,`${name}_${isShell()?'ตัวกล่อง':isLayered()?'ชุดฝาหน้าซ้อนชั้นกันแสงรั่ว':isService()?'ชุดฝาหน้าถอดเปลี่ยนได้':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
+      if(isRaisedFront()){
+        download(blob,`${name}_ชิ้นหน้ายกขอบ45องศา_แยก3ชิ้น.3mf`);
+      }else{
+      download(blob,`${name}_${isShell()?'ตัวกล่อง':isLayered()?'ชุดฝาหน้าซ้อนชั้นกันแสงรั่ว':isService()?'ชุดฝาหน้าถอดเปลี่ยนได้':isRaisedFront()?'ชิ้นหน้ายกขอบ45องศา':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
+    }
     }
     if(fmt==='stl'||fmt==='both'||fmt==='all'){
       busy(true,'กำลังเขียนไฟล์ STL…'); await new Promise(r=>setTimeout(r,20));
-      const files=isService()? [
-        {name:`${name}_ฝาหน้า_รวมชั้นกระจายแสง.stl`,data:stlOf(mergeForSTL('ฝาหน้า (รวมชั้นกระจายแสง)',pr.filter(p=>p.module==='front'),'#F2F2E8'))},
+      const files=isFrontModule()? [
+        {name:`${name}_${isRaisedFront()?'ชิ้นหน้ายกขอบ':'ฝาหน้า'}_รวมชั้นกระจายแสง.stl`,data:stlOf(mergeForSTL(frontModuleLabel()+' (รวมชั้นกระจายแสง)',pr.filter(p=>p.module==='front'),'#F2F2E8'))},
         {name:`${name}_ตัวกล่อง.stl`,data:stlOf(mergeForSTL('ตัวกล่อง',pr.filter(p=>p.module==='box'),S.box.frameColor))},
         {name:`${name}_ฐาน_ฝาหลัง.stl`,data:stlOf(mergeForSTL('ฐาน/ฝาหลัง',pr.filter(p=>p.module==='back'),S.box.backColor))}
       ] : pr.map(p=>({name:`${name}_${partFileLabel(p)}.stl`,data:stlOf(p)}));
@@ -3628,9 +3672,10 @@ function cutReadme(G0,holes){
 
 function readme(parts){
   const st=geomStack();
-  if(isService()) return ['YP Lightbox Studio — '+S.name+'  (โหมด'+frontModuleLabel()+')',''
+  if(isFrontModule()) return ['YP Lightbox Studio — '+S.name+'  (โหมด'+frontModuleLabel()+')',''
    ,'ชุดพิมพ์ประกอบด้วย 3 กลุ่ม: '+frontModuleLabel()+' · ตัวกล่อง · ฝาหลัง'
    ,'ฝาหน้าร่นจากขอบนอก 0.2 มม. รอบด้าน เพื่อสวมในกรอบได้โดยไม่ฝืด'
+   ,...(isRaisedFront()?['ชิ้นหน้ามีขอบลาด 45° สูง '+raisedFrontHeight().toFixed(1)+' มม. และกินระยะเข้าด้านใน '+raisedFrontHeight().toFixed(1)+' มม.']:[])
    ,...(isLayered()?['แผ่นกระจายแสงสีขาวหนา '+st.diff.toFixed(1)+' มม. อยู่ในช่องกรอบ; ลิ้นรับบ่าเป็นวงแหวนติดกับด้านหลังฝาหน้า กว้าง '+FRONT_LIP_WIDTH.toFixed(1)+' มม. สูง '+FRONT_LIP_HEIGHT.toFixed(1)+' มม. รอบขอบแผ่น เพื่อสวมเข้าตัวกล่องและตัดแสงรั่ว']:[])
    ,'กรอบข้างสีทึบทำหน้าที่เป็นคิ้วบังแสงรอบรอยต่อ'
    ,''
@@ -3670,6 +3715,7 @@ function readme(parts){
     ,'ลำดับการพิมพ์'
     ,'1) แผ่นหน้า+กรอบ พิมพ์คว่ำหน้าลงฐาน (ผิวสวยอยู่ที่ชั้นแรก) ไม่ต้องมีซัพพอร์ต'
     ,'2) แผ่นหลัง พิมพ์ราบ'
+    ,...(isRaisedFront()?['','รูปแบบชิ้นหน้า: ยกขอบลาด 45° สูง '+raisedFrontHeight().toFixed(1)+' มม. · ระยะลาดเข้าด้านใน '+raisedFrontHeight().toFixed(1)+' มม.']:[])
     ,'','ความหนารวม '+st.total.toFixed(1)+' มม. · กรอบลึก '+S.box.depth+' มม.'
     ,''
     ,(()=>{ const J=jointSpec(), fm=parts.find(p=>p.kind==='frame')||{};
@@ -3882,7 +3928,7 @@ function partMatrix(M,mode){
   const ex = mode==='exp';
   if(mode==='plate'){
     let place=M.place||{x:0,y:0};
-    if(isService()){
+    if(isFrontModule()){
       const PK=platePack();
       if(M.module==='front') place=PK.items.panel;
       else if(M.module==='box') place=PK.items.box;
@@ -4120,6 +4166,7 @@ const BIND=[
  ['bFrame','box.frame','num','bFrameV',v=>v+' มม.',''],
  ['bBack','box.back','num','bBackV',v=>v+' มม.',''],
  ['buildMode','build.mode','str',null,null,''],
+ ['raisedFrontH','build.raisedH','num','raisedFrontHV',v=>v+' มม.',''],
  ['shAcrT','sheet.acrT','num','shAcrTV',v=>v+' มม.',''],
  ['shAcrL','sheet.acrLedge','num','shAcrLV',v=>v+' มม.',''],
  ['shPlsT','sheet.plsT','num','shPlsTV',v=>v+' มม.',''],
@@ -4264,6 +4311,8 @@ function updateBadges(){
 function pushToUI(){
   /* โปรเจกต์ที่บันทึกก่อนเพิ่มระบบนี้ยังไม่มีสองค่านี้ */
   if(S.build&&S.build.mode==='layered') S.build.mode='service';
+  if(!S.build) S.build={mode:'service',raisedH:1.2};
+  if(!isFinite(+S.build.raisedH)) S.build.raisedH=1.2;
   if(!['off','standard','strict'].includes(S.art.seal)) S.art.seal='off';
   if(!isFinite(+S.art.choke)) S.art.choke=0.6;
   /* โปรไฟล์หน้ากล่องไฟหัว 0.4 มม.: สีหน้า 0.4–2.4 (ค่าเริ่มต้น 0.6) และ diffuser 0.4–1.2 */
@@ -4316,7 +4365,9 @@ function syncModeUI(){
   const sh=isShell(), st=geomStack();
   const service=isService();
   const layered=isLayered();
+  const raised=isRaisedFront();
   const show=(id,on)=>{ const e=$('#'+id); if(e) e.style.display = on?'':'none'; };
+  show('raisedFrontRow',raised);
   show('fullThick',!sh); show('fullBack',!sh); show('shellThick',sh);
   show('fullBgT',!sh&&!layered);
   show('artColor',!sh);  show('backColorRow',!sh);
@@ -4329,6 +4380,9 @@ function syncModeUI(){
     ? '<b>พิมพ์เฉพาะตัวกล่อง</b> — ผนังมีร่องและคิ้วรับแผ่นทั้งหัวและท้าย '+
       'หน้าใช้อะครีลิคตัดเลเซอร์ หลังใช้พลาสวูด ประหยัดเวลาพิมพ์ได้มาก '+
       'ตอนส่งออกจะได้ไฟล์เส้นตัด <b>DXF และ SVG</b> ของทั้งสองแผ่นมาด้วย'
+    : raised
+    ? '<b>ชิ้นหน้ายกขอบ</b> — ผิวหน้าลาดจากขอบเข้าหาหน้าป้ายด้วยมุม <b>45°</b> รอบรูปทรงจริง '+
+      'แยกพิมพ์เป็น <b>ชิ้นหน้า · ตัวกล่อง · ฝาหลัง</b> และ Preview 3D/ไฟล์ส่งออกใช้เมชชุดเดียวกัน'
     : layered
     ? '<b>ฝาหน้าถอดเปลี่ยนได้ + กันแสงรั่ว</b> — ผิวหน้าสีเป็นหน้าแปลน ส่วนแผ่นขาวนมอยู่ในช่องกรอบ และมีลิ้นรับบ่าเป็นวงแหวนติดด้านหลังฝาหน้า '+
       'เพื่อสวมเข้าตัวกล่องโดยไม่ปิดโพรงไฟ · ส่งออกเป็นฝาหน้า ตัวกล่อง และฝาหลังแยกกัน'
@@ -4342,6 +4396,9 @@ function syncModeUI(){
       'ร่องอะครีลิค + ความลึกกล่อง + ร่องพลาสวูด<br>'+
       'คิ้วบนเป็น<b>ลาด 45°</b> รับขอบอะครีลิคแบบสัมผัสเส้นรอบรูป แผ่นจึงเข้าศูนย์เองและพิมพ์ได้ไม่ต้องซัพพอร์ต · '+
       'คิ้วล่างเป็น<b>หน้าเรียบ</b> พลาสวูดวางแนบเต็มหน้า'
+    : raised
+    ? 'ขอบนูนสูง <b>'+raisedFrontHeight().toFixed(1)+' มม.</b> และกินระยะเข้าด้านในเท่ากัน จึงเป็นมุม 45° จริง · '+
+      'ปรับได้สูงสุด <b>10 มม.</b> (แนะนำ 1–5 มม.) · ยังพิมพ์คว่ำหน้าได้โดยไม่ต้องมีซัพพอร์ต'
     : layered
     ? 'ผิวหน้าสีร่น <b>0.2 มม.</b> รอบด้านและประกบกรอบทันที ส่วนแผ่นขาวนมอยู่ในช่องกรอบ '+
       'โดยมีลิ้นรับบ่าเป็นวงแหวนติดด้านหลังฝาหน้า กว้าง <b>'+FRONT_LIP_WIDTH.toFixed(1)+' มม.</b> สูง <b>'+FRONT_LIP_HEIGHT.toFixed(1)+' มม.</b> · โพรงไฟตรงกลางยังเปิดโล่ง'
