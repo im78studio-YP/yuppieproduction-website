@@ -35,65 +35,6 @@
 
 passed
 
----
-
-# Design QA — Wizard Build-Team Background
-
-## Source visual truth
-
-- Background reference: `D:/YP Job/YP Profile26/LINE_ALBUM_miniProfile_260815_1.jpg` (906 × 1280 px).
-- Existing Wizard reference: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-a5b8e9d1-ab26-4411-91d9-f3c83832bc57.png` (727 × 834 px).
-- Intended state: Quick Setup intro open, existing Wizard structure and actions unchanged, with the Yuppie build-team artwork visible as the atmospheric background.
-
-## Implementation evidence
-
-- Browser-rendered desktop screenshot: `qa/design-artifacts/wizard-background-implementation.png`.
-- Mobile responsive screenshot: `qa/design-artifacts/wizard-background-mobile.png`.
-- Combined source/before/after comparison: `qa/design-artifacts/wizard-background-comparison.jpg`.
-- Desktop viewport and implementation pixels: 727 × 834 CSS px at browser density 1; no density normalization required.
-- Mobile viewport: 390 × 844 CSS px at browser density 1.
-
-## Full-view comparison evidence
-
-- The original Wizard layout, typography, card density, progress row, close control, and primary/secondary actions remain unchanged.
-- The supplied artwork now fills the complete Wizard backdrop with a centered `cover` crop; the build-team photography and magenta brand marks remain recognizable around the sheet.
-- A solid dark overlay and translucent blurred sheet keep foreground copy legible while allowing the source image to establish the requested Yuppie production atmosphere.
-
-## Focused region comparison evidence
-
-- A separate crop was not needed because the background treatment, entire modal frame, typography, cards, scrollbar, and both actions are readable in the 727 × 834 full-view comparison.
-
-## Required fidelity surfaces
-
-- Fonts and typography: existing Thai/English families, weights, line heights, wrapping, and hierarchy are unchanged and retain clear contrast.
-- Spacing and layout rhythm: modal dimensions, padding, card gaps, radii, scrollbar, and action placement match the existing Wizard reference.
-- Colors and visual tokens: dark plum surfaces and magenta accents remain consistent; the new overlay is neutral-dark and does not alter semantic control colors.
-- Image quality and asset fidelity: the supplied JPEG is used directly without recreation or stretching; `background-size: cover` preserves its aspect ratio.
-- Copy and content: all Wizard text and labels are unchanged.
-
-## Interaction and responsive verification
-
-- `เริ่มสร้างบูธของคุณ` opens the Business step and marks the Business progress item current.
-- `ย้อนกลับ` returns to the intro without losing the background treatment.
-- Mobile layout remains scrollable and keeps the primary and skip actions accessible.
-- Browser console check: 0 errors.
-
-## Findings
-
-- No actionable P0, P1, or P2 issues remain.
-- P3: the poster's embedded display text remains faintly visible at the top edge on some crops; the 70% overlay keeps it subordinate and preserves the supplied source faithfully.
-
-## Comparison history
-
-1. Initial implementation comparison found the supplied image readable as atmosphere without reducing Wizard copy contrast or changing layout.
-2. No P0/P1/P2 correction loop was required; desktop, mobile, forward/back interaction, and console checks passed on the first visual pass.
-
-## Final result
-
-passed
-
----
-
 # Design QA — Island Booth
 
 ## Source visual truth
