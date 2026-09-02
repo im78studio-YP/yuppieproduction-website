@@ -8251,6 +8251,7 @@ function refreshAutoLightingStale(){
 function updateAutoLightingOption(mutator,markPlanStale=true,recalculateSuggestions=false){
   const before=objectSnapshot(),state=normalizeAutoLighting();mutator(state);
   if(recalculateSuggestions&&state.mode==='auto'&&(state.suggestions.length||state.approvedFixtures.length)){
+    globalThis.YPAutoLighting.applyAutomaticBrandWallLayout(S);
     const targetRevision=Math.max(1,sceneRevision+1),next=globalThis.YPAutoLighting.recalculateLightingPlan({spec:S,sceneRevision:targetRevision,lighting:state});
     next.lastCalculatedSceneSignature=autoLightingSceneSignature();next.lastCalculatedSceneRevision=targetRevision;next.stale=false;S.lighting=next;
   }else if(markPlanStale)invalidateAutoLighting();
@@ -8261,7 +8262,8 @@ function calculateAutoLighting(recalculate=false){
   if(!typ().walls.length&&!S.objects.some(obj=>/beam|fascia|entrance|frame|overhead|column|structure|คาน|กรอบ|เสา|โครง/i.test((obj.type||'')+' '+(obj.catalogId||'')+' '+(obj.label||'')))){
     /* Island/no-wall projects remain supported with invisible preview lights. */
   }
-  const before=objectSnapshot(),targetRevision=Math.max(1,sceneRevision+1),args={spec:S,sceneRevision:targetRevision,lighting:state};
+  const before=objectSnapshot();globalThis.YPAutoLighting.applyAutomaticBrandWallLayout(S);
+  const targetRevision=Math.max(1,sceneRevision+1),args={spec:S,sceneRevision:targetRevision,lighting:state};
   S.lighting=recalculate?globalThis.YPAutoLighting.recalculateLightingPlan(args):globalThis.YPAutoLighting.generateLightingPlan(args);S.lighting.lastCalculatedSceneSignature=autoLightingSceneSignature();
   recordObjectHistory(before);sync();S.lighting.lastCalculatedSceneRevision=sceneRevision;S.lighting.stale=false;
   const visible=S.lighting.suggestions.filter(item=>item.fixtureType!=='invisible').length,invisible=S.lighting.suggestions.length-visible;

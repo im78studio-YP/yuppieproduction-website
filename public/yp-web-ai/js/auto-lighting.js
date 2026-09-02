@@ -11,6 +11,9 @@
   const INTENSITY={soft:.72,standard:1,bright:1.32};
   const AUTO_RENDER_BASE_INTENSITY=16;
   const AUTO_BEAM_ANGLE=.68;
+  const BOOTH_WALL_THICKNESS=.1;
+  const PENINSULAR_WALL_THICKNESS=.3;
+  const STORAGE_PRESETS={a:{w:1.2,d:1.2},b:{w:1.2,d:1.5},c:{w:1.2,d:2},'1.2x1.2':{w:1.2,d:1.2},'1.2x1.5':{w:1.2,d:1.5},'1.2x2.0':{w:1.2,d:2}};
   const INTENT_PRIORITY={
     balanced:['logo','entrance','graphic','product','counter','screen','meeting','general'],
     brand:['logo','graphic','screen','product','counter','meeting','entrance','general'],
@@ -89,6 +92,56 @@
     return['back'];
   }
 
+  function boothWallThickness(spec={}){
+    return['penin','peninsular','backdrop','photo360'].includes(spec.type)?PENINSULAR_WALL_THICKNESS:BOOTH_WALL_THICKNESS;
+  }
+
+  /* Storage is a system asset, so it is not present in spec.objects.  Mirror
+     the room footprint used by the scene renderer so lighting and geometry
+     reason about exactly the same occupied wall spans. */
+  function storageRoomGeometry(spec={}){
+    const key=String(spec.stSize||'none');
+    if(key==='none')return null;
+    const W=Math.max(1,num(spec.W||spec.width,6)),D=Math.max(1,num(spec.D||spec.depth,3)),H=Math.max(.5,num(spec.H||spec.height,2.4)),walls=inferWalls(spec),t=boothWallThickness(spec),preset=STORAGE_PRESETS[key];
+    const dimensions=key==='custom'?{w:num(spec.stW,1.2),d:num(spec.stD,1.2)}:key==='full'?{w:W,d:num(spec.stD,1.2)}:(preset||{w:1.2,d:1.2});
+    const x0=walls.includes('left')?t:0,x1=walls.includes('right')?W-t:W,available=Math.max(.2,x1-x0),y=walls.includes('back')?t:0;
+    const w=Math.min(Math.max(.2,num(dimensions.w,1.2)),available),d=Math.min(Math.max(.2,num(dimensions.d,1.2)),Math.max(.2,D-y)),floorY=Math.max(0,num(spec.raise)/100),requestedHeight=num(spec.stHmode)===0?num(spec.stHv,H):num(spec.stHmode,H),h=Math.min(Math.max(.2,requestedHeight),Math.max(.2,H-floorY));
+    const x=spec.stPos==='left'?x0:spec.stPos==='center'?x0+(available-w)/2:x1-w;
+    return{x:round(x),y:round(y),w:round(w),d:round(d),h:round(h)};
+  }
+
+  function mergeIntervals(intervals=[]){
+    return intervals.slice().sort((a,b)=>a.min-b.min).reduce((merged,item)=>{
+      const last=merged[merged.length-1];
+      if(last&&item.min<=last.max){last.max=Math.max(last.max,item.max);last.assetIds=[...new Set(last.assetIds.concat(item.assetIds||[]))];}
+      else merged.push({min:item.min,max:item.max,assetIds:[...(item.assetIds||[])]});
+      return merged;
+    },[]);
+  }
+
+  function freeWallSpans(spec={},face='back'){
+    const span=face==='back'?Math.max(1,num(spec.W||spec.width,6)):Math.max(1,num(spec.D||spec.depth,3)),blocked=collectWallObstructions(spec,face),free=[];
+    let cursor=0;
+    blocked.forEach(interval=>{if(interval.min-cursor>.02)free.push({min:round(cursor),max:round(interval.min),width:round(interval.min-cursor)});cursor=Math.max(cursor,interval.max);});
+    if(span-cursor>.02)free.push({min:round(cursor),max:round(span),width:round(span-cursor)});
+    return free;
+  }
+
+  function automaticBrandWallLayout(spec={}){
+    if((spec.logoMount&&spec.logoMount!=='wall')||(spec.logoWall&&spec.logoWall!=='back'))return null;
+    const free=freeWallSpans(spec,'back');
+    if(!free.length||!collectBackWallObstructions(spec).length)return null;
+    const best=free.slice().sort((a,b)=>b.width-a.width||a.min-b.min)[0],padding=Math.min(.18,best.width*.08),available=Math.max(.05,best.width-padding*2),requested=Math.max(.4,num(spec.logoWidth,Math.min(2,available)));
+    return{face:'back',min:best.min,max:best.max,center:round((best.min+best.max)/2),availableWidth:round(available),targetWidth:round(Math.min(requested,available))};
+  }
+
+  function applyAutomaticBrandWallLayout(spec={}){
+    const layout=automaticBrandWallLayout(spec);if(!layout)return null;
+    spec.logoWallU=layout.center;
+    const W=Math.max(1,num(spec.W||spec.width,6)),ratio=layout.center/W;spec.logoPos=ratio<.34?'left':ratio>.66?'right':'center';
+    return layout;
+  }
+
   function objectInfo(object,index=0){
     const size=object.size||{},position=object.position||{},catalog=String(object.catalogId||''),name=String(object.label||object.name||object.type||catalog||'Asset '+(index+1));
     return{id:String(object.id||catalog||'asset-'+(index+1)),name,catalogId:catalog,type:String(object.type||''),
@@ -115,8 +168,9 @@
     const W=Math.max(1,num(spec.W||spec.width,6)),D=Math.max(1,num(spec.D||spec.depth,3)),H=Math.max(.5,num(spec.H||spec.height,2.4));
     const targets=[];
     if(spec.type!=='island'&&(num(spec.logoScale,25)>0||String(spec.brand||'').trim())){
+      const automaticLayout=automaticBrandWallLayout(spec),logoOnBack=(!spec.logoMount||spec.logoMount==='wall')&&(!spec.logoWall||spec.logoWall==='back'),logoX=automaticLayout?.center??(logoOnBack?num(spec.logoWallU,W/2):W/2),logoWidth=automaticLayout?.targetWidth??Math.max(.4,Math.min(W*.9,num(spec.logoWidth,Math.min(2,W*.45))));
       targets.push({id:'system-brand',type:'logo',name:'โลโก้และชื่อแบรนด์',assetId:'system-brand',zoneId:null,
-        position:vec(W/2,clamp(num(spec.logoWallY,H*.67),.25,H-.12),.04),width:Math.max(.4,Math.min(W*.9,num(spec.logoWidth,Math.min(2,W*.45))))});
+        position:vec(logoX,clamp(num(spec.logoWallY,H*.67),.25,H-.12),.04),width:logoWidth});
     }
     (spec.wallStickerFaces||[]).forEach(face=>{
       const sticker=spec.wallStickers?.[face];if(!sticker?.data)return;
@@ -298,7 +352,7 @@
 
   function collectWallObstructions(spec={},face='back'){
     const W=Math.max(1,num(spec.W||spec.width,6)),D=Math.max(1,num(spec.D||spec.depth,3)),H=Math.max(.5,num(spec.H||spec.height,2.4)),clearance=.12,span=face==='back'?W:D;
-    const intervals=(spec.objects||[]).map(objectInfo).filter(item=>item.visible).flatMap(item=>{
+    const objectIntervals=(spec.objects||[]).map(objectInfo).filter(item=>item.visible).flatMap(item=>{
       const radians=num(item.rotationY)*Math.PI/180,cos=Math.abs(Math.cos(radians)),sin=Math.abs(Math.sin(radians)),
         halfX=(cos*item.size.w+sin*item.size.d)/2,halfZ=(sin*item.size.w+cos*item.size.d)/2,
         /* Arm Light projects about .33 m in front of the wall.  A tall object
@@ -311,13 +365,13 @@
       const center=face==='back'?item.position.x:item.position.z,half=face==='back'?halfX:halfZ,
         min=clamp(center-half-clearance,0,span),max=clamp(center+half+clearance,0,span);
       return max-min>.02?[{assetId:item.id,min:round(min),max:round(max)}]:[];
-    }).sort((a,b)=>a.min-b.min);
-    return intervals.reduce((merged,item)=>{
-      const last=merged[merged.length-1];
-      if(last&&item.min<=last.max){last.max=Math.max(last.max,item.max);last.assetIds.push(item.assetId);}
-      else merged.push({min:item.min,max:item.max,assetIds:[item.assetId]});
-      return merged;
-    },[]);
+    }).map(item=>({min:item.min,max:item.max,assetIds:[item.assetId]}));
+    const room=storageRoomGeometry(spec),walls=inferWalls(spec),t=boothWallThickness(spec),epsilon=.012,roomIntervals=[];
+    if(room){
+      const touches=face==='back'?walls.includes('back')&&room.y<=t+epsilon:face==='left'?walls.includes('left')&&room.x<=t+epsilon:walls.includes('right')&&room.x+room.w>=W-t-epsilon;
+      if(touches){const start=face==='back'?room.x:room.y,length=face==='back'?room.w:room.d,min=clamp(start-clearance,0,span),max=clamp(start+length+clearance,0,span);if(max-min>.02)roomIntervals.push({min:round(min),max:round(max),assetIds:['storage-room']});}
+    }
+    return mergeIntervals(objectIntervals.concat(roomIntervals));
   }
 
   function collectBackWallObstructions(spec={}){return collectWallObstructions(spec,'back');}
@@ -327,7 +381,7 @@
     let output=fixtures;
     const removedFixtureIds=[];
     if(blocked.length&&wall.length){
-    const usableWidth=Math.max(0,W-blocked.reduce((sum,item)=>sum+(item.max-item.min),0)),desiredWallCount=Math.max(1,Math.round(usableWidth/1.55)),
+    const usableWidth=Math.max(0,W-blocked.reduce((sum,item)=>sum+(item.max-item.min),0)),desiredWallCount=usableWidth>.35?Math.max(1,Math.round(usableWidth/1.55)):0,
       obstructed=new Set(wall.filter(item=>blocked.some(interval=>item.position.x>=interval.min&&item.position.x<=interval.max)).map(item=>item.id)),
       available=wall.filter(item=>!obstructed.has(item.id)),priority={logo:0,graphic:0,product:1,counter:1,screen:1,meeting:2,general:3},
       keep=new Set(available.slice().sort((a,b)=>(priority[a.targetType]??2)-(priority[b.targetType]??2)).slice(0,desiredWallCount).map(item=>item.id)),
@@ -441,7 +495,7 @@
 
   global.YPAutoLighting={
     INTENTS,TEMPERATURES,BRIGHTNESS,PREFERENCES,FIXTURE_TYPES,TARGET_TYPES,defaultLightingState,normalizeLightingState,normalizeFixture,
-    inferWalls,collectTargets,collectMountSurfaces,isEntranceFrame,collectWallObstructions,collectBackWallObstructions,applyBackWallObstructions,mountRotationForSurface,aimOnMountSurface,fixtureWorldPointLocalOffset,fixtureAimLocalOffset,fixtureLightWorldPosition,fixtureLightLocalOffset,fixtureRenderIntensity,applyPhotometricSettings,
+    inferWalls,storageRoomGeometry,freeWallSpans,automaticBrandWallLayout,applyAutomaticBrandWallLayout,collectTargets,collectMountSurfaces,isEntranceFrame,collectWallObstructions,collectBackWallObstructions,applyBackWallObstructions,mountRotationForSurface,aimOnMountSurface,fixtureWorldPointLocalOffset,fixtureAimLocalOffset,fixtureLightWorldPosition,fixtureLightLocalOffset,fixtureRenderIntensity,applyPhotometricSettings,
     generateLightingPlan,recalculateLightingPlan,approveSuggestions,markStale,promptLines
   };
 })(typeof globalThis!=='undefined'?globalThis:window);

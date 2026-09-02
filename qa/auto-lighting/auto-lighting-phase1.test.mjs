@@ -124,6 +124,35 @@ test('17. ห้องและประตูไม่ถูกสร้าง�
   assert.ok(!api.collectTargets(spec).some(item=>item.id==='storage-door'));
 });
 
+test('17.1 ห้องระบบถูกนับเป็นพื้นที่กีดขวางของผนังหลังและผนังข้างที่ห้องชิด',()=>{
+  const spec={...baseSpec(),stSize:'a',stPos:'right',stHmode:2.4,logoMount:'wall',logoWall:'back',logoWallU:3};
+  assert.equal(JSON.stringify(api.storageRoomGeometry(spec)),JSON.stringify({x:4.7,y:.1,w:1.2,d:1.2,h:2.4}));
+  const back=api.collectWallObstructions(spec,'back'),left=api.collectWallObstructions(spec,'left'),right=api.collectWallObstructions(spec,'right');
+  assert.ok(back.some(item=>item.assetIds.includes('storage-room')&&item.min<4.7&&item.max===6));
+  assert.equal(left.some(item=>item.assetIds.includes('storage-room')),false);
+  assert.ok(right.some(item=>item.assetIds.includes('storage-room')&&item.min===0));
+});
+
+test('17.2 คำนวณใหม่หักโคมที่ห้องทับและนับโคมผนังหลังจากช่วงว่างจริง',()=>{
+  const spec={...baseSpec(),stSize:'a',stPos:'right',stHmode:2.4,logoMount:'wall',logoWall:'back',logoWallU:3};
+  spec.lighting={...api.defaultLightingState(),fixturePreference:'side-wall'};
+  const plan=api.generateLightingPlan({spec,sceneRevision:1}),blocked=api.collectBackWallObstructions(spec),back=plan.suggestions.filter(item=>item.mountSurfaceId==='wall-back');
+  assert.equal(back.length,3);assert.equal(plan.diagnostics.wallLayout.desiredWallCount,3);
+  assert.ok(back.every(item=>!blocked.some(interval=>item.position.x>=interval.min&&item.position.x<=interval.max)));
+  assert.ok(plan.diagnostics.wallLayout.removedFixtureIds.length>=1);
+});
+
+test('17.3 โลโก้และคู่โคมย้ายไปกึ่งกลางช่วงผนังที่เหลือเมื่อห้องอยู่ซ้ายหรือขวา',()=>{
+  for(const [side,direction] of [['right',-1],['left',1]]){
+    const spec={...baseSpec(),stSize:'a',stPos:side,stHmode:2.4,logoMount:'wall',logoWall:'back',logoWallU:3};
+    const layout=api.automaticBrandWallLayout(spec),target=api.collectTargets(spec).find(item=>item.id==='system-brand');
+    assert.ok(layout);assert.equal(target.position.x,layout.center);assert.ok((layout.center-spec.W/2)*direction>0);
+    api.applyAutomaticBrandWallLayout(spec);assert.equal(spec.logoWallU,layout.center);
+    const logoFixtures=api.generateLightingPlan({spec,sceneRevision:1}).suggestions.filter(item=>item.targetType==='logo');
+    assert.equal(logoFixtures.length,2);assert.ok(Math.abs((logoFixtures[0].position.x+logoFixtures[1].position.x)/2-layout.center)<.02);
+  }
+});
+
 test('18. Screen และ Product Shelf ถูกตรวจเป็น Target ตามประเภท',()=>{
   const spec=baseSpec();spec.objects=[{id:'tv',type:'digital-screen',position:{x:1,y:.8,z:.1},size:{w:1,d:.1,h:.7}},{id:'shelf',type:'product-shelf',position:{x:4,y:0,z:1},size:{w:1.4,d:.5,h:1.8}}];
   const targets=api.collectTargets(spec);assert.equal(targets.find(item=>item.id==='tv').type,'screen');assert.equal(targets.find(item=>item.id==='shelf').type,'product');
