@@ -28,6 +28,7 @@ test('เมชชิ้นหน้ายกขอบใช้ระยะ X\/Y
   assert.match(html,/inset=Math\.max\(0,rise-mid\)/);
   assert.match(html,/if\(isRaisedFront\(\)\) addRaisedFrontSolid\(M,mk,layerT\)/);
   assert.match(html,/frameZ0=\(isLayered\(\)\?colorT:bgT\)\+frontRaise/);
+  assert.match(html,/stepTarget=clamp\(\(G\.px\|\|\.2\)\*\.65,\.09,\.12\),steps=clamp\(Math\.ceil\(rise\/stepTarget\),8,32\)/);
 });
 
 test('Preview และไฟล์ส่งออกอ้างอิง buildParts ชุดเดียวและระบุโหมดในเอกสารผลิต',()=>{

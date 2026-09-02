@@ -2418,11 +2418,12 @@ function frameBandSpec(z0,z1){
 
 /* ชิ้นหน้ายกขอบ: ผิวหน้าด้านในยังแตะฐานพิมพ์ที่ z=0 แล้วขยายออก
    ตามระยะ z ด้วยอัตรา 1:1 จึงได้ลาด 45° ก่อนต่อเข้าความหนาหน้าเต็ม
-   ใช้ช่วงย่อยไม่เกินราว 0.2 มม. เพื่อให้ Preview และไฟล์พิมพ์ใช้รูปทรงเดียวกัน */
+   แบ่งผิวลาดราว 0.10 มม. และจำกัดไม่เกิน 32 ช่วงต่อชิ้นสี
+   เพื่อให้ส่วนโค้งเรียบกว่าเดิมโดยไม่สร้างเมชหนักจนเบราว์เซอร์ใช้หน่วยความจำเกิน */
 function addRaisedFrontSolid(M,mask,thickness){
   const rise=raisedFrontHeight();
   if(rise<=0){ addSolid(M,mask,0,thickness); return; }
-  const stepTarget=Math.max(.14,Math.min(.24,G.px||.2)),steps=clamp(Math.ceil(rise/stepTarget),3,64);
+  const stepTarget=clamp((G.px||.2)*.65,.09,.12),steps=clamp(Math.ceil(rise/stepTarget),8,32);
   for(let j=0;j<steps;j++){
     const za=rise*j/steps,zb=rise*(j+1)/steps,mid=(za+zb)/2,inset=Math.max(0,rise-mid),lim=inset/G.px;
     const slice=maskWhere(i=>mask[i]&&G.edtIn[i]>lim);
@@ -4398,7 +4399,7 @@ function syncModeUI(){
       'คิ้วล่างเป็น<b>หน้าเรียบ</b> พลาสวูดวางแนบเต็มหน้า'
     : raised
     ? 'ขอบนูนสูง <b>'+raisedFrontHeight().toFixed(1)+' มม.</b> และกินระยะเข้าด้านในเท่ากัน จึงเป็นมุม 45° จริง · '+
-      'ปรับได้สูงสุด <b>10 มม.</b> (แนะนำ 1–5 มม.) · ยังพิมพ์คว่ำหน้าได้โดยไม่ต้องมีซัพพอร์ต'
+      'ผิวลาดใช้ความละเอียดสมดุลประมาณ <b>0.10 มม.</b> และจำกัดจำนวนช่วงเพื่อให้ Preview ทำงานลื่น · ปรับสูงได้ถึง <b>10 มม.</b> (แนะนำ 1–5 มม.)'
     : layered
     ? 'ผิวหน้าสีร่น <b>0.2 มม.</b> รอบด้านและประกบกรอบทันที ส่วนแผ่นขาวนมอยู่ในช่องกรอบ '+
       'โดยมีลิ้นรับบ่าเป็นวงแหวนติดด้านหลังฝาหน้า กว้าง <b>'+FRONT_LIP_WIDTH.toFixed(1)+' มม.</b> สูง <b>'+FRONT_LIP_HEIGHT.toFixed(1)+' มม.</b> · โพรงไฟตรงกลางยังเปิดโล่ง'
