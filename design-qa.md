@@ -53,6 +53,110 @@ passed
 
 ---
 
+# Design QA — Separate 5D Rounded and Chamfer Work Types
+
+## Source of truth
+
+- Rounded-edge reference: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-ea94235a-d6d0-4402-a633-dac6f9c2da55.png`
+- Adjustable Chamfer reference: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-56161e28-dbd4-461b-a148-6abfe108e064.png`
+- Requested behavior: restore the existing rounded 5D edge and expose adjustable Chamfer as a separate work type with a 45° default.
+
+## Implementation evidence
+
+- Rounded implementation: `qa/lightbox-maker/artifacts/face5d-rounded-restored-3d.png`
+- Chamfer implementation: `qa/lightbox-maker/artifacts/face5d-chamfer-separate-45.png`
+- Viewport: 1191 × 912 CSS px at browser density 1.
+- Tested in assembled 3D view with the default YP Lightbox Studio two-line artwork.
+
+## Required fidelity surfaces
+
+- Work-type hierarchy: the selector now has independent “5D ขอบโค้งมน” and “5D ขอบ Chamfer” entries.
+- Rounded geometry: the original five-segment fillet path and its radius control are restored unchanged.
+- Chamfer geometry: the one-slope outer-edge path remains isolated to the new work type; angle defaults to 45° and can be adjusted from 20–70°.
+- Parameters: rounded mode displays only its radius; Chamfer mode displays only Chamfer height and angle. Shared 5D height remains available in both.
+- Production outputs: labels, README text, checks, and 3MF filenames identify the selected edge treatment.
+
+## Interaction and regression checks
+
+- Selected Chamfer, changed angle from 45° to 60°, and returned it to 45° successfully.
+- Switched from Chamfer to rounded and back; each mode restored the correct exclusive controls without stale UI.
+- Existing saved projects that contain `edgeR` remain rounded; short-lived Chamfer state without `edgeR` migrates to the new Chamfer mode.
+- Full automated suite: 165/165 tests passed.
+- Production build: passed.
+- Browser console warnings/errors: 0.
+
+## Comparison history
+
+1. Prior implementation replaced the rounded 5D mode with Chamfer, causing the original work type to disappear.
+2. Current implementation restores the rounded fillet path and adds a separate Chamfer work type instead of overwriting it.
+3. Reference and implementation screenshots were inspected together; no actionable P0, P1, or P2 issue remains for the requested separation.
+
+## Final result
+
+passed
+
+---
+
+# Design QA — Adjustable 5D Chamfer Angle
+
+## Source visual truth
+
+- Reference: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-56161e28-dbd4-461b-a148-6abfe108e064.png`.
+- Source pixels: 1898 × 891 px.
+- Scoped target: the 5D front uses a chamfered outer profile and exposes an adjustable chamfer-angle control whose default is 45°.
+
+## Implementation evidence
+
+- Browser-rendered implementation: `qa/lightbox-maker/artifacts/chamfer-45-implementation.png`.
+- Focused side-by-side evidence: `qa/lightbox-maker/artifacts/chamfer-45-comparison.png`.
+- Implementation pixels and CSS viewport: 1190 × 922 px at density 1.
+- Comparison board: 2635 × 808 px; both captures were proportionally normalized to 760 px content height without cropping.
+- State: `ชั้นสีหน้า 5D`, assembled 3D view, Chamfer height 2.0 mm, Chamfer angle 45°.
+
+## Full-view comparison evidence
+
+- The reference and implementation both present the chamfer controls alongside the live 3D model.
+- The implementation intentionally retains the existing YP Lightbox Studio dark/pink design system; this is a scoped feature reference rather than a full-screen visual clone.
+- The outer 5D wall now uses a single planar chamfer band instead of the former multi-segment fillet, while internal color boundaries remain flat.
+
+## Focused region comparison evidence
+
+- The combined board shows the reference 45° angle control and the implementation `มุม Chamfer` control at 45° in the same comparison input.
+- The reference uses a larger 5 mm upper section, so its chamfer is visually broader. The implementation preserves the product's existing 2 mm edge-height default; this is an accepted P3 difference outside the requested angle-default change.
+
+## Required fidelity surfaces
+
+- Fonts and typography: existing application family, weight, size, line height, and antialiasing remain unchanged; the two new labels follow adjacent control typography.
+- Spacing and layout rhythm: the new angle row uses the existing row, slider, numeric input, unit suffix, and panel spacing with no overflow.
+- Colors and visual tokens: all existing dark surfaces, pink controls, neutral text, borders, and active states are reused.
+- Image quality and asset fidelity: the live result remains WebGL geometry; no raster substitute, placeholder, or generated asset was introduced.
+- Copy and content: `ความสูง Chamfer` and `มุม Chamfer` distinguish profile size from angle; the default visibly reads 45°.
+
+## Interaction and regression verification
+
+- Selected the 5D work category and opened the assembled 3D view.
+- Entered 35° through the numeric control, confirmed the slider and model recomputed, then restored 45°.
+- Unit verification confirms 30°, 45°, and 60° produce different horizontal chamfer runs, with 45° producing equal rise and run.
+- Browser console: 0 warnings and 0 errors.
+- All 165 project tests, TypeScript validation, inline application JavaScript parsing, and the production build passed.
+
+## Findings
+
+- No actionable P0, P1, or P2 issue remains for the requested adjustable-angle feature.
+- P3: the default 2 mm chamfer height is subtler than the 5 mm reference upper section; it can be revisited as a separate dimensional decision.
+
+## Comparison history
+
+1. Initial implementation exposed the angle and replaced the outer fillet with a single chamfer surface.
+2. Browser interaction verified 35° and return to the 45° default without visual or console errors.
+3. Side-by-side review found no blocking mismatch within the requested scope.
+
+## Final result
+
+passed
+
+---
+
 # Design QA — Hollow 5D Front Light Path
 
 ## Source visual truth

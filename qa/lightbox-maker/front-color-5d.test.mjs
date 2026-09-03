@@ -8,36 +8,58 @@ const here=path.dirname(fileURLToPath(import.meta.url));
 const root=path.resolve(here,'../..');
 const html=fs.readFileSync(path.join(root,'public/lightbox_maker/YP-Lightbox-Studio.html'),'utf8');
 
-test('ชั้นสีหน้า 5D เป็นรูปแบบงานใหม่ ไม่ใช่ตัวเลือกย่อยของฝหน้ามาตรฐาน',()=>{
-  assert.match(html,/<option value="face5d">ชั้นสีหน้า 5D — ฝาหน้ายกสูง \+ ตัวกล่อง \+ ฝาหลัง<\/option>/);
+test('5D ขอบโค้งมนและ 5D Chamfer เป็นคนละรูปแบบงาน',()=>{
+  assert.match(html,/<option value="face5d">ชั้นสีหน้า 5D ขอบโค้งมน — ฝาหน้ายกสูง \+ ตัวกล่อง \+ ฝาหลัง<\/option>/);
+  assert.match(html,/<option value="face5dChamfer">ชั้นสีหน้า 5D ขอบ Chamfer — ฝาหน้ายกสูงขอบเฉียง \+ ตัวกล่อง \+ ฝาหลัง<\/option>/);
   assert.doesNotMatch(html,/id="faceStyle"/);
   assert.doesNotMatch(html,/\['faceStyle','face\.style'/);
   assert.match(html,/build:\{ mode:'service' \}/);
 });
 
-test('พารามิเตอร์ความสูงและรัศมีขอบทำงานเฉพาะรูปแบบงาน 5D',()=>{
+test('รูปแบบโค้งมนและ Chamfer มีพารามิเตอร์แยกกัน',()=>{
   assert.match(html,/id="face5dH" min="3" max="10" step="0\.5" value="5"/);
   assert.match(html,/id="face5dR" min="0\.6" max="2\.4" step="0\.2" value="2"/);
-  assert.match(html,/function isFace5D\(\)\{ return !!\(S\.build&&S\.build\.mode==='face5d'\); \}/);
+  assert.match(html,/id="face5dCH" min="0\.6" max="2\.4" step="0\.2" value="2"/);
+  assert.match(html,/id="face5dA" min="20" max="70" step="5" value="45"/);
+  assert.match(html,/face:\{ height5d:5, edgeR:2, chamferH:2, chamferAngle:45 \}/);
+  assert.match(html,/function isFace5D\(\)\{ return !!\(S\.build&&\(S\.build\.mode==='face5d'\|\|S\.build\.mode==='face5dChamfer'\)\); \}/);
+  assert.match(html,/function isFace5DRounded\(\)\{ return !!\(S\.build&&S\.build\.mode==='face5d'\); \}/);
+  assert.match(html,/function isFace5DChamfer\(\)\{ return !!\(S\.build&&S\.build\.mode==='face5dChamfer'\); \}/);
   assert.match(html,/show\('flatColorTRow',!sh\); show\('face5dRow',!sh&&isFace5D\(\)\);/);
-  assert.match(html,/show\('face5dRadiusRow',!sh&&isFace5D\(\)\);/);
+  assert.match(html,/show\('face5dRadiusRow',!sh&&isFace5DRounded\(\)\);/);
+  assert.match(html,/show\('face5dChamferRow',!sh&&isFace5DChamfer\(\)\);/);
+  assert.match(html,/show\('face5dAngleRow',!sh&&isFace5DChamfer\(\)\);/);
   assert.match(html,/const colorT=clamp\(\+b\.colorT\|\|0\.6,0\.4,2\.4\);/);
   assert.match(html,/const faceH=isFace5D\(\)\?clamp\(\+\(S\.face&&S\.face\.height5d\)\|\|5,3,10\):colorT;/);
   assert.match(html,/const frameZ0=isFace5D\(\)\?faceH:\(isLayered\(\)\?colorT:bgT\);/);
 });
 
-test('ขอบหน้า 5D ใช้ fillet เฉพาะขอบนอกสุด ผิวสีด้านในราบเสมอกัน',()=>{
-  assert.match(html,/const FACE5D_FILLET_SEGMENTS=5;/);
-  assert.match(html,/function addRoundedPrism\(M,groups,z0,z1,radius,outerOnly=false\)/);
-  assert.match(html,/rounded=!outerOnly\|\|li===0;/);
+test('ขอบหน้า 5D เลือกเส้นทาง fillet เดิมหรือ Chamfer ตามรูปแบบงาน',()=>{
+  assert.match(html,/function chamferProfile\(height,angleDeg,totalH,featureW,outerOnly=false\)/);
+  assert.match(html,/const deg=clamp\(\+angleDeg\|\|45,20,70\)/);
+  assert.match(html,/wantedH\/Math\.tan\(angle\)/);
+  assert.match(html,/function addChamferPrism\(M,groups,z0,z1,height,angleDeg,outerOnly=false\)/);
+  assert.match(html,/chamfered=!outerOnly\|\|li===0;/);
   assert.match(html,/function splitOuterEdgeMask\(mask,support=G\.panel\)/);
   assert.match(html,/const split=splitOuterEdgeMask\(wallMk,frontFit\|\|P\);/);
-  assert.match(html,/addRoundedSolid\(W,split\.edge,0,st\.faceH,[\s\S]*?,undefined,undefined,true\);/);
+  assert.match(html,/if\(isFace5DChamfer\(\)\) addChamferSolid\(W,split\.edge,0,st\.faceH,[\s\S]*?chamferAngle[\s\S]*?,undefined,undefined,true\);/);
+  assert.match(html,/else addRoundedSolid\(W,split\.edge,0,st\.faceH,clamp\(\+\(S\.face&&S\.face\.edgeR\)\|\|2,0\.6,2\.4\),undefined,undefined,true\);/);
   assert.match(html,/addSolid\(W,split\.inner,0,st\.faceH\);/);
   assert.match(html,/addSolid\(M,capMk,0,layerT\);/);
   assert.match(html,/M\.smoothN\.set\(ti,/);
   assert.match(html,/const s=i\*12, sn=M\.smoothN&&M\.smoothN\.get\(i\);/);
   assert.match(html,/M\.gloss=true;/);
+});
+
+test('มุม Chamfer 45 องศาเป็นค่าเริ่มต้นและเปลี่ยนระยะลาดจริง',()=>{
+  const match=html.match(/function chamferProfile\(height,angleDeg,totalH,featureW,outerOnly=false\)\{[\s\S]*?\n\}/);
+  assert.ok(match,'ต้องพบฟังก์ชันคำนวณโปรไฟล์ Chamfer');
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const profile=new Function('clamp',`${match[0]}; return chamferProfile;`)(clamp);
+  assert.equal(profile(2,45,5,100,true).deg,45);
+  assert.ok(Math.abs(profile(2,45,5,100,true).run-2)<1e-9);
+  assert.ok(profile(2,30,5,100,true).run>profile(2,45,5,100,true).run);
+  assert.ok(profile(2,60,5,100,true).run<profile(2,45,5,100,true).run);
 });
 
 test('5D แยกผิวสีบางออกจากผนังยกกลวงเพื่อเปิดทางเดินแสง',()=>{
@@ -71,9 +93,11 @@ test('เกาะสีในช่องว่างถูกแยกจา�
 
 test('5D ยังคงโครงสร้างสามโมดูล แต่มีชื่อและเอกสารผลิตแยกจากงานมาตรฐาน',()=>{
   assert.match(html,/function isService\(\)[\s\S]*?S\.build\.mode==='face5d'/);
-  assert.match(html,/function frontModuleLabel\(\)\{ return isFace5D\(\)\?'ชั้นสีหน้า 5D \+ กันแสงรั่ว'/);
-  assert.match(html,/if\(isFace5D\(\)\) download\(blob,`\$\{name\}_ชุดชั้นสีหน้า_5D\.3mf`\)/);
-  assert.match(html,/ชั้นสีหน้าแบบ 5D: ผิวสีหนา /);
+  assert.match(html,/return isFace5DChamfer\(\)\?'ชั้นสีหน้า 5D ขอบ Chamfer \+ กันแสงรั่ว':isFace5DRounded\(\)\?'ชั้นสีหน้า 5D ขอบโค้งมน \+ กันแสงรั่ว'/);
+  assert.match(html,/if\(isFace5DChamfer\(\)\) download\(blob,`\$\{name\}_ชุดชั้นสีหน้า_5D_Chamfer\.3mf`\)/);
+  assert.match(html,/else if\(isFace5DRounded\(\)\) download\(blob,`\$\{name\}_ชุดชั้นสีหน้า_5D_ขอบโค้งมน\.3mf`\)/);
+  assert.match(html,/ชั้นสีหน้าแบบ 5D ขอบโค้งมน: ผิวสีหนา /);
+  assert.match(html,/ชั้นสีหน้าแบบ 5D Chamfer: ผิวสีหนา /);
 });
 
 test('ตัวกล่อง 5D ลงฐานพิมพ์ที่ระดับเดียวกับชิ้นหน้าและฝาหลัง',()=>{
@@ -87,4 +111,5 @@ test('ตัวกล่อง 5D ลงฐานพิมพ์ที่ระ�
 
 test('state 5D ชั่วคราวจากรุ่นก่อนถูกย้ายเข้ารูปแบบงานใหม่',()=>{
   assert.match(html,/if\(S\.face&&S\.face\.style==='5d'&&S\.build\.mode==='service'\) S\.build\.mode='face5d'/);
+  assert.match(html,/if\(S\.build\.mode==='face5d'&&S\.face&&!isFinite\(\+S\.face\.edgeR\)&&isFinite\(\+S\.face\.chamferAngle\)\) S\.build\.mode='face5dChamfer'/);
 });
