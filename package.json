@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "node --test qa/quick-setup/quick-setup-context.test.mjs qa/ai-rendering/ai-staging.test.mjs qa/ai-rendering/ai-render-pipeline.test.mjs qa/ai-rendering/ai-render-page.test.mjs qa/ai-rendering/ai-render-intent.test.mjs qa/asset-list/asset-list-page.test.mjs qa/asset-list/fine-position-controls.test.mjs qa/auto-lighting/auto-lighting-phase1.test.mjs qa/lightbox-maker/raised-front.test.mjs qa/scene-asset-registry/scene-asset-registry.test.mjs qa/smart-snap/smart-snap-engine.test.mjs qa/attachment/asset-attachment-graph.test.mjs"
+    "test": "node --test qa/quick-setup/quick-setup-context.test.mjs qa/ai-rendering/ai-staging.test.mjs qa/ai-rendering/ai-render-pipeline.test.mjs qa/ai-rendering/ai-render-page.test.mjs qa/ai-rendering/ai-render-intent.test.mjs qa/asset-list/asset-list-page.test.mjs qa/asset-list/fine-position-controls.test.mjs qa/auto-lighting/auto-lighting-phase1.test.mjs qa/lightbox-maker/raised-front.test.mjs qa/lightbox-maker/front-color-5d.test.mjs qa/scene-asset-registry/scene-asset-registry.test.mjs qa/smart-snap/smart-snap-engine.test.mjs qa/attachment/asset-attachment-graph.test.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.383.0",

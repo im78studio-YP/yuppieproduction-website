@@ -421,15 +421,16 @@ Studio</textarea>
       <div class="row" style="margin-top:10px"><label>รูปแบบงาน</label>
         <select id="buildMode" class="grow">
           <option value="full">พิมพ์ทั้งใบ — หน้า + กรอบ + ฝาหลัง</option>
-          <option value="raised">ชิ้นหน้ายกขอบ — ลาด 45° รอบรูปทรง</option>
           <option value="service">พิมพ์แยกฝาหน้าถอดเปลี่ยนได้ + กันแสงรั่ว — หน้า + ตัวกล่อง + ฝาหลัง</option>
+          <option value="face5d">ชั้นสีหน้า 5D — ฝาหน้ายกสูง + ตัวกล่อง + ฝาหลัง</option>
           <option value="shell">พิมพ์เฉพาะตัวกล่อง — หน้าอะครีลิค · หลังพลาสวูด</option>
         </select></div>
       <p class="hint" id="modeHint" style="margin:6px 0 10px"></p>
-      <div class="row" id="raisedFrontRow"><label>ความสูงขอบนูน</label><input type="range" id="raisedFrontH" min="0.4" max="10" step="0.2" value="1.2"><span class="unit" id="raisedFrontHV">1.2 มม.</span></div>
       <div class="row"><label>ความลึกกล่อง</label><input type="range" id="bDepth" min="12" max="80" step="1" value="40"><span class="unit" id="bDepthV">40 มม.</span></div>
       <div id="fullThick">
-      <div class="row"><label>ชั้นสีหน้า</label><input type="range" id="bColorT" min="0.4" max="2.4" step="0.1" value="0.6"><span class="unit" id="bColorTV">0.6 มม.</span></div>
+      <div class="row" id="flatColorTRow"><label>ความหนาชั้นสีหน้า</label><input type="range" id="bColorT" min="0.4" max="2.4" step="0.1" value="0.6"><span class="unit" id="bColorTV">0.6 มม.</span></div>
+      <div class="row" id="face5dRow"><label>ความสูงสีหน้า 5D</label><input type="range" id="face5dH" min="3" max="10" step="0.5" value="5"><span class="unit" id="face5dHV">5 มม.</span></div>
+      <div class="row" id="face5dRadiusRow"><label>ความโค้งขอบหน้า</label><input type="range" id="face5dR" min="0.6" max="2.4" step="0.2" value="2"><span class="unit" id="face5dRV">2 มม.</span></div>
       <div class="row"><label>ชั้นกระจายแสง</label><input type="range" id="bDiff" min="0.4" max="1.2" step="0.1" value="0.4"><span class="unit" id="bDiffV">0.4 มม.</span></div>
       <div class="row" id="fullBgT"><label>ความหนาพื้นทึบ</label><input type="range" id="bBgT" min="0.6" max="3" step="0.1" value="2.4"><span class="unit" id="bBgTV">2.4 มม.</span></div>
       </div>
@@ -606,7 +607,10 @@ function defaults(){ return {
        joint:'snap', lipH:10, lipW:1.6, lipCl:0.2, bossW:8, screwDepth:10,
        snapBarb:0.45, snapW:12 },
   /* โหมดงาน — service = ฝาหน้าถอดเปลี่ยนได้ มีแผ่นกันแสงรั่วเป็นลิ้นสวม (ค่าแนะนำ) */
-  build:{ mode:'service', raisedH:1.2 },
+  build:{ mode:'service' },
+  /* ผิวหน้า 5D เป็นผิวราบร่วมกันทุกสี และมี fillet เฉพาะเส้นรอบนอกสุด
+     edgeR คุมรัศมีขอบนอกเฉพาะโหมดนี้ และใช้จำนวนช่วงโค้งคงที่เพื่อไม่ให้เมชหนักตามความสูง */
+  face:{ height5d:5, edgeR:2 },
   /* ร่อง+คิ้วรับแผ่นในโหมด shell (มิลลิเมตร) */
   sheet:{ acrT:3, acrLedge:2, plsT:5, plsLedge:2, cl:0.2 },
   price:{ qty:1, fil:750, mach:25, laborMin:25, laborRate:300, led:150, waste:8, margin:45, flush:120,
@@ -1202,6 +1206,32 @@ function maskOf(k){
   const m = new Uint8Array(G.gw*G.gh);
   for(let i=0;i<m.length;i++) if(G.owner[i]===k) m[i]=1;
   return m;
+}
+/* แยกก้อนสีที่แตะขอบนอกจริงออกจากเกาะสีซึ่งอยู่ในช่องว่างระหว่างตัวอักษร
+   เกาะด้านในต้องคงหน้าราบเต็มความสูง มิฉะนั้น addRoundedPrism จะมอง outer loop
+   ของทุกเกาะเป็นขอบนอกและสร้างร่องโค้งลงไปทั้งที่บริเวณนั้นอยู่กลางผิวหน้า */
+function splitOuterEdgeMask(mask,support=G.panel){
+  const {gw,gh}=G, N=mask.length;
+  const edge=new Uint8Array(N), inner=new Uint8Array(N), seen=new Uint8Array(N);
+  const dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+  for(let start=0;start<N;start++){
+    if(!mask[start]||seen[start]) continue;
+    const stack=[start], cells=[]; seen[start]=1;
+    let touchesOutside=false;
+    while(stack.length){
+      const i=stack.pop(), x=i%gw, y=(i/gw)|0; cells.push(i);
+      for(const d of dirs){
+        const xx=x+d[0], yy=y+d[1];
+        if(xx<0||xx>=gw||yy<0||yy>=gh){ touchesOutside=true; continue; }
+        const j=yy*gw+xx;
+        if(!support[j]) touchesOutside=true;
+        if(mask[j]&&!seen[j]){ seen[j]=1; stack.push(j); }
+      }
+    }
+    const out=touchesOutside?edge:inner;
+    for(const i of cells) out[i]=1;
+  }
+  return {edge,inner};
 }
 function maskGlow(){
   const m = new Uint8Array(G.gw*G.gh);
@@ -1915,6 +1945,176 @@ function addPrism(M,groups,z0,z1){
   }
 }
 
+/* ---------- ผิวหน้า 5D แบบ fillet จริงเฉพาะขอบนอก ----------
+   ปริซึมปกติมีฝาหน้าชนผนัง 90° จึงเห็นเป็นเหลี่ยม แม้เส้น contour ใน XY จะเรียบแล้วก็ตาม
+   ฟังก์ชันนี้สร้าง quarter-round จากหน้าราบลงสู่ผนังด้วยวงแหวนเพียง 5 ช่วง และส่ง normal
+   ต่อเนื่องให้ WebGL เฉพาะแถบโค้ง จำนวนเมชจึงคงที่ ไม่เพิ่มตามความสูงชิ้นงาน */
+const FACE5D_FILLET_SEGMENTS=5;
+function cleanProfileLoop(R){
+  let A=[];
+  for(const p of R){
+    const q=A[A.length-1];
+    if(!q||Math.hypot(p[0]-q[0],p[1]-q[1])>1e-7) A.push([p[0],p[1]]);
+  }
+  if(A.length>2&&Math.hypot(A[0][0]-A[A.length-1][0],A[0][1]-A[A.length-1][1])<1e-7) A.pop();
+  for(let pass=0;pass<2&&A.length>3;pass++){
+    const B=[];
+    for(let i=0,n=A.length;i<n;i++){
+      const p=A[(i-1+n)%n], c=A[i], q=A[(i+1)%n];
+      const ax=c[0]-p[0], ay=c[1]-p[1], bx=q[0]-c[0], by=q[1]-c[1];
+      const cross=ax*by-ay*bx, span=Math.hypot(ax,ay)*Math.hypot(bx,by);
+      if(span>1e-10&&Math.abs(cross)<=span*1e-8&&ax*bx+ay*by>0) continue;
+      B.push(c);
+    }
+    A=B;
+  }
+  return A;
+}
+function profileLoopData(R){
+  const n=R.length, out=new Array(n), smooth=new Array(n), scale=new Float64Array(n);
+  const COS_SMOOTH=Math.cos(48*Math.PI/180);
+  for(let i=0;i<n;i++){
+    const p=R[(i-1+n)%n], c=R[i], q=R[(i+1)%n];
+    let ax=c[0]-p[0], ay=c[1]-p[1], bx=q[0]-c[0], by=q[1]-c[1];
+    const la=Math.hypot(ax,ay)||1, lb=Math.hypot(bx,by)||1;
+    ax/=la; ay/=la; bx/=lb; by/=lb;
+    const n0=[ay,-ax], n1=[by,-bx];               // ด้านขวาของเส้น = นอกเนื้อเสมอ
+    let mx=n0[0]+n1[0], my=n0[1]+n1[1], ml=Math.hypot(mx,my);
+    if(ml<1e-5){ mx=n1[0]; my=n1[1]; ml=1; }
+    mx/=ml; my/=ml;
+    let den=mx*n0[0]+my*n0[1];
+    if(den<0.28){ mx=n1[0]; my=n1[1]; den=1; }
+    out[i]=[mx,my];
+    scale[i]=Math.min(2.2,1/den);                  // กันปลาย miter พุ่งที่มุมเว้าแคบ
+    smooth[i]=(ax*bx+ay*by)>=COS_SMOOTH ? [mx,my] : null;
+  }
+  return {out,smooth,scale};
+}
+function offsetProfileLoop(R,D,d){
+  return R.map((p,i)=>[p[0]-D.out[i][0]*d*D.scale[i],p[1]-D.out[i][1]*d*D.scale[i]]);
+}
+function triangulateProfileLoops(loops){
+  const pts=[], holes=[];
+  for(let i=0;i<loops.length;i++){
+    if(i) holes.push(pts.length);
+    for(const p of loops[i]) pts.push(p);
+  }
+  let idx=earcut(pts,holes);
+  if(idx.length){
+    const keep=[];
+    for(let i=0;i<idx.length;i+=3){
+      const A=pts[idx[i]],B=pts[idx[i+1]],C=pts[idx[i+2]];
+      if(Math.abs((B[0]-A[0])*(C[1]-A[1])-(C[0]-A[0])*(B[1]-A[1]))>=4e-5)
+        keep.push(idx[i],idx[i+1],idx[i+2]);
+    }
+    idx=keep;
+  }
+  return {pts,idx};
+}
+function triPreviewSmooth(M,p,q,r,np,nq,nr){
+  const ti=M.n/12;
+  const ux=q[0]-p[0],uy=q[1]-p[1],uz=q[2]-p[2];
+  const vx=r[0]-p[0],vy=r[1]-p[1],vz=r[2]-p[2];
+  let nx=uy*vz-uz*vy, ny=uz*vx-ux*vz, nz=ux*vy-uy*vx;
+  const L=Math.hypot(nx,ny,nz); if(L<1e-10) return;
+  nx/=L; ny/=L; nz/=L;
+  tri(M,p,q,r,nx,ny,nz);
+  if(!M.smoothN) M.smoothN=new Map();
+  M.smoothN.set(ti,[np[0],np[1],np[2],nq[0],nq[1],nq[2],nr[0],nr[1],nr[2]]);
+}
+function quadPreviewSmooth(M,p0,p1,p2,p3,n0,n1,n2,n3,expect){
+  const ux=p1[0]-p0[0],uy=p1[1]-p0[1],uz=p1[2]-p0[2];
+  const vx=p2[0]-p0[0],vy=p2[1]-p0[1],vz=p2[2]-p0[2];
+  const cx=uy*vz-uz*vy,cy=uz*vx-ux*vz,cz=ux*vy-uy*vx;
+  if(cx*expect[0]+cy*expect[1]+cz*expect[2]<0){
+    let t=p1;p1=p3;p3=t; t=n1;n1=n3;n3=t;
+  }
+  triPreviewSmooth(M,p0,p1,p2,n0,n1,n2);
+  triPreviewSmooth(M,p0,p2,p3,n0,n2,n3);
+}
+function addProfileCap(M,T,z,nz){
+  const {pts,idx}=T;
+  for(let i=0;i<idx.length;i+=3){
+    const A=pts[idx[i]],B=pts[idx[i+1]],C=pts[idx[i+2]];
+    if(nz>0) tri(M,[A[0],A[1],z],[B[0],B[1],z],[C[0],C[1],z],0,0,1);
+    else     tri(M,[A[0],A[1],z],[C[0],C[1],z],[B[0],B[1],z],0,0,-1);
+  }
+}
+function addRoundedPrism(M,groups,z0,z1,radius,outerOnly=false){
+  if(z1<=z0) return;
+  for(const src of groups){
+    const loops=[src.out].concat(src.holes).map(cleanProfileLoop);
+    if(loops.some(R=>R.length<3)){ addPrism(M,[src],z0,z1); continue; }
+    let area=Math.abs(loopArea(loops[0])), per=0;
+    for(let i=1;i<loops.length;i++) area-=Math.abs(loopArea(loops[i]));
+    const loopPer=loops.map(R=>{ let p=0; for(let i=0;i<R.length;i++) p+=Math.hypot(R[(i+1)%R.length][0]-R[i][0],R[(i+1)%R.length][1]-R[i][1]); return p; });
+    per=loopPer.reduce((a,b)=>a+b,0);
+    const featureW=2*Math.max(0,area)/Math.max(1e-6,per);
+    const r=Math.min(radius,(z1-z0)*0.45,featureW*(outerOnly?0.65:0.42));
+    if(r<0.18){ addPrism(M,[src],z0,z1); continue; }
+    const data=loops.map(profileLoopData);
+    /* ชั้นหน้าเป็นผืนเดียว: inset เฉพาะวงนอก ส่วนวงรู/รอยต่อสีคงพิกัดเดิม
+       จึงไม่มีร่อง fillet แยกตามตัวอักษรหรือสีด้านใน */
+    const topLoops=loops.map((R,i)=>(!outerOnly||i===0)?offsetProfileLoop(R,data[i],r):R);
+    const topTri=triangulateProfileLoops(topLoops), backTri=triangulateProfileLoops(loops);
+    if(!topTri.idx.length||!backTri.idx.length){ addPrism(M,[src],z0,z1); continue; }
+
+    M.vol+=Math.max(0,area)*(z1-z0)-(outerOnly?loopPer[0]:per)*r*r*(1-Math.PI/4);
+    for(const R of loops) for(const p of R){
+      if(p[0]<M.x0)M.x0=p[0]; if(p[0]>M.x1)M.x1=p[0];
+      if(p[1]<M.y0)M.y0=p[1]; if(p[1]>M.y1)M.y1=p[1];
+    }
+    if(z0<M.z0)M.z0=z0; if(z1>M.z1)M.z1=z1;
+    addProfileCap(M,topTri,z0,-1);
+    addProfileCap(M,backTri,z1,1);
+
+    for(let li=0;li<loops.length;li++){
+      const R=loops[li], D=data[li], n=R.length, rounded=!outerOnly||li===0;
+      if(rounded) for(let s=0;s<FACE5D_FILLET_SEGMENTS;s++){
+        const ta=(s/FACE5D_FILLET_SEGMENTS)*Math.PI/2;
+        const tb=((s+1)/FACE5D_FILLET_SEGMENTS)*Math.PI/2;
+        const da=r*(1-Math.sin(ta)), db=r*(1-Math.sin(tb));
+        const za=z0+r*(1-Math.cos(ta)), zb=z0+r*(1-Math.cos(tb));
+        const RA=offsetProfileLoop(R,D,da), RB=offsetProfileLoop(R,D,db);
+        for(let i=0;i<n;i++){
+          const j=(i+1)%n, dx=R[j][0]-R[i][0],dy=R[j][1]-R[i][1],L=Math.hypot(dx,dy)||1;
+          const seg=[dy/L,-dx/L], oi=D.smooth[i]||seg, oj=D.smooth[j]||seg;
+          const na=[oi[0]*Math.sin(ta),oi[1]*Math.sin(ta),-Math.cos(ta)];
+          const nb=[oj[0]*Math.sin(ta),oj[1]*Math.sin(ta),-Math.cos(ta)];
+          const nc=[oj[0]*Math.sin(tb),oj[1]*Math.sin(tb),-Math.cos(tb)];
+          const nd=[oi[0]*Math.sin(tb),oi[1]*Math.sin(tb),-Math.cos(tb)];
+          const tm=(ta+tb)/2, ex=[seg[0]*Math.sin(tm),seg[1]*Math.sin(tm),-Math.cos(tm)];
+          quadPreviewSmooth(M,[RA[i][0],RA[i][1],za],[RA[j][0],RA[j][1],za],
+            [RB[j][0],RB[j][1],zb],[RB[i][0],RB[i][1],zb],na,nb,nc,nd,ex);
+        }
+      }
+      const wallZ0=rounded?z0+r:z0;
+      if(z1>wallZ0+1e-5){
+        for(let i=0;i<n;i++){
+          const j=(i+1)%n,dx=R[j][0]-R[i][0],dy=R[j][1]-R[i][1],L=Math.hypot(dx,dy)||1;
+          const seg=[dy/L,-dx/L], oi=D.smooth[i]||seg, oj=D.smooth[j]||seg;
+          quadPreviewSmooth(M,[R[i][0],R[i][1],wallZ0],[R[j][0],R[j][1],wallZ0],
+            [R[j][0],R[j][1],z1],[R[i][0],R[i][1],z1],
+            [oi[0],oi[1],0],[oj[0],oj[1],0],[oj[0],oj[1],0],[oi[0],oi[1],0],[seg[0],seg[1],0]);
+        }
+      }
+    }
+  }
+}
+
+function addRoundedSolid(M,mask,z0,z1,radius,noMirrorX,boxes,outerOnly=false){
+  if(z1<=z0) return;
+  if(M.noTri){
+    let c=0; for(let i=0;i<mask.length;i++) if(mask[i]) c++;
+    if(!c) return;
+    M.vol+=c*G.px*G.px*(z1-z0);
+    if(z0<M.z0)M.z0=z0; if(z1>M.z1)M.z1=z1;
+    return;
+  }
+  if(S.exp.smooth===false){ addRects(M,maskToRects(mask,G.gw,G.gh),z0,z1,noMirrorX); return; }
+  addRoundedPrism(M,contoursOf(mask,G.gw,G.gh,noMirrorX,boxes),z0,z1,radius,outerOnly);
+}
+
 /* ---------- ทางเข้าเดียวที่ buildParts เรียกใช้ ---------- */
 function addSolid(M,mask,z0,z1,noMirrorX,boxes){
   if(z1<=z0) return;
@@ -2044,15 +2244,14 @@ const FRONT_LIP_HEIGHT=2.0;
              ที่ zA2 กับ zB2 เนื้อ "หด" เข้า = ผิวอิสระ พิมพ์ได้ไม่ต้องซัพพอร์ต */
 const SHELL_FACE=1.2;                    // ความสูงตัวคิ้ว (หน้าตั้ง) — พอให้แข็งแรงโดยไม่กินความลึกกล่อง
 function isShell(){ return !!(S.build && S.build.mode==='shell'); }
-function isRaisedFront(){ return !!(S.build && S.build.mode==='raised'); }
-function raisedFrontHeight(){ return isRaisedFront()?clamp(+(S.build.raisedH||1.2),0.4,10):0; }
 /* โปรเจกต์รุ่นก่อนที่เลือก layered ให้เปิดเป็น service อัตโนมัติ */
-function isLayered(){ return !!(S.build && (S.build.mode==='service'||S.build.mode==='layered'||S.build.mode==='raised')); }
-function isService(){ return !!(S.build && (S.build.mode==='service'||S.build.mode==='layered')); }
-function isFrontModule(){ return isService()||isRaisedFront(); }
-function frontModuleLabel(){ return isRaisedFront()?'ชิ้นหน้ายกขอบ 45°':'ฝาหน้าถอดเปลี่ยนได้ + กันแสงรั่ว'; }
+function isLayered(){ return !!(S.build && (S.build.mode==='service'||S.build.mode==='layered'||S.build.mode==='face5d')); }
+function isService(){ return !!(S.build && (S.build.mode==='service'||S.build.mode==='layered'||S.build.mode==='face5d')); }
+function isFace5D(){ return !!(S.build&&S.build.mode==='face5d'); }
+function isFrontModule(){ return isService(); }
+function frontModuleLabel(){ return isFace5D()?'ชั้นสีหน้า 5D + กันแสงรั่ว':'ฝาหน้าถอดเปลี่ยนได้ + กันแสงรั่ว'; }
 function buildModeLabel(){
-  return isShell()?'พิมพ์เฉพาะตัวกล่อง — หน้าอะครีลิค · หลังพลาสวูด':isRaisedFront()?'ชิ้นหน้ายกขอบ 45° สูง '+raisedFrontHeight().toFixed(1)+' มม.':isService()?frontModuleLabel():'พิมพ์ทั้งใบ';
+  return isShell()?'พิมพ์เฉพาะตัวกล่อง — หน้าอะครีลิค · หลังพลาสวูด':isService()?frontModuleLabel():'พิมพ์ทั้งใบ';
 }
 function shellSpec(){
   const b=S.box, sh=S.sheet||{};
@@ -2079,18 +2278,25 @@ function geomStack(){
     const H=shellSpec();
     return {colorT:0,diff:0,bgT:0,frameZ0:0,total:H.total,shell:H};
   }
-  const colorT=clamp(+b.colorT||0.6,0.4,2.4), diff=clamp(+b.diff||0.4,0.4,1.2);
-  const bgT = Math.max(b.bgT, colorT+0.2);
+  /* ความหนาของ "ผิวสี" และความสูงของ "รูปทรง 5D" เป็นคนละมิติ
+     - colorT คือสกินสีบางที่แสงผ่านได้ตามค่าชั้นสีหน้าปกติ
+     - faceH คือความสูงรวมของผนังยกกลวง ไม่ใช่เนื้อสีตัน
+     การแยกสองค่านี้ทำให้เพิ่มความสูง 5D ได้โดยไม่บังทางเดินแสง */
+  const colorT=clamp(+b.colorT||0.6,0.4,2.4);
+  const faceH=isFace5D()?clamp(+(S.face&&S.face.height5d)||5,3,10):colorT;
+  const diff=clamp(+b.diff||0.4,0.4,1.2);
+  /* โหมดฝาหน้าแยกใช้ diffuser รองหลังสี จึงไม่ต้องบังคับพื้นทึบให้หนาตาม 5D */
+  const bgT = isLayered()?Math.max(b.bgT,(+b.colorT||0.6)+0.2):Math.max(b.bgT,colorT+0.2);
   /* หน้าแบบซ้อนชั้น: สีอยู่ชั้นหน้า แล้วมีแผ่นขาวนมเต็มพื้นที่รองรับอยู่ด้านหลัง
      จึงไม่มีรอยต่อสีแบบปลายชนปลายที่แสงลอดได้ */
   /* หน้าแบบถอดเปลี่ยนได้: สีหน้ากับชั้นกระจายแสงมีความหนาเป็นอิสระ
      โดยค่าเริ่มต้นรวมกันเป็น 0.6 + 0.4 = 1.0 มม. */
-  const faceBaseT=isLayered()?diff:bgT, frontRaise=raisedFrontHeight();
+  const faceBaseT=isLayered()?diff:bgT;
    /* โมดูลถอดเปลี่ยนได้: กรอบเริ่มต่อจากผิวหน้าสีทันทีเพื่อรองรับหน้าแปลน
       แผ่นขาวนมอยู่เฉพาะช่องในของกรอบ ส่วนลิ้น/บ่ารับเป็นวงแหวนของฝาหน้า
       ที่ยื่นเข้าไปรับในช่องตัวกล่อง */
-  const frameZ0=(isLayered()?colorT:bgT)+frontRaise;
-  return {colorT,diff,bgT,faceBaseT,frontRaise,frameZ0,total:frameZ0+b.depth+b.back};
+  const frameZ0=isFace5D()?faceH:(isLayered()?colorT:bgT);
+  return {colorT,faceH,diff,bgT,faceBaseT,frameZ0,total:frameZ0+b.depth+b.back};
 }
 function bedSize(){ return Math.max(80, +S.exp.bed||256); }
 function bedHeight(){ return Math.max(80, +S.exp.bedH||bedSize()); }
@@ -2416,21 +2622,6 @@ function frameBandSpec(z0,z1){
   return out;
 }
 
-/* ชิ้นหน้ายกขอบ: ผิวหน้าด้านในยังแตะฐานพิมพ์ที่ z=0 แล้วขยายออก
-   ตามระยะ z ด้วยอัตรา 1:1 จึงได้ลาด 45° ก่อนต่อเข้าความหนาหน้าเต็ม
-   แบ่งผิวลาดราว 0.10 มม. และจำกัดไม่เกิน 32 ช่วงต่อชิ้นสี
-   เพื่อให้ส่วนโค้งเรียบกว่าเดิมโดยไม่สร้างเมชหนักจนเบราว์เซอร์ใช้หน่วยความจำเกิน */
-function addRaisedFrontSolid(M,mask,thickness){
-  const rise=raisedFrontHeight();
-  if(rise<=0){ addSolid(M,mask,0,thickness); return; }
-  const stepTarget=clamp((G.px||.2)*.65,.09,.12),steps=clamp(Math.ceil(rise/stepTarget),8,32);
-  for(let j=0;j<steps;j++){
-    const za=rise*j/steps,zb=rise*(j+1)/steps,mid=(za+zb)/2,inset=Math.max(0,rise-mid),lim=inset/G.px;
-    const slice=maskWhere(i=>mask[i]&&G.edtIn[i]>lim);
-    addSolid(M,slice,M.noTri?za:(j?za-ZEPS:za),zb);
-  }
-  addSolid(M,mask,M.noTri?rise:rise-ZEPS,rise+thickness);
-}
 
 function buildParts(nt){
   if(!G||!G.panel) buildGrid();
@@ -2449,6 +2640,9 @@ function buildParts(nt){
   const lipWidth=FRONT_LIP_WIDTH, lipHeight=FRONT_LIP_HEIGHT;
   const frontFit=isFrontModule()?maskWhere(i=>P[i]&&DI[i]>frontClear/px):null;
   const tongueFit=isFrontModule()?maskWhere(i=>P[i]&&DI[i]>(b.frame+frontClear)/px):null;
+  /* ผนังยก 5D เป็นวงแหวนรอบช่องแสงเท่านั้น ภายในจึงกลวงและนำแสงจากกล่อง
+     ไปถึง diffuser/ผิวสีบางด้านหน้าได้ โดยความสูงผนังใช้ faceH แยกจาก colorT */
+  const face5dWallFit=isFace5D()?maskWhere(i=>frontFit[i]&&(!tongueFit||!tongueFit[i])):null;
   // tongueFit is the complete diffuser aperture.  The lip belongs only on the
   // diffuser perimeter: keep it as a narrow ring just inside that aperture so
   // the light cavity remains open and no other edge is changed.
@@ -2456,6 +2650,8 @@ function buildParts(nt){
   const lipFit=isFrontModule()?maskWhere(i=>P[i]&&DI[i]>lipStart/px&&DI[i]<=(lipStart+lipWidth)/px):null;
   const trimFront=mk=>{ if(!frontFit) return mk; const out=mk.slice(); for(let i=0;i<out.length;i++) if(!frontFit[i]) out[i]=0; return out; };
   const frontPrefix=isFrontModule()?frontModuleLabel()+' · ':'';
+  const liveRings=S.pal.filter(p=>p.role==='ring'&&p.cells>0);
+  const outerRingNo=liveRings.length?Math.max(...liveRings.map(p=>p.ringIndex||0)):-1;
   /* --- 1. ชั้นสีทั้งหมด (พื้นใน · ลวดลาย · วงขอบ) ---
      โหมดหน้าซ้อนชั้นวางสีทุกสีเป็นผิวหน้าบาง ๆ เหนือแผ่นขาวนมต่อเนื่อง
      ไม่มีการให้สีสองสีชนกันจนเป็นแนวทะลุถึงโพรงไฟ */
@@ -2464,12 +2660,30 @@ function buildParts(nt){
     if(!p.cells) continue;
     /* ทุกสีหน้าที่ผู้ใช้เลือก รวมถึงขอบสีขาว เป็นชั้นสีจริงบนระนาบเดียวกัน
        ส่วน diffuser จะถูกสร้างเต็มช่องด้านในอีกชั้นหนึ่ง เพื่อให้แสงรองรับพื้นที่กราฟิกทั้งหมด */
-    const mk=trimFront(maskOf(k));
+    let mk=trimFront(maskOf(k));
     const M=Mesh(frontPrefix+(p.name||('สี '+k))+' · '+nearestFilament(p.hex), p.hex, nt);
     const layerT = isLayered()?st.colorT:(p.glow?st.colorT:st.bgT);
-    if(isRaisedFront()) addRaisedFrontSolid(M,mk,layerT); else addSolid(M,mk,0,layerT);
+    if(isFace5D()){
+      /* ผิวสีเป็นสกินบาง colorT เท่านั้น ส่วนพื้นที่วงแหวนรอบนอกสร้างเป็นผนังยกกลวง
+         จึงไม่มีก้อนสีตันหนา faceH ขวางแสง และผิวสีทุกสียังคงอยู่ระนาบเดียวกัน */
+      const wallMk=maskWhere(i=>mk[i]&&face5dWallFit[i]);
+      const capMk=maskWhere(i=>mk[i]&&!face5dWallFit[i]);
+      const exposed=!liveRings.length||(p.role==='ring'&&(p.ringIndex||0)===outerRingNo);
+      const W=Mesh(frontPrefix+(p.name||('สี '+k))+' · ผนังยกกลวง 5D',p.hex,nt);
+      if(exposed){
+        /* ใช้ frontFit (ขอบจริงหลังเผื่อสวม 0.2 มม.) เป็น support ไม่ใช่ G.panel เดิม
+           เพราะ wallMk ถูก trim แล้ว หากเทียบกับ panel เดิม component ขอบนอกจะดูเหมือนอยู่ด้านใน */
+        const split=splitOuterEdgeMask(wallMk,frontFit||P);
+        addRoundedSolid(W,split.edge,0,st.faceH,clamp(+(S.face&&S.face.edgeR)||2,0.6,2.4),undefined,undefined,true);
+        addSolid(W,split.inner,0,st.faceH);
+      }else addSolid(W,wallMk,0,st.faceH);
+      addSolid(M,capMk,0,layerT);
+      W.kind='face5dwall'; W.module='front'; W.glow=false; W.gloss=true;
+      if(W.n) parts.push(W);
+      M.gloss=true;
+    }else addSolid(M,mk,0,layerT);
     M.kind='color'; M.module=isFrontModule()?'front':''; M.glow=!!p.glow;
-    parts.push(M);
+    if(M.n) parts.push(M);
   }
 
   /* --- 2. ชั้นกระจายแสง --- */
@@ -2483,11 +2697,11 @@ function buildParts(nt){
   if(anyGlow){
     const M=Mesh(frontPrefix+(isLayered()?'แผ่นกระจายแสง':'ชั้นกระจายแสง')+' · ขาว/ใส','#F2F2E8',nt);
     if(isLayered()){
-      /* แผ่นขาวนมอยู่ในช่องในของกรอบ: หนาจาก colorT ถึง seatZ
-         เท่ากับ st.diff เพียงอย่างเดียว */
-      const frontZ=st.frontRaise+st.colorT, seatZ=frontZ+st.faceBaseT;
+      /* แผ่นขาวนมอยู่ชิดหลังสกินสี: หนาจาก colorT ถึง seatZ เท่ากับ st.diff
+         สำหรับ 5D ช่วงจากหลัง diffuser ถึง faceH เป็นโพรงอากาศนำแสง ไม่ใช่เนื้อสีตัน */
+      const frontZ=st.colorT, seatZ=frontZ+st.faceBaseT;
       addSolid(M,gm,frontZ,seatZ);
-    }else addSolid(M,gm,st.frontRaise+st.colorT,st.frontRaise+st.colorT+st.diff);
+    }else addSolid(M,gm,st.colorT,st.colorT+st.diff);
     M.kind='diffuser'; M.module=isFrontModule()?'front':''; M.glow=true;
     parts.push(M);
   }
@@ -2497,13 +2711,17 @@ function buildParts(nt){
      - ยื่นจากด้านหลังแผ่นขึ้นไป 2 มม. เพื่อสวมเข้าร่องของตัวกล่อง
      - ใช้ module=front เพื่อให้ถูกรวมในไฟล์/แผ่นพิมพ์ฝาหน้าเดียวกัน */
   if(isLayered()){
-    const seatZ=st.frontRaise+st.colorT+st.faceBaseT;
+    /* ลิ้นเริ่มต่อจาก diffuser เสมอเพื่อไม่ให้เกิดชิ้นลอยตอนพิมพ์คว่ำหน้า
+       ในโหมด 5D ลิ้นยืดผ่านช่วงยกไปถึงร่องตัวกล่องที่ faceH ทำหน้าที่เป็น
+       ผนังสะท้อนแสงวงใน ขณะที่ช่องกลางยังเปิดเป็นทางเดินแสงเต็มพื้นที่ */
+    const lipFrontZ=st.colorT+st.faceBaseT;
+    const lipBackZ=isFace5D()?st.faceH:lipFrontZ;
     let hasLip=false;
     if(lipFit) for(let i=0;i<lipFit.length;i++) if(lipFit[i]){hasLip=true;break;}
     if(hasLip){
       /* ใช้สีเดียวกับแผ่นกระจายแสง เพื่อไม่ให้เกิดเส้นดำหนาที่ขอบแผ่นสีขาว */
       const lip=Mesh(frontPrefix+'ลิ้นรับบ่าฝาหน้า · กว้าง '+lipWidth.toFixed(1)+' มม. สูง '+lipHeight.toFixed(1)+' มม.','#F2F2E8',nt);
-      addSolid(lip,lipFit,seatZ-ZEPS,seatZ+lipHeight);
+      addSolid(lip,lipFit,lipFrontZ-ZEPS,lipBackZ+lipHeight);
       lip.kind='lightseal'; lip.module='front'; lip.glow=false;
       parts.push(lip);
     }
@@ -2781,10 +2999,11 @@ function make3mf(parts,title){
   if(isFrontModule()){
     const PK=platePack();
     const makeGroup=(key,label,place)=>{
-      const ids=records.filter(r=>r.p.module===key).map(r=>r.id); if(!ids.length) return;
+      const group=records.filter(r=>r.p.module===key); if(!group.length) return;
+      const ids=group.map(r=>r.id), baseZ=printBaseZ(group.map(r=>r.p));
       const gid=id++;
       comps+=`<object id="${gid}" type="model" name="${xesc(title)} — ${label}"><components>${ids.map(o=>`<component objectid="${o}"/>`).join('')}</components></object>\n`;
-      items+=`<item objectid="${gid}" transform="1 0 0 0 1 0 0 0 1 ${place.x} ${place.y} 0"/>`;
+      items+=`<item objectid="${gid}" transform="1 0 0 0 1 0 0 0 1 ${place.x} ${place.y} ${-baseZ}"/>`;
     };
     makeGroup('front',frontModuleLabel()+' (รวมชั้นกระจายแสง)',PK.items.panel);
     makeGroup('box','ตัวกล่อง',PK.items.box);
@@ -2917,7 +3136,17 @@ function mergeForSTL(name,parts,hex){
   const n=live.reduce((a,p)=>a+p.n,0);
   M.a=new Float32Array(Math.max(12,n)); M.n=0;
   live.forEach(p=>{ M.a.set(p.a.subarray(0,p.n),M.n); M.n+=p.n; });
+  /* แต่ละโมดูลเก็บพิกัด z ตามตำแหน่งตอนประกอบ ตัวกล่อง 5D จึงเริ่มที่ faceH
+     เมื่อส่งออกเป็น STL แยกชิ้น ต้องเลื่อนฐานต่ำสุดของทั้งโมดูลกลับมา z=0 */
+  const baseZ=printBaseZ(live);
+  if(baseZ) for(let i=0;i<M.n;i+=12){ M.a[i+5]-=baseZ; M.a[i+8]-=baseZ; M.a[i+11]-=baseZ; }
   return M;
+}
+
+function printBaseZ(parts){
+  let z=Infinity;
+  for(const p of parts||[]) if(p&&p.n&&Number.isFinite(p.z0)&&p.z0<z) z=p.z0;
+  return Number.isFinite(z)?z:0;
 }
 /* ══════════════════════════════════════════════════════════════
    YP Lightbox Studio — preview, checks, pricing, UI
@@ -3051,10 +3280,14 @@ function drawLayers(c,cv,px){
   const frameImg=maskImg(i=>G.panel&&G.panel[i]&&G.edtIn[i]<=fwc,[74,80,91]);
   stack.push({img:backImg,label:`แผ่นหลัง ${b.back} มม.`});
   stack.push({img:frameImg,label:`กรอบข้าง ลึก ${b.depth} มม. · หนา ${b.frame} มม.`});
+  if(isFace5D()){
+    const wallImg=maskImg(i=>G.panel&&G.panel[i]&&G.edtIn[i]>(0.2/G.px)&&G.edtIn[i]<=(b.frame+0.2)/G.px,[226,45,143]);
+    stack.push({img:wallImg,label:`ผนังยกกลวง 5D สูง ${st.faceH.toFixed(1)} มม. · ภายในเป็นทางเดินแสง`});
+  }
   stack.push({img:dif,label:isLayered()?`แผ่นกระจายแสง ${st.diff} มม. · ลิ้นรับบ่าอยู่กับฝาหน้า`:`ชั้นกระจายแสง ${st.diff} มม.`});
   for(let k=S.pal.length-1;k>=1;k--) if(S.pal[k].cells)
     stack.push({img:layerImage(k),label:`${S.pal[k].name} · ${S.pal[k].hex.toUpperCase()} · ${nearestFilament(S.pal[k].hex)}`});
-  if(S.pal[0].cells) stack.push({img:layerImage(0),label:`${S.pal[0].name} ${st.bgT.toFixed(1)} มม. · ${nearestFilament(S.pal[0].hex)}`});
+  if(S.pal[0].cells) stack.push({img:layerImage(0),label:`${S.pal[0].name} ${(isLayered()?st.colorT:st.bgT).toFixed(1)} มม. · ${nearestFilament(S.pal[0].hex)}`});
 
   const n=stack.length, SK=0.55, SQ=0.5;                  // ค่าเฉือนของภาพไอโซเมตริก
   const LABX=cv.width*0.63;                               // คอลัมน์ป้ายชื่อ
@@ -3108,7 +3341,7 @@ function drawPlate(c,cv,px){
   box(PK.items.panel,'#ff2d8f26','#ff2d8f', isShell()
       ? `ตัวกล่อง ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} · สูง ${st.total.toFixed(1)} มม.`
       : isFrontModule()
-      ? `${isRaisedFront()?'ชิ้นหน้า':'ฝาหน้า'} ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} มม.`
+      ? `ฝาหน้า ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} มม.`
       : `แผ่นหน้า+กรอบ ${PK.items.panel.w.toFixed(0)}×${PK.items.panel.h.toFixed(0)} · สูง ${(st.frameZ0+b.depth).toFixed(1)} มม.`);
   if(isFrontModule()) box(PK.items.box,'#1a1a1a26','#1a1a1a',`ตัวกล่อง ${PK.items.box.w.toFixed(0)}×${PK.items.box.h.toFixed(0)} มม.`);
   box(PK.items.back ,'#3ba0ff26','#3ba0ff',isFrontModule()?`ฐาน/ฝาหลัง หนา ${b.back} มม.`:`แผ่นหลัง หนา ${b.back} มม.`);
@@ -3262,19 +3495,12 @@ function runChecks(){
     if(b.frame<2) add('warn','กรอบข้างบางกว่า 2 มม. คิ้วบังแสงของฝาหน้าถอดเปลี่ยนได้อาจไม่พอ — แนะนำ 2 มม. ขึ้นไป');
     if(S.hw.joint==='butt') add('warn','ควรเลือกบ่าล็อกหรือสกรูสำหรับฝาหลัง เพื่อเปิดเปลี่ยนฝาหน้าได้โดยไม่ต้องแกะกาว');
   }
-  if(isRaisedFront()&&G.panel&&G.edtIn){
-    const rise=raisedFrontHeight(), lim=rise/G.px; let face=0, flat=0;
-    for(let i=0;i<G.panel.length;i++) if(G.panel[i]){ face++; if(G.edtIn[i]>lim) flat++; }
-    const remain=face?flat/face:0;
-    if(!flat) add('err',`ขอบนูน ${rise.toFixed(1)} มม. กินพื้นที่เข้าด้านในจนไม่เหลือผิวหน้าราบ — ลดความสูงขอบนูน`);
-    else if(rise>5||remain<0.15) add('warn',`ขอบนูน ${rise.toFixed(1)} มม. ใช้ระยะลาดเข้าด้านในเท่ากัน เหลือผิวหน้าราบ ${(remain*100).toFixed(0)}% — แนะนำช่วง 1–5 มม.`);
-    else add('ok',`ขอบนูน 45° สูง ${rise.toFixed(1)} มม. · เหลือผิวหน้าราบ ${(remain*100).toFixed(0)}%`);
-  }
   const used=S.pal.filter(p=>p.cells>0).length;
   if(!isShell()){
+  if(isFace5D()) add('ok',`สีหน้า 5D หนา ${st.colorT.toFixed(1)} มม. · ผนังยกกลวงสูง ${st.faceH.toFixed(1)} มม. · fillet ขอบนอก ${clamp(+(S.face&&S.face.edgeR)||2,0.6,2.4).toFixed(1)} มม. — ทางเดินแสงไม่ถูกเนื้อสีตันปิด`);
   if(used>4) add('warn',`ใช้ ${used} สีในแผ่นเดียว เกิน 4 ช่อง AMS — ต้องต่อ AMS ตัวที่ 2 หรือเปลี่ยนเส้นกลางคัน`);
   if(b.colorT<0.4) add('warn','ชั้นสีบางกว่า 0.4 มม. สีอาจพิมพ์ไม่เต็มสำหรับหัวฉีด 0.4 มม.');
-  if(st.bgT>b.bgT+0.001) add('warn',`ปรับความหนาพื้นทึบขึ้นเป็น ${st.bgT.toFixed(1)} มม. อัตโนมัติ เพราะต้องหนากว่าชั้นสี`);
+  if(!isLayered()&&st.bgT>b.bgT+0.001) add('warn',`ปรับความหนาพื้นทึบขึ้นเป็น ${st.bgT.toFixed(1)} มม. อัตโนมัติ เพราะต้องหนากว่าชั้นสี`);
   if(b.bgT<1.0) add('warn','พื้นทึบบางกว่า 1.0 มม. แสงอาจทะลุพื้นหลัง เห็นเป็นฝ้า');
   if(st.diff<0.4) add('warn','ชั้นกระจายแสงบางกว่า 0.4 มม. อาจเห็นเป็นจุดไฟ LED และพิมพ์ไม่เต็ม');
   }
@@ -3467,7 +3693,7 @@ ${isShell()? (()=>{ const H=shellSpec(); return `
 <tr><td>รูสายไฟ</td><td>${S.hw.hole==='none'?'ไม่มี':S.hw.hole==='frame'?'บากที่ผนังด้านล่าง Ø'+S.hw.dia+' มม.':'รูกลมแผ่นพลาสวูด Ø'+S.hw.dia+' มม.'}</td></tr>
 <tr><td>การยึดแผ่น</td><td>คิ้วรับรอบด้าน + ซิลิโคน/กาว (เผื่อสวมข้างละ ${H.cl} มม.)</td></tr>`; })() : `
 <tr><td>รูปแบบงาน</td><td>${buildModeLabel()}</td></tr>
-<tr><td>โครงสร้าง</td><td>ชั้นสี ${b.colorT} · กระจายแสง ${st.diff} · พื้นทึบ ${st.bgT.toFixed(1)} · กรอบ ${b.frame} · หลัง ${b.back} มม.</td></tr>
+<tr><td>โครงสร้าง</td><td>ชั้นสี ${st.colorT}${isFace5D()?' · ผนังยกกลวง 5D '+st.faceH:''} · กระจายแสง ${st.diff}${isLayered()?'':' · พื้นทึบ '+st.bgT.toFixed(1)} · กรอบ ${b.frame} · หลัง ${b.back} มม.</td></tr>
 <tr><td>รูสายไฟ</td><td>${S.hw.hole==='none'?'ไม่มี':S.hw.hole==='frame'?'บากที่กรอบล่างด้านหลัง Ø'+S.hw.dia+' มม.':'รูกลมแผ่นหลัง Ø'+S.hw.dia+' มม.'}</td></tr>
 <tr><td>การประกบฝาหลัง</td><td>${ (()=>{ const M=Math.round(S.box.back+Math.min(S.hw.screwDepth,S.box.depth-3));
       const nB=(LAST&&LAST.bossCount)||0, nS=(LAST&&LAST.snapCount)||0;
@@ -3567,17 +3793,11 @@ function exportMeshIssues(parts){
       if(!d||d.n<12){
         issues.push('ฝาหน้าไม่มีแผ่นกระจายแสงต่อเนื่อง — ยกเลิกการส่งออกเพื่อป้องกันชั้นว่างใน slicer');
       }else{
-        const base=st.frontRaise+st.colorT;
+        const base=st.colorT;
         if(d.z0>base+0.02||d.z1<base+need-0.02)
           issues.push(`แผ่นกระจายแสงมีช่วงความหนาไม่ครบ (${Number.isFinite(d.z0)?d.z0.toFixed(2):'—'}–${Number.isFinite(d.z1)?d.z1.toFixed(2):'—'} มม.)`);
       }
     }
-  }
-  if(isRaisedFront()&&G&&G.panel&&G.edtIn){
-    const lim=raisedFrontHeight()/G.px;
-    let flat=false;
-    for(let i=0;i<G.panel.length;i++) if(G.panel[i]&&G.edtIn[i]>lim){ flat=true; break; }
-    if(!flat) issues.push('ขอบนูน 45° กินพื้นที่เข้าด้านในจนชิ้นหน้าไม่มีผิวสัมผัสฐานพิมพ์ — ลดความสูงขอบนูน');
   }
   return issues;
 }
@@ -3596,16 +3816,14 @@ async function doExport(){
     if(fmt==='3mf'||fmt==='both'||fmt==='all'){
       busy(true,'กำลังเขียนไฟล์ 3MF…'); await new Promise(r=>setTimeout(r,20));
       const blob=await make3mf(pr,S.name);
-      if(isRaisedFront()){
-        download(blob,`${name}_ชิ้นหน้ายกขอบ45องศา_แยก3ชิ้น.3mf`);
-      }else{
-      download(blob,`${name}_${isShell()?'ตัวกล่อง':isLayered()?'ชุดฝาหน้าซ้อนชั้นกันแสงรั่ว':isService()?'ชุดฝาหน้าถอดเปลี่ยนได้':isRaisedFront()?'ชิ้นหน้ายกขอบ45องศา':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
-    }
+      if(isFace5D()) download(blob,`${name}_ชุดชั้นสีหน้า_5D.3mf`);
+      else
+      download(blob,`${name}_${isShell()?'ตัวกล่อง':isLayered()?'ชุดฝาหน้าซ้อนชั้นกันแสงรั่ว':isService()?'ชุดฝหน้าถอดเปลี่ยนได้':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
     }
     if(fmt==='stl'||fmt==='both'||fmt==='all'){
       busy(true,'กำลังเขียนไฟล์ STL…'); await new Promise(r=>setTimeout(r,20));
       const files=isFrontModule()? [
-        {name:`${name}_${isRaisedFront()?'ชิ้นหน้ายกขอบ':'ฝาหน้า'}_รวมชั้นกระจายแสง.stl`,data:stlOf(mergeForSTL(frontModuleLabel()+' (รวมชั้นกระจายแสง)',pr.filter(p=>p.module==='front'),'#F2F2E8'))},
+        {name:`${name}_ฝาหน้า_รวมชั้นกระจายแสง.stl`,data:stlOf(mergeForSTL(frontModuleLabel()+' (รวมชั้นกระจายแสง)',pr.filter(p=>p.module==='front'),'#F2F2E8'))},
         {name:`${name}_ตัวกล่อง.stl`,data:stlOf(mergeForSTL('ตัวกล่อง',pr.filter(p=>p.module==='box'),S.box.frameColor))},
         {name:`${name}_ฐาน_ฝาหลัง.stl`,data:stlOf(mergeForSTL('ฐาน/ฝาหลัง',pr.filter(p=>p.module==='back'),S.box.backColor))}
       ] : pr.map(p=>({name:`${name}_${partFileLabel(p)}.stl`,data:stlOf(p)}));
@@ -3675,8 +3893,8 @@ function readme(parts){
   const st=geomStack();
   if(isFrontModule()) return ['YP Lightbox Studio — '+S.name+'  (โหมด'+frontModuleLabel()+')',''
    ,'ชุดพิมพ์ประกอบด้วย 3 กลุ่ม: '+frontModuleLabel()+' · ตัวกล่อง · ฝาหลัง'
+   ,...(isFace5D()?['ชั้นสีหน้าแบบ 5D: ผิวสีหนา '+st.colorT.toFixed(1)+' มม. · ผนังยกกลวงสูง '+st.faceH.toFixed(1)+' มม. · ภายในเป็นทางเดินแสง · fillet เฉพาะขอบนอก '+clamp(+(S.face&&S.face.edgeR)||2,0.6,2.4).toFixed(1)+' มม. แบบ quarter-round 5 ช่วง']:[])
    ,'ฝาหน้าร่นจากขอบนอก 0.2 มม. รอบด้าน เพื่อสวมในกรอบได้โดยไม่ฝืด'
-   ,...(isRaisedFront()?['ชิ้นหน้ามีขอบลาด 45° สูง '+raisedFrontHeight().toFixed(1)+' มม. และกินระยะเข้าด้านใน '+raisedFrontHeight().toFixed(1)+' มม.']:[])
    ,...(isLayered()?['แผ่นกระจายแสงสีขาวหนา '+st.diff.toFixed(1)+' มม. อยู่ในช่องกรอบ; ลิ้นรับบ่าเป็นวงแหวนติดกับด้านหลังฝาหน้า กว้าง '+FRONT_LIP_WIDTH.toFixed(1)+' มม. สูง '+FRONT_LIP_HEIGHT.toFixed(1)+' มม. รอบขอบแผ่น เพื่อสวมเข้าตัวกล่องและตัดแสงรั่ว']:[])
    ,'กรอบข้างสีทึบทำหน้าที่เป็นคิ้วบังแสงรอบรอยต่อ'
    ,''
@@ -3716,7 +3934,6 @@ function readme(parts){
     ,'ลำดับการพิมพ์'
     ,'1) แผ่นหน้า+กรอบ พิมพ์คว่ำหน้าลงฐาน (ผิวสวยอยู่ที่ชั้นแรก) ไม่ต้องมีซัพพอร์ต'
     ,'2) แผ่นหลัง พิมพ์ราบ'
-    ,...(isRaisedFront()?['','รูปแบบชิ้นหน้า: ยกขอบลาด 45° สูง '+raisedFrontHeight().toFixed(1)+' มม. · ระยะลาดเข้าด้านใน '+raisedFrontHeight().toFixed(1)+' มม.']:[])
     ,'','ความหนารวม '+st.total.toFixed(1)+' มม. · กรอบลึก '+S.box.depth+' มม.'
     ,''
     ,(()=>{ const J=jointSpec(), fm=parts.find(p=>p.kind==='frame')||{};
@@ -3788,7 +4005,7 @@ void main(){
    uSign = (ครึ่งกว้าง, ครึ่งสูง, ความลึกกล่อง) ทำให้แสงสเกลตามขนาดงานเสมอ */
 const FS=`precision mediump float;
 varying vec3 vN, vW;
-uniform vec3 uCol; uniform float uEmit; uniform float uDark;
+uniform vec3 uCol; uniform float uEmit; uniform float uDark, uGloss;
 uniform float uFloor, uHalo, uLit;
 uniform vec3 uLightCol, uSign, uBg;
 
@@ -3834,7 +4051,9 @@ void main(){
   float d=max(dot(N,L1),0.0)*0.78 + max(dot(N,L2),0.0)*0.26;
   vec3 V=normalize(vec3(0.0,0.0,1.0));
   float rim=pow(1.0-max(dot(N,V),0.0),3.0)*0.16;
-  vec3 lit=uCol*(0.30+d)+vec3(rim);
+  vec3 H=normalize(L1+V);
+  float spec=pow(max(dot(N,H),0.0),34.0)*0.24*uGloss;
+  vec3 lit=uCol*(0.30+d)+vec3(rim+spec);
   /* โหมดติดไฟ: ชิ้นทึบยังต้องอ่านรูปทรงออก จึงมีทั้งไฟส่องอ่อนๆ
      แสงสะท้อนจากหน้าป้าย และขอบเรืองรับแสง */
   float bounce=panelLight(vW,N);
@@ -3870,7 +4089,7 @@ function glInit(){
   V3.loc={aPos:gl.getAttribLocation(p,'aPos'), aNrm:gl.getAttribLocation(p,'aNrm'),
           uMVP:gl.getUniformLocation(p,'uMVP'), uM:gl.getUniformLocation(p,'uM'),
           uCol:gl.getUniformLocation(p,'uCol'), uEmit:gl.getUniformLocation(p,'uEmit'),
-          uDark:gl.getUniformLocation(p,'uDark'), uGrow:gl.getUniformLocation(p,'uGrow'),
+          uDark:gl.getUniformLocation(p,'uDark'), uGloss:gl.getUniformLocation(p,'uGloss'), uGrow:gl.getUniformLocation(p,'uGrow'),
           uFloor:gl.getUniformLocation(p,'uFloor'), uHalo:gl.getUniformLocation(p,'uHalo'),
           uLit:gl.getUniformLocation(p,'uLit'),
           uLightCol:gl.getUniformLocation(p,'uLightCol'), uSign:gl.getUniformLocation(p,'uSign'),
@@ -3899,9 +4118,9 @@ function glBuild(){
     const t=M.n/12; if(!t) continue;
     const pos=new Float32Array(t*9), nor=new Float32Array(t*9);
     for(let i=0;i<t;i++){
-      const s=i*12;
+      const s=i*12, sn=M.smoothN&&M.smoothN.get(i);
       for(let k=0;k<3;k++){
-        nor[i*9+k*3]=M.a[s]; nor[i*9+k*3+1]=M.a[s+1]; nor[i*9+k*3+2]=M.a[s+2];
+        nor[i*9+k*3]=sn?sn[k*3]:M.a[s]; nor[i*9+k*3+1]=sn?sn[k*3+1]:M.a[s+1]; nor[i*9+k*3+2]=sn?sn[k*3+2]:M.a[s+2];
         pos[i*9+k*3]=M.a[s+3+k*3]; pos[i*9+k*3+1]=M.a[s+4+k*3]; pos[i*9+k*3+2]=M.a[s+5+k*3];
       }
     }
@@ -3921,7 +4140,7 @@ function glBuild(){
 /* ---------- per-part transform per mode ---------- */
 /* โมดูลหน้า (สี + diffuser พร้อมลิ้นสอด + แผ่นบังแสง) เคลื่อนเป็นชุดเดียว
    ในมุมมองแยกชิ้น จึงไม่เกิดภาพลิ้นขาวค้างอยู่ในตัวกล่องจนดูเป็นอะไหล่เพิ่ม */
-const EXPLODE={color:46,diffuser:46,lightseal:46,frame:0,back:-38,shell:0,acrylic:46,plaswood:-46};
+const EXPLODE={color:46,face5dwall:46,diffuser:46,lightseal:46,frame:0,back:-38,shell:0,acrylic:46,plaswood:-46};
 /* ชิ้นที่มีไว้ดูเฉยๆ (อะครีลิค/พลาสวูด) ไม่ต้องโผล่ในผังฐานพิมพ์ */
 const skipIn=(M,mode)=> mode==='plate' && M.display;
 function partMatrix(M,mode){
@@ -3936,7 +4155,11 @@ function partMatrix(M,mode){
       else if(M.module==='back') place=PK.items.back;
     }
     const px=place.x, py=place.y;
-    return mkM(1,0,0, 0,0,1, 0,-1,0, px-BED/2, 0, BED/2-py);
+    /* โมเดลเก็บ z ตามตำแหน่งประกอบ แต่บนฐานพิมพ์ทุกโมดูลต้องวางฐานต่ำสุดที่ y=0
+       ใช้ค่าต่ำสุดร่วมของทั้งโมดูลเพื่อรักษาระยะซ้อนชั้นภายในชิ้นหน้า/ตัวกล่อง */
+    const peers=M.module?(V3.parts||[]).filter(p=>p.module===M.module):[M];
+    const baseZ=printBaseZ(peers);
+    return mkM(1,0,0, 0,0,1, 0,-1,0, px-BED/2, -baseZ, BED/2-py);
   }
   if(M.kind==='back'){
     /* ฝาหลังพิมพ์ผิวนอกติดฐาน บ่าชี้ขึ้น — ประกอบโดยหันบ่าเข้าในกล่อง
@@ -4022,6 +4245,7 @@ function glRender(){
   gl.uniform1f(L.uGrow,0);
   gl.uniform1f(L.uHalo,0);
   gl.uniform1f(L.uFloor,0);
+  gl.uniform1f(L.uGloss,0);
 
   /* พื้นสตูดิโอ — วางที่ก้นชิ้นงาน ให้แสงไฟมีที่ตกกระทบ */
   const floorY=B.mn[1]-0.4;
@@ -4058,6 +4282,7 @@ function glRender(){
     gl.uniformMatrix4fv(L.uMVP,false,m4mul(PV,Mm));
     const rgb=hex2rgb(M.hex).map(v=>v/255);
     gl.uniform3f(L.uCol,rgb[0],rgb[1],rgb[2]);
+    gl.uniform1f(L.uGloss,M.gloss?1:0);
     const emit = lit && emitOf(M) ? 1 : 0;
     gl.uniform1f(L.uEmit,emit);
     gl.uniform1f(L.uDark, lit&&!emit ? 1 : 0);
@@ -4162,12 +4387,13 @@ const BIND=[
  ['bH','exp.bedH','num',null,null,''],
  ['bDepth','box.depth','num','bDepthV',v=>v+' มม.',''],
  ['bColorT','box.colorT','num','bColorTV',v=>v+' มม.',''],
+ ['face5dH','face.height5d','num','face5dHV',v=>v+' มม.',''],
+ ['face5dR','face.edgeR','num','face5dRV',v=>v+' มม.',''],
  ['bDiff','box.diff','num','bDiffV',v=>v+' มม.',''],
  ['bBgT','box.bgT','num','bBgTV',v=>v+' มม.',''],
  ['bFrame','box.frame','num','bFrameV',v=>v+' มม.',''],
  ['bBack','box.back','num','bBackV',v=>v+' มม.',''],
  ['buildMode','build.mode','str',null,null,''],
- ['raisedFrontH','build.raisedH','num','raisedFrontHV',v=>v+' มม.',''],
  ['shAcrT','sheet.acrT','num','shAcrTV',v=>v+' มม.',''],
  ['shAcrL','sheet.acrLedge','num','shAcrLV',v=>v+' มม.',''],
  ['shPlsT','sheet.plsT','num','shPlsTV',v=>v+' มม.',''],
@@ -4310,10 +4536,14 @@ function updateBadges(){
 
 /* ---------- push state → controls ---------- */
 function pushToUI(){
-  /* โปรเจกต์ที่บันทึกก่อนเพิ่มระบบนี้ยังไม่มีสองค่านี้ */
-  if(S.build&&S.build.mode==='layered') S.build.mode='service';
-  if(!S.build) S.build={mode:'service',raisedH:1.2};
-  if(!isFinite(+S.build.raisedH)) S.build.raisedH=1.2;
+  /* โปรเจกต์เก่าจากโหมด layered/raised เปิดด้วยฝหน้าถอดเปลี่ยนได้แทน */
+  if(!S.build) S.build={mode:'service'};
+  if(S.build.mode==='layered'||S.build.mode==='raised') S.build.mode='service';
+  /* ย้าย state ชั่วคราวรุ่นก่อนที่เก็บ 5D เป็น face.style ให้มาอยู่ในรูปแบบงานใหม่ */
+  if(S.face&&S.face.style==='5d'&&S.build.mode==='service') S.build.mode='face5d';
+  if(!S.face) S.face={height5d:5};
+  if(!isFinite(+S.face.height5d)||+S.face.height5d<3||+S.face.height5d>10) S.face.height5d=5;
+  if(!isFinite(+S.face.edgeR)||+S.face.edgeR<0.6||+S.face.edgeR>2.4) S.face.edgeR=2;
   if(!['off','standard','strict'].includes(S.art.seal)) S.art.seal='off';
   if(!isFinite(+S.art.choke)) S.art.choke=0.6;
   /* โปรไฟล์หน้ากล่องไฟหัว 0.4 มม.: สีหน้า 0.4–2.4 (ค่าเริ่มต้น 0.6) และ diffuser 0.4–1.2 */
@@ -4366,10 +4596,10 @@ function syncModeUI(){
   const sh=isShell(), st=geomStack();
   const service=isService();
   const layered=isLayered();
-  const raised=isRaisedFront();
   const show=(id,on)=>{ const e=$('#'+id); if(e) e.style.display = on?'':'none'; };
-  show('raisedFrontRow',raised);
   show('fullThick',!sh); show('fullBack',!sh); show('shellThick',sh);
+  show('flatColorTRow',!sh); show('face5dRow',!sh&&isFace5D());
+  show('face5dRadiusRow',!sh&&isFace5D());
   show('fullBgT',!sh&&!layered);
   show('artColor',!sh);  show('backColorRow',!sh);
   show('jointBody',!sh); show('shellJointNote',sh); show('shellPrice',sh);
@@ -4381,9 +4611,9 @@ function syncModeUI(){
     ? '<b>พิมพ์เฉพาะตัวกล่อง</b> — ผนังมีร่องและคิ้วรับแผ่นทั้งหัวและท้าย '+
       'หน้าใช้อะครีลิคตัดเลเซอร์ หลังใช้พลาสวูด ประหยัดเวลาพิมพ์ได้มาก '+
       'ตอนส่งออกจะได้ไฟล์เส้นตัด <b>DXF และ SVG</b> ของทั้งสองแผ่นมาด้วย'
-    : raised
-    ? '<b>ชิ้นหน้ายกขอบ</b> — ผิวหน้าลาดจากขอบเข้าหาหน้าป้ายด้วยมุม <b>45°</b> รอบรูปทรงจริง '+
-      'แยกพิมพ์เป็น <b>ชิ้นหน้า · ตัวกล่อง · ฝาหลัง</b> และ Preview 3D/ไฟล์ส่งออกใช้เมชชุดเดียวกัน'
+    : isFace5D()
+    ? '<b>ชั้นสีหน้า 5D</b> — เป็นรูปแบบงานเฉพาะ ฝาหน้ายกสูงวางเหนือชั้นกระจายแสงและตัวกล่อง '+
+      'พารามิเตอร์ในหมวดนี้ไม่กระทบฝาหน้าถอดเปลี่ยนได้แบบมาตรฐาน'
     : layered
     ? '<b>ฝาหน้าถอดเปลี่ยนได้ + กันแสงรั่ว</b> — ผิวหน้าสีเป็นหน้าแปลน ส่วนแผ่นขาวนมอยู่ในช่องกรอบ และมีลิ้นรับบ่าเป็นวงแหวนติดด้านหลังฝาหน้า '+
       'เพื่อสวมเข้าตัวกล่องโดยไม่ปิดโพรงไฟ · ส่งออกเป็นฝาหน้า ตัวกล่อง และฝาหลังแยกกัน'
@@ -4397,9 +4627,10 @@ function syncModeUI(){
       'ร่องอะครีลิค + ความลึกกล่อง + ร่องพลาสวูด<br>'+
       'คิ้วบนเป็น<b>ลาด 45°</b> รับขอบอะครีลิคแบบสัมผัสเส้นรอบรูป แผ่นจึงเข้าศูนย์เองและพิมพ์ได้ไม่ต้องซัพพอร์ต · '+
       'คิ้วล่างเป็น<b>หน้าเรียบ</b> พลาสวูดวางแนบเต็มหน้า'
-    : raised
-    ? 'ขอบนูนสูง <b>'+raisedFrontHeight().toFixed(1)+' มม.</b> และกินระยะเข้าด้านในเท่ากัน จึงเป็นมุม 45° จริง · '+
-      'ผิวลาดใช้ความละเอียดสมดุลประมาณ <b>0.10 มม.</b> และจำกัดจำนวนช่วงเพื่อให้ Preview ทำงานลื่น · ปรับสูงได้ถึง <b>10 มม.</b> (แนะนำ 1–5 มม.)'
+    : isFace5D()
+    ? 'ผิวสีหน้าหนา <b>'+st.colorT.toFixed(1)+' มม.</b> วางบนผนังยกกลวงสูง <b>'+st.faceH.toFixed(1)+' มม.</b> · '+
+      'แผ่นกระจายแสงอยู่ชิดหลังผิวสีและภายในเป็นโพรงนำแสง · ขอบนอกโค้งรัศมี <b>'+clamp(+(S.face&&S.face.edgeR)||2,0.6,2.4).toFixed(1)+' มม.</b> '+
+      'ด้วย fillet จริงและ smooth normal โดยใช้จำนวนช่วงโค้งคงที่เพื่อไม่ให้เครื่องทำงานหนัก'
     : layered
     ? 'ผิวหน้าสีร่น <b>0.2 มม.</b> รอบด้านและประกบกรอบทันที ส่วนแผ่นขาวนมอยู่ในช่องกรอบ '+
       'โดยมีลิ้นรับบ่าเป็นวงแหวนติดด้านหลังฝาหน้า กว้าง <b>'+FRONT_LIP_WIDTH.toFixed(1)+' มม.</b> สูง <b>'+FRONT_LIP_HEIGHT.toFixed(1)+' มม.</b> · โพรงไฟตรงกลางยังเปิดโล่ง'

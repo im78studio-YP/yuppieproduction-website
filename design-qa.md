@@ -1,3 +1,117 @@
+# Design QA — Lightbox ชั้นสีหน้า 5D
+
+## Source visual truth
+
+- Rounded-edge target: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-ea94235a-d6d0-4402-a633-dac6f9c2da55.png` (501 × 509 px).
+- Internal-gap defect reference: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-059fd32f-5336-49d1-8d88-3249cc20458b.png` (501 × 253 px).
+- Requested behavior: every colored region and filled gap between letters shares one front plane, while the true outside silhouette keeps the glossy rounded fillet.
+
+## Implementation evidence
+
+- Browser-rendered close implementation: `qa/lightbox-maker/artifacts/front-color-5d-curve-restored-implementation.png` (1190 × 906 px; CSS viewport 1190 × 906 at density 1).
+- Focused side-by-side evidence: `qa/lightbox-maker/artifacts/front-color-5d-curve-restored-comparison.png`.
+- Tested state: default two-line artwork at close zoom, outer white and pink rings, build mode `ชั้นสีหน้า 5D`, height 5 mm, outer-edge radius 2 mm, assembled 3D view.
+
+## Comparison findings
+
+- Full view keeps the existing interface, typography, spacing, palette, canvas framing, and controls unchanged; the fix is limited to generated 5D geometry.
+- The focused reference exposes recessed pink islands between `Light` and `Studio`; these are separate same-color components enclosed by other front colors, not actual outside edges.
+- The implementation classifies every same-color component against `frontFit`, the actual front support after the 0.2 mm fit clearance: only components adjacent to that boundary enter the five-band quarter-round generator.
+- Enclosed same-color islands and every internal color mesh retain their full flat footprint at z=0; the focused post-fix capture shows those gaps flush with the pink, white, and letter faces.
+- Multiple color volumes remain separate in the 3MF for multicolor printing, but visually and dimensionally form one continuous front module.
+- Smooth normals and gloss remain scoped to the physical outer fillet; the fixed five-segment profile avoids height-dependent mesh growth.
+
+## Regression verification
+
+- The radius control remains exclusive to the 5D work category and continues to rebuild the model.
+- Standard, service, and shell modes still use their existing prism paths.
+- Browser console: 0 warnings and 0 errors.
+- Inline JavaScript syntax, TypeScript, production build, and all 162 project tests passed after the geometry split.
+- No actionable P0, P1, or P2 issue remains for the requested flush-face/outer-only treatment.
+
+## Required fidelity surfaces
+
+- Fonts and typography: source text, font weight, line arrangement, and antialiasing are unchanged.
+- Spacing and layout rhythm: application panels, canvas crop, controls, and model proportions are unchanged.
+- Colors and visual tokens: the existing pink, white, charcoal, and dark UI tokens are preserved; the correction changes geometry only.
+- Image quality and asset fidelity: comparison uses the supplied defect screenshot and a browser-rendered close capture of the live mesh; no raster substitute is used in the product.
+- Copy and content: no customer-facing labels or values changed in this iteration.
+
+## Comparison history
+
+1. Previous pass removed fillets from adjoining color boundaries but still rounded the outer loop of every disconnected component belonging to the outer-ring color.
+2. Latest reference identified the remaining P1 defect: enclosed pink components in letter gaps were recessed despite not touching the outside silhouette.
+3. Added component-to-panel boundary classification and routed enclosed components through the flat prism path.
+4. Close browser capture and focused side-by-side comparison confirm that the formerly recessed gaps now share the common front plane.
+5. The first classification compared trimmed color masks with the larger raw `G.panel`; the 0.2 mm fit margin made real outside components look internal and removed their fillet (P1).
+6. Changed the comparison support to `frontFit`, restoring the rounded outside highlight while keeping enclosed gap components flat.
+7. The latest combined comparison confirms both required states together: curved outer edge and flush internal gaps.
+
+## Final result
+
+passed
+
+---
+
+# Design QA — Hollow 5D Front Light Path
+
+## Source visual truth
+
+- Reference: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-c13888c4-85b2-4236-ab79-b82a1f2c7504.png`.
+- Source dimensions: 512 × 474 px.
+- Requested correction: the 5D relief height must not become the solid color-layer thickness; retain the rounded raised edge while opening an internal light path.
+
+## Implementation evidence
+
+- Browser-rendered plate view: `qa/lightbox-maker/artifacts/front-color-5d-hollow-plate.png`.
+- Focused plate crop: `qa/lightbox-maker/artifacts/front-color-5d-hollow-plate-focus.png`.
+- Lit state: `qa/lightbox-maker/artifacts/front-color-5d-hollow-lit.png`.
+- Assembled rounded-edge state: `qa/lightbox-maker/artifacts/front-color-5d-hollow-assembled.png`.
+- Full comparison: `qa/lightbox-maker/artifacts/front-color-5d-hollow-comparison.png`.
+- Focused comparison: `qa/lightbox-maker/artifacts/front-color-5d-hollow-focused-comparison.png`.
+- Implementation pixels and CSS viewport: 1190 × 906 px at density 1; focused crop 470 × 350 px. Comparison board: 1200 × 520 px.
+- Tested state: build mode `ชั้นสีหน้า 5D`, color skin 0.6 mm, raised wall 5 mm, outer radius 2 mm, diffuser 0.4 mm.
+
+## Full-view comparison evidence
+
+- The source shows the problematic front as one solid-height colored mass.
+- The implementation keeps the same 5 mm overall relief and rounded outline, but the front module now contains a 0.6 mm color skin, a 0.4 mm diffuser directly behind it, and a hollow raised perimeter wall.
+- The box, front module, and back remain three separately printable groups on the build plate.
+
+## Focused region comparison
+
+- `front-color-5d-hollow-focused-comparison.png` puts the source defect and revised plate view in one board.
+- The revised front remains visually thin at the emitting surface while the perimeter retains visible height; the black box and back are unchanged.
+
+## Required fidelity surfaces
+
+- Fonts and typography: existing UI font family, sizes, weights, wrapping, and hierarchy are unchanged; only the parameter label was clarified to `ความหนาชั้นสีหน้า`.
+- Spacing and layout rhythm: the restored color-thickness control uses the existing row, slider, numeric input, and spacing tokens with no overflow.
+- Colors and visual tokens: the existing pink, white, black, dark-panel, active-state, and material colors are preserved.
+- Image quality and asset fidelity: WebGL geometry remains vector/mesh rendered; no raster substitute or placeholder asset was introduced. Rounded highlights remain smooth in the assembled close view.
+- Copy and content: status and manufacturing guidance now distinguish `ความหนาชั้นสีหน้า` from `ความสูงสีหน้า 5D` and describe the hollow light path.
+
+## Findings
+
+- No actionable P0, P1, or P2 issue remains for the requested geometry change.
+- Height interaction verified at 5 mm → 10 mm → 5 mm while color thickness remained 0.6 mm.
+- Assembled, lit, exploded, and build-plate controls were exercised; the new 5D wall travels with the front module in exploded mode.
+- Browser console errors/warnings: 0.
+- All 163 project tests, TypeScript validation, production build, inline application JavaScript parsing, and `git diff --check` passed.
+
+## Comparison history
+
+1. Earlier state: `height5d` was assigned directly to `colorT`, producing a 5–10 mm solid colored face and placing the diffuser behind that mass.
+2. Fix: split the stack into a thin color skin, adjacent diffuser, hollow perimeter wall using `faceH`, and a rear fitting lip aligned to the box at `faceH`.
+3. Follow-up fix: added `face5dwall` to the exploded-view transform so every front-module component moves together.
+4. Post-fix evidence: the focused comparison, assembled close view, lit view, and 5/10 mm interaction check show the requested behavior without changing the existing visual system.
+
+## Final result
+
+passed
+
+---
+
 # Design QA — Smart Move
 
 ## Source of truth
