@@ -592,9 +592,9 @@ function defaults(){ return {
         imgData:null, imgName:'', removeBg:true, tol:26 },
   tr:{ scale:88, scaleY:88, uniform:true, dx:0, dy:0, rot:0 },
   art:{ n:2, smooth:1, glowMode:'logo', seal:'off', choke:0.6 },
-  /* ปิดช่องโปร่งเป็นค่าเริ่มต้นทั้งข้อความและโลโก้ แต่ยังเก็บค่าแยกกัน
-     เพื่อให้ผู้ใช้เปิดช่องของแต่ละต้นทางกลับได้โดยไม่กระทบอีกแท็บ */
-  shape:{ mode:'contour', fillHoles:true, fillHolesImage:true },
+  /* ข้อความปิดช่องในตัวอักษรเป็นค่าเริ่มต้น แต่รูปภาพเก็บค่าของตัวเอง
+     เพื่อไม่ให้สลับแท็บแล้วไปอุดช่องโปร่งของโลโก้โดยไม่ตั้งใจ */
+  shape:{ mode:'contour', fillHoles:true, fillHolesImage:false },
   rings:[ {w:4, hex:'#ffffff', glow:true},
           {w:3, hex:'#ee3c96', glow:false} ],
   pal:[ {hex:'#1a1a1a',name:'พื้นหลัง',glow:false},

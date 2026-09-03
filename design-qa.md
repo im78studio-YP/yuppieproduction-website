@@ -511,3 +511,53 @@ passed
 ## Final result
 
 passed
+
+---
+
+# Design QA — Fill Transparent Logo Holes Default
+
+## Source visual truth
+
+- Reference: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-7b871058-6bb4-421d-a690-587c0a4a4617.png`
+- Reference pixels: 280 × 111.
+- Requested state: image/logo mode with “ปิดช่องโปร่งภายในโลโก้” checked by default.
+
+## Implementation evidence
+
+- Full browser screenshot: `qa/lightbox-maker/artifacts/fill-logo-holes-default-checked.png` (1280 × 720 pixels).
+- Focused comparison crop: `qa/lightbox-maker/artifacts/fill-logo-holes-default-checked-focus.png` (308 × 160 pixels).
+- CSS viewport: 1280 × 720 at device pixel ratio 1.25.
+- State: image source tab selected, no image uploaded yet, checkbox checked.
+
+## Full-view and focused comparison
+
+- The full view confirms the existing dark YP Lightbox Studio layout and image-source state remain unchanged.
+- The focused source and implementation were inspected together; the checkbox, label, surrounding spacing, colors, and adjacent inner-border control match the requested state.
+- Density and crop differ because the source is a small reference crop; the focused implementation crop preserves the UI at native browser density without stretching.
+
+## Required fidelity surfaces
+
+- Fonts and typography: unchanged existing font family, size, weight, and hierarchy.
+- Spacing and layout rhythm: checkbox row and adjacent control spacing are unchanged.
+- Colors and visual tokens: existing dark panel, blue checked state, pink slider, and gray fields are preserved.
+- Image quality and asset fidelity: no new image assets; the supplied screenshot is used only as state reference.
+- Copy and content: image mode continues to display the exact label “ปิดช่องโปร่งภายในโลโก้”.
+
+## Findings and interaction checks
+
+- No actionable P0, P1, or P2 differences.
+- Fresh image-mode state reports the checkbox as checked.
+- The text and image modes still store their checkbox values independently, so a user override remains isolated to the active source type.
+- Browser console warnings/errors: 0.
+- Automated suite: 166/166 passed.
+- Production build: passed.
+
+## Comparison history
+
+1. Earlier default stored `fillHolesImage: false`, so switching to image mode cleared the checkbox.
+2. The image-mode default is now `true`; the existing independent state and event binding were preserved.
+3. Post-fix focused comparison confirms the requested checked state with no visual regression.
+
+## Final result
+
+passed
