@@ -2011,102 +2011,9 @@ function profileLoopData(R){
   return {out,smooth,scale};
 }
 function offsetProfileLoop(R,D,d){
-  return R.map((p,i)=>{ const t=typeof d==='number'?d:d[i];
-    return [p[0]-D.out[i][0]*t*D.scale[i],p[1]-D.out[i][1]*t*D.scale[i]];
-  });
+  return R.map((p,i)=>[p[0]-D.out[i][0]*d*D.scale[i],p[1]-D.out[i][1]*d*D.scale[i]]);
 }
-function profileContains(p,R){
-  let inside=false;
-  for(let i=0,j=R.length-1;i<R.length;j=i++)
-    if((R[i][1]>p[1])!==(R[j][1]>p[1])&&p[0]<(R[j][0]-R[i][0])*(p[1]-R[i][1])/(R[j][1]-R[i][1])+R[i][0]) inside=!inside;
-  return inside;
-}
-function profileCross(a,b,c,d){
-  const cross=(p,q,r)=>(q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0]);
-  return cross(a,b,c)*cross(a,b,d)<-1e-14&&cross(c,d,a)*cross(c,d,b)<-1e-14;
-}
-/* A cavity entirely inside a colour region can share its EXACT contour with the
-   skin. Subtract by nesting loops, not by tracing/smoothing a second raster ring.
-   Regions cut by another colour keep the legacy path; never join colours or holes. */
-function sharedFace5DContours(full,cap){
-  const base=full.flatMap(g=>[g.out,...g.holes]);
-  for(const g of cap) for(const R of [g.out,...g.holes]) for(let i=0;i<R.length;i++){
-    const p=R[i],q=R[(i+1)%R.length];
-    if(!full.some(f=>profileContains(p,f.out)&&!f.holes.some(h=>profileContains(p,h)))) return null;
-    for(const B of base) for(let j=0;j<B.length;j++)
-      if(profileCross(p,q,B[j],B[(j+1)%B.length])) return null;
-  }
-  const rings=base.map(R=>({R,roundOuter:loopArea(R)>0}));
-  for(const g of cap) for(const R of [g.out,...g.holes]) rings.push({R:R.slice().reverse(),roundOuter:false});
-  const groups=rings.filter(r=>loopArea(r.R)>0).map(r=>({out:r.R,holes:[],roundOuter:r.roundOuter}));
-  for(const {R} of rings.filter(r=>loopArea(r.R)<0)){
-    const hosts=groups.filter(g=>profileContains(R[0],g.out)).sort((a,b)=>Math.abs(loopArea(a.out))-Math.abs(loopArea(b.out)));
-    if(!hosts.length) return null;
-    hosts[0].holes.push(R);
-  }
-  return {wall:groups,cap};
-}
-/* Limit each fillet vertex by the space actually available along its inset ray.
-   The average width of a whole letter cannot protect a thin tip or concave join.
-   Only the inward/top profile changes: the original outside silhouette stays put. */
-function roundedProfileRadii(loops,data,r,outerOnly){
-  const radii=loops.map((R,li)=>R.map(()=>!outerOnly||li===0?r:0));
-  for(let li=0;li<loops.length;li++) for(let i=0;i<loops[li].length;i++){
-    if(!radii[li][i]) continue;
-    const p=loops[li][i],D=data[li],v=[-D.out[i][0]*D.scale[i],-D.out[i][1]*D.scale[i]];
-    for(let lj=0;lj<loops.length;lj++) for(let j=0;j<loops[lj].length;j++){
-      const R=loops[lj],k=(j+1)%R.length;
-      if(li===lj&&(j===i||k===i)) continue;
-      const a=R[j],b=R[k],ex=b[0]-a[0],ey=b[1]-a[1],den=v[0]*ey-v[1]*ex;
-      if(Math.abs(den)<1e-12) continue;
-      const dx=a[0]-p[0],dy=a[1]-p[1],t=(dx*ey-dy*ex)/den,u=(dx*v[1]-dy*v[0])/den;
-      if(t>1e-7&&u>=-1e-9&&u<=1+1e-9) radii[li][i]=Math.min(radii[li][i],t*(outerOnly&&lj>0?0.85:0.45));
-    }
-  }
-  // Also sample segment middles: the bisectors at the two ends of a narrow
-  // bridge may both point into wider lobes and completely miss that bridge.
-  for(let li=0;li<loops.length;li++) for(let i=0;i<loops[li].length;i++){
-    const R=loops[li],k=(i+1)%R.length;
-    if(!radii[li][i]&&!radii[li][k]) continue;
-    const p=[(R[i][0]+R[k][0])/2,(R[i][1]+R[k][1])/2];
-    const dx=R[k][0]-R[i][0],dy=R[k][1]-R[i][1],len=Math.hypot(dx,dy),v=[-dy/len,dx/len];
-    let limit=Infinity;
-    for(let lj=0;lj<loops.length;lj++) for(let j=0;j<loops[lj].length;j++){
-      if(li===lj&&i===j) continue;
-      const Q=loops[lj],a=Q[j],b=Q[(j+1)%Q.length],ex=b[0]-a[0],ey=b[1]-a[1],den=v[0]*ey-v[1]*ex;
-      if(Math.abs(den)<1e-12) continue;
-      const ax=a[0]-p[0],ay=a[1]-p[1],t=(ax*ey-ay*ex)/den,u=(ax*v[1]-ay*v[0])/den;
-      if(t>1e-7&&u>=-1e-9&&u<=1+1e-9) limit=Math.min(limit,t*(outerOnly&&lj>0?0.85:0.45));
-    }
-    radii[li][i]=Math.min(radii[li][i],limit);radii[li][k]=Math.min(radii[li][k],limit);
-  }
-  // Prevent neighbouring miter rays reversing short segments; resolve remaining
-  // crossings locally instead of flattening the entire letter's rounded edge.
-  for(let pass=0;pass<16;pass++){
-    const top=loops.map((R,li)=>offsetProfileLoop(R,data[li],radii[li]));
-    const bad=loops.map(R=>new Set());
-    for(let li=0;li<loops.length;li++) for(let i=0;i<loops[li].length;i++){
-      const R=loops[li],j=(i+1)%R.length,a=top[li][i],b=top[li][j];
-      if((b[0]-a[0])*(R[j][0]-R[i][0])+(b[1]-a[1])*(R[j][1]-R[i][1])<1e-8){ bad[li].add(i);bad[li].add(j); }
-      for(let lj=li;lj<loops.length;lj++) for(let k=li===lj?i+1:0;k<loops[lj].length;k++){
-        const l=(k+1)%loops[lj].length;
-        if(li===lj&&(k===j||l===i)) continue;
-        if(profileCross(a,b,top[lj][k],top[lj][l])){ bad[li].add(i);bad[li].add(j);bad[lj].add(k);bad[lj].add(l); }
-      }
-    }
-    if(bad.every(s=>!s.size)) break;
-    bad.forEach((s,li)=>s.forEach(i=>{ radii[li][i]*=0.5; }));
-  }
-  // Taper abrupt local reductions over neighbouring edges, without increasing a
-  // radius that has already been limited for clearance.
-  for(let pass=0;pass<4;pass++) radii.forEach((rr,li)=>{
-    const R=loops[li];
-    for(let i=0;i<R.length;i++) for(const j of [(i+1)%R.length,(i+R.length-1)%R.length])
-      rr[i]=Math.min(rr[i],rr[j]+Math.hypot(R[i][0]-R[j][0],R[i][1]-R[j][1])*0.35);
-  });
-  return radii;
-}
-function triangulateProfileLoops(loops,minArea=4e-5){
+function triangulateProfileLoops(loops){
   const pts=[], holes=[];
   for(let i=0;i<loops.length;i++){
     if(i) holes.push(pts.length);
@@ -2117,7 +2024,7 @@ function triangulateProfileLoops(loops,minArea=4e-5){
     const keep=[];
     for(let i=0;i<idx.length;i+=3){
       const A=pts[idx[i]],B=pts[idx[i+1]],C=pts[idx[i+2]];
-      if(Math.abs((B[0]-A[0])*(C[1]-A[1])-(C[0]-A[0])*(B[1]-A[1]))>=minArea)
+      if(Math.abs((B[0]-A[0])*(C[1]-A[1])-(C[0]-A[0])*(B[1]-A[1]))>=4e-5)
         keep.push(idx[i],idx[i+1],idx[i+2]);
     }
     idx=keep;
@@ -2156,7 +2063,6 @@ function addProfileCap(M,T,z,nz){
 function addRoundedPrism(M,groups,z0,z1,radius,outerOnly=false){
   if(z1<=z0) return;
   for(const src of groups){
-    if(src.roundOuter===false){ addPrism(M,[src],z0,z1); continue; }
     const loops=[src.out].concat(src.holes).map(cleanProfileLoop);
     if(loops.some(R=>R.length<3)){ addPrism(M,[src],z0,z1); continue; }
     let area=Math.abs(loopArea(loops[0])), per=0;
@@ -2164,22 +2070,16 @@ function addRoundedPrism(M,groups,z0,z1,radius,outerOnly=false){
     const loopPer=loops.map(R=>{ let p=0; for(let i=0;i<R.length;i++) p+=Math.hypot(R[(i+1)%R.length][0]-R[i][0],R[(i+1)%R.length][1]-R[i][1]); return p; });
     per=loopPer.reduce((a,b)=>a+b,0);
     const featureW=2*Math.max(0,area)/Math.max(1e-6,per);
-    const r=Math.min(radius,(z1-z0)*0.45,outerOnly?radius:featureW*0.42);
+    const r=Math.min(radius,(z1-z0)*0.45,featureW*(outerOnly?0.65:0.42));
     if(r<0.18){ addPrism(M,[src],z0,z1); continue; }
     const data=loops.map(profileLoopData);
-    const radii=roundedProfileRadii(loops,data,r,outerOnly);
     /* ชั้นหน้าเป็นผืนเดียว: inset เฉพาะวงนอก ส่วนวงรู/รอยต่อสีคงพิกัดเดิม
        จึงไม่มีร่อง fillet แยกตามตัวอักษรหรือสีด้านใน */
-    const topLoops=loops.map((R,i)=>offsetProfileLoop(R,data[i],radii[i]));
-    const topTri=triangulateProfileLoops(topLoops,1e-12), backTri=triangulateProfileLoops(loops,1e-12);
+    const topLoops=loops.map((R,i)=>(!outerOnly||i===0)?offsetProfileLoop(R,data[i],r):R);
+    const topTri=triangulateProfileLoops(topLoops), backTri=triangulateProfileLoops(loops);
     if(!topTri.idx.length||!backTri.idx.length){ addPrism(M,[src],z0,z1); continue; }
 
-    let roundLoss=0;
-    loops.forEach((R,li)=>R.forEach((p,i)=>{
-      const j=(i+1)%R.length,a=radii[li][i],b=radii[li][j];
-      roundLoss+=Math.hypot(R[j][0]-p[0],R[j][1]-p[1])*(a*a+a*b+b*b)/3;
-    }));
-    M.vol+=Math.max(0,area*(z1-z0)-roundLoss*(1-Math.PI/4));
+    M.vol+=Math.max(0,area)*(z1-z0)-(outerOnly?loopPer[0]:per)*r*r*(1-Math.PI/4);
     for(const R of loops) for(const p of R){
       if(p[0]<M.x0)M.x0=p[0]; if(p[0]>M.x1)M.x1=p[0];
       if(p[1]<M.y0)M.y0=p[1]; if(p[1]>M.y1)M.y1=p[1];
@@ -2189,12 +2089,12 @@ function addRoundedPrism(M,groups,z0,z1,radius,outerOnly=false){
     addProfileCap(M,backTri,z1,1);
 
     for(let li=0;li<loops.length;li++){
-      const R=loops[li], D=data[li], rr=radii[li], n=R.length, rounded=!outerOnly||li===0;
+      const R=loops[li], D=data[li], n=R.length, rounded=!outerOnly||li===0;
       if(rounded) for(let s=0;s<FACE5D_FILLET_SEGMENTS;s++){
         const ta=(s/FACE5D_FILLET_SEGMENTS)*Math.PI/2;
         const tb=((s+1)/FACE5D_FILLET_SEGMENTS)*Math.PI/2;
-        const da=rr.map(v=>v*(1-Math.sin(ta))), db=rr.map(v=>v*(1-Math.sin(tb)));
-        const za=rr.map(v=>z0+v*(1-Math.cos(ta))), zb=rr.map(v=>z0+v*(1-Math.cos(tb)));
+        const da=r*(1-Math.sin(ta)), db=r*(1-Math.sin(tb));
+        const za=z0+r*(1-Math.cos(ta)), zb=z0+r*(1-Math.cos(tb));
         const RA=offsetProfileLoop(R,D,da), RB=offsetProfileLoop(R,D,db);
         for(let i=0;i<n;i++){
           const j=(i+1)%n, dx=R[j][0]-R[i][0],dy=R[j][1]-R[i][1],L=Math.hypot(dx,dy)||1;
@@ -2204,16 +2104,16 @@ function addRoundedPrism(M,groups,z0,z1,radius,outerOnly=false){
           const nc=[oj[0]*Math.sin(tb),oj[1]*Math.sin(tb),-Math.cos(tb)];
           const nd=[oi[0]*Math.sin(tb),oi[1]*Math.sin(tb),-Math.cos(tb)];
           const tm=(ta+tb)/2, ex=[seg[0]*Math.sin(tm),seg[1]*Math.sin(tm),-Math.cos(tm)];
-          quadPreviewSmooth(M,[RA[i][0],RA[i][1],za[i]],[RA[j][0],RA[j][1],za[j]],
-            [RB[j][0],RB[j][1],zb[j]],[RB[i][0],RB[i][1],zb[i]],na,nb,nc,nd,ex);
+          quadPreviewSmooth(M,[RA[i][0],RA[i][1],za],[RA[j][0],RA[j][1],za],
+            [RB[j][0],RB[j][1],zb],[RB[i][0],RB[i][1],zb],na,nb,nc,nd,ex);
         }
       }
-      const wallZ0=rr.map(v=>z0+v);
-      if(z1>z0+r+1e-5){
+      const wallZ0=rounded?z0+r:z0;
+      if(z1>wallZ0+1e-5){
         for(let i=0;i<n;i++){
           const j=(i+1)%n,dx=R[j][0]-R[i][0],dy=R[j][1]-R[i][1],L=Math.hypot(dx,dy)||1;
           const seg=[dy/L,-dx/L], oi=D.smooth[i]||seg, oj=D.smooth[j]||seg;
-          quadPreviewSmooth(M,[R[i][0],R[i][1],wallZ0[i]],[R[j][0],R[j][1],wallZ0[j]],
+          quadPreviewSmooth(M,[R[i][0],R[i][1],wallZ0],[R[j][0],R[j][1],wallZ0],
             [R[j][0],R[j][1],z1],[R[i][0],R[i][1],z1],
             [oi[0],oi[1],0],[oj[0],oj[1],0],[oj[0],oj[1],0],[oi[0],oi[1],0],[seg[0],seg[1],0]);
         }
@@ -2913,13 +2813,6 @@ function buildParts(nt){
       const capMk=maskWhere(i=>mk[i]&&!face5dWallFit[i]);
       const exposed=!liveRings.length||(p.role==='ring'&&(p.ringIndex||0)===outerRingNo);
       const W=Mesh(frontPrefix+(p.name||('สี '+k))+' · ผนังยกกลวง 5D',p.hex,nt);
-      const shared=isFace5DRounded()&&!nt&&S.exp.smooth!==false
-        ?sharedFace5DContours(contoursOf(mk,gw,gh),contoursOf(capMk,gw,gh)):null;
-      if(shared){
-        if(exposed) addRoundedPrism(W,shared.wall,0,st.faceH,clamp(+(S.face&&S.face.edgeR)||2,0.6,2.4),true);
-        else addPrism(W,shared.wall,0,st.faceH);
-        addPrism(M,shared.cap,0,layerT);
-      }else{
       if(exposed){
         /* ใช้ frontFit (ขอบจริงหลังเผื่อสวม 0.2 มม.) เป็น support ไม่ใช่ G.panel เดิม
            เพราะ wallMk ถูก trim แล้ว หากเทียบกับ panel เดิม component ขอบนอกจะดูเหมือนอยู่ด้านใน */
@@ -2930,7 +2823,6 @@ function buildParts(nt){
         addSolid(W,split.inner,0,st.faceH);
       }else addSolid(W,wallMk,0,st.faceH);
       addSolid(M,capMk,0,layerT);
-      }
       W.kind='face5dwall'; W.module='front'; W.glow=false; W.gloss=true;
       if(W.n) parts.push(W);
       M.gloss=true;

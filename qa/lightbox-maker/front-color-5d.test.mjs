@@ -3,10 +3,98 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import vm from 'node:vm';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 const root=path.resolve(here,'../..');
 const html=fs.readFileSync(path.join(root,'public/lightbox_maker/YP-Lightbox-Studio.html'),'utf8');
+function geometryContext(){
+  const c=vm.createContext({document:{readyState:'loading',addEventListener(){}},window:{},TextEncoder,console});
+  vm.runInContext([...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).join('\n'),c);
+  return c;
+}
+function meshEdges(M){
+  const edges=new Map();
+  const key=p=>p.map(v=>Math.round(v*1e5)).join(',');
+  for(let i=0;i<M.n;i+=12){
+    const v=[3,6,9].map(k=>key(Array.from(M.a.slice(i+k,i+k+3))));
+    for(let j=0;j<3;j++){
+      const a=v[j],b=v[(j+1)%3],k=[a,b].sort().join('|');
+      assert.notEqual(a,b,'triangle must not collapse at export precision');
+      edges.set(k,(edges.get(k)||0)+1);
+    }
+  }
+  return edges;
+}
+
+test('rounded 5D narrow neck keeps all fillet vertices inside the logo and closes the mesh',()=>{
+  const c=geometryContext();
+  const result=vm.runInContext(`(()=>{
+    const R=[[0,0],[10,0],[10,4],[18,4],[18,0],[28,0],[28,10],[18,10],[18,6],[10,6],[10,10],[0,10]];
+    const loops=[R],D=loops.map(profileLoopData),rr=roundedProfileRadii(loops,D,2,true);
+    const T=offsetProfileLoop(R,D[0],rr[0]);
+    const M=Mesh('neck','#ff0000');addRoundedPrism(M,[{out:R,holes:[]}],0,5,2,true);
+    return {M,inside:T.every(p=>profileContains(p,R)),local:rr[0],cross:T.some((a,i)=>T.some((b,j)=>j>i+1&&(j+1)%T.length!==i&&profileCross(a,T[(i+1)%T.length],b,T[(j+1)%T.length])))};
+  })()`,c);
+  assert.equal(result.inside,true);
+  assert.equal(result.cross,false);
+  assert.ok(Math.min(...result.local)<Math.max(...result.local),'limit narrow sections locally, not the whole letter');
+  assert.ok([...meshEdges(result.M).values()].every(n=>n===2),'rounded mesh must be watertight');
+});
+
+test('rounded 5D skin and hollow wall use identical seam coordinates, including counters',()=>{
+  const c=geometryContext();
+  const out=vm.runInContext(`(()=>{
+    const circle=(r,n=48)=>Array.from({length:n},(_,i)=>[20+r*Math.cos(i*2*Math.PI/n),20+r*Math.sin(i*2*Math.PI/n)]);
+    const full=[{out:circle(15),holes:[circle(4).reverse()]}];
+    const cap=[{out:circle(12.6),holes:[circle(6.4).reverse()]}];
+    const shared=sharedFace5DContours(full,cap);
+    const wall=Mesh('wall','#ff0000'),skin=Mesh('skin','#ff0000');
+    addRoundedPrism(wall,shared.wall,0,5,2,true);addPrism(skin,shared.cap,0,.6);
+    return {shared,wall,skin};
+  })()`,c);
+  assert.equal(out.shared.wall.length,2,'preserve separate inner counter wall');
+  const outer=out.shared.wall.find(g=>g.roundOuter);
+  assert.deepEqual(outer.holes[0],out.shared.cap[0].out.slice().reverse());
+  const inner=out.shared.wall.find(g=>!g.roundOuter);
+  assert.deepEqual(inner.out,out.shared.cap[0].holes[0].slice().reverse());
+  for(const M of [out.wall,out.skin]) assert.ok([...meshEdges(M).values()].every(n=>n===2),'each export solid must close');
+  assert.equal(out.skin.z1,.6,'do not thicken the colour skin to the raised height');
+  assert.equal(out.wall.z1,5);
+});
+
+test('shared 5D contours reject cavities crossing a colour boundary',()=>{
+  const c=geometryContext();
+  assert.equal(vm.runInContext(`sharedFace5DContours([{out:[[0,0],[10,0],[10,10],[0,10]],holes:[]}],[{out:[[8,2],[12,2],[12,8],[8,8]],holes:[]}])`,c),null);
+});
+
+test('rounded raster logo keeps a closed shared rim without spikes at narrow bridges',()=>{
+  const c=geometryContext();
+  const result=vm.runInContext(`(()=>{
+    const gw=220,gh=110,px=.2,P=new Uint8Array(gw*gh);
+    S.box.W=gw*px;S.box.H=gh*px;
+    for(let y=0;y<gh;y++)for(let x=0;x<gw;x++){
+      const a=Math.hypot(x-55,y-55),b=Math.hypot(x-165,y-55);
+      P[y*gw+x]=(a<45||b<45||(x>=55&&x<=165&&Math.abs(y-55)<7))?1:0;
+    }
+    G={gw,gh,px,panel:P,empty:false};PB=panelBounds();
+    const D=edtToOutside(P,gw,gh),cap=P.map((v,i)=>v&&D[i]>2.4/px?1:0);
+    const shared=sharedFace5DContours(contoursOf(P,gw,gh),contoursOf(cap,gw,gh));
+    const M=Mesh('raster','#ff0000');addRoundedPrism(M,shared.wall,0,5,2,true);
+    return {M,groups:shared.wall.length};
+  })()`,c);
+  assert.ok(result.groups>0);
+  assert.ok([...meshEdges(result.M).values()].every(n=>n===2),'raster rim must stay watertight');
+});
+
+test('tiny valid cap triangles are retained to match the rounded side boundary',()=>{
+  const c=geometryContext();
+  const result=vm.runInContext(`(()=>{
+    const T=triangulateProfileLoops([[[0,0],[2,0],[2,.000005]]],1e-12);
+    return T.idx.length;
+  })()`,c);
+  assert.equal(result,3);
+});
 
 test('5D ขอบโค้งมนและ 5D Chamfer เป็นคนละรูปแบบงาน',()=>{
   assert.match(html,/<option value="face5d">ชั้นสีหน้า 5D ขอบโค้งมน — ฝาหน้ายกสูง \+ ตัวกล่อง \+ ฝาหลัง<\/option>/);
