@@ -137,7 +137,7 @@ test('Cap is a separate opt-in mode with original front contour and unchanged in
   assert.equal(front,run(c,'JSON.stringify(sheetLoops(false))'));
   assert.equal(panel,run(c,'JSON.stringify(Array.from(G.panel))'));
   run(c,"S.sheet.cl=.2;S.build.mode='shell'");
-  assert.notEqual(back,run(c,'JSON.stringify(sheetLoops(false))'));
+  assert.equal(back,run(c,'JSON.stringify(sheetLoops(false))'));
   assert.equal(back,run(c,"JSON.stringify(sheetLoops(false,'back'))"));
 });
 
@@ -176,7 +176,7 @@ test('Inset shell uses a thin front mouth and flat main-wall shoulder without lo
   const c=capFixture();run(c,"S.build.mode='shell';S.sheet.frontRim=1.2");
   const spec=run(c,'shellSpec()');
   assert.equal(spec.rim,1.2);assert.equal(spec.frontInset,1.4);
-  assert.equal(spec.inset,2.6);assert.equal(spec.frontSupport,1);
+  assert.equal(spec.inset,1.4);assert.equal(spec.frontSupport,1);
   assert.equal(spec.gA,3);assert.equal(spec.zA2,3);assert.equal(spec.fA,0);
   assert.equal(spec.total,48);assert.equal(run(c,'S.box.frame'),2.4);
   assert.ok(html.includes('slab(H.rim,0,H.acrT)'));
@@ -188,18 +188,20 @@ test('Inset shell uses a thin front mouth and flat main-wall shoulder without lo
   assert.equal(run(c,'JSON.stringify(Array.from(G.panel))'),before);
 });
 
-test('A four-mm stroke retains an inset acrylic face even when its rear sheet disappears',()=>{
+test('A four-mm stroke now retains both sheets; the old rear inset would erase it',()=>{
   const c=capFixture();
   run(c,`S.build.mode='shell';G.panel.fill(0);
     for(let y=20;y<40;y++)for(let x=10;x<70;x++)G.panel[y*100+x]=1;
     G.edtIn=edtToOutside(G.panel,G.gw,G.gh);PB=panelBounds();`);
   assert.ok(run(c,'sheetLoops(false).length>0'));
-  assert.equal(run(c,"sheetLoops(false,'back').length"),0);
+  assert.ok(run(c,"sheetLoops(false,'back').length>0"));
   assert.equal(run(c,"buildShell(false).some(p=>p.kind==='acrylic')"),true);
-  const files=run(c,'sheetCutFiles()');assert.equal(files.length,3);
-  assert.equal(files.some(f=>f.name.includes('พลาสวูด')),false);
+  assert.equal(run(c,"buildShell(false).some(p=>p.kind==='plaswood')"),true);
+  const files=run(c,'sheetCutFiles()');assert.equal(files.length,5);
+  assert.equal(files.some(f=>f.name.includes('พลาสวูด')),true);
   const note=new TextDecoder().decode(files.at(-1).data);
-  assert.match(note,/1.40 มม.\/ด้าน/);assert.match(note,/ไม่มีพื้นที่ฝาหลังสวมใน/);
+  assert.match(note,/1.40 มม.\/ด้าน/);assert.doesNotMatch(note,/ไม่มีพื้นที่ฝาหลังสวมใน/);
+  assert.equal(run(c,"S.sheet.backRim=2.4;sheetLoops(false,'back').length"),0);
 });
 
 test('Front rim adjustment changes only front cutting contour, not rear or outer logo',()=>{
@@ -216,7 +218,7 @@ test('Front rim adjustment changes only front cutting contour, not rear or outer
 });
 
 test('Inset front and rear exports use separate contours and millimetre units',()=>{
-  const c=capFixture();run(c,"S.build.mode='shell'");
+  const c=capFixture();run(c,"S.build.mode='shell';S.sheet.backRim=2.4");
   const files=run(c,'sheetCutFiles()'),decoder=new TextDecoder();
   assert.equal(files.length,5);
   const front=decoder.decode(files[0].data),back=decoder.decode(files[2].data);
@@ -224,6 +226,53 @@ test('Inset front and rear exports use separate contours and millimetre units',(
   assert.notEqual(front.replaceAll('ACRYLIC','PLASWOOD'),back);
   const note=decoder.decode(files[4].data);
   assert.match(note,/1.40 มม.\/ด้าน/);assert.match(note,/2.60 มม.\/ด้าน/);
-  assert.match(note,/หน้าและหลังคนละเส้นตัด/);
+  assert.match(note,/เส้นตัดหน้าและหลังแยกตามค่าริมปากและรูเจาะ/);
   assert.doesNotMatch(note,/ทั้งสองแผ่นใช้เส้นตัดเดียวกัน/);
+});
+
+test('Rear sheet sits on the main-wall shoulder; thin rear mouth spans the sheet thickness',()=>{
+  for(const mode of ['shell','shellCap']){
+    const c=capFixture();run(c,`S.build.mode='${mode}'`);
+    for(const thickness of [2,5,15]){
+      run(c,`S.sheet.plsT=${thickness}`);
+      const H=run(c,'shellSpec()');
+      assert.equal(H.backRim,1.2);assert.equal(H.backSupport,1);
+      assert.equal(H.fB,0);assert.equal(H.zB0,H.zB2);assert.equal(H.zB1,H.zB2);
+      assert.equal(H.wallMax,2.4);assert.equal(H.cav,40);
+      assert.equal(H.total-H.zB2,thickness);
+      const parts=run(c,'buildShell(false)'),back=parts.find(p=>p.kind==='plaswood');
+      assert.equal(back.z0,H.zB2);assert.equal(back.z1,H.total);assert.equal(back.hex,'#FFFFFF');
+      assert.equal(run(c,'buildShell(true).some(p=>p.display)'),false);
+    }
+  }
+  assert.ok(html.includes('slab(H.backRim,H.zB2,H.total)'));
+  assert.doesNotMatch(html,/slab\(F\+H\.lB/);
+});
+
+test('Rear rim is independent of front, main wall, backing and legacy ledge widths',()=>{
+  const c=capFixture();run(c,"S.build.mode='shell'");
+  const front=run(c,'JSON.stringify(sheetLoops(false))');
+  const rear=run(c,"JSON.stringify(sheetLoops(false,'back'))");
+  const panel=run(c,'JSON.stringify(Array.from(G.panel))');
+  const backing=run(c,'JSON.stringify(backingGeometry().groups)');
+  run(c,'S.sheet.backRim=.8;S.sheet.plsLedge=8;buildShell(false)');
+  assert.notEqual(run(c,"JSON.stringify(sheetLoops(false,'back'))"),rear);
+  assert.equal(run(c,'JSON.stringify(sheetLoops(false))'),front);
+  assert.equal(run(c,'JSON.stringify(Array.from(G.panel))'),panel);
+  assert.equal(run(c,'JSON.stringify(backingGeometry().groups)'),backing);
+  assert.equal(run(c,'S.box.frame'),2.4);assert.equal(run(c,'shellSpec().wallMax'),2.4);
+  assert.ok(run(c,'S.sheet.backRim=2.4;shellSpec().backSupport<.5'));
+  assert.match(html,/H.backSupport<0.5\?'err':'ok'/);
+});
+
+test('Older projects default rear rim to 1.2 without changing unrelated modes',()=>{
+  const c=capFixture();
+  run(c,'delete S.sheet.backRim;S.sheet.plsLedge=6');
+  assert.equal(run(c,'shellSpec().backRim'),1.2);
+  assert.equal(run(c,'defaults().sheet.backRim'),1.2);
+  assert.ok(html.includes("['shBackRim','sheet.backRim','num','shBackRimV'"));
+  for(const mode of ['full','service','face5d','face5dChamfer']){
+    run(c,`S.build.mode='${mode}'`);const before=run(c,'JSON.stringify(geomStack())');
+    run(c,'S.sheet.backRim=.8');assert.equal(run(c,'JSON.stringify(geomStack())'),before);
+  }
 });
