@@ -79,6 +79,15 @@ test('Registry ครอบ Booth Types และไม่แตะ Smart Snap b
   assert.ok(html.includes('screenAnchorSnap(event,obj,drag)'));
 });
 
+test('พรมเป็นพื้นสำหรับ Snap แต่ไม่เข้าสู่ Selection จาก Canvas หรือ Asset List',()=>{
+  assert.match(html,/id:SCENE_ASSET_IDS\.floor[\s\S]{0,600}selectable:spec\.floor!=='carpet'[\s\S]{0,120}snapEnabled:true/);
+  assert.ok(html.includes('selectable:asset.selectable!==false'));
+  assert.ok(html.includes('sceneItemExists(id)&&sceneItemSelectable(id)'));
+  assert.ok(html.includes("if(!item||item.selectable===false){setObjectSelection([])"));
+  assert.ok(html.includes("if(asset?.selectable!==false)meshes.push(node)"));
+  assert.ok(html.includes("item.selectable===false?'disabled ':''"));
+});
+
 test('Counter ถูกจัดเป็น Furniture ไม่ชนคำค้น Beam ภาษาไทย',()=>{
   const source=html.match(/function sceneObjectAssetSemantics\(obj,item=objectCatalogDef\(obj\?\.catalogId\)\)\{[\s\S]*?\n\}/)?.[0];
   assert.ok(source);

@@ -12,22 +12,21 @@ const html=fs.readFileSync(path.join(root,'public/lightbox_maker/YP-Lightbox-Stu
 test('เผื่อสวมแผ่นแสดงเฉพาะ shell มีช่วง 0.1–0.3 มม. ค่าเริ่มต้น 0.2',()=>{
   assert.match(html,/<div id="shellThick">[\s\S]*?id="shCl" min="0.1" max="0.3" step="0.05" value="0.2"/);
   assert.match(html,/show\('shellThick',sh\)/);
-  assert.match(html,/sheet:\{ acrT:3, frontRim:1.2, acrLedge:2, plsT:5, plsLedge:2, cl:0.2 \}/);
+  assert.match(html,/sheet:\{ acrT:3, acrLedge:2, plsT:5, plsLedge:2, cl:0.2 \}/);
   assert.ok(html.includes("['shCl','sheet.cl','num','shClV'"));
   assert.ok(html.includes('S.sheet.cl=sheetClearance(S.sheet.cl)'));
   const helper=html.match(/function sheetClearance\(value\)\{[\s\S]*?\n\}/)[0];
   const spec=html.match(/function shellSpec\(\)\{[\s\S]*?\n\}/)[0];
-  const ctx={S:{box:{frame:2.4,depth:40},sheet:{}},isShellCap:()=>false,SHELL_FACE:1.2,clamp:(n,lo,hi)=>Math.max(lo,Math.min(hi,n))};
+  const ctx={S:{box:{frame:2.4,depth:40},sheet:{}},SHELL_FACE:1.2,clamp:(n,lo,hi)=>Math.max(lo,Math.min(hi,n))};
   vm.createContext(ctx);vm.runInContext(helper+'\n'+spec,ctx);
   for(const [input,expected] of [[undefined,.2],[null,.2],['',.2],['bad',.2],[0,.1],[1,.3],[.1,.1],[.15,.15],[.2,.2],[.25,.25],[.3,.3]]){
     ctx.S.sheet.cl=input;
     const result=vm.runInContext('shellSpec()',ctx);
     assert.equal(result.cl,expected);
     assert.ok(Math.abs(result.inset-(2.4+expected))<1e-9);
-    assert.ok(Math.abs(result.frontInset-(1.2+expected))<1e-9);
     assert.equal(ctx.S.box.frame,2.4);
   }
-  assert.ok(html.includes("lim=(side==='front'?H.frontInset:H.inset)/G.px"));
+  assert.ok(html.includes('const lim=shellSpec().inset/G.px'));
   assert.ok(html.includes('const G0=sheetLoops(false)'));
 });
 

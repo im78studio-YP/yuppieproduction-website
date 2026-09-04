@@ -448,11 +448,11 @@ Studio</textarea>
 
       <div id="shellThick">
         <div class="row" style="margin-top:14px"><label>อะครีลิคหนา</label><input type="range" id="shAcrT" min="1" max="10" step="0.5" value="3"><span class="unit" id="shAcrTV">3 มม.</span></div>
-        <div class="row" id="shRimRow"><label>ริมปากรับอะครีลิค</label><input type="range" id="shRim" min="0.8" max="2.4" step="0.1" value="1.2"><span class="unit" id="shRimV">1.2 มม.</span></div>
+        <div class="row" id="shAcrLRow"><label>คิ้วบนกว้าง</label><input type="range" id="shAcrL" min="1" max="8" step="0.5" value="2"><span class="unit" id="shAcrLV">2 มม.</span></div>
         <div class="row"><label>พลาสวูดหนา</label><input type="range" id="shPlsT" min="2" max="15" step="0.5" value="5"><span class="unit" id="shPlsTV">5 มม.</span></div>
         <div class="row"><label>คิ้วล่างกว้าง</label><input type="range" id="shPlsL" min="1" max="8" step="0.5" value="2"><span class="unit" id="shPlsLV">2 มม.</span></div>
         <div class="row"><label for="shCl">เผื่อสวมแผ่น</label><input type="range" id="shCl" min="0.1" max="0.3" step="0.05" value="0.2" aria-describedby="shClHint"><span class="unit" id="shClV">0.2 มม./ข้าง</span></div>
-        <p class="hint" id="shClHint">เผื่อสวม 0.1–0.3 มม./ด้าน · หน้าร่นตามริมปากบาง หลังร่นตามผนังหลัก เส้นตัดคนละขนาด</p>
+        <p class="hint" id="shClHint">ระยะเผื่อต่อข้าง 0.1–0.3 มม. · ค่าเริ่มต้น 0.2 มม. เส้นตัดอะครีลิคและพลาสวูดร่นเข้าจากขอบนอกตามความหนาผนังกรอบ + เผื่อสวม โดยไม่เปลี่ยนความหนาผนังกรอบ</p>
         <div class="row"><label></label><span class="unit grow" id="shellInfo">—</span></div>
       </div>
 
@@ -629,7 +629,7 @@ function defaults(){ return {
      face5d ใช้ fillet โค้งมนเดิม ส่วน face5dChamfer ใช้ขอบเฉียงปรับมุมได้ */
   face:{ height5d:5, edgeR:2, chamferH:2, chamferAngle:45 },
   /* ร่อง+คิ้วรับแผ่นในโหมด shell (มิลลิเมตร) */
-  sheet:{ acrT:3, frontRim:1.2, acrLedge:2, plsT:5, plsLedge:2, cl:0.2 },
+  sheet:{ acrT:3, acrLedge:2, plsT:5, plsLedge:2, cl:0.2 },
   backing:{ enabled:false, offset:5, thickness:3 },
   price:{ qty:1, fil:750, mach:25, laborMin:25, laborRate:300, led:150, waste:8, margin:45, flush:120,
           acr:2200, pls:850, cut:35 },
@@ -2353,20 +2353,18 @@ function shellSpec(){
   const acrT = Math.max(0.8, +sh.acrT||3);
   const plsT = Math.max(1.0, +sh.plsT||5);
   const cap=isShellCap();
-  // Legacy acrLedge is retained in saved projects, but no longer grows the front wall.
-  const rim = Math.min(b.frame,clamp(+sh.frontRim||1.2,0.8,2.4));
-  const lA = cap?0:Math.max(0,b.frame-rim);
+  const lA   = cap?0:Math.max(0.8, +sh.acrLedge||2);
   const lB   = Math.max(0.8, +sh.plsLedge||2);
-  // Acrylic underside rests on a flat shoulder at z=acrT, without a projecting front ledge.
-  const gA = acrT;
+  /* อะครีลิคนั่งบนลาด 45° ตรงตำแหน่ง DI=frame+cl ⇒ สูงกว่าจุดเริ่มลาด cl พอดี
+     หักออกจากความลึกร่อง ผิวนอกแผ่นจะเสมอริมหน้าพอดี */
+  const gA = cap?acrT:Math.max(0.4, acrT - cl);
   const gB = plsT;                                    // คิ้วล่างเป็นหน้าเรียบ ระยะตรงตัว
-  const fA = 0, fB = SHELL_FACE;
+  const fA = cap?0:SHELL_FACE, fB = SHELL_FACE;
   const total = gA + b.depth + gB;
-  const zA1 = gA, zA2 = gA;
+  const zA1 = gA + lA, zA2 = zA1 + fA;
   const zB2 = total - gB, zB1 = zB2 - fB, zB0 = zB1 - lB;
-  return {cap,rim,frontInset:cap?0:rim+cl,frontSupport:cap?b.frame:b.frame-rim-cl,
-          cl,acrT,plsT,lA,lB,gA,gB,fA,fB,total,zA1,zA2,zB0,zB1,zB2,
-          cav:zB0-zA2, wallMax:b.frame+lB, inset:b.frame+cl};
+  return {cap,cl,acrT,plsT,lA,lB,gA,gB,fA,fB,total,zA1,zA2,zB0,zB1,zB2,
+          cav:zB0-zA2, wallMax:b.frame+Math.max(lA,lB), inset:b.frame+cl};
 }
 
 function geomStack(){
@@ -2662,7 +2660,7 @@ function syncBackingUI(){
 function sheetLoops(mirror,side='front'){
   if(!G||!G.panel||G.empty) return [];
   if(isShellCap()&&side==='front')return contoursOf(G.panel,G.gw,G.gh,!mirror);
-  const H=shellSpec(), lim=(side==='front'?H.frontInset:H.inset)/G.px;
+  const lim=shellSpec().inset/G.px;
   const m=maskWhere(i=> G.panel[i] && G.edtIn[i]>lim);
   return contoursOf(m,G.gw,G.gh,!mirror);
 }
@@ -2704,7 +2702,7 @@ function buildShell(nt){
           && !(nhPx!=null && y>=notchBandY && Math.abs(x-BI.cx)<=nhPx));
       mcache.set(key,m);
     }
-    const z0 = first||Math.abs(za-H.acrT)<1e-7? za : za-ZEPS;
+    const z0 = first? za : za-ZEPS;
     first=false;
     if(Ms[0].noTri || S.exp.smooth===false){ bandSpec.forEach((B,i)=>addSolid(Ms[i],m,Math.max(z0,B.z0),Math.min(zb,B.z1))); return; }
     let g=gcache.get(key);
@@ -2713,7 +2711,11 @@ function buildShell(nt){
   };
 
   const F=b.frame;
-  if(!H.cap)slab(H.rim,0,H.acrT); // Thin mouth; the main wall's top forms the flat shoulder.
+  if(!H.cap)slab(F, 0, H.gA);                                  // cap ไม่มีร่อง/บ่าหน้า
+  const NA=clamp(Math.round(H.lA/0.35),2,8);                   // ลาด 45° รับอะครีลิค
+  for(let j=0;j<NA;j++)
+    slab(F+H.lA*(j+0.5)/NA, H.gA+H.lA*j/NA, H.gA+H.lA*(j+1)/NA);
+  slab(F+H.lA, H.zA1, H.zA2);                                  // ตัวคิ้วบน
 
   /* โพรงไฟ — แทรกช่องบากสายไฟถ้าเลือกบากที่ผนัง */
   if(BI && dia>1.5 && zn0>H.zA2+0.5){
@@ -3638,13 +3640,7 @@ function runChecks(){
     if(H.cav<6) add('err',`โพรงไฟเหลือลึกแค่ ${H.cav.toFixed(1)} มม. ใส่ไฟไม่ลง — เพิ่มความลึกกล่อง หรือลดความกว้างคิ้ว`);
     else if(H.cav<12) add('warn',`โพรงไฟลึก ${H.cav.toFixed(1)} มม. เส้นไฟ LED ส่วนใหญ่ต้องการอย่างน้อย 12 มม. เพื่อให้แสงเกลี่ยทั่วหน้า`);
     else add('ok',`โพรงไฟลึก ${H.cav.toFixed(1)} มม. — พอสำหรับเส้นไฟ LED ทั่วไป`);
-    if(!H.cap){
-      add('ok',`ริมปากหน้า ${H.rim.toFixed(1)} มม. · เส้นตัดอะครีลิคร่น ${H.frontInset.toFixed(2)} มม./ด้าน · ไม่เพิ่มขอบนอกโลโก้`);
-      add(H.frontSupport<0.5?'err':'ok',`บ่าหน้ารับแผ่นเหลือ ${H.frontSupport.toFixed(2)} มม. (ผนังหลัก − ริมปาก − เผื่อสวม)${H.frontSupport<0.5?' — ลดริมปากหรือเพิ่มผนังหลักก่อนผลิต':''}`);
-      add('warn',`บ่าหน้าเรียบยื่น ${H.lA.toFixed(2)} มม. ตอนพิมพ์ริมหน้าลงฐาน ต้องตรวจ overhang/support ในสไลเซอร์และทดลองชิ้นเล็กก่อน`);
-      add('warn',`เส้นอะครีลิคที่โลโก้แคบกว่า≈${(2*H.frontInset).toFixed(1)} มม. อาจหายหรือขาดจากกัน · โพรงผนังหลักยังต้องมีพื้นที่เกิน≈${(2*b.frame).toFixed(1)} มม.`);
-      if(!G.panel.some((v,i)=>v&&G.edtIn[i]*G.px>H.frontInset))add('err','ไม่มีพื้นที่แผ่นอะครีลิคเหลือหลังร่น ห้ามผลิตจากชุดนี้');
-    }
+    if(!H.cap&&H.lA<=H.cl+0.3) add('err',`คิ้วบน ${H.lA} มม. แคบกว่าเผื่อสวม ${H.cl} มม. — อะครีลิคจะร่วงทะลุเข้าไปในกล่อง`);
     if(H.lB<=H.cl+0.3) add('err',`คิ้วล่าง ${H.lB} มม. แคบกว่าเผื่อสวม ${H.cl} มม. — พลาสวูดจะร่วงทะลุเข้าไปในกล่อง`);
     if(H.cap){
       add('ok','หน้าอะครีลิคปิดทับสันผนัง: ไม่มีบ่าหน้า เส้นตัดตามขอบนอกโลโก้ ไม่มี Offset อัตโนมัติ ยึดกาวและทดลองความแข็งแรงก่อนผลิต');
@@ -3657,13 +3653,15 @@ function runChecks(){
       else add('warn',`เส้นที่กว้างไม่เกินประมาณ ${(2*b.frame).toFixed(1)} มม. อาจตันด้วยผนัง ตรวจบริเวณเส้นบางและช่องไฟก่อนผลิต`);
       if(!backCells)add('err','ไม่มีพื้นที่แผ่นพลาสวูดสวมใน — ไม่สร้างไฟล์ตัดฝาหลังว่าง ต้องเปลี่ยนโครงสร้างฝาหลังก่อนผลิต');
       else add('warn','ฝาหลังยังร่นเข้าตามผนัง + เผื่อสวม: ตรวจชิ้นเล็กที่อาจหายหรือแยกจากกันก่อนตัด');
-    }else{
-      add('warn',`ฝาหลังยังร่น ${H.inset.toFixed(2)} มม./ด้าน และบ่าหลังหนาสุด ${H.wallMax.toFixed(1)} มม. ตรวจส่วนคอดและพื้นที่ฝาหลังก่อนตัด`);
-      if(!G.panel.some((v,i)=>v&&G.edtIn[i]*G.px>H.inset))add('err','ไม่มีพื้นที่แผ่นพลาสวูดสวมใน ไม่แนบไฟล์ตัดฝาหลังว่าง');
+    }else if(S.shape.mode==='contour'){
+      const R=activeRings(), tot=R.reduce((a,r)=>a+(+r.w),0);
+      if(tot < H.wallMax+1.5)
+        add('err',`ขอบรวม ${tot.toFixed(1)} มม. บางกว่าผนังตรงคิ้ว ${H.wallMax.toFixed(1)} มม. — คิ้วจะกินเข้าไปจนช่องแสงหาย เพิ่มความกว้างขอบที่หัวข้อ 4`);
+      else add('ok',`ขอบรวม ${tot.toFixed(1)} มม. กว้างกว่าผนังตรงคิ้ว ${H.wallMax.toFixed(1)} มม. — ช่องแสงเหลือ ${(tot-H.wallMax).toFixed(1)} มม.`);
     }
     if(S.hw.hole==='frame') add('ok',`ช่องบากสายไฟอยู่บนผนังในโพรงไฟ หลังคาลาด 45° พิมพ์ได้ไม่ต้องบริดจ์`);
     if(S.hw.hang) add('ok','รูแขวนเจาะบนแผ่นพลาสวูด อยู่ในไฟล์ DXF/SVG ที่ส่งออก');
-    add('ok','ส่งออก DXF และ SVG แยกหน้า/หลังคนละขนาดในชุด _ตัดแผ่น.zip โดยแนบเฉพาะแผ่นที่ยังมีพื้นที่เส้นตัด');
+    add('ok',H.cap?'ส่งออก DXF และ SVG แยกหน้า/หลังในชุด _ตัดแผ่น.zip โดยแนบเฉพาะแผ่นที่ยังมีพื้นที่เส้นตัด':'ส่งออกแล้วจะได้ไฟล์เส้นตัด DXF และ SVG ของทั้งอะครีลิคและพลาสวูดในชุด _ตัดแผ่น.zip');
   }
   if(isFrontModule()){
     add('ok',`${frontModuleLabel()}: แยกพิมพ์เป็นชิ้นหน้า · ตัวกล่อง · ฝาหลัง และชิ้นหน้าร่น 0.2 มม. รอบด้านเพื่อประกอบได้`);
@@ -3681,7 +3679,7 @@ function runChecks(){
   if(st.diff<0.4) add('warn','ชั้นกระจายแสงบางกว่า 0.4 มม. อาจเห็นเป็นจุดไฟ LED และพิมพ์ไม่เต็ม');
   }
   /* ส่วนที่ให้แสงผ่านล้ำเข้าไปในแนวผนังกรอบ */
-  if(!isShell()&&art&&G.panel&&G.edtIn){
+  if(!isShellCap()&&art&&G.panel&&G.edtIn){
     const fwc=b.frame/G.px; let touch=0, glowTot=0;
     for(let i=0;i<G.owner.length;i++){
       const o=G.owner[i];
@@ -3816,7 +3814,7 @@ function estimate(allParts){
       const cAcr=bbM2*(+p.acr||0), cPls=BL.length?bbM2*(+p.pls||0):0;
       const cCut=(m.perM+cutMetrics(BL).perM)*(+p.cut||0);
       cSheet=cAcr+cPls+cCut;
-      sheet={areaM2:m.areaM2, bbM2, perM:m.perM+cutMetrics(BL).perM, cAcr, cPls, cCut};
+      sheet={areaM2:m.areaM2, bbM2, perM:m.perM, cAcr, cPls, cCut};
     }
   }
   const cost = cFil+cMach+cLab+p.led+cSheet;
@@ -3863,11 +3861,11 @@ td:last-child,th:last-child{text-align:right}.tot td{font-weight:700;font-size:1
 <tr><td>ความหนารวม</td><td>${st.total.toFixed(1)} มม. (ลึกในกล่อง ${b.depth} มม.)</td></tr>
 ${isShell()? (()=>{ const H=shellSpec(); return `
 <tr><td>รูปแบบงาน</td><td>${buildModeLabel()}</td></tr>
-<tr><td>โครงสร้าง</td><td>ผนัง ${b.frame} มม. · ${H.cap?'หน้าปิดทับ':`ริมปากหน้า ${H.rim} มม. · บ่ารับสุทธิ ${H.frontSupport.toFixed(2)} มม.`} · คิ้วล่าง ${H.lB} มม. · โพรงไฟลึก ${H.cav.toFixed(1)} มม.</td></tr>
+<tr><td>โครงสร้าง</td><td>ผนัง ${b.frame} มม. · คิ้วบน ${H.lA} มม. · คิ้วล่าง ${H.lB} มม. · โพรงไฟลึก ${H.cav.toFixed(1)} มม.</td></tr>
 <tr><td>แผ่นหน้า</td><td>อะครีลิค ${H.acrT} มม. ตัดตามรูปทรง</td></tr>
 <tr><td>แผ่นหลัง</td><td>พลาสวูด ${H.plsT} มม. ตัดตามรูปทรง</td></tr>
 <tr><td>รูสายไฟ</td><td>${S.hw.hole==='none'?'ไม่มี':S.hw.hole==='frame'?'บากที่ผนังด้านล่าง Ø'+S.hw.dia+' มม.':'รูกลมแผ่นพลาสวูด Ø'+S.hw.dia+' มม.'}</td></tr>
-<tr><td>การยึดแผ่น</td><td>${H.cap?'หน้าปิดทับสันผนัง ยึดกาว ไม่มีบ่าหน้า · หลังสวมในบนคิ้วรับ':`หน้าร่น ${H.frontInset.toFixed(2)} มม. บนบ่าผนังหลัก · หลังร่น ${H.inset.toFixed(2)} มม. + ซิลิโคน/กาว`} (เผื่อสวม${H.cap?'ฝาหลัง':''}ข้างละ ${H.cl} มม.)</td></tr>`; })() : `
+<tr><td>การยึดแผ่น</td><td>${H.cap?'หน้าปิดทับสันผนัง ยึดกาว ไม่มีบ่าหน้า · หลังสวมในบนคิ้วรับ':'คิ้วรับรอบด้าน + ซิลิโคน/กาว'} (เผื่อสวม${H.cap?'ฝาหลัง':''}ข้างละ ${H.cl} มม.)</td></tr>`; })() : `
 <tr><td>รูปแบบงาน</td><td>${buildModeLabel()}</td></tr>
 <tr><td>โครงสร้าง</td><td>ชั้นสี ${st.colorT}${isFace5D()?' · ผนังยกกลวง 5D '+st.faceH:''} · กระจายแสง ${st.diff}${isLayered()?'':' · พื้นทึบ '+st.bgT.toFixed(1)} · กรอบ ${b.frame} · หลัง ${b.back} มม.</td></tr>
 <tr><td>รูสายไฟ</td><td>${S.hw.hole==='none'?'ไม่มี':S.hw.hole==='frame'?'บากที่กรอบล่างด้านหลัง Ø'+S.hw.dia+' มม.':'รูกลมแผ่นหลัง Ø'+S.hw.dia+' มม.'}</td></tr>
@@ -3891,7 +3889,7 @@ ${isShell()? '' : `<h2>สีที่ใช้</h2><ul>${cols}</ul>`}
 <tr><td>ชุดไฟ LED + สายไฟ</td><td>${nf(S.price.led,0)} ฿</td></tr>
 ${E.sheet? `<tr><td>แผ่นอะครีลิค</td><td>${nf(E.sheet.cAcr,0)} ฿</td></tr>
 <tr><td>แผ่นพลาสวูด</td><td>${nf(E.sheet.cPls,0)} ฿</td></tr>
-<tr><td>ค่าตัดแผ่น (${nf(E.sheet.perM,2)} ม.)</td><td>${nf(E.sheet.cCut,0)} ฿</td></tr>`:''}
+<tr><td>ค่าตัดแผ่น (${nf(E.sheet.perM*2,2)} ม.)</td><td>${nf(E.sheet.cCut,0)} ฿</td></tr>`:''}
 <tr><td>ราคาต่อชิ้น</td><td>${nf(E.price,0)} ฿</td></tr>
 <tr class="tot"><td>รวม ${q} ชิ้น</td><td>${nf(E.price*q,0)} ฿</td></tr>
 </table>
@@ -4075,28 +4073,26 @@ function cutReadme(G0,holes,Gb=G0){
     'ชดเชยดอกกัด/kerf ในโปรแกรมตัด ไม่ต้องบวกหรือลบขนาดโลโก้ซ้ำ'
   ].join('\n');
   return ['YP Lightbox Studio — ไฟล์ตัดแผ่น · '+S.name,''
-   ,'หน้าและหลังคนละเส้นตัด ห้ามใช้ไฟล์แทนกัน หน่วยมิลลิเมตร สเกล 1:1 ไม่เพิ่ม Offset ขอบนอกกล่อง'
-   ,'อะครีลิคหน้าร่น '+H.frontInset.toFixed(2)+' มม./ด้าน (ริมปาก '+H.rim+' + เผื่อสวม '+H.cl+')'
-   ,Gb.length?'พลาสวูดหลังร่น '+H.inset.toFixed(2)+' มม./ด้าน (ผนังหลัก '+b.frame+' + เผื่อสวม '+H.cl+')':'คำเตือน: ไม่มีพื้นที่ฝาหลังสวมใน ไม่แนบไฟล์พลาสวูด ต้องแก้ก่อนผลิต'
-   ,'พื้นที่อะครีลิค '+m.areaM2.toFixed(4)+' ตร.ม. · เส้นตัดหน้า '+m.perM.toFixed(2)+' ม. · หลัง '+cutMetrics(Gb).perM.toFixed(2)+' ม.'
+   ,'ทั้งสองแผ่นใช้เส้นตัดเดียวกัน = รูปทรงป้ายร่นเข้ามา '+H.inset.toFixed(2)+' มม.'
+   ,'  (ความหนากรอบ '+b.frame+' + เผื่อสวมข้างละ '+H.cl+' มม.)'
+   ,'ขนาดกรอบนอกของแผ่น '+PB.w.toFixed(1)+' × '+PB.h.toFixed(1)+' มม.'
+   ,'พื้นที่แผ่นละ '+m.areaM2.toFixed(4)+' ตร.ม. · เส้นตัดยาว '+m.perM.toFixed(2)+' ม.'
    ,''
    ,'1) อะครีลิค หนา '+H.acrT+' มม. — แผ่นขาวขุ่น/นมช่วยเกลี่ยแสงได้ดีที่สุด'
-   ,'   วางบนบ่าราบของผนังหลักที่ z='+H.acrT+' มม. ผิวนอกเสมอริมหน้า บ่ารับสุทธิ '+H.frontSupport.toFixed(2)+' มม.'
-   ,'   ถ้าบ่ารับสุทธิน้อยกว่า 0.5 มม. ต้องแก้ก่อนผลิต และตรวจแผ่นส่วนคอดที่อาจหายหรือขาด'
+   ,'   นั่งบนคิ้วบนซึ่งเป็นลาด 45° ผิวนอกจะเสมอริมหน้ากล่องพอดี'
    ,'   งานกราฟิก/สติกเกอร์บนหน้าอะครีลิค จัดการหน้างานตามปกติ ไฟล์นี้เป็นเส้นตัดอย่างเดียว'
    ,''
    ,'2) พลาสวูด หนา '+H.plsT+' มม. — นั่งบนคิ้วล่างซึ่งเป็นหน้าเรียบ'
-   ,'   ใส่จากด้านหลัง ไฟล์หน้า/หลังอ้างอิงมุมมองเดียวกัน ตรวจทิศทางก่อนตัดและประกอบ'
+   ,'   ใส่จากด้านหลัง พลิกแผ่นก่อนใส่ (รูปทรงเป็นรูปเดียวกัน พลิกแล้วรูยังตรง)'
    ,(holes.length? '   มีรูเจาะ '+holes.length+' รู ตามที่ตั้งค่าไว้ (รูแขวน/รูสายไฟ)' : '   ไม่มีรูเจาะ')
    ,''
    ,'การประกอบ'
-   ,'  1. หย่อนอะครีลิคลงช่องริมปากบาง วางบนบ่าผนังหลัก ใช้กาวที่เหมาะกับวัสดุและทดลองแรงยึด'
+   ,'  1. หย่อนอะครีลิคลงร่องหน้า ยาซิลิโคนใสหรือกาวอะครีลิคบางๆ ตามแนวคิ้ว'
    ,'  2. ติดไฟ LED ในโพรง ความลึกใช้งาน '+H.cav.toFixed(1)+' มม.'
    ,'  3. หย่อนพลาสวูดลงร่องหลัง ยึดด้วยซิลิโคนหรือสกรูเกลียวปล่อยจากด้านหลังเข้าคิ้ว'
    ,''
    ,'หมายเหตุ: เผื่อสวมข้างละ '+H.cl+' มม. เป็นค่าสำหรับเลเซอร์ที่ชดเชย kerf แล้ว'
-   ,'ให้ร้านตัดชดเชย kerf/ดอกกัด และทดลองคูปองระยะสวมก่อนตัดจริง ไม่หักความหนาผนังซ้ำ'
-   ,'บ่าหน้าเป็นขั้นราบ ตรวจ overhang/support ในสไลเซอร์ก่อนพิมพ์ ไม่รับประกันว่าพิมพ์ได้โดยไม่รองรับ'].join('\n');
+   ,'ถ้าร้านตัดไม่ชดเชย kerf แผ่นจะเล็กลงอีกประมาณ 0.1–0.2 มม. ซึ่งยังใส่ได้'].join('\n');
 }
 
 function readme(parts){
@@ -4122,19 +4118,20 @@ function readme(parts){
   if(isShell()){
     const H=shellSpec(), M=parts.find(p=>p.kind==='shell')||{};
     return ['YP Lightbox Studio — '+S.name+'  (โหมดพิมพ์เฉพาะตัวกล่อง)',''
-     ,'ตัวกล่องคว่ำริมหน้าลงฐาน: บ่าราบยื่น '+H.lA.toFixed(2)+' มม. ตรวจ overhang/support ในสไลเซอร์และทดลองก่อนพิมพ์'
+     ,'พิมพ์ชิ้นเดียว: ตัวกล่อง คว่ำริมหน้าลงฐาน ไม่ต้องมีซัพพอร์ต'
      ,'หน้ากล่อง = อะครีลิคตัดเลเซอร์ '+H.acrT+' มม. · ฝาหลัง = พลาสวูด '+H.plsT+' มม.'
      ,'ไฟล์เส้นตัดของทั้งสองแผ่นอยู่ในชุด _ตัดแผ่น.zip'
      ,''
      ,'ภาคตัดขวางจากริมหน้า (z=0) ไปด้านหลัง'
-     ,'  0.00 – '+H.gA.toFixed(2)+'   ร่องรับอะครีลิค (ริมปากหนา '+H.rim+' มม.)'
-     ,'  z='+H.gA.toFixed(2)+'   บ่ารับราบจากผนังหลัก '+S.box.frame+' มม. ระยะรองแผ่นสุทธิ '+H.frontSupport.toFixed(2)+' มม.'
+     ,'  0.00 – '+H.gA.toFixed(2)+'   ร่องรับอะครีลิค (ผนังหนา '+S.box.frame+' มม.)'
+     ,'  '+H.gA.toFixed(2)+' – '+H.zA1.toFixed(2)+'   ลาด 45° = ที่นั่งอะครีลิค (คิ้วกว้าง '+H.lA+' มม.)'
+     ,'  '+H.zA1.toFixed(2)+' – '+H.zA2.toFixed(2)+'   ตัวคิ้วบน (ผนังหนา '+(S.box.frame+H.lA).toFixed(2)+' มม.)'
      ,'  '+H.zA2.toFixed(2)+' – '+H.zB0.toFixed(2)+'   โพรงไฟ LED — ความลึกใช้งาน '+H.cav.toFixed(1)+' มม.'
      ,'  '+H.zB0.toFixed(2)+' – '+H.zB1.toFixed(2)+'   ลาด 45° รับคิ้วล่าง'
      ,'  '+H.zB1.toFixed(2)+' – '+H.zB2.toFixed(2)+'   ตัวคิ้วล่าง'
      ,'  '+H.zB2.toFixed(2)+' – '+H.total.toFixed(2)+'   ร่องรับพลาสวูด (หน้าเรียบรับแผ่นที่ z='+H.zB2.toFixed(2)+')'
      ,''
-     ,'ความหนารวม '+H.total.toFixed(2)+' มม. · หน้าร่น '+H.frontInset.toFixed(2)+' มม. · หลังร่น '+H.inset.toFixed(2)+' มม. ห้ามใช้เส้นตัดแทนกัน'
+     ,'ความหนารวม '+H.total.toFixed(2)+' มม. · เส้นรอบรูปแผ่นร่นเข้า '+H.inset.toFixed(2)+' มม.'
      ,''
      ,'ลำดับประกอบ'
      ,'  1. หย่อนอะครีลิคลงร่องหน้า ยาซิลิโคนใส/กาวบางๆ ตามแนวคิ้ว'
@@ -4145,8 +4142,7 @@ function readme(parts){
      ,'  4. หย่อนพลาสวูดลงร่องหลัง ยึดด้วยซิลิโคนหรือสกรูเกลียวปล่อยจากด้านหลัง'
      ,''
      ,'ชิ้นที่พิมพ์: '+(M.name||'ตัวกล่อง')+' — '+(M.hex||'').toUpperCase()+' ('+nearestFilament(M.hex||'#1a1a1a')+')'
-     ,'แนะนำสีทึบ (ดำ/เทาเข้ม) เพื่อไม่ให้แสงรอดออกข้างกล่อง'
-     ,cutReadme(sheetLoops(false),sheetHoles(),sheetLoops(false,'back'))].join('\n');
+     ,'แนะนำสีทึบ (ดำ/เทาเข้ม) เพื่อไม่ให้แสงรอดออกข้างกล่อง'].join('\n');
   }
   return ['YP Lightbox Studio — '+S.name,''
     ,'ลำดับการพิมพ์'
@@ -4643,7 +4639,7 @@ const BIND=[
  ['bBack','box.back','num','bBackV',v=>v+' มม.',''],
  ['buildMode','build.mode','str',null,null,''],
  ['shAcrT','sheet.acrT','num','shAcrTV',v=>v+' มม.',''],
- ['shRim','sheet.frontRim','num','shRimV',v=>v+' มม.',''],
+ ['shAcrL','sheet.acrLedge','num','shAcrLV',v=>v+' มม.',''],
  ['shPlsT','sheet.plsT','num','shPlsTV',v=>v+' มม.',''],
  ['shPlsL','sheet.plsLedge','num','shPlsLV',v=>v+' มม.',''],
  ['shCl','sheet.cl','num','shClV',v=>v+' มม./ข้าง',''],
@@ -4793,7 +4789,6 @@ function pushToUI(){
   S.backing=backingSpec();
   S.sheet=S.sheet||{};
   S.sheet.cl=sheetClearance(S.sheet.cl);
-  S.sheet.frontRim=clamp(+S.sheet.frontRim||1.2,0.8,2.4);
   /* โปรเจกต์เก่าจากโหมด layered/raised เปิดด้วยฝหน้าถอดเปลี่ยนได้แทน */
   if(!S.build) S.build={mode:'service'};
   if(S.build.mode==='layered'||S.build.mode==='raised') S.build.mode='service';
@@ -4864,18 +4859,18 @@ function syncModeUI(){
   if(exportHint) exportHint.textContent=isShellCap()
     ? '3MF พิมพ์เฉพาะกล่อง · DXF + SVG หน้าอะครีลิคตามขอบนอก ไม่ร่น · ฝาหลังพลาสวูดร่นเข้าตามผนัง + เผื่อสวม (เส้นตัดหน้า/หลังคนละขนาด)'
     : sh
-    ? '3MF พิมพ์ตัวกล่อง · DXF + SVG หน้าอิงริมปากบาง หลังอิงผนังหลัก รวมเผื่อสวมแล้ว เส้นตัดหน้า/หลังคนละขนาด'
+    ? '3MF สำหรับพิมพ์ตัวกล่อง พร้อม ZIP เส้นตัด DXF + SVG ของอะครีลิคและพลาสวูด — หักความหนาผนังกรอบและเผื่อสวมตามค่าที่ตั้งไว้ (ไฟล์ตัดแผ่นแนบให้ทุกตัวเลือกส่งออกในโหมดนี้)'
     : '3MF จะรวมทุกชิ้นไว้ในไฟล์เดียว แต่ละชิ้นแยกวัตถุพร้อมชื่อสี — เปิดใน Bambu Studio แล้วกำหนดเส้นให้แต่ละชิ้นได้เลย';
   const service=isService();
   const layered=isLayered();
   const show=(id,on)=>{ const e=$('#'+id); if(e) e.style.display = on?'':'none'; };
   show('fullThick',!sh); show('fullBack',!sh); show('shellThick',sh);
-  show('shRimRow',sh&&!isShellCap());
+  show('shAcrLRow',sh&&!isShellCap());
   const clLabel=document.querySelector('label[for="shCl"]');
   if(clLabel)clLabel.textContent=isShellCap()?'เผื่อสวมฝาหลัง':'เผื่อสวมแผ่น';
   const clHint=$('#shClHint');if(clHint)clHint.textContent=isShellCap()
     ? 'หน้าอะครีลิคตามขอบนอกโลโก้ ไม่หักระยะสวม · ค่านี้ใช้เฉพาะพลาสวูดหลังที่สวมใน'
-    : 'ระยะเผื่อต่อข้าง 0.1–0.3 มม. · หน้า: ริมปาก + เผื่อสวม · หลัง: ผนังหลัก + เผื่อสวม · ไม่มี Offset ขอบนอกอัตโนมัติ';
+    : 'ระยะเผื่อต่อข้าง 0.1–0.3 มม. · ค่าเริ่มต้น 0.2 มม. เส้นตัดอะครีลิคและพลาสวูดร่นเข้าจากขอบนอกตามความหนาผนังกรอบ + เผื่อสวม โดยไม่เปลี่ยนความหนาผนังกรอบ';
   show('flatColorTRow',!sh); show('face5dRow',!sh&&isFace5D());
   show('face5dRadiusRow',!sh&&isFace5DRounded());
   show('face5dChamferRow',!sh&&isFace5DChamfer());
@@ -4890,7 +4885,9 @@ function syncModeUI(){
   if(mh) mh.innerHTML = isShellCap()
     ? '<b>หน้าอะครีลิคปิดทับขอบ</b> — ตัดตามขอบนอกโลโก้ ยึดกาวบนสันผนัง ไม่มีบ่า/ร่องหน้า ไม่เพิ่ม Offset ตัวกล่อง · หลังพลาสวูดยังสวมใน ต้องตรวจเส้นบางก่อนผลิต'
     : sh
-    ? '<b>พิมพ์เฉพาะตัวกล่อง — ริมปากหน้าบาง</b> อะครีลิควางบนบ่าราบของผนังหลัก ไม่มีคิ้วหนายื่นเพิ่มด้านหน้า · หลังพลาสวูดสวมในแบบเดิม · DXF และ SVG หน้า/หลังคนละขนาด'
+    ? '<b>พิมพ์เฉพาะตัวกล่อง</b> — ผนังมีร่องและคิ้วรับแผ่นทั้งหัวและท้าย '+
+      'หน้าใช้อะครีลิคตัดเลเซอร์ หลังใช้พลาสวูด ประหยัดเวลาพิมพ์ได้มาก '+
+      'ตอนส่งออกจะได้ไฟล์เส้นตัด <b>DXF และ SVG</b> ของทั้งสองแผ่นมาด้วย'
     : isFace5DChamfer()
     ? '<b>ชั้นสีหน้า 5D ขอบ Chamfer</b> — รูปแบบงานแยกเฉพาะ ขอบนอกเป็นผิวเฉียงและปรับมุมได้ โดยเริ่มต้นที่ 45° '+
       'พารามิเตอร์นี้ไม่เปลี่ยนรูปแบบขอบโค้งมน'
@@ -4910,7 +4907,7 @@ function syncModeUI(){
     : sh
     ? 'ความลึกกล่องด้านบน = ระยะระหว่างร่องทั้งสอง ความหนารวมของกล่อง = '+
       'ร่องอะครีลิค + ความลึกกล่อง + ร่องพลาสวูด<br>'+
-      'ริมปากหน้าบางกว่าผนังหลัก ส่วนต่างเป็น<b>บ่าราบ</b> รับอะครีลิค ตรวจ overhang/support และระยะสวมก่อนผลิต · '+
+      'คิ้วบนเป็น<b>ลาด 45°</b> รับขอบอะครีลิคแบบสัมผัสเส้นรอบรูป แผ่นจึงเข้าศูนย์เองและพิมพ์ได้ไม่ต้องซัพพอร์ต · '+
       'คิ้วล่างเป็น<b>หน้าเรียบ</b> พลาสวูดวางแนบเต็มหน้า'
     : isFace5DChamfer()
     ? 'ผิวสีหน้าหนา <b>'+st.colorT.toFixed(1)+' มม.</b> วางบนผนังยกกลวงสูง <b>'+st.faceH.toFixed(1)+' มม.</b> · '+
@@ -4931,8 +4928,9 @@ function syncModeUI(){
   if(nt&&sh){
     const H=shellSpec();
     nt.innerHTML=H.cap?'หน้าอะครีลิคปิดทับตามขอบโลโก้ ยึดกาวบนสันผนัง · หลังพลาสวูดร่นเข้า <b>'+H.inset.toFixed(2)+' มม./ด้าน</b> เพื่อสวมใน ควรทดลองแรงยึดและแสงรั่วก่อนผลิต':
-      'หน้าอะครีลิคร่น <b>'+H.frontInset.toFixed(2)+' มม./ด้าน</b> (ริมปากจริง '+H.rim+' + เผื่อสวม '+H.cl+') · บ่ารับสุทธิ <b>'+H.frontSupport.toFixed(2)+' มม.</b><br>'+
-      'หลังพลาสวูดร่น <b>'+H.inset.toFixed(2)+' มม./ด้าน</b> ใช้เส้นตัดคนละชุด ห้ามสลับกัน · ทดลองแรงยึดและระยะสวมก่อนผลิต';
+      'แผ่นทั้งสองตัดตามรูปทรงป้ายร่นเข้ามา <b>'+H.inset.toFixed(2)+' มม.</b> '+
+      '(กรอบ '+S.box.frame+' + เผื่อสวมข้างละ '+H.cl+') แล้วหย่อนลงร่อง ยึดด้วยซิลิโคนใสหรือกาว<br>'+
+      'ปรับความหนาแผ่นและความกว้างคิ้วได้ที่หัวข้อ <b>5 · พื้นที่ทำงานและความหนา</b>';
   }
   const hh=$('#holeHint');
   if(hh) hh.innerHTML = sh
@@ -4951,8 +4949,7 @@ function syncModeUI(){
     const bad = H.cav<6 || H.wallMax>=999;
     si.innerHTML='ความหนารวม <b>'+H.total.toFixed(1)+' มม.</b> · โพรงไฟลึก '+
       '<b style="color:'+(H.cav<6?'var(--err)':'var(--ok)')+'">'+H.cav.toFixed(1)+' มม.</b> · '+
-      (H.cap?'':'ริมปากจริง '+H.rim.toFixed(1)+' มม. · บ่าหน้ารับสุทธิ <b style="color:'+(H.frontSupport<0.5?'var(--err)':'var(--ok)')+'">'+H.frontSupport.toFixed(2)+' มม.</b> · ')+
-      'ผนังหนาสุดตรงคิ้วหลัง '+H.wallMax.toFixed(1)+' มม.';
+      'ผนังหนาสุดตรงคิ้ว '+H.wallMax.toFixed(1)+' มม.';
   }
 }
 
