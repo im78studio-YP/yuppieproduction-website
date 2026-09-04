@@ -19,6 +19,23 @@ function fixture(){
 }
 const run=(ctx,s)=>vm.runInContext(s,ctx);
 
+test('Acrylic keeps face emission and floor lighting but is excluded from expanded mesh halos',()=>{
+  const policies=html.match(/const emitOf=M=>[^;]+;[\s\S]*?const haloOf=M=>[^;]+;/)[0];
+  const c=vm.createContext({});vm.runInContext(policies,c);
+  assert.equal(vm.runInContext("!!emitOf({kind:'acrylic',glow:true})",c),true);
+  assert.equal(vm.runInContext("!!haloOf({kind:'acrylic',glow:true})",c),false);
+  for(const kind of ['color','frame']){
+    assert.equal(vm.runInContext(`!!haloOf({kind:'${kind}',glow:true})`,c),true);
+    assert.equal(vm.runInContext(`!!haloOf({kind:'${kind}',glow:false})`,c),false);
+  }
+  for(const kind of ['plaswood','backing','diffuser','shell']){
+    assert.equal(vm.runInContext(`!!haloOf({kind:'${kind}',glow:true})`,c),false);
+  }
+  assert.ok(html.includes('for(const B of V3.buf) if(emitOf(B.M))'));
+  assert.ok(html.includes('const emit = lit && emitOf(M) ? 1 : 0'));
+  assert.ok(html.includes('if(!haloOf(M)||skipIn(M,V3.mode)) continue'));
+});
+
 test('Shell does not automatically expand the logo; clear backing offset remains available',()=>{
   assert.doesNotMatch(html,/shellAutoOffset|shellPaddedGrid|shapeBorderMM/);
   assert.ok(html.includes('const total=acc;'));

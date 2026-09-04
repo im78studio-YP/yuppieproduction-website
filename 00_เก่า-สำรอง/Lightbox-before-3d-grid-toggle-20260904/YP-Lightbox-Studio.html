@@ -4209,7 +4209,7 @@ void main(){
 const FS=`precision mediump float;
 varying vec3 vN, vW;
 uniform vec3 uCol; uniform float uEmit; uniform float uDark, uGloss, uOpacity, uTransmission;
-uniform float uFloor, uHalo, uLit, uGrid;
+uniform float uFloor, uHalo, uLit;
 uniform vec3 uLightCol, uSign, uBg;
 
 /* แสงจากป้าย มองเป็นแผ่นเรืองแสงตั้งอยู่ที่ระนาบ z=0 หันหน้าไปทาง +z */
@@ -4228,7 +4228,6 @@ float panelLight(vec3 P, vec3 N){
 }
 
 void main(){
-  if(uGrid>0.5){ gl_FragColor=vec4(uCol,1.0); return; }
   if(uHalo>0.5){
     vec3 N=normalize(vN);
     float f=pow(1.0-abs(N.z),1.6);
@@ -4295,7 +4294,7 @@ function glInit(){
           uCol:gl.getUniformLocation(p,'uCol'), uEmit:gl.getUniformLocation(p,'uEmit'),
           uDark:gl.getUniformLocation(p,'uDark'), uGloss:gl.getUniformLocation(p,'uGloss'), uGrow:gl.getUniformLocation(p,'uGrow'), uOpacity:gl.getUniformLocation(p,'uOpacity'),
           uTransmission:gl.getUniformLocation(p,'uTransmission'),
-          uFloor:gl.getUniformLocation(p,'uFloor'), uHalo:gl.getUniformLocation(p,'uHalo'), uGrid:gl.getUniformLocation(p,'uGrid'),
+          uFloor:gl.getUniformLocation(p,'uFloor'), uHalo:gl.getUniformLocation(p,'uHalo'),
           uLit:gl.getUniformLocation(p,'uLit'),
           uLightCol:gl.getUniformLocation(p,'uLightCol'), uSign:gl.getUniformLocation(p,'uSign'),
           uBg:gl.getUniformLocation(p,'uBg')};
@@ -4346,34 +4345,13 @@ function glBuild(){
   const parts=buildParts(false);
   V3.parts=parts;
   parts.forEach(glUploadPart);
+  /* กริดฐานพิมพ์ (เส้น) */
+  const L=[]; const BED=bedSize(), H=BED/2;
+  for(let i=0;i<=BED;i+=16){ L.push(-H+i,0,-H, -H+i,0,H, -H,0,-H+i, H,0,-H+i); }
+  const g=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,g); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(L),gl.STATIC_DRAW);
+  V3.grid={b:g,count:L.length/3};
   V3.bounds=null;
   V3.dirty=false;
-}
-
-/* Preview-only floor lines: bounded density, one reusable GPU buffer, no mesh rebuild. */
-function previewGridSpec(mode,B,eyeY,enabled){
-  if(!enabled)return null;
-  const plate=mode==='plate', y=plate?0:B.mn[1]-0.4;
-  if(eyeY<=y+0.2)return null; // Match the studio floor's below-floor visibility.
-  const hx=plate?bedSize()/2:Math.max(80,(B.mx[0]-B.mn[0])*0.75+40);
-  const hz=plate?bedSize()/2:Math.max(80,(B.mx[2]-B.mn[2])*0.75+40);
-  const cx=plate?0:B.c[0], cz=plate?0:B.c[2];
-  const step=10*Math.pow(2,Math.max(0,Math.ceil(Math.log2(Math.max(hx,hz)*2/1000))));
-  return {x0:cx-hx,x1:cx+hx,z0:cz-hz,z1:cz+hz,y:y+0.04,step,
-          color:mode==='lit'?[0.28,0.32,0.39]:[0.52,0.55,0.60]};
-}
-function previewGridVertices(spec){
-  const {x0,x1,z0,z1,step}=spec, lines=[];
-  for(let x=Math.ceil(x0/step)*step;x<=x1;x+=step)lines.push(x,0,z0,x,0,z1);
-  for(let z=Math.ceil(z0/step)*step;z<=z1;z+=step)lines.push(x0,0,z,x1,0,z);
-  return new Float32Array(lines);
-}
-function previewGridBuffer(gl,spec){
-  const key=[spec.x0,spec.x1,spec.z0,spec.z1,spec.step].join('|');
-  if(V3.grid&&V3.grid.key===key)return V3.grid;
-  const vertices=previewGridVertices(spec), b=V3.grid?.b||gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);
-  return V3.grid={b,key,count:vertices.length/3};
 }
 
 /* ---------- per-part transform per mode ---------- */
@@ -4472,9 +4450,6 @@ function glRender(){
      diffuser เป็นชั้นรองด้านใน: ถ้าให้ emit/halo ด้วย จะฟุ้งขาวลอดรอบฝาหน้า
      และทำให้รอยต่อระหว่างฝาหน้ากับกล่องดูเหมือนมีขอบสีขาว */
   const emitOf=M=>M.glow && (M.kind==='color'||M.kind==='acrylic'||M.kind==='frame');
-  // Milky acrylic still emits light, but expanding its faceted mesh crosses the thin rim.
-  // Keep its real silhouette; retain the existing halo for printed luminous parts only.
-  const haloOf=M=>emitOf(M)&&M.kind!=='acrylic';
   let lr=0,lg=0,lb=0,ln=0;
   for(const B of V3.buf) if(emitOf(B.M)){
     const c=hex2rgb(B.M.hex), t=B.M.lightTransmission??1; lr+=c[0]*t; lg+=c[1]*t; lb+=c[2]*t; ln++;
@@ -4488,7 +4463,6 @@ function glRender(){
   gl.uniform1f(L.uGrow,0);
   gl.uniform1f(L.uHalo,0);
   gl.uniform1f(L.uFloor,0);
-  gl.uniform1f(L.uGrid,0);
   gl.uniform1f(L.uGloss,0);
   gl.uniform1f(L.uOpacity,1);
   gl.uniform1f(L.uTransmission,1);
@@ -4509,18 +4483,16 @@ function glRender(){
     gl.uniform1f(L.uFloor,0);
   }
 
-  /* The same checkbox controls 2D, studio, exploded, lit and print-bed grids. */
-  const gridSpec=previewGridSpec(V3.mode,B,eye[1],S.ui.showGrid);
-  if(gridSpec){
-    const grid=previewGridBuffer(gl,gridSpec);
-    gl.bindBuffer(gl.ARRAY_BUFFER,grid.b);
+  /* กริดฐานพิมพ์ในโหมดผังพิมพ์ */
+  if(V3.mode==='plate' && V3.grid){
+    gl.bindBuffer(gl.ARRAY_BUFFER,V3.grid.b);
     gl.vertexAttribPointer(L.aPos,3,gl.FLOAT,false,0,0);
-    gl.disableVertexAttribArray(L.aNrm);gl.vertexAttrib3f(L.aNrm,0,1,0);
-    const M=mkM(1,0,0,0,1,0,0,0,1,0,gridSpec.y,0);
-    gl.uniformMatrix4fv(L.uM,false,M);gl.uniformMatrix4fv(L.uMVP,false,m4mul(PV,M));
-    gl.uniform3f(L.uCol,...gridSpec.color);gl.uniform1f(L.uGrid,1);
-    gl.depthMask(false);gl.drawArrays(gl.LINES,0,grid.count);gl.depthMask(true);
-    gl.uniform1f(L.uGrid,0);gl.enableVertexAttribArray(L.aNrm);
+    gl.bindBuffer(gl.ARRAY_BUFFER,V3.grid.b);
+    gl.vertexAttribPointer(L.aNrm,3,gl.FLOAT,false,0,0);
+    const I=mkM(1,0,0,0,1,0,0,0,1,0,0,0);
+    gl.uniformMatrix4fv(L.uM,false,I); gl.uniformMatrix4fv(L.uMVP,false,PV);
+    gl.uniform3f(L.uCol,0.62,0.64,0.68); gl.uniform1f(L.uEmit,1); gl.uniform1f(L.uDark,0);
+    gl.drawArrays(gl.LINES,0,V3.grid.count);
   }
 
   for(const B of V3.buf){
@@ -4556,7 +4528,7 @@ function glRender(){
     for(const pass of [grow*0.45,grow*1.3]){
       gl.uniform1f(L.uGrow,pass);
       for(const B of V3.buf){
-        const M=B.M; if(!haloOf(M)||skipIn(M,V3.mode)) continue;
+        const M=B.M; if(!emitOf(M)||skipIn(M,V3.mode)) continue;
         const Mm=partMatrix(M,V3.mode);
         gl.uniformMatrix4fv(L.uM,false,Mm);
         gl.uniformMatrix4fv(L.uMVP,false,m4mul(PV,Mm));
@@ -4750,7 +4722,7 @@ function schedule(needSrc,mode){
   _t=setTimeout(()=>{
     const full=_geometryPending; _geometryPending=false;
     if(_needSrc){ rebuildSource(); _needSrc=false; }
-    if(mode==='d'&&!full){ draw(); return; }
+    if(mode==='d'){ draw(); return; }
     if(mode==='q'){ refreshQuote(); return; }
     if(mode==='b'&&!full){ refreshBackingPreview(); return; }
     recompute();

@@ -4472,9 +4472,6 @@ function glRender(){
      diffuser เป็นชั้นรองด้านใน: ถ้าให้ emit/halo ด้วย จะฟุ้งขาวลอดรอบฝาหน้า
      และทำให้รอยต่อระหว่างฝาหน้ากับกล่องดูเหมือนมีขอบสีขาว */
   const emitOf=M=>M.glow && (M.kind==='color'||M.kind==='acrylic'||M.kind==='frame');
-  // Milky acrylic still emits light, but expanding its faceted mesh crosses the thin rim.
-  // Keep its real silhouette; retain the existing halo for printed luminous parts only.
-  const haloOf=M=>emitOf(M)&&M.kind!=='acrylic';
   let lr=0,lg=0,lb=0,ln=0;
   for(const B of V3.buf) if(emitOf(B.M)){
     const c=hex2rgb(B.M.hex), t=B.M.lightTransmission??1; lr+=c[0]*t; lg+=c[1]*t; lb+=c[2]*t; ln++;
@@ -4556,7 +4553,7 @@ function glRender(){
     for(const pass of [grow*0.45,grow*1.3]){
       gl.uniform1f(L.uGrow,pass);
       for(const B of V3.buf){
-        const M=B.M; if(!haloOf(M)||skipIn(M,V3.mode)) continue;
+        const M=B.M; if(!emitOf(M)||skipIn(M,V3.mode)) continue;
         const Mm=partMatrix(M,V3.mode);
         gl.uniformMatrix4fv(L.uM,false,Mm);
         gl.uniformMatrix4fv(L.uMVP,false,m4mul(PV,Mm));
