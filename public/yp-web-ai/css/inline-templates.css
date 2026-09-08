@@ -4,6 +4,9 @@
 .inline-template-card img{display:block;width:calc(100% + 32px);max-width:none;height:auto;aspect-ratio:4/3;object-fit:contain;margin:0 -16px 14px;background:#eee}
 .inline-template-card h3{font-size:19px;margin:8px 0}.inline-template-card strong{color:#f1cddc}.inline-template-card p{line-height:1.6}
 .inline-template-actions{display:flex;gap:10px;flex-wrap:wrap}.inline-template-actions a{text-decoration:none}
+.template-feedback{padding:14px;border:1px solid #9c6684;border-radius:10px;background:#352332;margin:16px 0}
+.template-feedback[hidden]{display:none!important}.template-feedback p{margin:0 0 10px;line-height:1.6;overflow-wrap:anywhere}
+.template-feedback .inline-template-actions:empty{display:none}
 @media(max-width:650px){.inline-template-grid{grid-template-columns:1fr}.inline-template-dialog{padding:16px}}
 #inlineTemplateSubmenu[hidden],#quickInlineTemplates[hidden],.quick-template-preview[hidden]{display:none!important}
 #peninsularTemplateSubmenu[hidden]{display:none!important}

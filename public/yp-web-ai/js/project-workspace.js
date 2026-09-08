@@ -50,9 +50,11 @@
     revision++;if(pendingDraft)return;
     status('มีการแก้ไข · กำลังรอบันทึกร่าง…');clearTimeout(timer);timer=setTimeout(persist,1200);
   }
-  async function run(action){
-    if(busy||!ready)return;busy=true;refresh();
-    try{return await action();}catch(error){status('ทำรายการไม่สำเร็จ: '+error.message+' · แบบปัจจุบันยังอยู่',true);return false;}
+  async function run(action,{detailed=false}={}){
+    if(busy||!ready)return detailed?{ok:false,code:busy?'busy':'not-ready',message:busy?'กำลังทำรายการอื่นอยู่ กรุณารอให้เสร็จแล้วลองอีกครั้ง':'ระบบโปรเจกต์ยังโหลดไม่เสร็จ กรุณารอสักครู่แล้วลองอีกครั้ง'}:undefined;
+    busy=true;refresh();
+    try{const result=await action();return detailed?{ok:result===true,code:result===true?'success':'cancelled',message:result===true?'ทำรายการสำเร็จ':'ยกเลิกการยืนยันแล้ว ยังไม่ได้เปลี่ยนแบบ'}:result;}
+    catch(error){const message='ทำรายการไม่สำเร็จ: '+error.message+' · แบบปัจจุบันยังอยู่';status(message,true);return detailed?{ok:false,code:error.code||'error',message}:false;}
     finally{busy=false;refresh();}
   }
   function apply(value){
@@ -90,15 +92,18 @@
     snapshot();const next=store.clone(project);next.active=slot;apply(next);await persist();
   });
   $('projectName').oninput=event=>{if(project){project.name=event.target.value.trim().slice(0,80)||'บูธของฉัน';changed();}};
-  $('projectRecover').onclick=()=>run(async()=>{
-    if(!pendingDraft)return;
+  async function recoverDraft(){
+    if(!pendingDraft)return true;
     if(revision>0&&!await ask('เปิดร่างเดิม?','การแก้ไขที่ทำหลังเปิดหน้านี้จะถูกแทนที่ สามารถยกเลิกแล้วบันทึกไฟล์ปัจจุบันก่อนได้','เปิดร่างเดิม'))return;
-    apply(store.isolateAssets(store.clone(pendingDraft)));pendingDraft=null;recovery.hidden=true;await persist();
-  });
-  $('projectKeepCurrent').onclick=()=>run(async()=>{
+    apply(store.isolateAssets(store.clone(pendingDraft)));pendingDraft=null;recovery.hidden=true;await persist();return true;
+  }
+  async function keepCurrentDraft(){
+    if(!pendingDraft)return true;
     if(!await ask('ใช้แบบปัจจุบันต่อ?','ร่างอัตโนมัติเดิมจะถูกแทนที่ด้วยแบบปัจจุบัน ไฟล์ที่เคยดาวน์โหลดไว้จะไม่ถูกลบ','ใช้แบบปัจจุบัน'))return;
-    pendingDraft=null;recovery.hidden=true;revision++;await persist();
-  });
+    pendingDraft=null;recovery.hidden=true;revision++;await persist();return true;
+  }
+  $('projectRecover').onclick=()=>run(recoverDraft);
+  $('projectKeepCurrent').onclick=()=>run(keepCurrentDraft);
   function setLevel(value){
     advanced=value;document.body.dataset.editorLevel=value?'advanced':'basic';
     $('editorLevelToggle').setAttribute('aria-pressed',String(value));$('editorLevelToggle').textContent='เครื่องมือขั้นสูง: '+(value?'เปิด':'ปิด');
@@ -126,14 +131,19 @@
       return true;
     }),
     state:()=>({ready,busy,pendingDraft:!!pendingDraft,active:project?.active||'A',hasOther:!!project?.variants[project.active==='A'?'B':'A']}),
-    useTemplate:({makeSnapshot,name,initialWizard=false})=>run(async()=>{
-      if(pendingDraft)throw new Error('กรุณาเลือกร่างเดิมหรือใช้แบบปัจจุบันก่อน');
+    resolveTemplateDraft:choice=>run(async()=>{
+      if(choice==='recover')return recoverDraft();
+      if(choice==='current')return keepCurrentDraft();
+      throw new Error('กรุณาเลือกเปิดร่างเดิมหรือใช้แบบปัจจุบัน');
+    },{detailed:true}),
+    useTemplate:({makeSnapshot,name,initialWizard=false,detailed=false})=>run(async()=>{
+      if(pendingDraft)throw Object.assign(new Error('พบร่างที่บันทึกไว้ กรุณาเลือกเปิดร่างเดิมหรือใช้แบบปัจจุบันก่อนเลือกเทมเพลต'),{code:'pending-draft'});
       const active=project.active,fresh=initialWizard&&window.YPQuickSetupBridge.getState().firstRun&&active==='A'&&!project.variants.B,target=fresh?'A':active==='A'?'B':'A';
       const current=bridge.capture().spec,sizeChanged=current.W!==6||current.D!==3||current.H!==2.4;
       if(!fresh&&(project.variants[target]||sizeChanged)&&!await ask('ใช้เทมเพลตในแบบ '+target+'?', (project.variants[target]?'แบบ '+target+' เดิมทั้งชุดจะถูกแทนที่':'สร้างแบบใหม่')+' ด้วย '+name+' ขนาดกว้าง 6 × ลึก 3 × สูง 2.4 ม. โดยเก็บแบบ '+active+' ปัจจุบันไว้ หากต้องการเก็บทั้งสองแบบ ให้ยกเลิกแล้วบันทึกไฟล์ก่อน','ใช้ในแบบ '+target))return false;
       const replacement=makeSnapshot();store.validateSpec(replacement.spec);snapshot();const next=store.clone(project);
       next.active=target;next.variants[target]=replacement;apply(next);await persist();return true;
-    }),
+    },{detailed}),
     useStarter:({makeSnapshot,newVariant=true,purposeName='',removedCount=0})=>run(async()=>{
       if(pendingDraft)throw new Error('กรุณาเลือกเปิดร่างเดิมหรือใช้แบบปัจจุบันก่อนเลือกผังตั้งต้น');
       const active=project.active,target=newVariant?(active==='A'?'B':'A'):active;
