@@ -2,6 +2,7 @@
   'use strict';
   const part=(catalogId,x,z,w,d,h,color,y=0,extra={})=>({catalogId,position:{x,y,z},size:{w,d,h},color,...extra});
   const panel=(x,z,w,d,h,color,y=0)=>part('panel-standard',x,z,w,d,h,color,y);
+  const rounded=(x,z,w,d,h,color,y=0)=>part('panel-rounded',x,z,w,d,h,color,y);
   const frame=(x,color)=>[panel(x,.39,1.25,.14,2.2,color,.1),panel(x,.48,1.07,.06,2.02,'#527b35',.19)];
   const templates=[
     {id:'penin-adventure',name:'01 · Adventure Gateway',tagline:'เคาน์เตอร์ใหญ่ + กรอบทางเข้า',description:'อ้างอิงภาพ 1: เคาน์เตอร์หน้าซ้าย ผนังกราฟิก จอหลัง และกรอบสีทองฝั่งขวาพร้อมจอเล็ก เปิดด้านข้างไว้',primary:'#c58b24',secondary:'#32363b',background:'#555b50',floor:'tile',tile:'woodL',graphic:'EXPLORE / CONNECT / DISCOVER',purpose:'display',
@@ -9,12 +10,28 @@
     {id:'penin-connect',name:'02 · Connect & Demo',tagline:'ต้อนรับ + โต๊ะสาธิตพร้อมที่นั่ง',description:'อ้างอิงภาพ 2: เคาน์เตอร์ต้อนรับหน้าซ้าย โต๊ะสูงพร้อมเก้าอี้ 2 ตัวฝั่งขวา จอติดผนัง และเสาตกแต่งสีเขียวน้ำทะเล',primary:'#208c8b',secondary:'#a87a4c',background:'#edf0ed',floor:'tile',tile:'woodL',graphic:'CONNECT / EXPERIENCE / TALK TO US',purpose:'meeting',
       objects:[part('counter-standard',.98,2.06,1.35,.68,1,'#a87a4c'),part('high-table-stool-set',4.05,1.65,2.05,.8,1.08,null,0,{geometryMode:'model'}),panel(3,.43,.2,.25,2.4,'#208c8b'),panel(5.85,.43,.2,.25,2.4,'#208c8b'),panel(4.4,.37,1.35,.09,.78,'#151a24',1.36),panel(4.4,.425,1.2,.025,.63,'#dcebf2',1.44),part('plant-medium',.98,2.06,.28,.28,.45,null,1.04)]},
     {id:'penin-natural',name:'03 · Natural Showcase',tagline:'กรอบไม้ + แผงสีเขียว',description:'อ้างอิงภาพ 3: เคาน์เตอร์หน้าซ้าย กรอบไม้และแผงสีเขียวสองฝั่ง ผนังเล่าเรื่องสินค้าตรงกลาง และพื้นที่รับลูกค้าเปิดโล่ง',primary:'#997944',secondary:'#c6ad82',background:'#e7e1d5',floor:'tile',tile:'conc',graphic:'NATURALLY GOOD / MADE FOR EVERYDAY',purpose:'sales',
-      objects:[part('counter-standard',1.04,2.12,1.65,.68,1,'#dfd2b8'),...frame(.75,'#c6ad82'),...frame(5.25,'#c6ad82'),panel(3,.38,3.35,.13,.16,'#333029',2.24),panel(.75,.525,.79,.025,.58,'#f4efdf',1.14),panel(5.25,.525,.79,.025,.58,'#f4efdf',1.14),panel(3.15,.36,.72,.18,.07,'#c6ad82',1.1),panel(3.95,.36,.72,.18,.07,'#c6ad82',.83)]}
+      objects:[part('counter-standard',1.04,2.12,1.65,.68,1,'#dfd2b8'),...frame(.75,'#c6ad82'),...frame(5.25,'#c6ad82'),panel(3,.38,3.35,.13,.16,'#333029',2.24),panel(.75,.525,.79,.025,.58,'#f4efdf',1.14),panel(5.25,.525,.79,.025,.58,'#f4efdf',1.14),panel(3.15,.36,.72,.18,.07,'#c6ad82',1.1),panel(3.95,.36,.72,.18,.07,'#c6ad82',.83)]},
+    {id:'penin-blue-pavilion',name:'04 · Blue Pavilion',tagline:'ซุ้มขาว–น้ำเงิน + ระแนงไม้ + พื้นที่เจรจา',description:'อ้างอิงภาพ 4: ซุ้มคาดหน้าสีขาว–น้ำเงิน ป้ายแนวตั้งมุมโค้ง เสาระแนงไม้พร้อมกรอบโชว์ เคาน์เตอร์ต้อนรับซ้าย และโต๊ะเจรจา 2 ชุด เปิดด้านหน้าและด้านข้าง',primary:'#125b94',secondary:'#ac8c6b',background:'#f4f5f3',floor:'tile',tile:'woodL',graphic:'DESIGNED TO CONNECT',purpose:'meeting',
+      objects:[
+        panel(3,2.55,6,.28,.4,'#ffffff',2),
+        panel(.14,1.43,.28,2.26,.4,'#ffffff',2),panel(5.86,1.43,.28,2.26,.4,'#ffffff',2),
+        rounded(.66,2.7,1.12,.025,.25,'#125b94',2.025),rounded(5.38,2.7,1.02,.025,.25,'#125b94',2.025),
+        panel(1.48,2.5,.3,.24,2,'#ffffff'),panel(4.25,2.5,.88,.24,2,'#ffffff'),
+        ...Array.from({length:8},(_,i)=>panel(3.94+i*.087,2.645,.047,.045,2,'#ac8c6b')),
+        rounded(1.48,2.68,.7,.14,1.38,'#ffffff',.48),rounded(1.48,2.765,.57,.035,1.2,'#125b94',.57),
+        panel(4.25,2.73,1.22,.12,.74,'#ffffff',.67),panel(4.25,2.801,1.08,.02,.62,'#ac8c6b',.73),panel(4.25,2.816,.98,.01,.52,'#f3efe5',.78),
+        part('counter-standard',.65,2.27,.94,.55,.85,'#ffffff'),rounded(.65,2.568,.78,.02,.69,'#125b94',.06),
+        part('table-standard',2.45,1.13,.85,.55,.73,'#eee9df'),
+        part('chair-standard',1.68,1.13,.46,.48,.79,'#f4f1e9',0,{rotationY:90}),part('chair-standard',3.21,1.13,.46,.48,.79,'#f4f1e9',0,{rotationY:-90}),
+        part('table-standard',4.75,1.13,.85,.55,.73,'#eee9df'),
+        part('chair-standard',4.01,1.13,.46,.48,.79,'#f4f1e9',0,{rotationY:90}),part('chair-standard',5.49,1.13,.46,.48,.79,'#f4f1e9',0,{rotationY:-90}),
+        part('brand-artwork-copy',3,2.707,2,.012,.34,null,2.03,{label:'โลโก้ YP บนซุ้ม',brandLogo:true})
+      ]}
   ];
   function build(id,initial,catalog){
     const t=templates.find(t=>t.id===id);if(!t)throw new Error('ไม่พบเทมเพลต Peninsular');
     const spec=structuredClone(initial);Object.assign(spec,{W:6,D:3,H:2.4,type:'penin',primary:t.primary,secondary:t.secondary,colTouched:true,secTouched:true,wallCol:'white',wallMat:'paint',floor:t.floor,tile:t.tile,carpet:'cream',raise:0,stSize:'none',logoWallU:t.id==='penin-adventure'?2:t.id==='penin-connect'?1.42:3,logoWallY:1.91,logoScale:t.id==='penin-connect'?24:30,nameScale:0,designPurpose:t.purpose,boothTemplate:{id:t.id,type:'penin',name:t.name,version:1},objects:[],view:'three'});
-    spec.objects=t.objects.map((o,i)=>{const item=catalog.find(v=>v.catalogId===o.catalogId);if(!item)throw new Error('ไม่พบอุปกรณ์ '+o.catalogId);return {id:t.id+'-'+i,catalogId:item.catalogId,type:item.type,position:{...o.position},size:{...o.size},rotationX:0,rotationY:0,rotationZ:0,orientation:'horizontal',locked:false,unitPrice:item.unitPrice,geometryMode:o.geometryMode==='model'?'model':'parametric',appearance:o.color?{mode:'solid',color:o.color}:{mode:'original'},...(o.structure?{structure:{...o.structure}}:{})};});return {spec,assets:[]};
+    spec.objects=t.objects.map((o,i)=>{const item=catalog.find(v=>v.catalogId===o.catalogId);if(!item)throw new Error('ไม่พบอุปกรณ์ '+o.catalogId);return {id:t.id+'-'+i,catalogId:item.catalogId,type:item.type,...(o.label?{label:o.label}:{}),position:{...o.position},size:{...o.size},rotationX:0,rotationY:o.rotationY||0,rotationZ:0,orientation:'horizontal',locked:false,unitPrice:item.unitPrice,geometryMode:o.geometryMode==='model'?'model':'parametric',appearance:o.brandLogo&&spec.logo?{mode:'original',textureData:spec.logo,textureName:'YP logo',textureId:t.id+'-logo'}:o.color?{mode:'solid',color:o.color}:{mode:'original'},...(o.structure?{structure:{...o.structure}}:{})};});return {spec,assets:[]};
   }
   root.YPPeninsularTemplates={templates,build};
 })(globalThis);

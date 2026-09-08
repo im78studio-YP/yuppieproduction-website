@@ -1738,6 +1738,7 @@ const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:n
   capabilities:null,ports:[],collision:null,...item});
 const OBJECT_CATALOG=[
   furnitureItem({catalogId:'panel-standard',category:'display',type:'panel',name:'แผงตกแต่ง / กรอบ',icon:'▯',size:{w:1,d:.12,h:2.4},unitPrice:0,color:'#c6ad82'}),
+  furnitureItem({catalogId:'panel-rounded',category:'display',type:'roundedPanel',name:'แผงมุมโค้ง',icon:'▯',size:{w:.7,d:.12,h:1.4},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'entrance-frame',category:'structure',type:'entranceFrame',name:'กรอบทางเข้า',icon:'FRAME',size:{w:1,d:2.4,h:2.4},unitPrice:0,color:'#f2f3f5',
     clearance:0,anchor:'back-right',backWallOnly:true,rotationStep:45,placementPolicy:{preferredTarget:'back-wall',allowedTargets:['floor','wall','storage-room','structure','asset','free'],requiresSurface:false,defaultSpawn:'front-staging',allowOutsideBooth:true},
     capabilities:['floorPlaceable','attachable','resizable','styleable','compound'],
@@ -7362,6 +7363,15 @@ class ThreeBoothRenderer{
       });
       part.material=Array.isArray(part.material)?cloned:cloned[0];meshes.push(part);});
     if(!appearance.textureData)return;
+    // Logo copies can share the already-decoded brand image. Apply synchronously
+    // so clean screenshots retain fascia branding after the final scene rebuild.
+    const brandImage=obj.type==='brandCopy'?this.brandImages.get(appearance.textureData):null;
+    if(brandImage){
+      const texture=new T.CanvasTexture(brandImage._ypRasterSource||brandImage);texture.colorSpace=T.SRGBColorSpace;
+      meshes.forEach(part=>{const materials=Array.isArray(part.material)?part.material:[part.material];materials.forEach(material=>{
+        material.map=texture;material.color?.set('#ffffff');material.transparent=true;material.alphaTest=.01;material.needsUpdate=true;
+      });});return;
+    }
     const buildId=this.buildId,loader=new T.TextureLoader();loader.load(appearance.textureData,texture=>{
       if(buildId!==this.buildId||!root.parent){texture.dispose();return;}texture.colorSpace=T.SRGBColorSpace;texture.wrapS=T.ClampToEdgeWrapping;texture.wrapT=T.ClampToEdgeWrapping;
       meshes.forEach(part=>{const materials=Array.isArray(part.material)?part.material:[part.material];materials.forEach(material=>{
@@ -7406,6 +7416,13 @@ class ThreeBoothRenderer{
         const target=new T.Object3D();target.position.set(x,0,Math.min(.35,cfg.depth));target.name='downlight-target';light.target=target;root.add(target,light);
       }
       root.userData.structureType='downlight-beam';root.userData.structureConfig={...cfg};
+    }else if(obj.type==='roundedPanel'){
+      const w=s.w,h=s.h,r=Math.min(w,h)*.18,shape=new T.Shape();
+      shape.moveTo(-w/2+r,0);shape.lineTo(w/2-r,0);shape.quadraticCurveTo(w/2,0,w/2,r);
+      shape.lineTo(w/2,h-r);shape.quadraticCurveTo(w/2,h,w/2-r,h);
+      shape.lineTo(-w/2+r,h);shape.quadraticCurveTo(-w/2,h,-w/2,h-r);
+      shape.lineTo(-w/2,r);shape.quadraticCurveTo(-w/2,0,-w/2+r,0);
+      mesh(new T.ExtrudeGeometry(shape,{depth:s.d,bevelEnabled:false,curveSegments:16}),base,[0,0,-s.d/2]);
     }else if(obj.type==='counter'){
       bx([s.w,s.h-.08,s.d],[0,(s.h-.08)/2,0],base);
       bx([s.w+.08,.08,s.d+.06],[0,s.h-.04,0],light,{roughness:.42});
@@ -9397,8 +9414,8 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/inline-templates.css?v=20260908-2">
 <script src="js/inline-templates.js?v=20260908-2"></script>
 <script src="js/inline-template-ui.js?v=20260908-2"></script>
-<script src="js/peninsular-templates.js?v=20260908-1"></script>
-<script src="js/peninsular-template-ui.js?v=20260908-1"></script>
+<script src="js/peninsular-templates.js?v=20260909-1"></script>
+<script src="js/peninsular-template-ui.js?v=20260909-1"></script>
 <script src="js/inline-wizard.js?v=20260908-3"></script>
 </body>
 </html>

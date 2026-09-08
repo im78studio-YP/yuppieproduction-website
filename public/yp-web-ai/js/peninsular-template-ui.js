@@ -5,13 +5,18 @@
       ['#8c9382','#6a746a','#454e4b'].forEach((color,k)=>{c.fillStyle=color;c.beginPath();c.moveTo(0,720);for(let i=0;i<=12;i++)c.lineTo(i*150,270+k*120+Math.sin(i*2.1+k)*90);c.lineTo(1800,720);c.fill();});
       c.fillStyle=t.primary;c.fillRect(0,0,1800,22);
     }else if(t.id==='penin-connect'){c.fillStyle='#354a50';c.fillRect(930,0,780,720);c.fillStyle=t.primary;c.fillRect(875,0,55,720);c.fillRect(1710,0,90,720);c.fillStyle='#c4d7d5';for(let y=365;y<650;y+=48)c.fillRect(70,y,620,6);}
-    else{c.fillStyle='#c6ad82';c.fillRect(0,680,1800,40);['#aa713e','#b79447','#955451'].forEach((color,i)=>{c.fillStyle=color;c.fillRect(630+i*125,380,85,190);c.fillRect(650+i*125,345,45,40);c.fillStyle='#f5f0e3';c.fillRect(635+i*125,430,75,65);});}
+    else if(t.id==='penin-blue-pavilion'){
+      for(const [x,w] of [[390,380],[1020,690]]){c.save();c.beginPath();c.rect(x,220,w,440);c.clip();c.fillStyle='#e5f7fd';c.fillRect(x,220,w,440);
+        const colors=['#36bcdf','#a7e8f4',t.primary,'#60cde9','#dcf5fc'];
+        for(let row=0;row<5;row++)for(let col=0;col<7;col++){const px=x+col*115-60,py=180+row*115;c.fillStyle=colors[(row*3+col)%colors.length];c.beginPath();c.moveTo(px,py);c.lineTo(px+115,py+115);c.lineTo(px,py+115);c.closePath();c.fill();}
+        c.restore();}
+    }else{c.fillStyle='#c6ad82';c.fillRect(0,680,1800,40);['#aa713e','#b79447','#955451'].forEach((color,i)=>{c.fillStyle=color;c.fillRect(630+i*125,380,85,190);c.fillRect(650+i*125,345,45,40);c.fillStyle='#f5f0e3';c.fillRect(635+i*125,430,75,65);});}
     c.fillStyle=t.id==='penin-adventure'?'#ffffff':'#353a34';c.textAlign='center';c.font='24px sans-serif';c.fillText(t.graphic,t.id==='penin-adventure'?630:t.id==='penin-connect'?440:900,305);return canvas.toDataURL('image/png');}
   function snapshot(id,options={}){const t={...library.templates.find(t=>t.id===id)},result=library.build(id,JSON.parse(INITIAL_BOOTH_SPEC_JSON),OBJECT_CATALOG);
     if(/^#[\da-f]{6}$/i.test(options.primary||'')){const original=t.primary;t.primary=options.primary;result.spec.primary=t.primary;for(const o of result.spec.objects){if(o.appearance?.color===original)o.appearance.color=t.primary;if(o.structure?.color===original)o.structure.color=t.primary;}}
     result.spec.wallStickerFaces=['back'];Object.assign(result.spec.wallStickers.back,{data:artwork(t),name:t.name+' · กราฟิกตัวอย่าง',id:1,ar:2.5,w:6,h:2.4,mode:'cover'});YPProjectStore.validateSpec(result.spec);return result;}
   window.YPPeninsularTemplateBridge={snapshot};if(new URLSearchParams(location.search).get('comparePreview')==='1')return;
-  const entry=document.createElement('section');entry.id='peninsularTemplateSubmenu';entry.className='starter-entry';entry.innerHTML='<h3>เทมเพลต Peninsular 3×6 ม.</h3><p>3 แบบตามภาพอ้างอิง · เปิดหน้า ซ้าย และขวา</p><button type="button" class="btn pri" id="peninsularTemplatesOpen">เลือกเทมเพลต 3 แบบ</button>';
+  const entry=document.createElement('section');entry.id='peninsularTemplateSubmenu';entry.className='starter-entry';entry.innerHTML='<h3>เทมเพลต Peninsular 3×6 ม.</h3><p>'+library.templates.length+' แบบตามภาพอ้างอิง · เปิดหน้า ซ้าย และขวา</p><button type="button" class="btn pri" id="peninsularTemplatesOpen">เลือกเทมเพลต '+library.templates.length+' แบบ</button>';
   document.getElementById('oType').after(entry);
   const dialog=document.createElement('dialog');dialog.className='project-dialog inline-template-dialog';dialog.setAttribute('aria-labelledby','peninsularTemplatesTitle');dialog.innerHTML='<div class="starter-heading"><h2 id="peninsularTemplatesTitle">Peninsular · กว้าง 6 × ลึก 3 ม.</h2><button class="btn" id="peninsularTemplatesClose" aria-label="ปิด">×</button></div><p>ใช้โลโก้ YP ตั้งต้น · สัดส่วนรายชิ้นประมาณจากภาพอ้างอิง ไม่ใช่แบบผลิต</p><p>เลือกใช้ใน A/B อีกช่องเพื่อเก็บแบบปัจจุบันไว้ ระบบจะถามก่อนแทนที่งานที่มีอยู่หรือเปลี่ยนขนาด</p><div class="inline-template-grid" id="peninsularCards"></div><p id="peninsularTemplateStatus" role="status"></p>';document.body.append(dialog);let opener;
   const close=()=>{dialog.close();opener?.focus();};

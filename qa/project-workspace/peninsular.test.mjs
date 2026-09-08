@@ -5,7 +5,7 @@ await import('../../public/yp-web-ai/js/peninsular-templates.js');
 const api=globalThis.YPPeninsularTemplates;
 const html=await readFile(new URL('../../public/yp-web-ai/index.html',import.meta.url),'utf8');
 const catalog=Function('furnitureItem','return '+html.match(/const OBJECT_CATALOG=(\[[\s\S]*?\]);/)[1])(item=>item);
-test('three distinct reference-derived layouts',()=>{assert.equal(api.templates.length,3);assert.equal(new Set(api.templates.map(t=>t.id)).size,3);assert.equal(new Set(api.templates.map(t=>JSON.stringify(t.objects))).size,3);});
+test('four distinct reference-derived layouts',()=>{assert.equal(api.templates.length,4);assert.equal(new Set(api.templates.map(t=>t.id)).size,4);assert.equal(new Set(api.templates.map(t=>JSON.stringify(t.objects))).size,4);});
 for(const t of api.templates)test(t.id+' preserves source and logo, fits a 6x3x2.4 booth, and has editable parts',()=>{
   const initial={W:6,D:6,H:2.4,type:'inline',logo:'data:image/png;base64,YQ==',logoColor:'#ee3c96',objects:[],sceneItemState:{}};
   const before=structuredClone(initial),snapshot=api.build(t.id,initial,catalog),s=snapshot.spec;
@@ -15,4 +15,12 @@ for(const t of api.templates)test(t.id+' preserves source and logo, fits a 6x3x2
   s.objects[0].size.w=900;assert.notEqual(api.build(t.id,initial,catalog).spec.objects[0].size.w,900);
 });
 test('unknown template rejects explicitly',()=>assert.throws(()=>api.build('invalid',{},catalog)));
+test('Blue Pavilion keeps fascia branding, curved signs and four inward-facing chairs',()=>{
+  const logo='data:image/png;base64,YQ==',s=api.build('penin-blue-pavilion',{logo},catalog).spec;
+  assert.equal(s.objects.filter(o=>o.type==='chair').length,4);
+  assert.deepEqual(s.objects.filter(o=>o.type==='chair').map(o=>o.rotationY),[90,-90,90,-90]);
+  assert.equal(s.objects.find(o=>o.type==='brandCopy').appearance.textureData,logo);
+  assert.ok(s.objects.filter(o=>o.type==='roundedPanel').length>=4);
+  assert.equal(s.objects.filter(o=>o.type==='table').length,2);
+});
 test('Peninsular still has only the back wall',()=>assert.match(html,/k:'penin'[^\n]+walls:\['back'\]/));
