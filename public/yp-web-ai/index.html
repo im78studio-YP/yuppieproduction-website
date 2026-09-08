@@ -1737,6 +1737,7 @@ const FURNITURE_CATEGORIES=[
 const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:null,modelScale:1,modelRotationY:0,initialRotation:0,
   capabilities:null,ports:[],collision:null,...item});
 const OBJECT_CATALOG=[
+  furnitureItem({catalogId:'panel-standard',category:'display',type:'panel',name:'แผงตกแต่ง / กรอบ',icon:'▯',size:{w:1,d:.12,h:2.4},unitPrice:0,color:'#c6ad82'}),
   furnitureItem({catalogId:'entrance-frame',category:'structure',type:'entranceFrame',name:'กรอบทางเข้า',icon:'FRAME',size:{w:1,d:2.4,h:2.4},unitPrice:0,color:'#f2f3f5',
     clearance:0,anchor:'back-right',backWallOnly:true,rotationStep:45,placementPolicy:{preferredTarget:'back-wall',allowedTargets:['floor','wall','storage-room','structure','asset','free'],requiresSurface:false,defaultSpawn:'front-staging',allowOutsideBooth:true},
     capabilities:['floorPlaceable','attachable','resizable','styleable','compound'],
@@ -8446,6 +8447,7 @@ function sync(){
 
   document.querySelectorAll('#oType .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.type));
   window.YPInlineTemplateUI?.syncType(S.type);
+  window.YPPeninsularTemplateUI?.syncType(S.type);
   const cornerActive=S.type==='corner',cornerWrap=document.getElementById('cornerSideWrap');
   cornerWrap.hidden=!cornerActive;
   if(cornerActive)document.querySelectorAll('#oCornerSide .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.cornerSide));
@@ -9033,7 +9035,8 @@ function updateQuickLayoutStep(){
   const corner=quickSetupDraft?.boothType==='corner',cornerHost=document.getElementById('quickCornerSides');cornerHost.hidden=!corner;
   document.querySelectorAll('#quickCornerSides [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===quickSetupDraft?.cornerSide)));
   const type=TYPES.find(item=>item.k===quickSetupDraft?.boothType),preset=quickBoothDefaults(quickSetupDraft?.boothType),error=quickLayoutValidation(),side=CORNER_SIDES.find(item=>item.k===quickSetupDraft?.cornerSide);
-  document.getElementById('quickLayoutSummary').textContent=type&&preset?'รูปแบบ '+type.n+(corner&&side?' · '+side.n:'')+' · '+preset.displaySize+' (กว้าง '+preset.width+' × ลึก '+preset.depth+' × สูง '+preset.height+' ม.) · เปิด '+preset.openSides+' ด้าน':'กรุณาเลือกรูปแบบบูธ';
+  window.YPInlineWizard?.update(quickSetupDraft);
+  document.getElementById('quickLayoutSummary').textContent=type&&preset?'รูปแบบ '+type.n+(corner&&side?' · '+side.n:'')+' · '+(quickSetupDraft.templateId?'เทมเพลต 3 × 6 ม.':preset.displaySize)+' (กว้าง '+quickSetupDraft.width+' × ลึก '+quickSetupDraft.depth+' × สูง '+quickSetupDraft.height+' ม.) · เปิด '+preset.openSides+' ด้าน':'กรุณาเลือกรูปแบบบูธ';
   document.getElementById('quickLayoutError').textContent=quickLayoutAttempted?error:'';document.getElementById('quickLayoutNext').disabled=!!error;
   window.YPInlineWizard?.update(quickSetupDraft);
 }
@@ -9087,7 +9090,7 @@ function completeQuickSetup(){
   const category=ALLCATS.find(item=>item.k===quickSetupDraft.businessCategoryId),type=TYPES.find(item=>item.k===quickSetupDraft.boothType),preset=quickBoothDefaults(quickSetupDraft.boothType);if(!category||!type||!preset)return false;
   quickSetupCompleting=true;setQuickSetupStep('loading');
   window.setTimeout(async()=>{
-    if(quickSetupDraft.templateId&&type.k==='inline'){
+    if(quickSetupDraft.templateId&&['inline','penin'].includes(type.k)){
       try{
         const templateId=quickSetupDraft.templateId,ok=await window.YPInlineWizard.complete(quickSetupDraft,quickSetupFirstRun);
         quickSetupCompleting=false;
@@ -9394,6 +9397,8 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/inline-templates.css?v=20260908-2">
 <script src="js/inline-templates.js?v=20260908-2"></script>
 <script src="js/inline-template-ui.js?v=20260908-2"></script>
-<script src="js/inline-wizard.js?v=20260908-2"></script>
+<script src="js/peninsular-templates.js?v=20260908-1"></script>
+<script src="js/peninsular-template-ui.js?v=20260908-1"></script>
+<script src="js/inline-wizard.js?v=20260908-3"></script>
 </body>
 </html>
