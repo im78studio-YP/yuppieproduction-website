@@ -1766,6 +1766,7 @@ const OBJECT_CATALOG=[
     transformPolicy:{canResize:true,canScale:true,defaultMode:'scale',productionSensitive:false}}),
   furnitureItem({catalogId:'table-standard',category:'hospitality',type:'table',name:'โต๊ะ',icon:'▱',size:{w:1.2,d:.7,h:.75},unitPrice:12500,color:'#a97b4f'}),
   furnitureItem({catalogId:'chair-standard',category:'hospitality',type:'chair',name:'เก้าอี้',icon:'⌑',size:{w:.5,d:.5,h:.85},unitPrice:4500,color:'#626b78'}),
+  furnitureItem({catalogId:'bar-stool',category:'hospitality',type:'barStool',name:'สตูลบาร์',icon:'⌑',size:{w:.37,d:.37,h:.9},unitPrice:0,color:'#c8ceca'}),
   furnitureItem({catalogId:'high-table-stool-set',category:'hospitality',type:'table',name:'ชุดโต๊ะสูง + เก้าอี้ 2 ตัว',icon:'◉',size:{w:2.05,d:.8,h:1.08},unitPrice:21500,color:'#8f9398',
     modelUrl:'assets/furniture/high-table-stool-set.glb',transformPolicy:{canResize:false,canScale:true,defaultMode:'scale',productionSensitive:false}}),
   furnitureItem({catalogId:'plant-medium',category:'decor',type:'plant',name:'ต้นไม้',icon:'♧',size:{w:.55,d:.55,h:1.2},unitPrice:3500,color:'#4f8653'})];
@@ -5200,7 +5201,7 @@ function build(){
   const mk=(id,arr,set,f)=>{const box=document.getElementById(id);box.innerHTML='';
     arr.forEach(o=>{const b=el('button','opt',f?f(o):(o.n+(o.s?'<small>'+o.s+'</small>':'')));
       b.dataset.k=String(o.k);b.onclick=()=>{set(o.k);sync();};box.appendChild(b);});};
-  mk('oCornerSide',CORNER_SIDES,v=>{S.cornerSide=v;},o=>o.n+'<small>'+o.s+'</small>');
+  mk('oCornerSide',CORNER_SIDES,v=>{if(S.type==='corner'&&S.boothTemplate?.type==='corner'&&window.YPCornerTemplateBridge){try{YPCornerTemplateBridge.switchSide(v);}catch(error){announceCatalog(error.message,'error');}}else S.cornerSide=v;},o=>o.n+'<small>'+o.s+'</small>');
   mk('oStSize',ST_SIZE,v=>S.stSize=v,o=>o.n+'<small>'+o.s+'</small>');
   mk('oStH',ST_H,v=>{S.stHmode=v;});
   mk('oStPos',ST_POS,v=>{S.stPos=v; if(!S.doorTouched)S.stDoor=autoDoorFor();});
@@ -7486,6 +7487,13 @@ class ThreeBoothRenderer{
       bx([s.w,.08,s.d],[0,s.h-.04,0],base,{roughness:.5});
       const lx=s.w/2-.07,lz=s.d/2-.07;
       [[-lx,-lz],[lx,-lz],[-lx,lz],[lx,lz]].forEach(([x,z])=>bx([.055,s.h-.08,.055],[x,(s.h-.08)/2,z],dark,{edges:false}));
+    }else if(obj.type==='barStool'){
+      const radius=Math.min(s.w,s.d)*.46,seatY=s.h*.73;
+      mesh(new T.CylinderGeometry(radius,radius,.03,32),'#aeb7ba',[0,.015,0],{metalness:.65,roughness:.3});
+      mesh(new T.CylinderGeometry(.025,.035,seatY-.04,16),'#bdc5c7',[0,seatY/2,0],{metalness:.65,roughness:.3});
+      mesh(new T.CylinderGeometry(radius,radius,.06,32),base,[0,seatY,0]);
+      bx([s.w*.82,s.h-seatY-.04,.03],[0,(seatY+s.h)/2,-s.d*.39],base);
+      const ring=mesh(new T.TorusGeometry(radius*.68,.013,8,32),'#aeb7ba',[0,s.h*.3,0],{metalness:.65,roughness:.3});ring.rotation.x=Math.PI/2;
     }else if(obj.type==='chair'){
       const seatY=s.h*.48;bx([s.w,.08,s.d],[0,seatY,0],base);
       bx([s.w,s.h-seatY,.08],[0,(seatY+s.h)/2,-s.d/2+.04],base);
@@ -8510,6 +8518,7 @@ function sync(){
   document.querySelectorAll('#oType .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.type));
   window.YPInlineTemplateUI?.syncType(S.type);
   window.YPPeninsularTemplateUI?.syncType(S.type);
+  window.YPCornerTemplateUI?.syncType(S.type);
   const cornerActive=S.type==='corner',cornerWrap=document.getElementById('cornerSideWrap');
   cornerWrap.hidden=!cornerActive;
   if(cornerActive)document.querySelectorAll('#oCornerSide .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.cornerSide));
@@ -9152,7 +9161,7 @@ function completeQuickSetup(){
   const category=ALLCATS.find(item=>item.k===quickSetupDraft.businessCategoryId),type=TYPES.find(item=>item.k===quickSetupDraft.boothType),preset=quickBoothDefaults(quickSetupDraft.boothType);if(!category||!type||!preset)return false;
   quickSetupCompleting=true;setQuickSetupStep('loading');
   window.setTimeout(async()=>{
-    if(quickSetupDraft.templateId&&['inline','penin'].includes(type.k)){
+    if(quickSetupDraft.templateId&&['inline','penin','corner'].includes(type.k)){
       try{
         const templateId=quickSetupDraft.templateId,ok=await window.YPInlineWizard.complete(quickSetupDraft,quickSetupFirstRun);
         quickSetupCompleting=false;
@@ -9461,7 +9470,9 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/inline-template-ui.js?v=20260909-6"></script>
 <script src="js/peninsular-templates.js?v=20260909-5"></script>
 <script src="js/peninsular-template-ui.js?v=20260909-5"></script>
-<script src="js/inline-wizard.js?v=20260908-3"></script>
-<script src="js/template-entry.js?v=20260909-6"></script>
+<script src="js/corner-templates.js?v=20260909-7"></script>
+<script src="js/corner-template-ui.js?v=20260909-7"></script>
+<script src="js/inline-wizard.js?v=20260909-7"></script>
+<script src="js/template-entry.js?v=20260909-7"></script>
 </body>
 </html>
