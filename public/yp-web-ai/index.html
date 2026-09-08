@@ -771,6 +771,7 @@ select:focus{border-color:var(--acc)}
 @media(prefers-reduced-motion:reduce){.quick-setup-step.is-entering{animation:none}}
 </style>
 <link rel="stylesheet" href="css/asset-editor.css?v=20260829-3">
+<link rel="stylesheet" href="css/project-workspace.css?v=20260905-1">
 </head>
 <body>
 
@@ -794,7 +795,7 @@ select:focus{border-color:var(--acc)}
       </aside>
     </div>
     <div class="header-total" aria-label="ยอดรวมโดยประมาณ"><span>ยอดประเมิน</span><strong id="price">—</strong></div>
-    <button class="btn pri sm" type="button" onclick="closeHeaderSummary(false);openM('mQuote')">ขอใบเสนอราคา</button>
+    <button class="btn pri sm" type="button" onclick="closeHeaderSummary(false);sendQuote()">เตรียมส่งงาน</button>
   </div>
 </header>
 
@@ -1583,6 +1584,7 @@ select:focus{border-color:var(--acc)}
             <div class="quick-choice-grid quick-corner-options" id="quickCornerSides" role="radiogroup" aria-label="เลือกด้านหัวมุม" hidden></div>
             <div class="quick-selection-summary" id="quickLayoutSummary"></div>
             <div class="quick-error" id="quickLayoutError" role="status" aria-live="polite"></div>
+            <section id="quickInlineTemplates" class="quick-template-section" hidden aria-labelledby="quickTemplatesTitle"></section>
           </div>
         </div>
         <div class="quick-step-actions">
@@ -1618,12 +1620,13 @@ select:focus{border-color:var(--acc)}
           <header class="quick-step-head">
             <div class="quick-step-kicker">QUICK SETUP • ขั้นตอนที่ 4</div>
             <h2 id="quickFloorTitle" tabindex="-1">พื้น</h2>
-            <p class="quick-step-description">ค่าเริ่มต้นคือไม่ยกพื้นและปูพรมสีเทาดำ ยืนยันค่าเดิมหรือเลือกวัสดุเริ่มต้นแบบอื่นได้</p>
+            <p class="quick-step-description">ตรวจวัสดุจากแบบที่เลือก หรือปรับพื้นให้เหมาะกับแบรนด์ของคุณ</p>
           </header>
           <div class="quick-section"><div class="quick-section-title">ระดับพื้น</div><div class="quick-choice-grid quick-compact-grid" id="quickRaiseOptions" role="radiogroup" aria-label="เลือกระดับพื้น"></div></div>
           <div class="quick-section"><div class="quick-section-title">วัสดุปูพื้น</div><div class="quick-choice-grid quick-compact-grid" id="quickFloorOptions" role="radiogroup" aria-label="เลือกวัสดุปูพื้น"></div></div>
           <div class="quick-section" id="quickCarpetSection"><div class="quick-section-title">สีพรม</div><div class="quick-choice-grid quick-compact-grid" id="quickCarpetOptions" role="radiogroup" aria-label="เลือกสีพรม"></div></div>
-          <div class="quick-default-callout"><b>ค่าเริ่มต้น</b><span>ไม่ยกพื้น · พรมสีเทาดำ หากไม่เปลี่ยนค่า ระบบจะใช้ชุดนี้สร้างบูธทันที</span></div>
+          <div class="quick-section" id="quickTileSection" hidden><div class="quick-section-title">ลายกระเบื้องยาง</div><div class="quick-choice-grid quick-compact-grid" id="quickTileOptions" role="radiogroup" aria-label="เลือกลายกระเบื้องยาง"></div></div>
+          <div class="quick-default-callout"><b>ค่าที่เลือก</b><span id="quickFloorSummary">ไม่ยกพื้น · พรมสีเทาดำ</span></div>
         </div>
         <div class="quick-step-actions">
           <button class="btn quick-back" id="quickFloorBack" type="button">ย้อนกลับ</button>
@@ -1640,6 +1643,7 @@ select:focus{border-color:var(--acc)}
           </header>
           <div class="quick-section"><div class="quick-choice-grid quick-compact-grid" id="quickRoomOptions" role="radiogroup" aria-label="เลือกเพิ่มห้องเก็บของ"></div></div>
           <div class="quick-selection-summary" id="quickRoomSummary"></div>
+          <div class="quick-error" id="quickRoomError" role="status" aria-live="polite"></div>
         </div>
         <div class="quick-step-actions">
           <button class="btn quick-back" id="quickRoomBack" type="button">ย้อนกลับ</button>
@@ -1658,34 +1662,21 @@ select:focus{border-color:var(--acc)}
   <div class="sheet"><button class="close" onclick="closeM('mLine')">×</button>
     <div style="width:54px;height:54px;border-radius:16px;background:var(--line-gr);color:#04310f;
       display:grid;place-items:center;font-size:26px;margin:0 auto 14px">💚</div>
-    <h2>ประตู 1 — แอดไลน์เพื่อดูภาพเต็ม</h2>
-    <p class="sub">กดปุ่มเดียว ไม่ต้องออกไปสแกน QR</p>
-    <div class="perk"><i>✓</i> ภาพเรนเดอร์เต็มความละเอียด ไม่มีลายน้ำ</div>
-    <div class="perk"><i>✓</i> ส่งภาพเข้าแชทให้เลย ส่งต่อให้เจ้านายดูได้</div>
-    <div class="perk"><i>✓</i> ปรึกษาทีมออกแบบได้ในแชทเดียวกัน</div>
-    <button class="btn line lg" style="margin-top:14px" onclick="closeM('mLine');openM('mLineOk')">เข้าสู่ระบบด้วย LINE</button>
-    <button class="btn lg" style="margin-top:7px;background:transparent" onclick="closeM('mLine')">ใช้อีเมลแทน</button>
+    <h2>ยังไม่เชื่อมต่อ LINE</h2>
+    <p class="sub">ดาวน์โหลดชุดงานไว้ส่งต่อด้วยตัวเองก่อนได้ ขั้นนี้ยังไม่ส่งข้อมูลถึง @teamyuppie</p>
+    <button class="btn pri lg" style="margin-top:14px" onclick="closeM('mLine');sendQuote()">เตรียมชุดส่งงาน</button>
+    <button class="btn lg" style="margin-top:7px;background:transparent" onclick="closeM('mLine')">กลับไปออกแบบ</button>
   </div>
 </div>
 <div class="modal" id="mLineOk" onclick="if(event.target===this)closeM('mLineOk')">
-  <div class="sheet"><div class="okic">✓</div><h2>เพิ่ม @teamyuppie แล้ว</h2>
-    <p class="sub">ระบบจะส่งภาพบูธของคุณเข้าแชท LINE ภายในไม่กี่วินาที</p>
+  <div class="sheet"><h2>ยังไม่เชื่อมต่อ LINE</h2>
+    <p class="sub">ยังไม่ได้เพิ่มเพื่อนหรือส่งข้อมูลเข้าแชท</p>
     <button class="btn pri lg" onclick="closeM('mLineOk')">ดูแบบต่อ</button></div>
 </div>
 <div class="modal" id="mQuote" onclick="if(event.target===this)closeM('mQuote')">
   <div class="sheet left"><button class="close" onclick="closeM('mQuote')">×</button>
-    <div id="qForm"><h2>ประตู 2 — ขอใบเสนอราคา</h2>
-      <p class="sub">ทีมออกแบบจะนำแบบที่คุณเลือกไปพัฒนาต่อและตีราคาจริง</p>
-      <div class="fg">
-        <div><label class="lbl">ชื่อ-นามสกุล *</label><input type="text" id="qn" class="qi" placeholder="สมชาย ใจดี"></div>
-        <div><label class="lbl">เบอร์โทร *</label><input type="text" id="qt" class="qi" placeholder="08x-xxx-xxxx"></div>
-        <div><label class="lbl">บริษัท</label><input type="text" id="qc" class="qi" placeholder="บริษัท ..."></div>
-        <div><label class="lbl">งานแสดงสินค้า</label><input type="text" id="qe" class="qi" placeholder="เช่น THAIFEX"></div>
-      </div>
-      <button class="btn pri lg" style="margin-top:16px" onclick="sendQuote()">ส่งข้อมูลพร้อมแบบที่เลือก</button>
-    </div>
-    <div id="qDone" style="display:none;text-align:center"><div class="okic">✓</div><h2>ส่งเรียบร้อย</h2>
-      <p class="sub" id="qMsg"></p><button class="btn lg" onclick="closeM('mQuote')">ปิด</button></div>
+    <h2>เตรียมชุดส่งงาน</h2><p class="sub">ดาวน์โหลดแบบพร้อมข้อมูลงานไว้ส่งต่อ ยังไม่ได้ส่งถึงทีม Yuppie</p>
+    <button class="btn pri lg" onclick="closeM('mQuote');sendQuote()">กรอกข้อมูลและตรวจแบบ</button>
   </div>
 </div>
 <script src="js/quick-setup.js?v=20260830-1"></script>
@@ -1697,6 +1688,7 @@ select:focus{border-color:var(--acc)}
 <script src="js/smart-snap-engine.js?v=20260902-2"></script>
 <script src="js/asset-attachment-graph.js?v=20260901-1"></script>
 <script src="js/brand-visible-bounds.js?v=20260902-1"></script>
+<script src="assets/branding/default-logo.js?v=20260908-1"></script>
 <script>
 /* ================= ข้อมูล ================= */
 const CATGROUPS=[
@@ -1953,6 +1945,7 @@ const BoothSpec={version:3,cat:'food',customBusinessCategory:'',primary:'#2e7d4f
   logo:null,logoAcc:null,logoAR:2.2,logoHasTransparency:null,logoVisibleBounds:null,brand:'',view:'three',photo:null,objects:[],sceneItemState:{},sceneAssetRegistry:{version:2,assets:[]},sceneSnapData:{version:1,anchors:[],surfaces:[]},assetAttachmentGraph:{version:1,attachments:[]},promptFidelity:6,wallRadius:3.5,
   placementSnap:true,magneticSnap:true,geometryFidelity:10,stagingFreedom:6,aiStaging:defaultAIStagingSettings(),aiRendering:defaultAIRenderingSettings(),
   lighting:globalThis.YPAutoLighting.defaultLightingState()};
+if(globalThis.YPDefaultLogo)Object.assign(BoothSpec,{logo:YPDefaultLogo.data,logoAR:YPDefaultLogo.aspect,logoAcc:YPDefaultLogo.color,logoColor:YPDefaultLogo.color,logoColorTouched:true,logoHasTransparency:true,brand:YPDefaultLogo.brand,logoScale:35,nameScale:0});
 const S=BoothSpec;
 const INITIAL_BOOTH_SPEC_JSON=JSON.stringify(BoothSpec);
 const MAX_CARPET_TEXTURE_UPLOADS=3;
@@ -2081,7 +2074,7 @@ let lastValidLayout=null;
 /* ================= helpers ================= */
 const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
 const fmt=n=>Math.round(n).toLocaleString('en-US');
-const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const SCENE_ASSET_IDS=Object.freeze({
   floor:'structure.floor.main',wallBack:'structure.wall.back',wallLeft:'structure.wall.left',wallRight:'structure.wall.right',
   room:'structure.room.main',door:'structure.door.main',brand:'branding.logo.main',floorGraphic:'branding.graphic.floor',
@@ -4230,7 +4223,7 @@ function syncObjectControls(){
     document.getElementById(id).disabled=!obj&&!systemAction||!!obj&&locked&&id!=='btnOpenAssetSettings';
   });
   const lockButton=document.getElementById('btnLockObject');if(lockButton){
-    lockButton.disabled=!obj;lockButton.classList.toggle('on',!!obj&&locked);lockButton.textContent=locked?'Unlock':'Lock';
+    lockButton.disabled=!obj;lockButton.classList.toggle('on',!!obj&&locked);lockButton.textContent=locked?'ปลดล็อก':'ล็อก';
     lockButton.title=locked?'ปลดล็อก Asset':'ล็อก Asset';lockButton.setAttribute('aria-label',locked?'ปลดล็อก Asset ที่เลือก':'ล็อก Asset ที่เลือก');
     lockButton.setAttribute('aria-pressed',String(!!obj&&locked));
   }
@@ -5678,6 +5671,7 @@ class ThreeBoothRenderer{
     this.THREE=THREE;this.handleDrag=handleDrag;
     this.modelLoader=new GLTFLoader();this.fixtureTemplates=new Map();this.fixtureLoads=new Map();this.fixtureErrors=new Map();
     this.furnitureTemplates=new Map();this.furnitureLoads=new Map();this.furnitureErrors=new Map();
+    this.brandImages=new Map();this.brandImageLoads=new Map();this.brandImageErrors=new Set();
     this.downlightTemplate=null;this.downlightLoad=null;this.downlightError=null;
     this.floorImage=null;this.floorImagePromise=null;this.floorImagePromiseSource='';this.floorImageSourceKey='';this.floorImageError=false;
     this.seamlessFloorCanvases=new WeakMap();
@@ -5859,6 +5853,7 @@ class ThreeBoothRenderer{
     this.fixtureLoads.forEach(promise=>promises.push(promise));
     this.furnitureLoads.forEach(promise=>promises.push(promise));
     this.wallStickerLoads.forEach(promise=>promises.push(promise));
+    this.brandImageLoads.forEach(promise=>promises.push(promise));
     return [...new Set(promises.filter(promise=>promise&&typeof promise.then==='function'))];
   }
   async waitForSceneAssets(timeoutMs=10000,spec=BoothSpec,validateState=null){
@@ -5888,6 +5883,7 @@ class ThreeBoothRenderer{
     const spec=options.snapshot?.spec||options.spec||BoothSpec,validateState=typeof options.validateState==='function'?options.validateState:null;
     if(validateState)validateState();this.currentKey='';this.update(spec);
     await this.waitForSceneAssets(options.assetTimeoutMs??10000,spec,validateState);if(validateState)validateState();
+    if(spec.logo&&!this.brandImages.has(spec.logo))throw new Error('ยังโหลดโลโก้ไม่สำเร็จ กรุณารอแล้วลองส่งภาพอีกครั้ง');
     const T=this.THREE,sourceWidth=Math.max(1,this.lastSize[0]||Math.floor(this.host.getBoundingClientRect().width)||16);
     const sourceHeight=Math.max(1,this.lastSize[1]||Math.floor(this.host.getBoundingClientRect().height)||9);
     const viewportAspect=sourceWidth/sourceHeight,requestedAspect=Number(options.aspectRatio),sourceAspect=Number.isFinite(requestedAspect)&&requestedAspect>0?requestedAspect:viewportAspect,minLongEdge=Math.max(1536,Math.floor(Number(options.minLongEdge)||1536));
@@ -6892,7 +6888,8 @@ class ThreeBoothRenderer{
           dx=cx-size.w/2+preserveX,dy=cy-size.h/2+preserveY;
         if(image){const tint=document.createElement('canvas'),tw=Math.max(2,Math.ceil(size.w)),th=Math.max(2,Math.ceil(size.h));tint.width=tw;tint.height=th;
           const tx=tint.getContext('2d'),source=crop||{sourceX:0,sourceY:0,sourceWidth:image.naturalWidth,sourceHeight:image.naturalHeight};
-          tx.drawImage(image,source.sourceX,source.sourceY,source.sourceWidth,source.sourceHeight,0,0,tw,th);tx.globalCompositeOperation='source-in';tx.fillStyle=logoInk;tx.fillRect(0,0,tw,th);sx.drawImage(tint,dx,dy,size.w,size.h);}
+          const raster=image._ypRasterSource||image,scaleX=image._ypRasterSource?raster.width/image.naturalWidth:1,scaleY=image._ypRasterSource?raster.height/image.naturalHeight:1;
+          tx.drawImage(raster,source.sourceX*scaleX,source.sourceY*scaleY,source.sourceWidth*scaleX,source.sourceHeight*scaleY,0,0,tw,th);tx.globalCompositeOperation='source-in';tx.fillStyle=logoInk;tx.fillRect(0,0,tw,th);sx.drawImage(tint,dx,dy,size.w,size.h);}
         else{sx.strokeStyle=logoInk;sx.lineWidth=7;sx.setLineDash([18,12]);sx.strokeRect(dx,dy,size.w,size.h);sx.setLineDash([]);
           sx.fillStyle=logoInk;sx.globalAlpha=.65;sx.font='700 '+Math.max(16,Math.min(48,size.h*.32))+'px Inter, sans-serif';sx.textAlign='center';sx.textBaseline='middle';sx.fillText('LOGO',cx,cy);sx.globalAlpha=1;}
         return size;
@@ -6927,9 +6924,23 @@ class ThreeBoothRenderer{
       }
       trimToOutput();anchorFloorOutput();captureVisibleBounds();
     };
-    draw(null);texture=new T.CanvasTexture(c);texture.colorSpace=T.SRGBColorSpace;captureVisibleBounds();
-    if(spec.logo){const image=new Image();image.onload=()=>{if(this.buildId!==generation)return;image._ypVisibleAlphaBounds=visibleImagePixelBounds(image);draw(image);texture.needsUpdate=true;
-        if(this.active)this.renderer.render(this.scene,this.camera);};image.src=spec.logo;}
+    const cached=spec.logo?this.brandImages.get(spec.logo):null;
+    draw(cached||null);texture=new T.CanvasTexture(c);texture.colorSpace=T.SRGBColorSpace;captureVisibleBounds();
+    if(spec.logo&&!cached&&!this.brandImageErrors.has(spec.logo)){
+      const source=spec.logo;let pending=this.brandImageLoads.get(source);
+      if(!pending){
+        pending=new Promise(resolve=>{const image=new Image();
+          image.onload=()=>{
+            // SVGs without intrinsic width/height can be clipped by Chrome's 9-argument drawImage.
+            // Rasterize the complete vector first; subsequent crop coordinates use stable pixels.
+            if(source.startsWith('data:image/svg+xml')){const raster=document.createElement('canvas');raster.width=1536;raster.height=Math.max(1,Math.round(1536*image.naturalHeight/image.naturalWidth));raster.getContext('2d').drawImage(image,0,0,raster.width,raster.height);image._ypRasterSource=raster;}
+            image._ypVisibleAlphaBounds=visibleImagePixelBounds(image);this.brandImages.set(source,image);while(this.brandImages.size>4)this.brandImages.delete(this.brandImages.keys().next().value);this.brandImageLoads.delete(source);resolve(image);
+          };
+          image.onerror=()=>{this.brandImageErrors.add(source);this.brandImageLoads.delete(source);resolve(null);};image.src=source;
+        });this.brandImageLoads.set(source,pending);
+      }
+      pending.then(image=>{if(!image||this.buildId!==generation)return;draw(image);texture.needsUpdate=true;if(this.active)this.renderer.render(this.scene,this.camera);});
+    }
     return texture;
   }
   brandMaterial(spec,bg){
@@ -7407,14 +7418,14 @@ class ThreeBoothRenderer{
       bx([s.w,.08,s.d],[0,.04,0],dark);bx([.08,s.h*.46,.08],[0,s.h*.28,0],dark,{edges:false});
       const panelH=s.h*.48,panelMat=new T.MeshStandardMaterial({color:0x13171e,roughness:.28,metalness:.22,
         emissive:new T.Color(accent),emissiveIntensity:.16});
-      bx([s.w,.055,panelH],[0,s.h-panelH/2,.02],dark,{material:panelMat});
+      bx([s.w,panelH,.055],[0,s.h-panelH/2,.02],dark,{material:panelMat});
     }else if(obj.type==='table'){
       bx([s.w,.08,s.d],[0,s.h-.04,0],base,{roughness:.5});
       const lx=s.w/2-.07,lz=s.d/2-.07;
       [[-lx,-lz],[lx,-lz],[-lx,lz],[lx,lz]].forEach(([x,z])=>bx([.055,s.h-.08,.055],[x,(s.h-.08)/2,z],dark,{edges:false}));
     }else if(obj.type==='chair'){
       const seatY=s.h*.48;bx([s.w,.08,s.d],[0,seatY,0],base);
-      bx([s.w,.08,s.h-seatY],[0,(seatY+s.h)/2,-s.d/2+.04],base);
+      bx([s.w,s.h-seatY,.08],[0,(seatY+s.h)/2,-s.d/2+.04],base);
       const lx=s.w/2-.055,lz=s.d/2-.055;
       [[-lx,-lz],[lx,-lz],[-lx,lz],[lx,lz]].forEach(([x,z])=>bx([.045,seatY,.045],[x,seatY/2,z],dark,{edges:false}));
     }else if(obj.type==='plant'){
@@ -7703,7 +7714,9 @@ function loadThreeRenderer(){
     import('three'),
     import('three/addons/controls/OrbitControls.js'),
     import('three/addons/loaders/GLTFLoader.js'),
-    import('./js/handle-drag.js?v=20260902-1')])
+    // Comparison frames are non-interactive and have no selection/drag handles.
+    // Omitting this local ESM import also allows their renderer to run under file://.
+    new URLSearchParams(location.search).get('comparePreview')==='1'?Promise.resolve(null):import('./js/handle-drag.js?v=20260902-1')])
     .then(([THREE,controls,gltf,handleDrag])=>threeRenderer=new ThreeBoothRenderer(THREE,controls.OrbitControls,gltf.GLTFLoader,handleDrag));
   return threeRendererPromise;
 }
@@ -8214,6 +8227,7 @@ function dimDiagram(){
 
 /* ================= render ================= */
 function render(){
+  window.YPProjectWorkspace?.changed();
   const v=document.getElementById('view');
   if(S.view==='three'){renderThreeView(v);return;}
   if(threeRenderer)threeRenderer.unmount(v);else v.classList.remove('three-active');
@@ -8431,6 +8445,7 @@ function sync(){
   document.getElementById('dimDiagram').innerHTML=dimDiagram();
 
   document.querySelectorAll('#oType .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.type));
+  window.YPInlineTemplateUI?.syncType(S.type);
   const cornerActive=S.type==='corner',cornerWrap=document.getElementById('cornerSideWrap');
   cornerWrap.hidden=!cornerActive;
   if(cornerActive)document.querySelectorAll('#oCornerSide .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.cornerSide));
@@ -8953,6 +8968,7 @@ const QUICK_SETUP_STEPS=Object.freeze(['intro','business','layout','brand','floo
 const QUICK_SETUP_PROGRESS_STEPS=Object.freeze(['business','layout','brand','floor','room']);
 const QUICK_SETUP_TYPE_KEYS=Object.freeze(['inline','corner','penin','island']);
 let quickSetupStep='intro',quickSetupDraft=null,quickBusinessAttempted=false,quickLayoutAttempted=false,quickBrandAttempted=false,quickSetupCompleting=false;
+let quickSetupFirstRun=true;
 const quickBoothDefaults=type=>window.YPQuickSetupContext?.boothDefaultsFor(type)||({inline:{width:6,depth:3,height:2.4,displaySize:'3 × 6 ม.',openSides:1},corner:{width:6,depth:3,height:2.4,displaySize:'3 × 6 ม.',openSides:2},penin:{width:6,depth:6,height:2.4,displaySize:'6 × 6 ม.',openSides:3},island:{width:6,depth:6,height:2.4,displaySize:'6 × 6 ม.',openSides:4}}[type]||null);
 const normalizedQuickHex=(value,fallback='#2E7D4F')=>window.YPQuickSetupContext?.normalizeHexColor(value,fallback)||(/^#[0-9a-fA-F]{6}$/.test(String(value||''))?String(value).toUpperCase():fallback);
 function quickSetupDraftFromEditor(){
@@ -8960,7 +8976,7 @@ function quickSetupDraftFromEditor(){
   return{businessCategoryId:S.cat||'',businessCategoryLabel:businessCategoryLabel(S),customBusinessCategory:String(S.customBusinessCategory||''),
     boothType,cornerSide:boothType==='corner'?(S.cornerSide||'right'):'',width:preset.width,depth:preset.depth,height:preset.height,
     primary:normalizedQuickHex(S.primary||'#2E7D4F'),brandTouched:false,raise:RAISE.some(item=>item.k===S.raise)?S.raise:0,
-    floor:FLOORS.some(item=>item.k===S.floor)?S.floor:'carpet',carpet:CARPETS.some(item=>item.k===S.carpet)?S.carpet:'grey',addStorage:S.stSize!=='none'};
+    floor:FLOORS.some(item=>item.k===S.floor)?S.floor:'carpet',carpet:CARPETS.some(item=>item.k===S.carpet)?S.carpet:'grey',tile:S.tile||'woodL',addStorage:S.stSize!=='none',templateId:null};
 }
 function createQuickChoice({value,label,detail='',selected=false,onSelect}){
   const button=document.createElement('button');button.type='button';button.className='quick-choice';button.dataset.value=value;button.setAttribute('role','radio');button.setAttribute('aria-checked',String(selected));
@@ -9019,6 +9035,7 @@ function updateQuickLayoutStep(){
   const type=TYPES.find(item=>item.k===quickSetupDraft?.boothType),preset=quickBoothDefaults(quickSetupDraft?.boothType),error=quickLayoutValidation(),side=CORNER_SIDES.find(item=>item.k===quickSetupDraft?.cornerSide);
   document.getElementById('quickLayoutSummary').textContent=type&&preset?'รูปแบบ '+type.n+(corner&&side?' · '+side.n:'')+' · '+preset.displaySize+' (กว้าง '+preset.width+' × ลึก '+preset.depth+' × สูง '+preset.height+' ม.) · เปิด '+preset.openSides+' ด้าน':'กรุณาเลือกรูปแบบบูธ';
   document.getElementById('quickLayoutError').textContent=quickLayoutAttempted?error:'';document.getElementById('quickLayoutNext').disabled=!!error;
+  window.YPInlineWizard?.update(quickSetupDraft);
 }
 function quickBrandValidation(){return /^#[0-9a-fA-F]{6}$/.test(String(quickSetupDraft?.primary||''))?'':'กรุณากรอกรหัสสี HEX 6 หลัก เช่น #F72585';}
 function updateQuickBrandStep(){
@@ -9030,12 +9047,16 @@ function buildQuickFloorChoices(){
   const raiseHost=document.getElementById('quickRaiseOptions');raiseHost.innerHTML='';RAISE.forEach(item=>raiseHost.appendChild(createQuickChoice({value:String(item.k),label:item.n,detail:item.s,selected:Number(quickSetupDraft?.raise)===item.k,onSelect:()=>{quickSetupDraft.raise=item.k;updateQuickFloorStep();}})));bindQuickRadioKeys(raiseHost);
   const floorHost=document.getElementById('quickFloorOptions');floorHost.innerHTML='';FLOORS.forEach(item=>floorHost.appendChild(createQuickChoice({value:item.k,label:item.n,detail:item.s,selected:quickSetupDraft?.floor===item.k,onSelect:value=>{quickSetupDraft.floor=value;updateQuickFloorStep();}})));bindQuickRadioKeys(floorHost);
   const carpetHost=document.getElementById('quickCarpetOptions');carpetHost.innerHTML='';CARPETS.forEach(item=>carpetHost.appendChild(createQuickChoice({value:item.k,label:item.k==='grey'?'เทาดำ':item.n,detail:item.k==='grey'?'ค่าเริ่มต้น':'',selected:quickSetupDraft?.carpet===item.k,onSelect:value=>{quickSetupDraft.carpet=value;updateQuickFloorStep();}})));bindQuickRadioKeys(carpetHost);
+  const tileHost=document.getElementById('quickTileOptions');tileHost.innerHTML='';TILES.forEach(item=>tileHost.appendChild(createQuickChoice({value:item.k,label:item.n,selected:quickSetupDraft?.tile===item.k,onSelect:value=>{quickSetupDraft.tile=value;updateQuickFloorStep();}})));bindQuickRadioKeys(tileHost);
 }
 function updateQuickFloorStep(){
   document.querySelectorAll('#quickRaiseOptions [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(Number(button.dataset.value)===Number(quickSetupDraft?.raise))));
   document.querySelectorAll('#quickFloorOptions [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===quickSetupDraft?.floor)));
   document.querySelectorAll('#quickCarpetOptions [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===quickSetupDraft?.carpet)));
   document.getElementById('quickCarpetSection').hidden=quickSetupDraft?.floor!=='carpet';
+  document.getElementById('quickTileSection').hidden=quickSetupDraft?.floor!=='tile';
+  document.querySelectorAll('#quickTileOptions [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===quickSetupDraft?.tile)));
+  document.getElementById('quickFloorSummary').textContent=(RAISE.find(v=>v.k===Number(quickSetupDraft?.raise))?.n||'ไม่ยกพื้น')+' · '+(FLOORS.find(v=>v.k===quickSetupDraft?.floor)?.n||'')+' '+(quickSetupDraft?.floor==='tile'?TILES.find(v=>v.k===quickSetupDraft.tile)?.n||'':quickSetupDraft?.floor==='carpet'?CARPETS.find(v=>v.k===quickSetupDraft.carpet)?.n||'':'');
 }
 function buildQuickRoomChoices(){
   const host=document.getElementById('quickRoomOptions');host.innerHTML='';[
@@ -9045,7 +9066,7 @@ function buildQuickRoomChoices(){
 }
 function updateQuickRoomStep(){
   const selected=quickSetupDraft?.addStorage?'storage':'none';document.querySelectorAll('#quickRoomOptions [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===selected)));
-  document.getElementById('quickRoomSummary').textContent=quickSetupDraft?.addStorage?'ระบบจะเพิ่มห้องเก็บของมาตรฐาน และเปิดให้ปรับขนาด/ตำแหน่งต่อในเมนู “เพิ่มห้อง”':'เริ่มด้วยพื้นที่บูธโล่ง โดยยังเพิ่มห้องภายหลังได้';
+  document.getElementById('quickRoomSummary').textContent=quickSetupDraft?.addStorage?(quickSetupDraft.templateId==='retail'?'ใช้ห้องเก็บของหลังขวา 1.2 × 1.2 ม. ตามเทมเพลต Select Store':'เพิ่มห้องเก็บของหลังขวา 1.2 × 1.2 ม. โปรดตรวจและจัดอุปกรณ์ที่อาจทับพื้นที่ห้องในตัวแก้ไขอีกครั้ง'):'ไม่มีห้องเก็บของ โดยยังเพิ่มห้องภายหลังได้';
 }
 function setQuickSetupStep(step,{focus=true}={}){
   if(!QUICK_SETUP_STEPS.includes(step))return;quickSetupStep=step;
@@ -9065,22 +9086,35 @@ function completeQuickSetup(){
   if(businessError){setQuickSetupStep('business');updateQuickBusinessStep();return false;}if(layoutError){setQuickSetupStep('layout');updateQuickLayoutStep();return false;}if(brandError){setQuickSetupStep('brand');updateQuickBrandStep();return false;}
   const category=ALLCATS.find(item=>item.k===quickSetupDraft.businessCategoryId),type=TYPES.find(item=>item.k===quickSetupDraft.boothType),preset=quickBoothDefaults(quickSetupDraft.boothType);if(!category||!type||!preset)return false;
   quickSetupCompleting=true;setQuickSetupStep('loading');
-  window.setTimeout(()=>{
+  window.setTimeout(async()=>{
+    if(quickSetupDraft.templateId&&type.k==='inline'){
+      try{
+        const templateId=quickSetupDraft.templateId,ok=await window.YPInlineWizard.complete(quickSetupDraft,quickSetupFirstRun);
+        quickSetupCompleting=false;
+        if(!ok){setQuickSetupStep('room');document.getElementById('quickRoomError').textContent='ยังไม่ได้เปลี่ยนแบบ คุณยกเลิกหรือระบบยังไม่พร้อม กรุณาตรวจแถบโปรเจกต์';return;}
+        closeReleaseNotes(false);quickSetupDraft=null;closeDockPanel(false);
+        loadThreeRenderer().then(renderer=>renderer.setCameraView('perspective')).catch(()=>{});
+        window.dispatchEvent(new CustomEvent('yp:quick-setup-complete',{detail:{templateId}}));
+      }catch(error){quickSetupCompleting=false;setQuickSetupStep('room');document.getElementById('quickRoomError').textContent='สร้างแบบไม่สำเร็จ: '+error.message;}
+      return;
+    }
     const categoryChanged=S.cat!==category.k;S.cat=category.k;S.customBusinessCategory=category.k==='other'?String(quickSetupDraft.customBusinessCategory||'').trim():'';
     if(categoryChanged&&!S.pairTouched)S.pair=category.pr;
     S.type=type.k;S.cornerSide=type.k==='corner'?quickSetupDraft.cornerSide:'right';S.W=preset.width;S.D=preset.depth;S.H=preset.height;
-    S.primary=normalizedQuickHex(quickSetupDraft.primary);S.colTouched=true;S.logoColor=S.primary;S.logoColorTouched=false;
-    S.raise=Number(quickSetupDraft.raise)||0;S.floor=quickSetupDraft.floor||'carpet';S.carpet=quickSetupDraft.carpet||'grey';
+    S.primary=normalizedQuickHex(quickSetupDraft.primary);S.colTouched=true;if(!S.logoColorTouched)S.logoColor=S.primary;
+    S.raise=Number(quickSetupDraft.raise)||0;S.floor=quickSetupDraft.floor||'carpet';S.carpet=quickSetupDraft.carpet||'grey';S.tile=quickSetupDraft.tile||'woodL';
     S.stSize=quickSetupDraft.addStorage?'a':'none';if(quickSetupDraft.addStorage){S.stW=1.2;S.stD=1.2;S.stHmode=2.4;S.stPos='right';S.doorTouched=false;}
     S.lights=type.k!=='island';S.lighting=globalThis.YPAutoLighting.defaultLightingState();S.view='three';syncDims();sync();closeDockPanel(false);
     loadThreeRenderer().then(renderer=>renderer.setCameraView('perspective')).catch(()=>{});
     quickSetupCompleting=false;closeReleaseNotes(false);quickSetupDraft=null;
+    window.dispatchEvent(new CustomEvent('yp:quick-setup-complete'));
   },360);
   return true;
 }
 function closeReleaseNotes(discardDraft=true){
   if(quickSetupCompleting)return;
   if(!releaseNotesModal.classList.contains('show'))return;
+  quickSetupFirstRun=false;
   if(discardDraft)quickSetupDraft=null;
   releaseNotesModal.classList.remove('show');releaseNotesModal.setAttribute('aria-hidden','true');
   document.querySelector('.dock-tool.on')?.focus();
@@ -9109,28 +9143,134 @@ document.addEventListener('keydown',event=>{
   else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
 });
 initQuickSetup();requestAnimationFrame(()=>document.getElementById('releaseClose').focus());
-window.YPQuickSetupBridge={getState:()=>({step:quickSetupStep,draft:quickSetupDraft?{...quickSetupDraft}:null,open:releaseNotesModal.classList.contains('show')}),
+window.YPQuickSetupBridge={getState:()=>({step:quickSetupStep,firstRun:quickSetupFirstRun,draft:quickSetupDraft?{...quickSetupDraft}:null,open:releaseNotesModal.classList.contains('show')}),
   open(){quickSetupDraft=quickSetupDraftFromEditor();quickSetupCompleting=false;releaseNotesModal.classList.add('show');releaseNotesModal.setAttribute('aria-hidden','false');setQuickSetupStep('intro');},close:()=>closeReleaseNotes(true)};
 
 function openM(id){document.getElementById(id).classList.add('show');}
 function closeM(id){document.getElementById(id).classList.remove('show');}
 function sendQuote(){
-  const n=document.getElementById('qn').value.trim(),t=document.getElementById('qt').value.trim();
-  if(!n||!t){alert('กรุณากรอกชื่อและเบอร์โทร');return;}
-  document.getElementById('qMsg').innerHTML='ขอบคุณคุณ <b>'+esc(n)+'</b> ทีมงานจะติดต่อกลับที่ '+esc(t)+
-    '<br><span style="color:var(--tx3);font-size:11.5px">แนบ: '+cat().n+' · กว้าง '+S.W+' ลึก '+S.D+
-    ' · '+typ().n+'</span>';
-  document.getElementById('qForm').style.display='none';
-  document.getElementById('qDone').style.display='block';}
+  if(window.YPHandoffUI)window.YPHandoffUI.open();
+  else alert('ระบบเตรียมชุดงานยังไม่พร้อม กรุณารอสักครู่แล้วลองใหม่');}
 
 document.querySelectorAll('.qi').forEach(i=>{i.style.cssText=
   'width:100%;padding:10px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);outline:none';});
 document.getElementById('stW').value=1.2;document.getElementById('stD').value=1.2;
 document.getElementById('stHv').value=2.4;
-build();syncDims();sync();initGlobalNumericResets();loadMyAssets();
+build();syncDims();sync();initGlobalNumericResets();const projectAssetsReady=loadMyAssets();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>render());
 window.addEventListener('resize',positionObjectToolbar,{passive:true});
 window.getBoothSpec=()=>JSON.parse(serializeBoothSpec());
+/* Project I/O keeps the existing state object and renderer integrations intact. */
+window.YPProjectBridge={
+  ready:projectAssetsReady,
+  handoffGeometry(spec){
+    // Collision helpers normalize objects; only pass clones so inspection never edits the scene.
+    return spec.objects.map(source=>{
+      const obj=structuredClone(source);
+      try{
+        const volumes=worldCollisionVolumes(objectCatalogDef(obj.catalogId),obj.size,obj.position.x,obj.position.z,obj.rotationY||0,obj);
+        const points=volumes.flatMap(volume=>volume.shape.corners);
+        if(!points.length)return {id:obj.id,bounds:null};
+        return {id:obj.id,bounds:{x0:Math.min(...points.map(p=>p.x)),x1:Math.max(...points.map(p=>p.x)),z0:Math.min(...points.map(p=>p.z)),z1:Math.max(...points.map(p=>p.z))}};
+      }catch{return {id:obj.id,bounds:null};}
+    });
+  },
+  selectForHandoff(id){
+    if(!objectById(id))throw new Error('ไม่พบวัตถุนี้แล้ว กรุณาตรวจสรุปใหม่');
+    setObjectSelection([id],id);logoEditor.selected=false;syncObjectControls();
+    if(threeRenderer)threeRenderer.setSceneSelection([id],id);
+    if(S.view==='plan')render();
+  },
+  capture(){
+    const spec=JSON.parse(serializeBoothSpec());
+    // Generated AI requests/results are session artifacts, not editable design data.
+    if(spec.aiRendering){spec.aiRendering.preview=null;spec.aiRendering.renderPackage=null;}
+    const used=new Set(spec.objects.map(object=>object.catalogId));
+    const assets=CUSTOM_ASSETS.filter(item=>used.has(item.catalogId)).map(item=>({id:item.catalogId,name:item.name,size:{...item.size},file:item.file}));
+    return {spec,assets};
+  },
+  restore(snapshot){
+    window.YPProjectStore.validateSpec(snapshot.spec);
+    const initial=JSON.parse(INITIAL_BOOTH_SPEC_JSON),next={...initial,...structuredClone(snapshot.spec)};
+    for(const [key,value] of Object.entries(initial)){
+      // Existing projects may deliberately have no logo, accent or alpha analysis.
+      if(next[key]===null&&['logo','logoAcc','logoHasTransparency'].includes(key))continue;
+      if(value!==null&&!Array.isArray(value)&&typeof next[key]!==typeof value)throw new Error('ชนิดข้อมูลไม่ถูกต้อง: '+key);
+    }
+    if(!TYPES.some(item=>item.k===next.type)||!ALLCATS.some(item=>item.k===next.cat))throw new Error('ไม่รู้จักประเภทบูธหรือธุรกิจ');
+    const embedded=new Set(snapshot.assets.map(item=>item.id));
+    if(next.objects.some(object=>!embedded.has(object.catalogId)&&!objectCatalogDef(object.catalogId)))throw new Error('แบบนี้ใช้อุปกรณ์ที่ไม่มีในคลังรุ่นนี้');
+    if(threeRenderer?.pointerDrag)throw new Error('กรุณาวางวัตถุให้เสร็จก่อนเปิดแบบ');
+    const previous=this.capture(),previousCatalog=CUSTOM_ASSETS.slice(),previousEditor=structuredClone(objectEditor),previousLayout=lastValidLayout;
+    const apply=state=>{
+      Object.keys(S).forEach(key=>delete S[key]);Object.assign(S,state);
+      setObjectSelection([]);objectEditor.multiSelect=false;objectEditor.past.length=0;objectEditor.future.length=0;
+      objectEditor.moveMode='smart';objectEditor.transformMode='move';logoEditor.selected=false;lastValidLayout=null;
+      aiConceptUI.proposal=null;aiConceptUI.suggestions=[];aiConceptUI.selectedIds.clear();aiConceptUI.lastReport=null;
+      lastPreparedRenderPackage=null;sceneStateSignature='';
+      sceneAssetRegistry.clearObjectBindings();sceneAssetRegistry.syncAssets([]);
+      assetAttachmentGraph.load(S.assetAttachmentGraph,{resolve:false});
+      closeAssetSettings();document.getElementById('brand').value=S.brand;
+      if(threeRenderer){threeRenderer.cancelCameraTransition?.();threeRenderer.currentKey='';threeRenderer.hasFramed=false;threeRenderer.clearMagneticSnapPreview?.();}
+      const savedCamera=structuredClone(S.aiRendering?.camera||null);
+      syncDims();syncLayoutInputs();sync();
+      if(threeRenderer&&savedCamera){threeRenderer.applyCameraManifest(savedCamera);S.aiRendering.camera=savedCamera;}
+      document.querySelectorAll('[data-v]').forEach(button=>{const active=button.dataset.v===S.view;button.classList.toggle('on',active);button.setAttribute('aria-selected',String(active));});
+    };
+    try{
+      for(const record of snapshot.assets){
+        const index=CUSTOM_ASSETS.findIndex(item=>item.catalogId===record.id),item=normalizeMyAsset(record);
+        if(index<0)CUSTOM_ASSETS.push(item);else CUSTOM_ASSETS[index]=item;
+        const url=CUSTOM_ASSET_URLS.get(record.id);if(url)URL.revokeObjectURL(url);CUSTOM_ASSET_URLS.delete(record.id);
+        threeRenderer?.furnitureTemplates?.delete(record.id);
+      }
+      apply(next);renderMyAssetList();window.YPQuickSetupBridge.close();
+    }catch(error){CUSTOM_ASSETS.splice(0,CUSTOM_ASSETS.length,...previousCatalog);apply(previous.spec);Object.assign(objectEditor,previousEditor);lastValidLayout=previousLayout;syncObjectControls();renderMyAssetList();throw error;}
+  },
+  basicMode(){if(objectEditor.transformMode==='scale')setObjectTransformMode('move');const detail=document.getElementById('moveAdvanced');if(detail)detail.open=false;if(document.querySelector('[data-asset-tab="editor"]')?.getAttribute('aria-selected')==='true')setAssetTab('catalog');},
+};
+window.YPStarterBridge={
+  context(){
+    const linked=new Set();
+    (S.assetAttachmentGraph?.attachments||[]).forEach(link=>{linked.add(link.childAssetId||link.assetId);linked.add((link.attachment||link).targetAssetId);});
+    S.objects.forEach(obj=>{const parent=obj.attachment?.targetId||obj.placement?.targetId;if(parent){linked.add(obj.id);linked.add(parent);}});
+    const protectedObjects=S.objects.filter(obj=>objectLocked(obj)||['entranceFrame','downlightBeam','brandCopy'].includes(obj.type)||obj.attachment||linked.has(obj.id));
+    // Keep complete groups if any member is protected, so group relationships survive.
+    const groups=new Set(protectedObjects.map(obj=>obj.groupId).filter(Boolean));
+    const kept=S.objects.filter(obj=>protectedObjects.includes(obj)||groups.has(obj.groupId));
+    const obstacles=[];
+    kept.forEach(obj=>worldCollisionVolumes(objectCatalogDef(obj.catalogId),obj.size,obj.position.x,obj.position.z,obj.rotationY||0,obj).forEach(volume=>{
+      if(volume.minY>=2.05||volume.maxY<=0)return;
+      const points=volume.shape.corners;obstacles.push({x0:Math.min(...points.map(p=>p.x)),x1:Math.max(...points.map(p=>p.x)),z0:Math.min(...points.map(p=>p.z)),z1:Math.max(...points.map(p=>p.z))});
+    }));
+    let room=null;
+    if(hasStore()){const g=storeGeom(boothWallThickness(S));room={x0:g.x,x1:g.x+g.w,z0:g.y,z1:g.y+g.d};
+      // Reserve approach space on every exposed side, conservatively including the door swing.
+      obstacles.push({x0:Math.max(0,room.x0-.85),x1:Math.min(S.W,room.x1+.85),z0:Math.max(0,room.z0-.85),z1:Math.min(S.D,room.z1+.85)});}
+    const removed=S.objects.filter(obj=>!kept.includes(obj));
+    const sourceKey=JSON.stringify({W:S.W,D:S.D,H:S.H,type:S.type,cornerSide:S.cornerSide,raise:S.raise,room,door:[S.stDoor,S.stDoorType,S.doorOff],objects:S.objects,graph:S.assetAttachmentGraph});
+    return {width:S.W,depth:S.D,height:S.H,type:S.type,walls:typ().walls.slice(),wallThickness:boothWallThickness(S),room,obstacles,
+      keptIds:kept.map(obj=>obj.id),removedIds:removed.map(obj=>obj.id),sourceKey,
+      catalog:OBJECT_CATALOG.filter(item=>!item.hiddenFromCatalog).map(item=>({catalogId:item.catalogId,name:item.name,size:{...item.size}})),
+      accept:p=>isCatalogPlacementValid(p.catalogId,p.x,p.z,p.rotationY,null,null,true)};
+  },
+  snapshot(plan){
+    const context=this.context();if(!plan.ok||context.sourceKey!==plan.sourceKey)throw new Error('แบบมีการเปลี่ยนแปลง กรุณาเปิดตัวอย่างผังใหม่');
+    const next=window.YPProjectBridge.capture(),kept=new Set(context.keptIds),removed=new Set(context.removedIds);
+    next.spec.objects=next.spec.objects.filter(obj=>kept.has(obj.id));
+    for(const placement of plan.placements){
+      if(!context.accept(placement))throw new Error('ตำแหน่งอุปกรณ์ไม่ผ่านการตรวจ กรุณาจัดวางเอง');
+      const object=makeCatalogObject(placement.catalogId,placement.x,placement.z);if(!object)throw new Error('ไม่พบอุปกรณ์ในคลัง');
+      object.rotationY=placement.rotationY;object.starterSource='purpose-v1';normalizeSceneObjectModel(object,objectCatalogDef(object.catalogId));next.spec.objects.push(object);
+    }
+    Object.keys(next.spec.sceneItemState||{}).forEach(id=>{if(removed.has(id))delete next.spec.sceneItemState[id];});
+    next.spec.sceneAssetRegistry={version:2,assets:(next.spec.sceneAssetRegistry?.assets||[]).filter(asset=>!removed.has(asset.id))};
+    next.spec.sceneSnapData={version:1,anchors:[],surfaces:[]};
+    next.spec.designPurpose=plan.purpose;next.spec.starterLayout={version:1,purpose:plan.purpose,createdAt:new Date().toISOString()};
+    const used=new Set(next.spec.objects.map(obj=>obj.catalogId));next.assets=next.assets.filter(asset=>used.has(asset.id));
+    return next;
+  }
+};
 window.SceneAssetRegistryAPI={
   registerAsset(asset,object3D=null){const registered=sceneAssetRegistry.registerAsset(asset,object3D,{replace:false});S.sceneAssetRegistry=sceneAssetRegistry.serialize();return JSON.parse(JSON.stringify(registered));},
   unregisterAsset(assetId){
@@ -9240,5 +9380,20 @@ buildGeometryManifest(S);
 window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispose();},{once:true});
 </script>
 <script type="module" src="js/asset-editor/asset-editor.js?v=20260829-3"></script>
+<script src="js/project-store.js?v=20260905-1"></script>
+<script src="js/project-workspace.js?v=20260908-2"></script>
+<script src="js/starter-layouts.js?v=20260905-1"></script>
+<script src="js/starter-layout-ui.js?v=20260908-2"></script>
+<link rel="stylesheet" href="css/handoff.css?v=20260905-1">
+<script src="js/handoff-package.js?v=20260905-1"></script>
+<script src="js/handoff-ui.js?v=20260905-1"></script>
+<link rel="stylesheet" href="css/compare.css?v=20260907-1">
+<script src="js/compare.js?v=20260907-1"></script>
+<script src="js/compare-preview.js?v=20260907-1"></script>
+<script src="js/compare-ui.js?v=20260907-1"></script>
+<link rel="stylesheet" href="css/inline-templates.css?v=20260908-2">
+<script src="js/inline-templates.js?v=20260908-2"></script>
+<script src="js/inline-template-ui.js?v=20260908-2"></script>
+<script src="js/inline-wizard.js?v=20260908-2"></script>
 </body>
 </html>

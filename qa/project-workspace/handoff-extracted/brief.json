@@ -1,0 +1,50 @@
+{
+  "format": "yuppie-booth-handoff",
+  "version": 1,
+  "createdAt": "2026-09-05T05:16:47.926Z",
+  "projectId": "dee0653f-4360-47fb-ac76-49cc0defa14e",
+  "projectName": "บูธของฉัน",
+  "selected": "A",
+  "status": "prepared-offline-not-sent",
+  "brief": {
+    "contact": "ทดสอบ ลูกค้า",
+    "phone": "0812345678",
+    "company": "",
+    "event": "",
+    "venue": "",
+    "install": "",
+    "dismantle": "",
+    "budget": "",
+    "notes": "https://example.test <script>bad()</script>"
+  },
+  "booth": {
+    "width": 6,
+    "depth": 3,
+    "height": 2.4,
+    "unit": "m",
+    "brand": "",
+    "purpose": "",
+    "type": "inline",
+    "storage": "none"
+  },
+  "equipment": [
+    {
+      "id": "obj-mtnxkhkl-1",
+      "catalogId": "counter-standard",
+      "name": "counter-standard",
+      "size": {
+        "w": 1.2,
+        "d": 0.6,
+        "h": 1
+      },
+      "position": {
+        "x": 0.6,
+        "y": 0,
+        "z": 3.55
+      },
+      "rotationY": 0
+    }
+  ],
+  "disclaimer": "แบบร่างสำหรับหารือ ไม่ใช่ใบเสนอราคาหรือแบบผลิต รายการอุปกรณ์ไม่ใช่ BOM ครบทุกวัสดุ ทีมงานต้องตรวจขนาด โครงสร้าง และราคาก่อนผลิต",
+  "imageIncluded": true
+}

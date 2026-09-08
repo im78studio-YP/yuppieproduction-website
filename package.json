@@ -7,6 +7,14 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "test:projects": "node --test qa/project-workspace/project-store.test.mjs qa/project-workspace/starter-layouts.test.mjs qa/project-workspace/handoff.test.mjs qa/project-workspace/compare.test.mjs qa/project-workspace/inline-templates.test.mjs qa/project-workspace/inline-wizard.test.mjs",
+    "test:wizard:browser": "node qa/project-workspace/inline-wizard-smoke.cjs",
+    "test:templates:browser": "node qa/project-workspace/inline-templates-smoke.cjs",
+    "test:compare:browser": "node qa/project-workspace/compare-smoke.cjs",
+    "test:handoff:browser": "node qa/project-workspace/handoff-smoke.cjs",
+    "test:readiness:browser": "node qa/project-workspace/readiness-smoke.cjs",
+    "test:starters:browser": "node qa/project-workspace/starter-smoke.cjs",
+    "test:projects:browser": "node qa/project-workspace/smoke.cjs",
     "test": "node --test qa/quick-setup/quick-setup-context.test.mjs qa/ai-rendering/ai-staging.test.mjs qa/ai-rendering/ai-render-pipeline.test.mjs qa/ai-rendering/ai-render-page.test.mjs qa/ai-rendering/ai-render-intent.test.mjs qa/asset-list/asset-list-page.test.mjs qa/asset-list/fine-position-controls.test.mjs qa/auto-lighting/auto-lighting-phase1.test.mjs qa/lightbox-maker/raised-front.test.mjs qa/lightbox-maker/front-color-5d.test.mjs qa/lightbox-maker/backing-sheet.test.mjs qa/lightbox-maker/preview-grid.test.mjs qa/scene-asset-registry/scene-asset-registry.test.mjs qa/smart-snap/smart-snap-engine.test.mjs qa/attachment/asset-attachment-graph.test.mjs"
   },
   "dependencies": {

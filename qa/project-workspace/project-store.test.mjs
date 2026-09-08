@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+await import('../../public/yp-web-ai/js/project-store.js');
+const api=globalThis.YPProjectStore;
+const base=()=>({spec:{version:3,W:6,D:3,H:2.4,view:'three',objects:[],brand:'ACME',logo:null},assets:[]});
+const glb=await readFile(new URL('../../public/yp-web-ai/assets/furniture/counter-standard.glb',import.meta.url));
+const custom=()=>{const s=base();s.spec.objects.push({id:'object1',catalogId:'my-asset-test',unitPrice:0,position:{x:1,y:0,z:1},size:{w:1,d:1,h:1}});s.assets.push({id:'my-asset-test',name:'เคาน์เตอร์',size:{w:1,d:1,h:1},file:new Blob([glb])});return s;};
+test('A/B duplicate is deep and preserves source',()=>{const p=api.create(base());api.duplicate(p,base());p.variants.B.spec.brand='B';assert.equal(p.variants.A.spec.brand,'ACME');assert.equal(p.active,'B');});
+test('portable file roundtrips both variants, logo and GLB bytes',async()=>{
+  const s=custom();s.spec.logo='data:image/png;base64,aGVsbG8=';const p=api.create(s);api.duplicate(p,s);p.variants.B.spec.W=8;
+  const loaded=api.fromText(await api.toText(p));assert.equal(loaded.variants.A.spec.W,6);assert.equal(loaded.variants.B.spec.W,8);
+  assert.equal(loaded.variants.A.spec.logo,s.spec.logo);assert.deepEqual(Buffer.from(await loaded.variants.B.assets[0].file.arrayBuffer()),glb);
+});
+test('rejects unsupported schema without changing input',()=>{const p=api.create(base()),before=JSON.stringify(p);assert.throws(()=>api.fromText('{"format":"x"}'));assert.equal(JSON.stringify(p),before);p.version=2;assert.throws(()=>api.validate(p));});
+test('rejects missing custom files and duplicate object IDs',()=>{const p=api.create(custom());p.variants.A.assets=[];assert.throws(()=>api.validate(p),/My Asset/);const q=api.create(custom());q.variants.A.spec.objects.push({...q.variants.A.spec.objects[0]});assert.throws(()=>api.validate(q));});
+test('rejects prototype pollution keys and HTML injection',()=>{assert.throws(()=>api.fromText('{"__proto__":{"polluted":true}}'));assert.equal({}.polluted,undefined);const s=base();s.spec.photo='x" onerror="alert(1)';assert.throws(()=>api.validateSpec(s.spec),/รูปภาพ/);});
+test('rejects external image references and malformed dimensions',()=>{const s=base();s.spec.logo='https://example.test/a.png';assert.throws(()=>api.validateSpec(s.spec));s.spec.logo=null;s.spec.W='6';assert.throws(()=>api.validateSpec(s.spec));});
+test('rejects corrupt GLB header',async()=>{const p=api.create(custom()),file=JSON.parse(await api.toText(p));file.variants.A.assets[0].data=btoa('not-a-valid-glb');assert.throws(()=>api.fromText(JSON.stringify(file)),/GLB/);});
+test('import model IDs are isolated with all catalog references updated',()=>{const p=api.create(custom());p.variants.A.spec.sceneAssetRegistry={assets:[{metadata:{catalogId:'my-asset-test'}}]};api.isolateAssets(p);const id=p.variants.A.assets[0].id;assert.notEqual(id,'my-asset-test');assert.equal(p.variants.A.spec.objects[0].catalogId,id);assert.equal(p.variants.A.spec.sceneAssetRegistry.assets[0].metadata.catalogId,id);api.validate(p);});
+test('capture replaces only the active variant',()=>{const p=api.create(base());api.duplicate(p,base());const s=base();s.spec.H=3;api.capture(p,s);s.spec.H=4;assert.equal(p.variants.A.spec.H,2.4);assert.equal(p.variants.B.spec.H,3);});
+test('rejects non-finite object position',()=>{const p=api.create(custom());p.variants.A.spec.objects[0].position.x=NaN;assert.throws(()=>api.validate(p));});

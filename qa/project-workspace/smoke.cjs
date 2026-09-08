@@ -1,0 +1,70 @@
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs/promises');
+(async()=>{
+  const browser=await chromium.launch({channel:'chrome',headless:true,args:['--disable-gpu']});
+  try{
+    const page=await browser.newPage({viewport:{width:1440,height:1000},acceptDownloads:true});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto('http://127.0.0.1:4173/yp-web-ai/index.html');
+    await page.waitForFunction(()=>window.YPProjectWorkspace&&document.getElementById('projectStatus').textContent!=='กำลังเตรียมระบบบันทึก…');
+    await page.evaluate(()=>window.YPQuickSetupBridge.close());
+    await page.waitForFunction(()=>document.querySelector('#view canvas'),{},{timeout:60000});
+    console.log('BOOT',await page.locator('#projectStatus').textContent());
+    console.log('CAPTURE',await page.evaluate(()=>{const p=YPProjectStore.create(YPProjectBridge.capture());try{YPProjectStore.validate(p);return {ok:true,objects:p.variants.A.spec.objects.length};}catch(e){return {error:e.message};}}));
+    await page.locator('#projectName').fill('ทดสอบ A-B');
+    await page.evaluate(async()=>{
+      addCatalogObject(OBJECT_CATALOG.find(item=>item.type!=='structure').catalogId);
+      const s=YPProjectBridge.capture();s.spec.brand='BRAND A';s.spec.W=6;
+      const c=document.createElement('canvas');c.width=64;c.height=32;const ctx=c.getContext('2d');ctx.fillStyle='#f72585';ctx.fillRect(0,0,64,32);s.spec.logo=c.toDataURL();
+      const file=await (await fetch('./assets/furniture/counter-standard.glb')).blob();
+      s.assets.push({id:'my-asset-smoke',name:'Uploaded counter',size:{w:1,d:.5,h:1},file});
+      s.spec.objects.push({id:'obj-custom-smoke',catalogId:'my-asset-smoke',unitPrice:0,position:{x:2,y:0,z:2},size:{w:1,d:.5,h:1},rotationX:0,rotationY:0,rotationZ:0,locked:false});
+      YPProjectBridge.restore(s);
+    });
+    await page.locator('#projectDuplicate').click();
+    await page.waitForFunction(()=>document.getElementById('projectB').getAttribute('aria-pressed')==='true'&&!document.getElementById('projectB').disabled);
+    await page.evaluate(()=>{const s=YPProjectBridge.capture();s.spec.brand='BRAND B';s.spec.W=8;s.spec.objects.find(o=>o.id==='obj-custom-smoke').position.x=4;YPProjectBridge.restore(s);});
+    await page.locator('#projectA').click();
+    await page.waitForFunction(()=>window.getBoothSpec().brand==='BRAND A');
+    assert.equal(await page.evaluate(()=>getBoothSpec().W),6);
+    assert.equal(await page.evaluate(()=>getBoothSpec().objects.find(o=>o.id==='obj-custom-smoke').position.x),2);
+    await page.locator('#projectB').click();
+    await page.waitForFunction(()=>getBoothSpec().brand==='BRAND B');
+    assert.equal(await page.evaluate(()=>getBoothSpec().W),8);
+    assert.equal(await page.evaluate(()=>getBoothSpec().objects.find(o=>o.id==='obj-custom-smoke').position.x),4);
+    await page.locator('#editorLevelToggle').click();assert.equal(await page.locator('body').getAttribute('data-editor-level'),'advanced');
+    await page.locator('#editorLevelToggle').click();assert.equal(await page.locator('body').getAttribute('data-editor-level'),'basic');
+    await page.evaluate(()=>{setObjectSelection(['obj-custom-smoke']);syncObjectControls();});
+    assert.equal(await page.locator('#btnScaleObject').isVisible(),false);
+    await page.locator('#editorLevelToggle').click();assert.equal(await page.locator('#btnScaleObject').isVisible(),true);
+    await page.locator('#editorLevelToggle').click();
+    const pending=page.waitForEvent('download');await page.locator('#projectSave').click();const download=await pending;
+    const text=await fs.readFile(await download.path(),'utf8');assert.equal(JSON.parse(text).variants.A.spec.brand,'BRAND A');assert.equal(JSON.parse(text).variants.B.spec.brand,'BRAND B');
+    await page.locator('#projectFile').setInputFiles({name:'roundtrip.ypbooth.json',mimeType:'application/json',buffer:Buffer.from(text)});
+    await page.locator('#projectConfirm').click();await page.waitForFunction(()=>getBoothSpec().brand==='BRAND B'&&!document.getElementById('projectSave').disabled);
+    assert.equal(await page.evaluate(()=>YPProjectBridge.capture().assets.length),1);
+    assert.equal(await page.evaluate(()=>getBoothSpec().objects.length),2);
+    assert.ok(await page.evaluate(()=>getBoothSpec().logo.startsWith('data:image/png;base64,')));
+    // A schema-correct but invalid option must roll back rather than clear the scene.
+    const wrong=JSON.parse(text);wrong.variants.B.spec.pair='missing-option';
+    await page.locator('#projectFile').setInputFiles({name:'bad-option.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(wrong))});
+    await page.locator('#projectConfirm').click();await page.waitForFunction(()=>document.getElementById('projectStatus').dataset.error==='true');
+    assert.equal(await page.evaluate(()=>getBoothSpec().brand),'BRAND B');
+    await page.locator('#projectFile').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{"format":"wrong"}')});
+    await page.waitForFunction(()=>document.getElementById('projectStatus').dataset.error==='true');assert.equal(await page.evaluate(()=>getBoothSpec().brand),'BRAND B');
+    await page.evaluate(()=>YPProjectWorkspace.changed());await page.waitForFunction(()=>document.getElementById('projectStatus').textContent.startsWith('ร่างบันทึก'));
+    await page.reload();await page.locator('#projectRecover').waitFor({state:'visible'});await page.locator('#projectRecover').click();
+    await page.waitForFunction(()=>getBoothSpec().brand==='BRAND B'&&!document.getElementById('projectSave').disabled);
+    await page.waitForFunction(()=>document.querySelector('#view canvas'));
+    assert.ok(!(await page.locator('#price').textContent()).includes('NaN'));
+    await page.screenshot({path:'qa/project-workspace/desktop.png',animations:'disabled'});
+    await page.setViewportSize({width:390,height:844});await page.locator('#dockClose').click();await page.screenshot({path:'qa/project-workspace/mobile.png',animations:'disabled'});
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),'mobile horizontal overflow');
+    console.log('ERRORS',JSON.stringify(errors));assert.deepEqual(errors,[]);
+    // Storage failure must not claim that the draft has been saved.
+    await page.evaluate(()=>{YPProjectStore.writeDraft=async()=>{throw new Error('QuotaExceededError');};YPProjectWorkspace.changed();});
+    await page.waitForFunction(()=>document.getElementById('projectStatus').textContent.includes('QuotaExceededError'));
+    console.log('PASS: A/B independence, file roundtrip, invalid file, draft recovery, advanced toggle, mobile bounds');
+  }finally{await browser.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});
