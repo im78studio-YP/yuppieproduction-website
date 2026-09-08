@@ -5,7 +5,7 @@ await import('../../public/yp-web-ai/js/peninsular-templates.js');
 const api=globalThis.YPPeninsularTemplates;
 const html=await readFile(new URL('../../public/yp-web-ai/index.html',import.meta.url),'utf8');
 const catalog=Function('furnitureItem','return '+html.match(/const OBJECT_CATALOG=(\[[\s\S]*?\]);/)[1])(item=>item);
-test('four distinct reference-derived layouts',()=>{assert.equal(api.templates.length,4);assert.equal(new Set(api.templates.map(t=>t.id)).size,4);assert.equal(new Set(api.templates.map(t=>JSON.stringify(t.objects))).size,4);});
+test('eight distinct reference-derived layouts',()=>{assert.equal(api.templates.length,8);assert.equal(new Set(api.templates.map(t=>t.id)).size,8);assert.equal(new Set(api.templates.map(t=>JSON.stringify(t.objects))).size,8);});
 for(const t of api.templates)test(t.id+' preserves source and logo, fits a 6x3x2.4 booth, and has editable parts',()=>{
   const initial={W:6,D:6,H:2.4,type:'inline',logo:'data:image/png;base64,YQ==',logoColor:'#ee3c96',objects:[],sceneItemState:{}};
   const before=structuredClone(initial),snapshot=api.build(t.id,initial,catalog),s=snapshot.spec;
@@ -24,3 +24,16 @@ test('Blue Pavilion keeps fascia branding, curved signs and four inward-facing c
   assert.equal(s.objects.filter(o=>o.type==='table').length,2);
 });
 test('Peninsular still has only the back wall',()=>assert.match(html,/k:'penin'[^\n]+walls:\['back'\]/));
+test('new references retain their distinct structural features',()=>{
+  const make=id=>api.build(id,{logo:'data:image/png;base64,YQ=='},catalog).spec;
+  assert.equal(make('penin-aqua-curve').objects.filter(o=>o.type==='fasciaCurve').length,2);
+  assert.equal(make('penin-timber-noir').objects.filter(o=>o.type==='ringPendant').length,2);
+  assert.equal(make('penin-blue-axis').objects.filter(o=>o.type==='crossPier').length,1);
+  for(const id of ['penin-aqua-curve','penin-timber-noir','penin-blue-axis'])assert.ok(make(id).objects.find(o=>o.type==='brandCopy').appearance.textureData);
+});
+test('Orchard has editable organic structures, merchandising and side entry gaps',()=>{
+  const s=api.build('penin-orchard',{logo:'data:image/png;base64,YQ=='},catalog).spec;
+  for(const [type,count] of [['organicCanopy',2],['treePier',2],['organicDisplay',1],['flutedCounter',1],['table',2]])assert.equal(s.objects.filter(o=>o.type===type).length,count);
+  const counter=s.objects.find(o=>o.type==='flutedCounter');assert.ok(counter.position.x-counter.size.w/2>=.6);assert.ok(6-counter.position.x-counter.size.w/2>=.6);
+  assert.equal(counter.appearance.mode,'original');assert.equal(s.objects.find(o=>o.type==='organicDisplay').appearance.mode,'original');
+});

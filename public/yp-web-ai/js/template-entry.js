@@ -1,0 +1,44 @@
+(async function(){
+  'use strict';
+  const url=new URL(location.href),id=url.searchParams.get('useTemplate');
+  if(!id||url.searchParams.get('comparePreview')==='1')return;
+  const groups=[{library:window.YPInlineTemplates,bridge:window.YPInlineTemplateBridge,folder:'inline-templates'},{library:window.YPPeninsularTemplates,bridge:window.YPPeninsularTemplateBridge,folder:'peninsular-templates'}];
+  const group=groups.find(g=>g.library?.templates.some(t=>t.id===id)),template=group?.library.templates.find(t=>t.id===id);
+  // Consume the navigation request once: refresh must not reapply the template.
+  url.searchParams.delete('useTemplate');try{history.replaceState(null,'',url.href);}catch{/* file:// may restrict history changes. */}
+  const dialog=document.createElement('dialog');dialog.className='project-dialog';dialog.id='templateEntryDialog';dialog.setAttribute('aria-labelledby','templateEntryTitle');
+  dialog.innerHTML='<h2 id="templateEntryTitle"></h2><img id="templateEntryImage" alt="" style="width:100%;border-radius:8px" hidden><p id="templateEntryStatus" role="status" aria-live="polite" aria-atomic="true"></p><div class="project-dialog-actions" id="templateEntryActions"></div><div class="project-dialog-actions" style="margin-top:12px"><button type="button" class="btn" id="templateEntryClose">ปิด / ยังไม่ใช้แบบนี้</button></div>';
+  document.body.append(dialog);
+  const title=dialog.querySelector('h2'),status=document.getElementById('templateEntryStatus'),actions=document.getElementById('templateEntryActions'),close=document.getElementById('templateEntryClose');let busy=false,attempted=false;
+  title.textContent=template?template.name:'ไม่พบเทมเพลตนี้';
+  if(template){const img=document.getElementById('templateEntryImage');img.src='assets/'+group.folder+'/'+template.id+'.png';img.alt=template.name;img.hidden=false;}
+  function setBusy(value){busy=value;dialog.setAttribute('aria-busy',String(value));for(const b of dialog.querySelectorAll('button'))b.disabled=value;}
+  function button(label,handler,key){const b=document.createElement('button');b.className='btn pri';b.type='button';b.textContent=label;b.id=key;b.disabled=busy;b.onclick=handler;actions.append(b);}
+  function feedback(message){status.textContent=message;actions.replaceChildren();
+    if(!template)return;
+    if(window.YPProjectWorkspace?.state().pendingDraft){button('เปิดร่างเดิม',()=>resolve('recover'),'templateEntryRecover');button('ใช้แบบปัจจุบัน',()=>resolve('current'),'templateEntryCurrent');}
+    else button('ใช้แบบนี้',apply,'templateEntryApply');
+  }
+  async function resolve(choice){
+    if(busy)return;setBusy(true);
+    try{const result=await YPProjectWorkspace.resolveTemplateDraft(choice);feedback(result.ok?'พร้อมแล้ว กด “ใช้แบบนี้” เพื่อใช้เทมเพลตที่เลือก โดยระบบจะเก็บแบบปัจจุบันไว้ใน A/B':result.message);}
+    catch(error){feedback('ทำรายการไม่สำเร็จ: '+error.message);}finally{setBusy(false);}
+  }
+  async function apply(){
+    if(busy||!template||!dialog.open)return;attempted=true;setBusy(true);status.textContent='กำลังเตรียมแบบที่เลือก…';actions.replaceChildren();
+    try{
+      const workspace=window.YPProjectWorkspace;
+      if(!workspace?.state().ready){feedback('ระบบโปรเจกต์ยังโหลดไม่เสร็จ รอสักครู่แล้วกด “ใช้แบบนี้” อีกครั้ง');return;}
+      const result=await workspace.useTemplate({makeSnapshot:()=>group.bridge.snapshot(id),name:template.name,initialWizard:true,detailed:true});
+      if(result.ok){window.YPQuickSetupBridge.close();dialog.close();document.getElementById('projectName')?.focus();}
+      else feedback(result.message);
+    }catch(error){feedback('ใช้เทมเพลตไม่สำเร็จ: '+error.message);}finally{setBusy(false);}
+  }
+  close.onclick=()=>{if(!busy)dialog.close();};dialog.oncancel=e=>{if(busy)e.preventDefault();};
+  document.addEventListener('keydown',e=>{if(dialog.open)e.stopPropagation();},true);
+  dialog.showModal();feedback(template?'กำลังเตรียมตัวออกแบบ…':'ลิงก์นี้ไม่ตรงกับเทมเพลตที่มีอยู่ กรุณากลับไปเลือกจากหน้ารวมเทมเพลต');
+  if(!template)return;
+  const deadline=Date.now()+15000;
+  while(dialog.open&&!window.YPProjectWorkspace?.state().ready&&Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,100));
+  if(dialog.open&&!attempted)await apply();
+})();

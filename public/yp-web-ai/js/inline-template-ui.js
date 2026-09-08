@@ -47,8 +47,7 @@
       catch(error){document.getElementById('inlineTemplateStatus').textContent=error.message;}
       finally{for(const b of grid.querySelectorAll('button'))b.disabled=false;}
     };
-    const file=document.createElement('a');file.className='btn';file.href='assets/inline-templates/'+t.id+'.ypbooth.json';file.download=t.id+'.ypbooth.json';file.textContent='ดาวน์โหลดแบบ';
-    const actions=document.createElement('div');actions.className='inline-template-actions';actions.append(apply,file);card.append(img,title,tag,description,actions);grid.append(card);
+    const actions=document.createElement('div');actions.className='inline-template-actions';actions.append(apply);card.append(img,title,tag,description,actions);grid.append(card);
   });
   function open(){opener=document.activeElement;const state=YPProjectWorkspace?.state();document.getElementById('inlineTemplateDestination').textContent='จะสร้างในแบบ '+(state?.active==='A'?'B':'A')+' โดยเก็บแบบ '+(state?.active||'A')+' ปัจจุบันไว้ หากช่องปลายทางมีงานอยู่ ระบบจะถามก่อนแทนที่';document.getElementById('inlineTemplateStatus').textContent='';dialog.showModal();}
   document.getElementById('inlineTemplatesOpen').onclick=open;document.getElementById('inlineTemplatesClose').onclick=close;

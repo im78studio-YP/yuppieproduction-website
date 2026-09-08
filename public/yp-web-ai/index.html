@@ -1739,6 +1739,13 @@ const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:n
 const OBJECT_CATALOG=[
   furnitureItem({catalogId:'panel-standard',category:'display',type:'panel',name:'แผงตกแต่ง / กรอบ',icon:'▯',size:{w:1,d:.12,h:2.4},unitPrice:0,color:'#c6ad82'}),
   furnitureItem({catalogId:'panel-rounded',category:'display',type:'roundedPanel',name:'แผงมุมโค้ง',icon:'▯',size:{w:.7,d:.12,h:1.4},unitPrice:0,color:'#ffffff'}),
+  furnitureItem({catalogId:'fascia-curved',category:'structure',type:'fasciaCurve',name:'ป้ายซุ้มโค้งเข้ามุม',icon:'▯',size:{w:4,d:1.8,h:.4},unitPrice:0,color:'#ffffff'}),
+  furnitureItem({catalogId:'pier-cross',category:'structure',type:'crossPier',name:'เสาตกแต่งทรง X',icon:'X',size:{w:1,d:.22,h:2},unitPrice:0,color:'#ffffff'}),
+  furnitureItem({catalogId:'pendant-ring',category:'decor',type:'ringPendant',name:'โคมห้อยวงแหวน (จำลอง)',icon:'◯',size:{w:.6,d:.6,h:.4},unitPrice:0,color:'#353535'}),
+  furnitureItem({catalogId:'canopy-organic',category:'structure',type:'organicCanopy',name:'ซุ้มโค้งออร์แกนิก',icon:'☁',size:{w:5.7,d:1.65,h:.25},unitPrice:0,color:'#97b622'}),
+  furnitureItem({catalogId:'pier-tree',category:'structure',type:'treePier',name:'เสาตกแต่งกิ่งไม้',icon:'Y',size:{w:1,d:.32,h:2.15},unitPrice:0,color:'#c8ae82'}),
+  furnitureItem({catalogId:'display-organic',category:'display',type:'organicDisplay',name:'ผนังโชว์ช่องโค้ง',icon:'▯',size:{w:4.1,d:.3,h:1.6},unitPrice:0,color:'#ffffff'}),
+  furnitureItem({catalogId:'counter-fluted',category:'reception',type:'flutedCounter',name:'เคาน์เตอร์โค้งหน้าระแนง',icon:'▰',size:{w:4.7,d:.6,h:.8},unitPrice:0,color:'#c2a179'}),
   furnitureItem({catalogId:'entrance-frame',category:'structure',type:'entranceFrame',name:'กรอบทางเข้า',icon:'FRAME',size:{w:1,d:2.4,h:2.4},unitPrice:0,color:'#f2f3f5',
     clearance:0,anchor:'back-right',backWallOnly:true,rotationStep:45,placementPolicy:{preferredTarget:'back-wall',allowedTargets:['floor','wall','storage-room','structure','asset','free'],requiresSurface:false,defaultSpawn:'front-staging',allowOutsideBooth:true},
     capabilities:['floorPlaceable','attachable','resizable','styleable','compound'],
@@ -7416,6 +7423,44 @@ class ThreeBoothRenderer{
         const target=new T.Object3D();target.position.set(x,0,Math.min(.35,cfg.depth));target.name='downlight-target';light.target=target;root.add(target,light);
       }
       root.userData.structureType='downlight-beam';root.userData.structureConfig={...cfg};
+    }else if(obj.type==='organicCanopy'){
+      const w=s.w,d=s.d,shape=new T.Shape();shape.moveTo(-w/2,0);
+      shape.bezierCurveTo(-w/2,d*.48,-w*.4,d*.48,-w*.28,d*.48);shape.bezierCurveTo(-w*.12,d*.48,-w*.12,d*.24,0,d*.24);
+      shape.bezierCurveTo(w*.12,d*.24,w*.12,d*.48,w*.28,d*.48);shape.bezierCurveTo(w*.4,d*.48,w/2,d*.48,w/2,0);
+      shape.bezierCurveTo(w/2,-d*.48,w*.4,-d*.48,w*.28,-d*.48);shape.bezierCurveTo(w*.12,-d*.48,w*.12,-d*.24,0,-d*.24);
+      shape.bezierCurveTo(-w*.12,-d*.24,-w*.12,-d*.48,-w*.28,-d*.48);shape.bezierCurveTo(-w*.4,-d*.48,-w/2,-d*.48,-w/2,0);shape.closePath();
+      const geometry=new T.ExtrudeGeometry(shape,{depth:s.h,bevelEnabled:false,curveSegments:32});geometry.rotateX(Math.PI/2);mesh(geometry,base,[0,s.h,0]);
+    }else if(obj.type==='treePier'){
+      const radius=Math.min(s.w*.035,s.d*.13),pointsFor=end=>[new T.Vector3(0,radius,0),new T.Vector3(0,s.h*.38,0),new T.Vector3(end*s.w*.45,s.h*.7,0),new T.Vector3(end*s.w*.45,s.h-radius,0)];
+      [-1,-.5,0,.5,1].forEach(end=>mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pointsFor(end)),24,radius,8,false),base,[0,0,0]));
+    }else if(obj.type==='organicDisplay'){
+      const w=s.w,h=s.h,shape=new T.Shape();shape.moveTo(-w/2,0);shape.lineTo(-w/2,h*.73);
+      shape.bezierCurveTo(-w/2,h,-w*.22,h,-w*.16,h*.86);shape.quadraticCurveTo(w*.02,h*.98,w*.13,h*.77);
+      shape.quadraticCurveTo(w*.32,h*.87,w*.37,h*.65);shape.quadraticCurveTo(w/2,h*.68,w/2,h*.45);shape.lineTo(w/2,0);shape.closePath();
+      const hole=new T.Path();hole.absellipse(0,h*.43,w*.35,h*.3,0,Math.PI*2,true);shape.holes.push(hole);
+      mesh(new T.ExtrudeGeometry(shape,{depth:s.d*.32,bevelEnabled:false,curveSegments:32}),base,[0,0,s.d*.18]);
+      bx([w*.78,h*.72,.02],[0,h*.42,-s.d/2+.01],'#eee7d3');
+      [.24,.43,.62].forEach(y=>bx([w*.59,.035,s.d*.75],[0,h*y,0],'#ffffff',{edges:false}));
+    }else if(obj.type==='flutedCounter'){
+      const w=s.w,d=s.d,r=Math.min(d*.42,w*.15),shape=new T.Shape();
+      shape.moveTo(-w/2+r,-d/2);shape.lineTo(w/2-r,-d/2);shape.quadraticCurveTo(w/2,-d/2,w/2,-d/2+r);shape.lineTo(w/2,d/2-r);shape.quadraticCurveTo(w/2,d/2,w/2-r,d/2);
+      shape.lineTo(-w/2+r,d/2);shape.quadraticCurveTo(-w/2,d/2,-w/2,d/2-r);shape.lineTo(-w/2,-d/2+r);shape.quadraticCurveTo(-w/2,-d/2,-w/2+r,-d/2);shape.closePath();
+      const slab=(height,y,color)=>{const g=new T.ExtrudeGeometry(shape,{depth:height,bevelEnabled:false,curveSegments:20});g.rotateX(Math.PI/2);mesh(g,color,[0,y+height,0]);};
+      slab(s.h*.75,0,base);slab(s.h*.25,s.h*.75,'#f3f3ef');
+      const count=Math.max(5,Math.ceil((w-2*r)/.06));for(let i=0;i<count;i++)bx([Math.min(.025,w/count*.4),s.h*.7,.025],[-w/2+r+(i+.5)*(w-2*r)/count,s.h*.35,d/2-.006],'#876b47',{edges:false});
+    }else if(obj.type==='fasciaCurve'){
+      const w=s.w,d=s.d,t=Math.min(.16,w*.12,d*.15),r=Math.min(.65,w*.24,d*.5),shape=new T.Shape();
+      shape.moveTo(-w/2,d/2);shape.lineTo(w/2-r,d/2);shape.quadraticCurveTo(w/2,d/2,w/2,d/2-r);shape.lineTo(w/2,-d/2);
+      shape.lineTo(w/2-t,-d/2);shape.lineTo(w/2-t,d/2-r);shape.quadraticCurveTo(w/2-t,d/2-t,w/2-r,d/2-t);shape.lineTo(-w/2,d/2-t);shape.closePath();
+      const geometry=new T.ExtrudeGeometry(shape,{depth:s.h,bevelEnabled:false,curveSegments:24});geometry.rotateX(Math.PI/2);mesh(geometry,base,[0,s.h,0]);
+    }else if(obj.type==='crossPier'){
+      const shape=new T.Shape(),points=[[-.5,0],[-.23,0],[0,.36],[.23,0],[.5,0],[.17,.5],[.5,1],[.23,1],[0,.64],[-.23,1],[-.5,1],[-.17,.5]];
+      points.forEach(([x,y],i)=>i?shape.lineTo(x*s.w,y*s.h):shape.moveTo(x*s.w,y*s.h));shape.closePath();
+      mesh(new T.ExtrudeGeometry(shape,{depth:s.d,bevelEnabled:false}),base,[0,0,-s.d/2]);
+    }else if(obj.type==='ringPendant'){
+      const radius=Math.min(s.w,s.d)*.44,tube=Math.min(.022,radius*.13),ring=mesh(new T.TorusGeometry(radius,tube,8,48),base,[0,tube,0]);ring.rotation.x=Math.PI/2;
+      const glow=mesh(new T.TorusGeometry(radius,tube*.45,8,48),'#fff7df',[0,tube*.45,0],{emissive:'#fff7df',emissiveIntensity:.7});glow.rotation.x=Math.PI/2;
+      [-1,1].forEach(sign=>bx([.008,Math.max(.01,s.h-tube*2),.008],[sign*radius*.7,(s.h+tube*2)/2,0],dark,{edges:false}));
     }else if(obj.type==='roundedPanel'){
       const w=s.w,h=s.h,r=Math.min(w,h)*.18,shape=new T.Shape();
       shape.moveTo(-w/2+r,0);shape.lineTo(w/2-r,0);shape.quadraticCurveTo(w/2,0,w/2,r);
@@ -9413,9 +9458,10 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/compare-ui.js?v=20260907-1"></script>
 <link rel="stylesheet" href="css/inline-templates.css?v=20260909-3">
 <script src="js/inline-templates.js?v=20260908-2"></script>
-<script src="js/inline-template-ui.js?v=20260908-2"></script>
-<script src="js/peninsular-templates.js?v=20260909-1"></script>
-<script src="js/peninsular-template-ui.js?v=20260909-3"></script>
+<script src="js/inline-template-ui.js?v=20260909-6"></script>
+<script src="js/peninsular-templates.js?v=20260909-5"></script>
+<script src="js/peninsular-template-ui.js?v=20260909-5"></script>
 <script src="js/inline-wizard.js?v=20260908-3"></script>
+<script src="js/template-entry.js?v=20260909-6"></script>
 </body>
 </html>

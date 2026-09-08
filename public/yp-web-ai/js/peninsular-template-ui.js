@@ -10,6 +10,21 @@
         const colors=['#36bcdf','#a7e8f4',t.primary,'#60cde9','#dcf5fc'];
         for(let row=0;row<5;row++)for(let col=0;col<7;col++){const px=x+col*115-60,py=180+row*115;c.fillStyle=colors[(row*3+col)%colors.length];c.beginPath();c.moveTo(px,py);c.lineTo(px+115,py+115);c.lineTo(px,py+115);c.closePath();c.fill();}
         c.restore();}
+    }else if(t.id==='penin-aqua-curve'){
+      c.fillStyle='#d8f2f3';c.fillRect(1110,180,620,500);c.fillStyle=t.primary;c.fillRect(0,660,1800,35);
+      c.strokeStyle=t.primary;c.lineWidth=12;for(let i=0;i<4;i++){c.beginPath();c.arc(1530,420,110+i*36,-Math.PI*.7,Math.PI*.6);c.stroke();}
+    }else if(t.id==='penin-timber-noir'){
+      c.fillStyle='#bd9e78';c.beginPath();c.moveTo(880,110);c.lineTo(1800,110);c.lineTo(1800,720);c.lineTo(1240,720);c.closePath();c.fill();
+      c.save();c.beginPath();c.rect(1420,110,380,610);c.clip();c.strokeStyle=t.primary;c.lineWidth=18;
+      for(let i=-600;i<800;i+=42){c.beginPath();c.moveTo(1420+i,110);c.lineTo(1800+i,720);c.stroke();}c.restore();
+      c.fillStyle='#d7b079';c.fillRect(60,265,680,5);
+    }else if(t.id==='penin-orchard'){
+      c.fillStyle='#d9d3ad';c.fillRect(0,540,1800,180);c.strokeStyle='#ad9876';c.lineWidth=5;
+      for(let x=0;x<1800;x+=16){c.beginPath();c.moveTo(x,545);c.lineTo(x,720);c.stroke();}
+      c.fillStyle='#e4e9cf';for(let i=0;i<7;i++){c.beginPath();c.ellipse(100+i*270,390,70,30,-.65,0,Math.PI*2);c.fill();}
+    }else if(t.id==='penin-blue-axis'){
+      c.fillStyle='#f3f5f6';c.beginPath();c.moveTo(0,270);c.lineTo(1100,660);c.lineTo(1100,720);c.lineTo(0,720);c.closePath();c.fill();
+      c.strokeStyle='#dce3e8';c.lineWidth=38;c.beginPath();c.moveTo(1120,700);c.lineTo(1310,270);c.lineTo(1580,270);c.lineTo(1740,700);c.stroke();
     }else{c.fillStyle='#c6ad82';c.fillRect(0,680,1800,40);['#aa713e','#b79447','#955451'].forEach((color,i)=>{c.fillStyle=color;c.fillRect(630+i*125,380,85,190);c.fillRect(650+i*125,345,45,40);c.fillStyle='#f5f0e3';c.fillRect(635+i*125,430,75,65);});}
     c.fillStyle=t.id==='penin-adventure'?'#ffffff':'#353a34';c.textAlign='center';c.font='24px sans-serif';c.fillText(t.graphic,t.id==='penin-adventure'?630:t.id==='penin-connect'?440:900,305);return canvas.toDataURL('image/png');}
   function snapshot(id,options={}){const t={...library.templates.find(t=>t.id===id)},result=library.build(id,JSON.parse(INITIAL_BOOTH_SPEC_JSON),OBJECT_CATALOG);
