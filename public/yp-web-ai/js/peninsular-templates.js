@@ -169,6 +169,27 @@
       ...[3.13,3.72,4.31].map(x=>panel(x,2.5,.49,.46,.035,'#119cb8')),
       ...curvedCounter(1.22,2.57,1.65,'#119cb8')
     ]});
+  templates.push({id:'penin-golden-oculus',name:'15 · Golden Oculus',tagline:'ช่องวงกลมสีเหลือง + กรอบดำ–ขาว + ผนังกราฟิก',
+    description:'อ้างอิงบูธเดียวกันจากสองมุม: แผงขาวช่องวงกลมทะลุพร้อมกรอบเหลือง ซุ้มดำ ผนังกราฟิกสีสด เคาน์เตอร์รับรอง โต๊ะเจรจา และตู้โชว์ ไม่ใส่พุ่มไม้แขวน คงกระบะต้นไม้ใต้ช่องวงกลมไว้',
+    primary:'#e9b715',secondary:'#343738',background:'#dfddd5',floor:'tile',tile:'woodL',graphic:'',purpose:'display',logoU:3,logoY:1.9,logoScale:0,
+    objects:[
+      panel(1.77,.375,2.92,.12,2.04,'#ffffff'),graphicPanel('spectrum-flow',1.77,.447,2.69,1.85,.08),
+      panel(.44,1.24,.62,.22,2.04,'#ffffff'),panel(1.77,.85,2.92,1.13,.12,'#ffffff',2.04),
+      {...panel(.44,1.366,.49,.035,.81,'#17232c',.63),tv:'portrait'},
+      {...panel(.44,1.391,.41,.012,.73,'#14618a',.67),tv:'portrait'},logo(.44,1.365,.47,1.64),
+      part('panel-oculus',3.82,2.1,1.38,.2,2.4,'#ffffff'),
+      part('display-ring',3.82,2.249,1.17,.1,1.2,'#e9b715',.48),
+      panel(4.59,2.04,.14,.3,2.3,'#e9b715'),logo(3.82,2.218,1.09,2.03),
+      grass(3.82,2.43,1.55),
+      part('display-ring',4.65,.382,1.87,.12,1.87,'#ffffff',.25),logo(4.65,.453,1.08,.94),
+      panel(3.15,.89,5.35,.19,.24,'#343738',2.08),
+      panel(5.75,1.52,.15,1.37,.24,'#343738',2.08),panel(5.215,2.11,1.23,.19,.24,'#343738',2.08),
+      panel(5.75,2.1,.13,.18,2.08,'#ffffff'),logo(5.215,2.218,1.03,2.1),
+      panel(3.81,1.53,.16,1.22,.08,'#ffffff',2.32),
+      panel(1.39,2.49,1.46,.61,.86,'#ffffff'),panel(1.61,2.812,1.11,.035,.42,'#343738',.39),logo(1.61,2.837,.85,.5),
+      part('glass-panel',1.45,2.44,1.02,.36,.025,null,.876),part('bar-stool',1.38,1.87,.36,.36,.84,null,0,{rotationY:180}),
+      ...fourSeats(4.98,1.28),...cases([5.39],2.58,'#ffffff')
+    ]});
   function build(id,initial,catalog){
     const t=templates.find(t=>t.id===id);if(!t)throw new Error('ไม่พบเทมเพลต Peninsular');
     const spec=structuredClone(initial);Object.assign(spec,{W:6,D:3,H:2.4,type:'penin',primary:t.primary,secondary:t.secondary,colTouched:true,secTouched:true,wallCol:'white',wallMat:'paint',floor:t.floor,tile:t.tile,carpet:'cream',raise:0,stSize:'none',logoWallU:t.id==='penin-adventure'?2:t.id==='penin-connect'?1.42:3,logoWallY:1.91,logoScale:t.id==='penin-connect'?24:30,nameScale:0,designPurpose:t.purpose,boothTemplate:{id:t.id,type:'penin',name:t.name,version:1},objects:[],view:'three'});

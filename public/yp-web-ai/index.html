@@ -1760,6 +1760,7 @@ const OBJECT_CATALOG=[
   furnitureItem({catalogId:'canopy-ribbon',category:'structure',type:'ribbonCanopy',name:'หลังคาริบบิ้นมุมมน',icon:'▰',size:{w:2,d:2.6,h:.22},unitPrice:0,color:'#167bd9'}),
   furnitureItem({catalogId:'counter-corner-round',category:'reception',type:'roundedCornerCounter',name:'เคาน์เตอร์โค้งเข้ามุม',icon:'▰',size:{w:2.25,d:1.22,h:.88},unitPrice:0,color:'#167bd9'}),
   furnitureItem({catalogId:'display-ring',category:'display',type:'ringDisplay',name:'ป้ายโชว์วงรี',icon:'◯',size:{w:1.2,d:.18,h:1.55},unitPrice:0,color:'#ffffff'}),
+  furnitureItem({catalogId:'panel-oculus',category:'structure',type:'oculusPanel',name:'แผงช่องวงกลมทะลุ',icon:'◉',size:{w:1.38,d:.2,h:2.4},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'plant-trailing',category:'decor',type:'trailingPlant',name:'สวนแขวนจำลอง',icon:'♧',size:{w:.65,d:.3,h:.8},unitPrice:0,color:'#4f792f'}),
   furnitureItem({catalogId:'planter-grass',category:'decor',type:'grassPlanter',name:'กระบะต้นไม้ใบยาว',icon:'♧',size:{w:1.2,d:.3,h:.7},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'pier-tree',category:'structure',type:'treePier',name:'เสาตกแต่งกิ่งไม้',icon:'Y',size:{w:1,d:.32,h:2.15},unitPrice:0,color:'#c8ae82'}),
@@ -7567,6 +7568,10 @@ class ThreeBoothRenderer{
     }else if(obj.type==='grassPlanter'){
       bx([s.w,s.h*.3,s.d],[0,s.h*.15,0],'#ffffff');bx([s.w*.93,.02,s.d*.84],[0,s.h*.3,0],'#4c4534');
       for(let i=0;i<22;i++){const height=s.h*(.42+(i%4)*.07),blade=bx([s.w*.014,height,.016],[(i/21-.5)*s.w*.88,s.h*.3+height/2,(i%3-1)*s.d*.21],['#6e8939','#9fa949','#506a2a'][i%3]);if(blade)blade.rotation.z=(i%3-1)*.09;}
+    }else if(obj.type==='oculusPanel'){
+      const shape=new T.Shape();shape.moveTo(-s.w/2,0);shape.lineTo(s.w/2,0);shape.lineTo(s.w/2,s.h);shape.lineTo(-s.w/2,s.h);shape.closePath();
+      const hole=new T.Path();hole.absellipse(0,s.h*.45,s.w*.36,s.h*.215,0,Math.PI*2,true);shape.holes.push(hole);
+      mesh(new T.ExtrudeGeometry(shape,{depth:s.d,bevelEnabled:false,curveSegments:64}),base,[0,0,-s.d/2]);
     }else if(obj.type==='ringDisplay'){
       const shape=new T.Shape();shape.absellipse(0,s.h/2,s.w/2,s.h/2,0,Math.PI*2,false);const hole=new T.Path();hole.absellipse(0,s.h/2,s.w*.39,s.h*.42,0,Math.PI*2,true);shape.holes.push(hole);
       mesh(new T.ExtrudeGeometry(shape,{depth:s.d,bevelEnabled:false,curveSegments:48}),base,[0,0,-s.d/2]);
@@ -9601,8 +9606,8 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/inline-templates.css?v=20260909-3">
 <script src="js/inline-templates.js?v=20260908-2"></script>
 <script src="js/inline-template-ui.js?v=20260909-6"></script>
-<script src="js/peninsular-templates.js?v=20260909-15"></script>
-<script src="js/peninsular-template-ui.js?v=20260909-15"></script>
+<script src="js/peninsular-templates.js?v=20260909-16"></script>
+<script src="js/peninsular-template-ui.js?v=20260909-16"></script>
 <script src="js/corner-templates.js?v=20260909-13"></script>
 <script src="js/corner-template-ui.js?v=20260909-13"></script>
 <script src="js/island-templates.js?v=20260909-11"></script>
