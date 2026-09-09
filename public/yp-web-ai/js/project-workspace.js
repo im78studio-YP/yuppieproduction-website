@@ -139,9 +139,10 @@
     useTemplate:({makeSnapshot,name,initialWizard=false,detailed=false})=>run(async()=>{
       if(pendingDraft)throw Object.assign(new Error('พบร่างที่บันทึกไว้ กรุณาเลือกเปิดร่างเดิมหรือใช้แบบปัจจุบันก่อนเลือกเทมเพลต'),{code:'pending-draft'});
       const active=project.active,fresh=initialWizard&&window.YPQuickSetupBridge.getState().firstRun&&active==='A'&&!project.variants.B,target=fresh?'A':active==='A'?'B':'A';
-      const current=bridge.capture().spec,sizeChanged=current.W!==6||current.D!==3||current.H!==2.4;
-      if(!fresh&&(project.variants[target]||sizeChanged)&&!await ask('ใช้เทมเพลตในแบบ '+target+'?', (project.variants[target]?'แบบ '+target+' เดิมทั้งชุดจะถูกแทนที่':'สร้างแบบใหม่')+' ด้วย '+name+' ขนาดกว้าง 6 × ลึก 3 × สูง 2.4 ม. โดยเก็บแบบ '+active+' ปัจจุบันไว้ หากต้องการเก็บทั้งสองแบบ ให้ยกเลิกแล้วบันทึกไฟล์ก่อน','ใช้ในแบบ '+target))return false;
-      const replacement=makeSnapshot();store.validateSpec(replacement.spec);snapshot();const next=store.clone(project);
+      const replacement=makeSnapshot();store.validateSpec(replacement.spec);const dimensions=replacement.spec;
+      const current=bridge.capture().spec,sizeChanged=current.W!==dimensions.W||current.D!==dimensions.D||current.H!==dimensions.H;
+      if(!fresh&&(project.variants[target]||sizeChanged)&&!await ask('ใช้เทมเพลตในแบบ '+target+'?', (project.variants[target]?'แบบ '+target+' เดิมทั้งชุดจะถูกแทนที่':'สร้างแบบใหม่')+' ด้วย '+name+' ขนาดกว้าง '+dimensions.W+' × ลึก '+dimensions.D+' × สูง '+dimensions.H+' ม. โดยเก็บแบบ '+active+' ปัจจุบันไว้ หากต้องการเก็บทั้งสองแบบ ให้ยกเลิกแล้วบันทึกไฟล์ก่อน','ใช้ในแบบ '+target))return false;
+      snapshot();const next=store.clone(project);
       next.active=target;next.variants[target]=replacement;apply(next);await persist();return true;
     },{detailed}),
     useStarter:({makeSnapshot,newVariant=true,purposeName='',removedCount=0})=>run(async()=>{

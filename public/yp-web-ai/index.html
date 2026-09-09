@@ -1745,6 +1745,9 @@ const OBJECT_CATALOG=[
   furnitureItem({catalogId:'pier-cross',category:'structure',type:'crossPier',name:'เสาตกแต่งทรง X',icon:'X',size:{w:1,d:.22,h:2},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'pendant-ring',category:'decor',type:'ringPendant',name:'โคมห้อยวงแหวน (จำลอง)',icon:'◯',size:{w:.6,d:.6,h:.4},unitPrice:0,color:'#353535'}),
   furnitureItem({catalogId:'canopy-organic',category:'structure',type:'organicCanopy',name:'ซุ้มโค้งออร์แกนิก',icon:'☁',size:{w:5.7,d:1.65,h:.25},unitPrice:0,color:'#97b622'}),
+  furnitureItem({catalogId:'display-ring',category:'display',type:'ringDisplay',name:'ป้ายโชว์วงรี',icon:'◯',size:{w:1.2,d:.18,h:1.55},unitPrice:0,color:'#ffffff'}),
+  furnitureItem({catalogId:'plant-trailing',category:'decor',type:'trailingPlant',name:'สวนแขวนจำลอง',icon:'♧',size:{w:.65,d:.3,h:.8},unitPrice:0,color:'#4f792f'}),
+  furnitureItem({catalogId:'planter-grass',category:'decor',type:'grassPlanter',name:'กระบะต้นไม้ใบยาว',icon:'♧',size:{w:1.2,d:.3,h:.7},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'pier-tree',category:'structure',type:'treePier',name:'เสาตกแต่งกิ่งไม้',icon:'Y',size:{w:1,d:.32,h:2.15},unitPrice:0,color:'#c8ae82'}),
   furnitureItem({catalogId:'display-organic',category:'display',type:'organicDisplay',name:'ผนังโชว์ช่องโค้ง',icon:'▯',size:{w:4.1,d:.3,h:1.6},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'counter-fluted',category:'reception',type:'flutedCounter',name:'เคาน์เตอร์โค้งหน้าระแนง',icon:'▰',size:{w:4.7,d:.6,h:.8},unitPrice:0,color:'#c2a179'}),
@@ -7463,6 +7466,18 @@ class ThreeBoothRenderer{
       const shape=new T.Shape(),points=[[-.5,0],[-.23,0],[0,.36],[.23,0],[.5,0],[.17,.5],[.5,1],[.23,1],[0,.64],[-.23,1],[-.5,1],[-.17,.5]];
       points.forEach(([x,y],i)=>i?shape.lineTo(x*s.w,y*s.h):shape.moveTo(x*s.w,y*s.h));shape.closePath();
       mesh(new T.ExtrudeGeometry(shape,{depth:s.d,bevelEnabled:false}),base,[0,0,-s.d/2]);
+    }else if(obj.type==='trailingPlant'){
+      bx([s.w,.06,s.d],[0,s.h-.03,0],'#c8ae87');
+      for(let i=0;i<9;i++){const x=(i/8-.5)*s.w*.85,len=s.h*(.65+(i%3)*.13),z=(i%2?1:-1)*s.d*.23;
+        mesh(new T.CylinderGeometry(.006,.004,len,6),'#47612c',[x,s.h-.06-len/2,z]);
+        for(let j=0;j<6;j++){const leaf=mesh(new T.SphereGeometry(1,8,6),['#487831','#6b913e','#365e2a'][(i+j)%3],[x+(j%2?1:-1)*s.w*.025,s.h-.1-j*len/6,z]);leaf.scale.set(s.w*.065,s.h*.09,s.d*.18);leaf.rotation.z=(j%2?1:-1)*.5;}
+      }
+    }else if(obj.type==='grassPlanter'){
+      bx([s.w,s.h*.3,s.d],[0,s.h*.15,0],'#ffffff');bx([s.w*.93,.02,s.d*.84],[0,s.h*.3,0],'#4c4534');
+      for(let i=0;i<22;i++){const height=s.h*(.42+(i%4)*.07),blade=bx([s.w*.014,height,.016],[(i/21-.5)*s.w*.88,s.h*.3+height/2,(i%3-1)*s.d*.21],['#6e8939','#9fa949','#506a2a'][i%3]);if(blade)blade.rotation.z=(i%3-1)*.09;}
+    }else if(obj.type==='ringDisplay'){
+      const shape=new T.Shape();shape.absellipse(0,s.h/2,s.w/2,s.h/2,0,Math.PI*2,false);const hole=new T.Path();hole.absellipse(0,s.h/2,s.w*.39,s.h*.42,0,Math.PI*2,true);shape.holes.push(hole);
+      mesh(new T.ExtrudeGeometry(shape,{depth:s.d,bevelEnabled:false,curveSegments:48}),base,[0,0,-s.d/2]);
     }else if(obj.type==='ringPendant'){
       const radius=Math.min(s.w,s.d)*.44,tube=Math.min(.022,radius*.13),ring=mesh(new T.TorusGeometry(radius,tube,8,48),base,[0,tube,0]);ring.rotation.x=Math.PI/2;
       const glow=mesh(new T.TorusGeometry(radius,tube*.45,8,48),'#fff7df',[0,tube*.45,0],{emissive:'#fff7df',emissiveIntensity:.7});glow.rotation.x=Math.PI/2;
@@ -8528,6 +8543,7 @@ function sync(){
   window.YPInlineTemplateUI?.syncType(S.type);
   window.YPPeninsularTemplateUI?.syncType(S.type);
   window.YPCornerTemplateUI?.syncType(S.type);
+  window.YPIslandTemplateUI?.syncType(S.type);
   const cornerActive=S.type==='corner',cornerWrap=document.getElementById('cornerSideWrap');
   cornerWrap.hidden=!cornerActive;
   if(cornerActive)document.querySelectorAll('#oCornerSide .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.cornerSide));
@@ -9170,7 +9186,7 @@ function completeQuickSetup(){
   const category=ALLCATS.find(item=>item.k===quickSetupDraft.businessCategoryId),type=TYPES.find(item=>item.k===quickSetupDraft.boothType),preset=quickBoothDefaults(quickSetupDraft.boothType);if(!category||!type||!preset)return false;
   quickSetupCompleting=true;setQuickSetupStep('loading');
   window.setTimeout(async()=>{
-    if(quickSetupDraft.templateId&&['inline','penin','corner'].includes(type.k)){
+    if(quickSetupDraft.templateId&&['inline','penin','corner','island'].includes(type.k)){
       try{
         const templateId=quickSetupDraft.templateId,ok=await window.YPInlineWizard.complete(quickSetupDraft,quickSetupFirstRun);
         quickSetupCompleting=false;
@@ -9464,7 +9480,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 </script>
 <script type="module" src="js/asset-editor/asset-editor.js?v=20260829-3"></script>
 <script src="js/project-store.js?v=20260905-1"></script>
-<script src="js/project-workspace.js?v=20260909-3"></script>
+<script src="js/project-workspace.js?v=20260909-10"></script>
 <script src="js/starter-layouts.js?v=20260905-1"></script>
 <script src="js/starter-layout-ui.js?v=20260908-2"></script>
 <link rel="stylesheet" href="css/handoff.css?v=20260905-1">
@@ -9481,7 +9497,9 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/peninsular-template-ui.js?v=20260909-5"></script>
 <script src="js/corner-templates.js?v=20260909-9"></script>
 <script src="js/corner-template-ui.js?v=20260909-7"></script>
-<script src="js/inline-wizard.js?v=20260909-7"></script>
-<script src="js/template-entry.js?v=20260909-7"></script>
+<script src="js/island-templates.js?v=20260909-10"></script>
+<script src="js/island-template-ui.js?v=20260909-10"></script>
+<script src="js/inline-wizard.js?v=20260909-10"></script>
+<script src="js/template-entry.js?v=20260909-10"></script>
 </body>
 </html>

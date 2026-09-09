@@ -3,7 +3,7 @@
   const url=new URL(location.href),id=url.searchParams.get('useTemplate');
   if(!id||url.searchParams.get('comparePreview')==='1')return;
   const cornerSide=url.searchParams.get('cornerSide')==='left'?'left':'right';
-  const groups=[{library:window.YPInlineTemplates,bridge:window.YPInlineTemplateBridge,folder:'inline-templates'},{library:window.YPPeninsularTemplates,bridge:window.YPPeninsularTemplateBridge,folder:'peninsular-templates'},{library:window.YPCornerTemplates,bridge:window.YPCornerTemplateBridge,folder:'corner-templates'}];
+  const groups=[{library:window.YPInlineTemplates,bridge:window.YPInlineTemplateBridge,folder:'inline-templates'},{library:window.YPPeninsularTemplates,bridge:window.YPPeninsularTemplateBridge,folder:'peninsular-templates'},{library:window.YPCornerTemplates,bridge:window.YPCornerTemplateBridge,folder:'corner-templates'},{library:window.YPIslandTemplates,bridge:window.YPIslandTemplateBridge,folder:'island-templates'}];
   const group=groups.find(g=>g.library?.templates.some(t=>t.id===id)),template=group?.library.templates.find(t=>t.id===id);
   // Consume the navigation request once: refresh must not reapply the template.
   url.searchParams.delete('useTemplate');url.searchParams.delete('cornerSide');try{history.replaceState(null,'',url.href);}catch{/* file:// may restrict history changes. */}

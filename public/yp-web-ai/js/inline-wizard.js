@@ -2,9 +2,10 @@
   'use strict';
   if(new URLSearchParams(location.search).get('comparePreview')==='1')return;
   const host=document.getElementById('quickInlineTemplates');
-  const libraryFor=type=>type==='inline'?window.YPInlineTemplates:type==='penin'?window.YPPeninsularTemplates:type==='corner'?window.YPCornerTemplates:null;
-  const bridgeFor=type=>type==='inline'?window.YPInlineTemplateBridge:type==='corner'?window.YPCornerTemplateBridge:window.YPPeninsularTemplateBridge;
-  const imageFor=(type,id)=>'assets/'+(type==='inline'?'inline':type==='corner'?'corner':'peninsular')+'-templates/'+id+(type==='corner'?'-'+(quickSetupDraft?.cornerSide||'right'):'')+'.png';
+  const libraryFor=type=>type==='inline'?window.YPInlineTemplates:type==='penin'?window.YPPeninsularTemplates:type==='corner'?window.YPCornerTemplates:type==='island'?window.YPIslandTemplates:null;
+  const bridgeFor=type=>type==='inline'?window.YPInlineTemplateBridge:type==='corner'?window.YPCornerTemplateBridge:type==='island'?window.YPIslandTemplateBridge:window.YPPeninsularTemplateBridge;
+  const imageFor=(type,id)=>'assets/'+(type==='inline'?'inline':type==='corner'?'corner':type==='island'?'island':'peninsular')+'-templates/'+id+(type==='corner'?'-'+(quickSetupDraft?.cornerSide||'right'):'')+'.png';
+  const dimensions=t=>({width:t?.width||6,depth:t?.depth||3,height:t?.height||2.4});
   const fields=['primary','brandTouched','floor','carpet','tile','raise','addStorage','width','depth','height'];
   host.innerHTML='<div class="quick-template-heading"><h3 id="quickTemplatesTitle">เริ่มจากแบบไหนดี?</h3><span>Inline · กว้าง 6 × ลึก 3 ม.</span></div><p class="quick-template-help">ออกแบบเอง หรือเลือกตัวอย่างแล้วปรับสี พื้น และห้องในขั้นถัดไป · ใช้โลโก้ YP ตั้งต้น เปลี่ยนภายหลังได้</p><div id="quickTemplateChoices" class="quick-template-choices" role="radiogroup" aria-labelledby="quickTemplatesTitle"></div><figure id="quickTemplatePreview" class="quick-template-preview" hidden><img id="quickTemplateImage" alt=""><figcaption><strong id="quickTemplateName"></strong><p id="quickTemplateDescription"></p></figcaption></figure><p id="quickTemplateStatus" class="quick-template-help" role="status" aria-live="polite"></p>';
   const choices=document.getElementById('quickTemplateChoices');
@@ -18,7 +19,7 @@
     else{
       const t=library.templates.find(t=>t.id===id);if(!t)return;
       if(!draft.templateBefore)draft.templateBefore=Object.fromEntries(fields.map(k=>[k,draft[k]]));
-      Object.assign(draft,{templateId:id,templateType:draft.boothType,width:6,depth:3,height:2.4,primary:t.primary.toUpperCase(),brandTouched:true,floor:t.floor,carpet:t.carpet||'cream',tile:t.tile||'woodL',raise:0,addStorage:!!t.storage});
+      Object.assign(draft,{templateId:id,templateType:draft.boothType,...dimensions(t),primary:t.primary.toUpperCase(),brandTouched:true,floor:t.floor,carpet:t.carpet||'cream',tile:t.tile||'woodL',raise:0,addStorage:!!t.storage});
     }
     document.getElementById('quickRoomError').textContent='';updateQuickLayoutStep();
   }
@@ -31,14 +32,14 @@
     const button=createQuickChoice({value:t.id,label:t.name.replace(/^\d+ · /,''),detail:t.tagline,onSelect:()=>select(t.id)});button.classList.add('quick-template-card');
     const img=document.createElement('img');img.src=imageFor(type,t.id);img.alt='';img.width=320;img.height=240;button.prepend(img);choices.append(button);
   }
-  host.querySelector('.quick-template-heading span').textContent=(type==='inline'?'Inline':type==='corner'?'หัวมุม':'Peninsular')+' · เทมเพลตกว้าง 6 × ลึก 3 ม.';
+  const size=dimensions(library.templates[0]);host.querySelector('.quick-template-heading span').textContent=(type==='inline'?'Inline':type==='corner'?'หัวมุม':type==='island'?'Island':'Peninsular')+' · เทมเพลตกว้าง '+size.width+' × ลึก '+size.depth+' ม.';
   }
   bindQuickRadioKeys(choices);
   function update(draft){
     if(!draft)return;const library=libraryFor(draft.boothType);host.hidden=!library;
     if(draft.templateId&&draft.templateType!==draft.boothType){reset(draft);const preset=quickBoothDefaults(draft.boothType);if(preset)Object.assign(draft,{width:preset.width,depth:preset.depth,height:preset.height});}
     if(!library)return;if(shownType!==draft.boothType)buildChoices(draft.boothType);
-    if(draft.templateId)Object.assign(draft,{width:6,depth:3,height:2.4});
+    if(draft.templateId)Object.assign(draft,dimensions(library.templates.find(t=>t.id===draft.templateId)));
     const selected=draft.templateId||'manual';
     choices.querySelectorAll('[role=radio]').forEach(b=>{const on=b.dataset.value===selected;b.setAttribute('aria-checked',String(on));b.tabIndex=on?0:-1;});
     if(draft.boothType==='corner')choices.querySelectorAll('[role=radio] img').forEach(img=>{img.src=imageFor('corner',img.parentElement.dataset.value);});
