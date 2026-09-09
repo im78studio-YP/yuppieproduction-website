@@ -1314,7 +1314,8 @@ select:focus{border-color:var(--acc)}
       <details class="move-advanced" id="moveAdvanced">
         <summary class="btn move-advanced-summary" title="ปรับตำแหน่งตามแกน X, Y และ Z ครั้งละ 5 เซนติเมตร">ปรับละเอียด</summary>
         <div class="move-advanced-menu fine-position-menu" role="group" aria-label="ปรับตำแหน่ง Asset แบบละเอียด">
-          <div class="fine-position-head"><strong>Fine Position</strong><small>ครั้งละ 0.05 ม.</small></div>
+          <div class="fine-position-head"><strong>Fine Position · Z-up</strong><small>ครั้งละ 0.05 ม.</small></div>
+          <div class="fine-position-help">X ซ้าย–ขวา · Y หน้า–หลัง · Z ขึ้น–ลง<br>อิงทิศบูธ ไม่ใช่มุมกล้อง</div>
           <div class="fine-position-row">
             <span class="fine-position-axis" aria-hidden="true">X</span>
             <button class="btn fine-position-step" type="button" data-fine-axis="x" data-fine-delta="-0.05" aria-label="เลื่อน Asset ไปทางซ้าย 5 เซนติเมตร" title="X− ซ้าย 5 ซม.">−</button>
@@ -1323,15 +1324,15 @@ select:focus{border-color:var(--acc)}
           </div>
           <div class="fine-position-row">
             <span class="fine-position-axis" aria-hidden="true">Y</span>
-            <button class="btn fine-position-step" type="button" data-fine-axis="y" data-fine-delta="-0.05" aria-label="เลื่อน Asset ลง 5 เซนติเมตร" title="Y− ลง 5 ซม.">−</button>
+            <button class="btn fine-position-step" type="button" data-fine-axis="y" data-fine-delta="-0.05" aria-label="เลื่อน Asset ไปด้านหลัง 5 เซนติเมตร" title="Y− ด้านหลัง 5 ซม.">−</button>
             <label class="fine-position-field" for="finePositionY"><input class="fine-position-input" id="finePositionY" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="—" aria-label="พิกัด Y หน่วยเมตร"><span class="fine-position-unit">ม.</span></label>
-            <button class="btn fine-position-step" type="button" data-fine-axis="y" data-fine-delta="0.05" aria-label="เลื่อน Asset ขึ้น 5 เซนติเมตร" title="Y+ ขึ้น 5 ซม.">+</button>
+            <button class="btn fine-position-step" type="button" data-fine-axis="y" data-fine-delta="0.05" aria-label="เลื่อน Asset มาด้านหน้า 5 เซนติเมตร" title="Y+ ด้านหน้า 5 ซม.">+</button>
           </div>
           <div class="fine-position-row">
             <span class="fine-position-axis" aria-hidden="true">Z</span>
-            <button class="btn fine-position-step" type="button" data-fine-axis="z" data-fine-delta="-0.05" aria-label="เลื่อน Asset ไปด้านหลัง 5 เซนติเมตร" title="Z− ด้านหลัง 5 ซม.">−</button>
+            <button class="btn fine-position-step" type="button" data-fine-axis="z" data-fine-delta="-0.05" aria-label="เลื่อน Asset ลง 5 เซนติเมตร" title="Z− ลง 5 ซม.">−</button>
             <label class="fine-position-field" for="finePositionZ"><input class="fine-position-input" id="finePositionZ" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="—" aria-label="พิกัด Z หน่วยเมตร"><span class="fine-position-unit">ม.</span></label>
-            <button class="btn fine-position-step" type="button" data-fine-axis="z" data-fine-delta="0.05" aria-label="เลื่อน Asset มาด้านหน้า 5 เซนติเมตร" title="Z+ ด้านหน้า 5 ซม.">+</button>
+            <button class="btn fine-position-step" type="button" data-fine-axis="z" data-fine-delta="0.05" aria-label="เลื่อน Asset ขึ้น 5 เซนติเมตร" title="Z+ ขึ้น 5 ซม.">+</button>
           </div>
           <div class="fine-position-help" id="finePositionHelp" role="status">เลือก Asset ที่ต้องการปรับ</div>
         </div>
@@ -4023,6 +4024,9 @@ function selectedAlignmentBounds(obj){
     minY:base,maxY:base+(Number(size.h)||0),centerY:base+(Number(size.h)||0)/2};
 }
 const FINE_POSITION_STEP=.05;
+// Fine Position presents Z-up. Persisted specs, renderer and movement helpers
+// retain Y-up: UI X/Y/Z map to world x/z/y without migrating existing projects.
+function finePositionWorldAxis(axis){return {x:'x',y:'z',z:'y'}[axis];}
 const finePositionDraft={selectionKey:'',values:{x:'',y:'',z:''},dirty:new Set(),errors:{}};
 function finePositionAxisOverflow(bounds,axis){
   if(axis==='x')return Math.max(0,-bounds.minX)+Math.max(0,bounds.maxX-S.W);
@@ -4056,7 +4060,7 @@ function setFinePositionError(axis,message=''){
 }
 function cancelFinePositionDraft(axis){
   const primary=finePositionPrimaryObject(),input=finePositionInput(axis);finePositionDraft.dirty.delete(axis);delete finePositionDraft.errors[axis];
-  finePositionDraft.values[axis]='';setFinePositionError(axis,'');if(input){input.value=primary?Number(primary.position?.[axis]||0).toFixed(2):'';input.placeholder=primary?'':'—';}
+  finePositionDraft.values[axis]='';setFinePositionError(axis,'');if(input){input.value=primary?Number(primary.position?.[finePositionWorldAxis(axis)]||0).toFixed(2):'';input.placeholder=primary?'':'—';}
   syncFinePositionControls();
 }
 function parseFinePositionDraft(value){
@@ -4068,21 +4072,22 @@ function releaseObjectAttachment(obj){
   obj.attachment=null;detachPersistentAttachment(obj.id,{reason:'manual-move'});if(obj.placement){obj.placement.mode='free';obj.placement.surface='free';obj.placement.targetId=null;obj.placement.anchorAttachment=null;obj.placement.snapCandidate=null;}
 }
 function commitFinePositionInput(axis){
+  const worldAxis=finePositionWorldAxis(axis);if(!worldAxis)return false;
   const objects=selectedObjects(),input=finePositionInput(axis);if(objects.length!==1||!input)return false;
   const obj=objects[0];if(objectLocked(obj)){setFinePositionError(axis,'ปลดล็อก Asset ก่อนปรับตำแหน่ง');return false;}
   const numeric=parseFinePositionDraft(input.value);if(numeric===null){setFinePositionError(axis,'กรอกพิกัดเป็นตัวเลข เช่น 1.25 หรือ 1,25');return false;}
-  const current=Number(obj.position?.[axis])||0,delta=numeric-current,next=shiftedFinePositionBounds(selectedAlignmentBounds(obj),axis,delta);
-  if(finePositionAxisOverflow(next,axis)>.0001){setFinePositionError(axis,'ยืนยันไม่ได้ เพราะ Bounding Box ของ Asset จะอยู่นอกพื้นที่บูธ');return false;}
+  const current=Number(obj.position?.[worldAxis])||0,delta=numeric-current,next=shiftedFinePositionBounds(selectedAlignmentBounds(obj),worldAxis,delta);
+  if(finePositionAxisOverflow(next,worldAxis)>.0001){setFinePositionError(axis,'ยืนยันไม่ได้ เพราะ Bounding Box ของ Asset จะอยู่นอกพื้นที่บูธ');return false;}
   finePositionDraft.dirty.delete(axis);delete finePositionDraft.errors[axis];setFinePositionError(axis,'');
   if(Math.abs(delta)<.000001){input.value=current.toFixed(2);return true;}
-  const before=objectSnapshot();obj.position[axis]=+numeric.toFixed(3);releaseObjectAttachment(obj);normalizeSceneObjectModel(obj);
-  recordObjectHistory(before);sync();announceCatalog('ปรับพิกัด '+axis.toUpperCase()+' เป็น '+Number(obj.position[axis]).toFixed(2)+' ม. แล้ว','success');return true;
+  const before=objectSnapshot();obj.position[worldAxis]=+numeric.toFixed(3);releaseObjectAttachment(obj);normalizeSceneObjectModel(obj);
+  recordObjectHistory(before);sync();announceCatalog('ปรับพิกัด '+axis.toUpperCase()+' เป็น '+Number(obj.position[worldAxis]).toFixed(2)+' ม. แล้ว','success');return true;
 }
 function syncFinePositionControls(){
   const objects=selectedObjects(),primary=finePositionPrimaryObject(objects),locked=objects.some(objectLocked),multi=objects.length>1,buttons=document.querySelectorAll('[data-fine-axis]'),help=document.getElementById('finePositionHelp'),selectionKey=finePositionSelectionKey(objects);
   if(finePositionDraft.selectionKey!==selectionKey){resetFinePositionDraft();finePositionDraft.selectionKey=selectionKey;}
   ['x','y','z'].forEach(axis=>{const input=finePositionInput(axis);if(!input)return;input.disabled=!primary||locked||multi;input.placeholder=multi?'—':primary?'':'—';
-    if(multi)input.value='';else if(!finePositionDraft.dirty.has(axis))input.value=primary?Number(primary.position?.[axis]||0).toFixed(2):'';
+    if(multi)input.value='';else if(!finePositionDraft.dirty.has(axis))input.value=primary?Number(primary.position?.[finePositionWorldAxis(axis)]||0).toFixed(2):'';
     input.closest('.fine-position-field')?.classList.toggle('is-invalid',!!finePositionDraft.errors[axis]);});
   buttons.forEach(button=>button.disabled=!objects.length||locked);
   const summary=document.querySelector('#moveAdvanced>summary');if(summary)summary.setAttribute('aria-disabled',String(!objects.length||locked));
@@ -5307,7 +5312,7 @@ function build(){
   document.getElementById('btnResizeObject').onclick=toggleObjectResizeMode;
   document.getElementById('btnScaleObject').onclick=toggleObjectScaleMode;
   document.querySelectorAll('[data-fine-axis]').forEach(button=>button.onclick=event=>{
-    event.preventDefault();event.stopPropagation();fineMoveSelectedObjects(button.dataset.fineAxis,button.dataset.fineDelta);
+    event.preventDefault();event.stopPropagation();fineMoveSelectedObjects(finePositionWorldAxis(button.dataset.fineAxis),button.dataset.fineDelta);
   });
   ['x','y','z'].forEach(axis=>{const input=finePositionInput(axis);if(!input)return;
     input.oninput=()=>{finePositionDraft.values[axis]=input.value;finePositionDraft.dirty.add(axis);setFinePositionError(axis,'');};

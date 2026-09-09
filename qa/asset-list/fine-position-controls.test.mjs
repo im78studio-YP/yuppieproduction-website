@@ -42,7 +42,7 @@ test('Fine Position ใช้ Draft และยืนยัน Absolute เฉ�
 });
 
 test('Fine Position แสดงสองตำแหน่ง แยกหน่วย และปิด Absolute เมื่อเลือกหลายชิ้น',()=>{
-  assert.match(html,/Number\(primary\.position\?\.\[axis\]\|\|0\)\.toFixed\(2\)/);
+  assert.ok(html.includes('Number(primary.position?.[finePositionWorldAxis(axis)]||0).toFixed(2)'));
   assert.ok(html.includes('<span class="fine-position-unit">ม.</span>'));
   assert.match(html,/input\.disabled=!primary\|\|locked\|\|multi/);
   assert.match(html,/input\.placeholder=multi\?'—'/);
@@ -60,4 +60,17 @@ test('Selection ว่างปิด Contextual Toolbar, Fine Position แล�
 test('Fine Position ไม่เปลี่ยน Smart Move',()=>{
   assert.ok(html.includes('id="btnMoveSmart"'));
   assert.match(html,/document\.getElementById\('btnMoveSmart'\)\.onclick=\(\)=>setObjectMoveMode\('smart'\)/);
+});
+
+test('Z-up แปลงพิกัดเฉพาะ UI ทั้งปุ่ม ค่าแสดง และ Absolute โดยคง world Y-up',()=>{
+  assert.ok(html.includes("function finePositionWorldAxis(axis){return {x:'x',y:'z',z:'y'}[axis];}"));
+  assert.ok(html.includes('fineMoveSelectedObjects(finePositionWorldAxis(button.dataset.fineAxis),button.dataset.fineDelta)'));
+  assert.ok(html.includes('obj.position[worldAxis]=+numeric.toFixed(3)'));
+  assert.ok(html.includes('finePositionAxisOverflow(next,worldAxis)'));
+  assert.ok(html.includes('title="Z+ ขึ้น 5 ซม."'));
+  assert.ok(html.includes('title="Z− ลง 5 ซม."'));
+  assert.ok(html.includes('title="Y+ ด้านหน้า 5 ซม."'));
+  assert.ok(html.includes('title="Y− ด้านหลัง 5 ซม."'));
+  // Internal movement remains world-coordinate based for existing callers.
+  assert.ok(html.includes('obj.position[axis]=+(Number(obj.position?.[axis]||0)+delta).toFixed(3)'));
 });
