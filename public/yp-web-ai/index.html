@@ -1745,6 +1745,9 @@ const OBJECT_CATALOG=[
   furnitureItem({catalogId:'pier-cross',category:'structure',type:'crossPier',name:'เสาตกแต่งทรง X',icon:'X',size:{w:1,d:.22,h:2},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'pendant-ring',category:'decor',type:'ringPendant',name:'โคมห้อยวงแหวน (จำลอง)',icon:'◯',size:{w:.6,d:.6,h:.4},unitPrice:0,color:'#353535'}),
   furnitureItem({catalogId:'canopy-organic',category:'structure',type:'organicCanopy',name:'ซุ้มโค้งออร์แกนิก',icon:'☁',size:{w:5.7,d:1.65,h:.25},unitPrice:0,color:'#97b622'}),
+  furnitureItem({catalogId:'portal-ribbon',category:'structure',type:'ribbonPortal',name:'ซุ้มริบบิ้นโค้ง',icon:'Γ',size:{w:5.2,d:.6,h:3},unitPrice:0,color:'#167bd9'}),
+  furnitureItem({catalogId:'canopy-ribbon',category:'structure',type:'ribbonCanopy',name:'หลังคาริบบิ้นมุมมน',icon:'▰',size:{w:2,d:2.6,h:.22},unitPrice:0,color:'#167bd9'}),
+  furnitureItem({catalogId:'counter-corner-round',category:'reception',type:'roundedCornerCounter',name:'เคาน์เตอร์โค้งเข้ามุม',icon:'▰',size:{w:2.25,d:1.22,h:.88},unitPrice:0,color:'#167bd9'}),
   furnitureItem({catalogId:'display-ring',category:'display',type:'ringDisplay',name:'ป้ายโชว์วงรี',icon:'◯',size:{w:1.2,d:.18,h:1.55},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'plant-trailing',category:'decor',type:'trailingPlant',name:'สวนแขวนจำลอง',icon:'♧',size:{w:.65,d:.3,h:.8},unitPrice:0,color:'#4f792f'}),
   furnitureItem({catalogId:'planter-grass',category:'decor',type:'grassPlanter',name:'กระบะต้นไม้ใบยาว',icon:'♧',size:{w:1.2,d:.3,h:.7},unitPrice:0,color:'#ffffff'}),
@@ -5872,6 +5875,11 @@ class ThreeBoothRenderer{
     return [...new Set(promises.filter(promise=>promise&&typeof promise.then==='function'))];
   }
   async waitForSceneAssets(timeoutMs=10000,spec=BoothSpec,validateState=null){
+    // Island has no wall branding to initiate logo loading. Artwork copies must
+    // also be decoded before the final rebuild used for clean screenshots.
+    const artworkSources=new Set([spec.logo,...(spec.objects||[]).filter(o=>o.type==='brandCopy').map(o=>o.appearance?.textureData)].filter(Boolean));
+    for(const source of this.brandImages.keys())if(this.brandImages.size>4&&!artworkSources.has(source))this.brandImages.delete(source);
+    artworkSources.forEach(source=>this.loadBrandImage(source));
     const deadline=Date.now()+Math.max(0,Number(timeoutMs)||0);
     for(let pass=0;pass<5;pass++){
       const pending=this.pendingSceneAssets();
@@ -6863,6 +6871,17 @@ class ThreeBoothRenderer{
       (face==='left'&&spec.stFace==='front-left')||(face==='right'&&spec.stFace==='front-right'));
     return this.surfaceMaterial(selected?'sticker':'paint',selected?a.acc:stPaintColor(a),a.sec,[1.5,1.5]);
   }
+  loadBrandImage(source){
+    if(!source||this.brandImages.has(source)||this.brandImageErrors.has(source))return Promise.resolve(this.brandImages.get(source)||null);
+    if(this.brandImageLoads.has(source))return this.brandImageLoads.get(source);
+    const pending=new Promise(resolve=>{const image=new Image();
+      image.onload=()=>{
+        if(source.startsWith('data:image/svg+xml')){const raster=document.createElement('canvas');raster.width=1536;raster.height=Math.max(1,Math.round(1536*image.naturalHeight/image.naturalWidth));raster.getContext('2d').drawImage(image,0,0,raster.width,raster.height);image._ypRasterSource=raster;}
+        image._ypVisibleAlphaBounds=visibleImagePixelBounds(image);this.brandImages.set(source,image);this.brandImageLoads.delete(source);resolve(image);
+      };
+      image.onerror=()=>{this.brandImageErrors.add(source);this.brandImageLoads.delete(source);resolve(null);};image.src=source;
+    });this.brandImageLoads.set(source,pending);return pending;
+  }
   brandTexture(spec,bg){
     const T=this.THREE,c=document.createElement('canvas'),stage=document.createElement('canvas');c.width=stage.width=1024;c.height=stage.height=512;
     const x=c.getContext('2d'),sx=stage.getContext('2d'),a=palette(),generation=this.buildId;let texture=null;
@@ -6945,18 +6964,7 @@ class ThreeBoothRenderer{
     const cached=spec.logo?this.brandImages.get(spec.logo):null;
     draw(cached||null);texture=new T.CanvasTexture(c);texture.colorSpace=T.SRGBColorSpace;captureVisibleBounds();
     if(spec.logo&&!cached&&!this.brandImageErrors.has(spec.logo)){
-      const source=spec.logo;let pending=this.brandImageLoads.get(source);
-      if(!pending){
-        pending=new Promise(resolve=>{const image=new Image();
-          image.onload=()=>{
-            // SVGs without intrinsic width/height can be clipped by Chrome's 9-argument drawImage.
-            // Rasterize the complete vector first; subsequent crop coordinates use stable pixels.
-            if(source.startsWith('data:image/svg+xml')){const raster=document.createElement('canvas');raster.width=1536;raster.height=Math.max(1,Math.round(1536*image.naturalHeight/image.naturalWidth));raster.getContext('2d').drawImage(image,0,0,raster.width,raster.height);image._ypRasterSource=raster;}
-            image._ypVisibleAlphaBounds=visibleImagePixelBounds(image);this.brandImages.set(source,image);while(this.brandImages.size>4)this.brandImages.delete(this.brandImages.keys().next().value);this.brandImageLoads.delete(source);resolve(image);
-          };
-          image.onerror=()=>{this.brandImageErrors.add(source);this.brandImageLoads.delete(source);resolve(null);};image.src=source;
-        });this.brandImageLoads.set(source,pending);
-      }
+      const pending=this.loadBrandImage(spec.logo);
       pending.then(image=>{if(!image||this.buildId!==generation)return;draw(image);texture.needsUpdate=true;if(this.active)this.renderer.render(this.scene,this.camera);});
     }
     return texture;
@@ -7370,7 +7378,7 @@ class ThreeBoothRenderer{
     normalizeSceneObjectModel(obj);const T=this.THREE,appearance=obj.appearance||{},meshes=[];
     root.traverse(part=>{if(!part.isMesh||!part.material)return;const source=Array.isArray(part.material)?part.material:[part.material];
       const cloned=source.map(material=>{
-        if(appearance.mode==='solid'){
+        if(appearance.mode==='solid'&&!(obj.type==='ribbonPortal'&&part.name==='ribbon-white-stripe')){
           const next=new T.MeshStandardMaterial({color:appearance.color||'#f5f5f5',roughness:.72,metalness:.02,
             side:material.side,flatShading:material.flatShading===true,transparent:false,opacity:1});
           next.name=(material.name||'material')+'-solid-override';next.needsUpdate=true;return next;
@@ -7457,6 +7465,20 @@ class ThreeBoothRenderer{
       const slab=(height,y,color)=>{const g=new T.ExtrudeGeometry(shape,{depth:height,bevelEnabled:false,curveSegments:20});g.rotateX(Math.PI/2);mesh(g,color,[0,y+height,0]);};
       slab(s.h*.75,0,base);slab(s.h*.25,s.h*.75,'#f3f3ef');
       const count=Math.max(5,Math.ceil((w-2*r)/.06));for(let i=0;i<count;i++)bx([Math.min(.025,w/count*.4),s.h*.7,.025],[-w/2+r+(i+.5)*(w-2*r)/count,s.h*.35,d/2-.006],'#876b47',{edges:false});
+    }else if(obj.type==='ribbonPortal'){
+      const w=s.w,h=s.h,t=Math.min(.28,w*.08,h*.15),r=Math.min(.65,w*.2,h*.3),shape=new T.Shape();
+      shape.moveTo(-w/2,0);shape.lineTo(-w/2,h-r);shape.quadraticCurveTo(-w/2,h,-w/2+r,h);shape.lineTo(w/2,h);shape.lineTo(w/2,h-t);shape.lineTo(-w/2+r,h-t);shape.quadraticCurveTo(-w/2+t,h-t,-w/2+t,h-r);shape.lineTo(-w/2+t,0);shape.closePath();
+      mesh(new T.ExtrudeGeometry(shape,{depth:s.d,bevelEnabled:false,curveSegments:32}),base,[0,0,-s.d/2]);
+      const curve=new T.CurvePath(),v=(x,y)=>new T.Vector3(x,y,s.d/2+.006),offset=t*.68;
+      curve.add(new T.LineCurve3(v(-w/2+offset,.03),v(-w/2+offset,h-r)));curve.add(new T.QuadraticBezierCurve3(v(-w/2+offset,h-r),v(-w/2+offset,h-offset),v(-w/2+r,h-offset)));curve.add(new T.LineCurve3(v(-w/2+r,h-offset),v(w/2-.02,h-offset)));
+      mesh(new T.TubeGeometry(curve,64,.014,6,false),'#ffffff',[0,0,0],{roughness:.4}).name='ribbon-white-stripe';
+    }else if(obj.type==='ribbonCanopy'){
+      const w=s.w,d=s.d,r=Math.min(.5,w*.25,d*.25),shape=new T.Shape();
+      shape.moveTo(-w/2+r,-d/2);shape.lineTo(w/2-r,-d/2);shape.quadraticCurveTo(w/2,-d/2,w/2,-d/2+r);shape.lineTo(w/2,d/2-r);shape.quadraticCurveTo(w/2,d/2,w/2-r,d/2);shape.lineTo(-w/2+r,d/2);shape.quadraticCurveTo(-w/2,d/2,-w/2,d/2-r);shape.lineTo(-w/2,-d/2+r);shape.quadraticCurveTo(-w/2,-d/2,-w/2+r,-d/2);shape.closePath();
+      const geometry=new T.ExtrudeGeometry(shape,{depth:s.h,bevelEnabled:false,curveSegments:32});geometry.rotateX(Math.PI/2);mesh(geometry,base,[0,s.h,0]);
+    }else if(obj.type==='roundedCornerCounter'){
+      const w=s.w,d=s.d,t=Math.min(.42,d*.38),r=Math.min(.5,d*.48),shape=new T.Shape();shape.moveTo(-w/2,d/2);shape.lineTo(w/2-r,d/2);shape.quadraticCurveTo(w/2,d/2,w/2,d/2-r);shape.lineTo(w/2,-d/2);shape.lineTo(w/2-t,-d/2);shape.lineTo(w/2-t,d/2-r);shape.quadraticCurveTo(w/2-t,d/2-t,w/2-r,d/2-t);shape.lineTo(-w/2,d/2-t);shape.closePath();
+      const slab=(height,y,color)=>{const geometry=new T.ExtrudeGeometry(shape,{depth:height,bevelEnabled:false,curveSegments:32});geometry.rotateX(Math.PI/2);mesh(geometry,color,[0,y+height,0]);};slab(s.h*.16,0,'#f6f5ef');slab(s.h*.62,s.h*.16,base);slab(s.h*.22,s.h*.78,'#f6f5ef');
     }else if(obj.type==='fasciaCurve'){
       const w=s.w,d=s.d,t=Math.min(.16,w*.12,d*.15),r=Math.min(.65,w*.24,d*.5),shape=new T.Shape();
       shape.moveTo(-w/2,d/2);shape.lineTo(w/2-r,d/2);shape.quadraticCurveTo(w/2,d/2,w/2,d/2-r);shape.lineTo(w/2,-d/2);
@@ -9497,8 +9519,8 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/peninsular-template-ui.js?v=20260909-5"></script>
 <script src="js/corner-templates.js?v=20260909-9"></script>
 <script src="js/corner-template-ui.js?v=20260909-7"></script>
-<script src="js/island-templates.js?v=20260909-10"></script>
-<script src="js/island-template-ui.js?v=20260909-10"></script>
+<script src="js/island-templates.js?v=20260909-11"></script>
+<script src="js/island-template-ui.js?v=20260909-11"></script>
 <script src="js/inline-wizard.js?v=20260909-10"></script>
 <script src="js/template-entry.js?v=20260909-10"></script>
 </body>
