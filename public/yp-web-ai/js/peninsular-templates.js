@@ -8,6 +8,9 @@
   const screen=(x,z,w,y)=>[panel(x,z,w,.07,w*.58,'#202b35',y),panel(x,z+.041,w-.1,.012,w*.58-.1,'#14618a',y+.05)];
   const meeting=(x,z)=>[part('table-standard',x,z,.78,.62,.72,'#eeeae0'),part('chair-standard',x-.65,z,.45,.46,.78,'#f4f1e9',0,{rotationY:90}),part('chair-standard',x+.65,z,.45,.46,.78,'#f4f1e9',0,{rotationY:-90})];
   const planter=(x,z,w)=>[panel(x,z,w,.28,.19,'#ffffff'),...Array.from({length:5},(_,i)=>part('plant-medium',x-w*.39+i*w*.195,z,.21,.21,.42,null,.19))];
+  const pairedScreen=(key,...args)=>screen(...args).map(o=>({...o,tv:key}));
+  const graphicPanel=(key,x,z,w,h,y)=>part('brand-artwork-copy',x,z,w,.012,h,null,y,{graphic:key});
+  const fourSeats=(x,z)=>[...meeting(x,z),part('chair-standard',x,z-.58,.45,.46,.78,'#f4f1e9'),part('chair-standard',x,z+.58,.45,.46,.78,'#f4f1e9',0,{rotationY:180})];
   const templates=[
     {id:'penin-adventure',name:'01 · Adventure Gateway',tagline:'เคาน์เตอร์ใหญ่ + กรอบทางเข้า',description:'อ้างอิงภาพ 1: เคาน์เตอร์หน้าซ้าย ผนังกราฟิก จอหลัง และกรอบสีทองฝั่งขวาพร้อมจอเล็ก เปิดด้านข้างไว้',primary:'#c58b24',secondary:'#32363b',background:'#555b50',floor:'tile',tile:'woodL',graphic:'EXPLORE / CONNECT / DISCOVER',purpose:'display',
       objects:[part('counter-standard',1.85,2.12,2.8,.7,1.02,'#32363b'),part('entrance-frame',5.12,1.3,.72,1.9,2.4,'#c58b24',0,{structure:{projection:1.9,height:2.4,pierWidth:.72,thickness:.16,color:'#c58b24'}}),panel(.08,.36,.12,.1,2.4,'#c58b24'),panel(2.4,.36,4.7,.1,.1,'#c58b24',2.3),panel(3.82,.36,.92,.08,.55,'#151a24',1.3),panel(3.82,.41,.8,.025,.43,'#244271',1.36),panel(5.12,2.265,.54,.035,.35,'#151a24',1.42),panel(5.12,2.29,.46,.014,.27,'#244271',1.46),...Array.from({length:24},(_,i)=>panel(.57+i*.111,2.487,.022,.015,.86,'#20252b',.05))]},
@@ -67,7 +70,35 @@
         part('counter-fluted',3,2.56,4.7,.6,.8,null),
         panel(3,2.56,1.9,.41,.06,'#d1dcd9',.8),
         ...Array.from({length:5},(_,i)=>panel(2.28+i*.36,2.56,.29,.3,.045,['#ddc664','#d98849','#b6c951','#d6a977','#db6651'][i],.86)),
-        logo(3,2.872,1.18,.56)]}
+        logo(3,2.872,1.18,.56)]},
+    {id:'penin-noir-lounge',name:'09 · Noir Lounge',tagline:'โซนกระจกกรอบไม้ + ซุ้มดำ + เคาน์เตอร์เขียว',description:'โซนนั่งคุยซ้ายมีแผงกระจกจำลอง กรอบไม้และคานขาว ด้านขวาเป็นซุ้มดำคาดเหลืองพร้อมโต๊ะเจรจา 4 ที่นั่ง เคาน์เตอร์เขียวด้านหน้า ปรับจากภาพอ้างอิงให้พอดี 6×3 ม. เว้นทางเข้าโซนซ้ายจากด้านใน',primary:'#343739',secondary:'#bfa07a',background:'#343739',floor:'tile',tile:'woodL',graphic:'CONNECT / DISCUSS / CREATE',purpose:'meeting',logoU:3,logoY:1.9,logoScale:0,
+      objects:[
+        panel(.24,1.3,.12,1.94,2.32,'#bfa07a'),panel(.24,2.2,.14,.16,2.32,'#bfa07a'),panel(2.38,2.2,.14,.16,2.32,'#bfa07a'),
+        panel(1.31,2.2,2.28,.18,.18,'#bfa07a',2.14),
+        ...Array.from({length:5},(_,i)=>panel(.55+i*.35,1.3,.095,1.94,.11,'#ffffff',2.14)),
+        part('glass-panel',1.31,2.18,2.0,.012,1.95,null,.12),
+        part('lounge-sofa',1.25,.83,1.55,.58,.72,'#eeece5'),
+        part('lounge-sofa',.62,1.48,1.02,.54,.72,'#eeece5',0,{rotationY:90}),
+        part('table-standard',1.55,1.57,.55,.45,.48,'#e9e6df'),
+        panel(2.73,1.02,.5,1.4,2.4,'#343739'),panel(4.39,1.77,2.83,.24,.25,'#343739',2.15),panel(5.75,1.77,.18,.24,2.15,'#343739'),
+        panel(3.04,1.898,.025,.015,2.15,'#e8ed75'),panel(5.71,1.898,.025,.015,2.15,'#e8ed75'),panel(4.375,1.898,2.695,.015,.025,'#e8ed75',2.15),
+        ...Array.from({length:3},(_,i)=>panel(3.6+i*.66,1.04,.07,1.22,.15,'#343739',2.15)),
+        graphicPanel('light-rings',4.4,.345,2.25,1.23,.54),...fourSeats(4.32,1.16),
+        panel(4.96,2.57,1.45,.62,.82,'#343739'),panel(4.96,2.57,1.5,.66,.045,'#343739',.82),panel(4.79,2.892,1.16,.025,.55,'#5eaa68',.22),logo(4.79,2.91,.87,.37),
+        part('planter-grass',.99,2.48,1.4,.25,.52,null),logo(1.31,2.197,1.45,1.22),
+        ...pairedScreen('lounge',1.28,.36,1.12,1.03),logo(2.73,1.731,.41,1.28)
+      ]},
+    {id:'penin-aqua-wave',name:'10 · Aqua Wave',tagline:'ซุ้มคลื่นฟ้า–ไม้ + ตู้โชว์ + เคาน์เตอร์โค้ง',description:'ซุ้มคลื่นสีฟ้าซ้อนแถบไม้ ผนังขาวพร้อมจอและกราฟิกวงแหวน ประตูตกแต่งจำลอง ตู้โชว์ 3 ใบ โต๊ะเจรจา 4 ที่นั่ง และเคาน์เตอร์โค้งหน้าขวา เปิดทางเข้าด้านหน้าและสองข้าง',primary:'#17bad5',secondary:'#c8ae87',background:'#f4f5f1',floor:'tile',tile:'woodL',graphic:'IDEAS / EXPERIENCE / CONNECTIONS',purpose:'display',logoU:3,logoY:1.9,logoScale:0,
+      objects:[
+        part('fascia-wave',3,.68,5.8,.7,.24,'#c8ae87',1.91),part('fascia-wave',3,.68,5.8,.72,.25,'#17bad5',2.15),rounded(5.8,.63,.2,.45,1.91,'#17bad5'),
+        logo(1.25,1.045,1.1,1.93),logo(4.6,1.045,1.1,1.93),
+        ...pairedScreen('left',.86,.38,1.24,1.01),panel(.86,.5,1.28,.34,.05,'#c8ae87',.88),part('planter-grass',.86,.6,1.2,.26,.55,null),
+        panel(2.03,.45,.72,.2,1.86,'#ffffff'),panel(1.72,.568,.025,.025,1.78,'#5a6062',.04),panel(2.34,.568,.025,.025,1.78,'#5a6062',.04),panel(2.03,.568,.65,.025,.025,'#5a6062',1.8),panel(2.26,.586,.12,.02,.035,'#353a3c',.87),
+        panel(3.08,.375,1.22,.04,.48,'#178e9f',1.04),...pairedScreen('demo',3.23,.414,.62,1.1),
+        graphicPanel('blue-rings',4.76,.35,1.87,1.32,.53),...fourSeats(4.25,1.32),
+        ...[.43,1.04,1.65].flatMap(x=>[panel(x,2.42,.49,.46,.78,'#ffffff'),part('display-glass-case',x,2.42,.49,.46,.25,null,.78)]),
+        part('counter-corner-round',5.15,2.46,1.35,.87,.8,null),logo(5.08,2.902,.84,.33)
+      ]}
   ];
   function build(id,initial,catalog){
     const t=templates.find(t=>t.id===id);if(!t)throw new Error('ไม่พบเทมเพลต Peninsular');
@@ -76,7 +107,7 @@
     // This layout brands the upper header; keep the default wall logo available
     // in the asset list, but hidden so the foreground timber does not cut it.
     if(t.id==='penin-timber-noir')spec.sceneItemState={...spec.sceneItemState,'branding.logo.main':{visible:false}};
-    spec.objects=t.objects.map((o,i)=>{const item=catalog.find(v=>v.catalogId===o.catalogId);if(!item)throw new Error('ไม่พบอุปกรณ์ '+o.catalogId);return {id:t.id+'-'+i,catalogId:item.catalogId,type:item.type,...(o.label?{label:o.label}:{}),position:{...o.position},size:{...o.size},rotationX:0,rotationY:o.rotationY||0,rotationZ:0,orientation:'horizontal',locked:false,unitPrice:item.unitPrice,geometryMode:o.geometryMode==='model'?'model':'parametric',appearance:o.brandLogo&&spec.logo?{mode:'original',textureData:spec.logo,textureName:'YP logo',textureId:t.id+'-logo'}:o.color?{mode:'solid',color:o.color}:{mode:'original'},...(o.structure?{structure:{...o.structure}}:{})};});return {spec,assets:[]};
+    spec.objects=t.objects.map((o,i)=>{const item=catalog.find(v=>v.catalogId===o.catalogId);if(!item)throw new Error('ไม่พบอุปกรณ์ '+o.catalogId);return {id:t.id+'-'+i,catalogId:item.catalogId,type:item.type,...(o.label?{label:o.label}:{}),...(o.tv?{groupId:t.id+'-tv-'+o.tv}:{}),position:{...o.position},size:{...o.size},rotationX:0,rotationY:o.rotationY||0,rotationZ:0,orientation:'horizontal',locked:false,unitPrice:item.unitPrice,geometryMode:o.geometryMode==='model'?'model':'parametric',appearance:o.brandLogo&&spec.logo?{mode:'original',textureData:spec.logo,textureName:'YP logo',textureId:t.id+'-logo'}:o.color?{mode:'solid',color:o.color}:{mode:'original'},...(o.structure?{structure:{...o.structure}}:{})};});return {spec,assets:[]};
   }
   root.YPPeninsularTemplates={templates,build:(...args)=>{const result=build(...args);root.YPTemplateTVGroups?.apply(result.spec);return result;}};
 })(globalThis);

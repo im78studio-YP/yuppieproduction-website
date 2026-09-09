@@ -5,7 +5,7 @@ await import('../../public/yp-web-ai/js/peninsular-templates.js');
 const api=globalThis.YPPeninsularTemplates;
 const html=await readFile(new URL('../../public/yp-web-ai/index.html',import.meta.url),'utf8');
 const catalog=Function('furnitureItem','return '+html.match(/const OBJECT_CATALOG=(\[[\s\S]*?\]);/)[1])(item=>item);
-test('eight distinct reference-derived layouts',()=>{assert.equal(api.templates.length,8);assert.equal(new Set(api.templates.map(t=>t.id)).size,8);assert.equal(new Set(api.templates.map(t=>JSON.stringify(t.objects))).size,8);});
+test('ten distinct reference-derived layouts',()=>{assert.equal(api.templates.length,10);assert.equal(new Set(api.templates.map(t=>t.id)).size,10);assert.equal(new Set(api.templates.map(t=>JSON.stringify(t.objects))).size,10);});
 for(const t of api.templates)test(t.id+' preserves source and logo, fits a 6x3x2.4 booth, and has editable parts',()=>{
   const initial={W:6,D:6,H:2.4,type:'inline',logo:'data:image/png;base64,YQ==',logoColor:'#ee3c96',objects:[],sceneItemState:{}};
   const before=structuredClone(initial),snapshot=api.build(t.id,initial,catalog),s=snapshot.spec;
@@ -36,4 +36,21 @@ test('Orchard has editable organic structures, merchandising and side entry gaps
   for(const [type,count] of [['organicCanopy',2],['treePier',2],['organicDisplay',1],['flutedCounter',1],['table',2]])assert.equal(s.objects.filter(o=>o.type===type).length,count);
   const counter=s.objects.find(o=>o.type==='flutedCounter');assert.ok(counter.position.x-counter.size.w/2>=.6);assert.ok(6-counter.position.x-counter.size.w/2>=.6);
   assert.equal(counter.appearance.mode,'original');assert.equal(s.objects.find(o=>o.type==='organicDisplay').appearance.mode,'original');
+});
+
+test('Noir Lounge and Aqua Wave keep their requested features and grouped screens',()=>{
+  const lounge=api.build('penin-noir-lounge',{logo:'data:yp'},catalog).spec,wave=api.build('penin-aqua-wave',{logo:'data:yp'},catalog).spec;
+  assert.equal(lounge.objects.filter(o=>o.type==='glassPanel').length,1);
+  assert.equal(lounge.objects.filter(o=>o.type==='loungeSofa').length,2);
+  assert.equal(wave.objects.filter(o=>o.type==='waveHeader').length,2);
+  assert.equal(wave.objects.filter(o=>o.type==='glassCase').length,3);
+  assert.equal(wave.objects.filter(o=>o.type==='roundedCornerCounter').length,1);
+  for(const [s,count] of [[lounge,1],[wave,2]]){
+    assert.equal(s.objects.filter(o=>o.type==='chair').length,4);
+    assert.equal(s.logoScale,0);
+    const groups=Object.groupBy(s.objects.filter(o=>o.groupId),o=>o.groupId);
+    assert.equal(Object.keys(groups).length,count);
+    Object.values(groups).forEach(pair=>assert.equal(pair.length,2));
+    s.objects.filter(o=>o.type==='glassPanel'||o.type==='glassCase').forEach(o=>assert.equal(o.appearance.mode,'original'));
+  }
 });
