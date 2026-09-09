@@ -17,7 +17,7 @@ test('Fine Position แทนเมนูโหมดลากเดิมด้
 test('Fine Position ใช้ระยะ 5 ซม. สะสมและ Selection กลาง',()=>{
   assert.match(html,/const FINE_POSITION_STEP=\.05/);
   assert.match(html,/delta=direction\*FINE_POSITION_STEP/);
-  assert.match(html,/function fineMoveSelectedObjects\(axis,delta\)[\s\S]*const objects=selectedObjects\(\)/);
+  assert.match(html,/function fineMoveSelectedObjects\(axis,delta\)[\s\S]*const objects=selectedTransformObjects\(\)/);
   assert.match(html,/function finePositionSelectionKey\(objects=selectedObjects\(\)\)/);
   assert.doesNotMatch(html,/finePositionSelectionState|assetListSelectionState/);
 });
@@ -72,5 +72,5 @@ test('Z-up แปลงพิกัดเฉพาะ UI ทั้งปุ่�
   assert.ok(html.includes('title="Y+ ด้านหน้า 5 ซม."'));
   assert.ok(html.includes('title="Y− ด้านหลัง 5 ซม."'));
   // Internal movement remains world-coordinate based for existing callers.
-  assert.ok(html.includes('obj.position[axis]=+(Number(obj.position?.[axis]||0)+delta).toFixed(3)'));
+  assert.ok(html.includes('obj.position[axis]=+(Number(obj.position?.[axis]||0)+delta).toFixed(objects.length>1?9:3)'));
 });

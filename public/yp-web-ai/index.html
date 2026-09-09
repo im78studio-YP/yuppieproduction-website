@@ -682,6 +682,7 @@ select:focus{border-color:var(--acc)}
   #btnUndoObject:before{content:'↶'}#btnRedoObject:before{content:'↷'}
   .canvas-object-toolbar #btnLockObject{width:52px;min-width:52px;padding:7px 5px;font-size:9px}
   .canvas-object-toolbar #btnLockObject:before{content:none}
+  .canvas-object-toolbar #btnGroupObjects,.canvas-object-toolbar #btnUngroupObjects{width:auto;min-width:54px;font-size:9px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
@@ -1344,6 +1345,8 @@ select:focus{border-color:var(--acc)}
       <button class="btn" id="btnOpenAssetSettings" type="button" title="ตั้งค่าขนาดและพื้นผิวของ Asset" aria-label="เปิดหน้าตั้งค่า Asset">ตั้งค่า Asset</button>
       <button class="btn asset-list-trigger" id="btnAssetList" type="button" title="เปิดรายการวัตถุทั้งหมด" aria-label="เปิด Asset List" aria-expanded="false" aria-controls="assetListPanel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg> Asset List</button>
       <button class="btn" id="btnDuplicateObject" type="button" title="ทำสำเนา" aria-label="ทำสำเนาวัตถุ">⧉ สำเนา</button>
+      <button class="btn" id="btnGroupObjects" type="button" title="รวม Asset ที่เลือกเป็น Group" aria-label="รวมวัตถุที่เลือกเป็น Group">Group</button>
+      <button class="btn" id="btnUngroupObjects" type="button" title="แยก Group โดยคงตำแหน่งเดิม" aria-label="แยก Group ที่เลือก">Ungroup</button>
       <button class="btn danger" id="btnDeleteObject" type="button" title="ลบ" aria-label="ลบวัตถุ">ลบ</button>
       <span class="tool-sep" aria-hidden="true"></span>
       <button class="btn" id="btnUndoObject" type="button" title="ย้อนกลับ" aria-label="ย้อนกลับการแก้ไขวัตถุ">↶ Undo</button>
@@ -3793,12 +3796,45 @@ function bindDownlightBeamEditor(box,obj){
   box.querySelectorAll('[data-beam-color]').forEach(input=>input.onchange=()=>updateDownlightBeamObject(obj.id,input.dataset.beamColor,input.value));
   const attach=box.querySelector('[data-beam-attach]');if(attach)attach.onclick=()=>attachDownlightBeamToBackWall(obj.id);
 }
+function selectedTransformObjects(){
+  // Resolve complete groups even if an older single-asset action narrowed selection.
+  const ids=new Set(selectedObjectIds());
+  [...ids].forEach(id=>groupObjectIds(objectById(id)?.groupId).forEach(memberId=>ids.add(memberId)));
+  return [...ids].map(objectById).filter(Boolean);
+}
+function rotateObjectGroup(objects,degrees=45){
+  if(objects.some(objectLocked))return announceCatalog('ใน Group มี Asset ที่ล็อกอยู่ กรุณา Unlock ก่อนหมุน','error'),false;
+  if(objects.some(obj=>obj.capabilities?.rotatable===false))return announceCatalog('ใน Group มี Asset ที่ไม่รองรับการหมุน','error'),false;
+  // The centroid of member origins is invariant under rigid rotation. Recomputing
+  // an axis-aligned bounding-box midpoint after every turn would make the pivot drift.
+  const pivot=objects.reduce((p,obj)=>({x:p.x+Number(obj.position.x)/objects.length,z:p.z+Number(obj.position.z)/objects.length}),{x:0,z:0});
+  const angle=degrees*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
+  const candidates=objects.map(obj=>{
+    const next=structuredClone(obj),dx=obj.position.x-pivot.x,dz=obj.position.z-pivot.z;
+    next.position.x=+(pivot.x+dx*c+dz*s).toFixed(9);
+    next.position.z=+(pivot.z-dx*s+dz*c).toFixed(9);
+    next.rotationY=((Number(obj.rotationY||0)+degrees)%360+360)%360;
+    return next;
+  });
+  if(candidates.some(next=>!isCatalogPlacementValid(next.catalogId,next.position.x,next.position.z,next.rotationY,next.id,next.size,ALLOW_ASSET_OVERLAP,next))){
+    announceCatalog('หมุน Group ไม่ได้ เพราะสมาชิกบางชิ้นจะอยู่นอกพื้นที่หรือชนโครงสร้างบูธ','error');return false;
+  }
+  const before=objectSnapshot(),primary=objectEditor.selectedId;
+  // Detach before assigning transforms so snap constraints cannot pull a member back.
+  objects.forEach(releaseObjectAttachment);
+  objects.forEach((obj,i)=>{obj.position={...candidates[i].position};obj.rotationY=candidates[i].rotationY;
+    if(isDownlightBeamObject(obj)&&obj.structure)obj.structure.wallAttached=false;normalizeSceneObjectModel(obj);
+  });
+  recordObjectHistory(before);setObjectSelection(objects.map(obj=>obj.id),primary);sync();
+  announceCatalog('หมุนทั้ง Group '+objects.length+' ชิ้น รอบจุดกลางร่วมกัน '+degrees+'° แล้ว','success');return true;
+}
 function rotateSelectedObject(){
   const obj=objectById(objectEditor.selectedId);if(!obj){
     if(objectEditor.selectedId!==SCENE_ASSET_IDS.brand)return;
     if(S.logoMount!=='floor')return announceCatalog('โลโก้ติดผนังต้องรักษาแนวขนานผนัง · เปลี่ยนด้านติดตั้งได้ใน ตั้งค่า Asset','error');
     const before=objectSnapshot();S.logoFloorRotation=(Number(S.logoFloorRotation||0)+45)%360;recordObjectHistory(before);sync();announceCatalog('หมุนโลโก้ 45° แล้ว','success');return;
   }
+  const members=selectedTransformObjects();if(members.length>1)return rotateObjectGroup(members);
   if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
   const rotationY=(obj.rotationY+45)%360,item=objectCatalogDef(obj.catalogId);
   if(!isCatalogPlacementValid(obj.catalogId,obj.position.x,obj.position.z,rotationY,obj.id,obj.size)){
@@ -4073,7 +4109,7 @@ function releaseObjectAttachment(obj){
 }
 function commitFinePositionInput(axis){
   const worldAxis=finePositionWorldAxis(axis);if(!worldAxis)return false;
-  const objects=selectedObjects(),input=finePositionInput(axis);if(objects.length!==1||!input)return false;
+  const objects=selectedTransformObjects(),input=finePositionInput(axis);if(objects.length!==1||!input)return false;
   const obj=objects[0];if(objectLocked(obj)){setFinePositionError(axis,'ปลดล็อก Asset ก่อนปรับตำแหน่ง');return false;}
   const numeric=parseFinePositionDraft(input.value);if(numeric===null){setFinePositionError(axis,'กรอกพิกัดเป็นตัวเลข เช่น 1.25 หรือ 1,25');return false;}
   const current=Number(obj.position?.[worldAxis])||0,delta=numeric-current,next=shiftedFinePositionBounds(selectedAlignmentBounds(obj),worldAxis,delta);
@@ -4084,7 +4120,7 @@ function commitFinePositionInput(axis){
   recordObjectHistory(before);sync();announceCatalog('ปรับพิกัด '+axis.toUpperCase()+' เป็น '+Number(obj.position[worldAxis]).toFixed(2)+' ม. แล้ว','success');return true;
 }
 function syncFinePositionControls(){
-  const objects=selectedObjects(),primary=finePositionPrimaryObject(objects),locked=objects.some(objectLocked),multi=objects.length>1,buttons=document.querySelectorAll('[data-fine-axis]'),help=document.getElementById('finePositionHelp'),selectionKey=finePositionSelectionKey(objects);
+  const objects=selectedTransformObjects(),primary=finePositionPrimaryObject(objects),locked=objects.some(objectLocked),multi=objects.length>1,buttons=document.querySelectorAll('[data-fine-axis]'),help=document.getElementById('finePositionHelp'),selectionKey=finePositionSelectionKey(objects);
   if(finePositionDraft.selectionKey!==selectionKey){resetFinePositionDraft();finePositionDraft.selectionKey=selectionKey;}
   ['x','y','z'].forEach(axis=>{const input=finePositionInput(axis);if(!input)return;input.disabled=!primary||locked||multi;input.placeholder=multi?'—':primary?'':'—';
     if(multi)input.value='';else if(!finePositionDraft.dirty.has(axis))input.value=primary?Number(primary.position?.[finePositionWorldAxis(axis)]||0).toFixed(2):'';
@@ -4098,7 +4134,7 @@ function syncFinePositionControls(){
 function fineMoveSelectedObjects(axis,delta){
   if(!['x','y','z'].includes(axis))return false;
   const direction=Math.sign(Number(delta));if(!direction)return false;delta=direction*FINE_POSITION_STEP;
-  const objects=selectedObjects();
+  const objects=selectedTransformObjects();
   if(!objects.length){syncFinePositionControls();return announceCatalog('เลือก Asset ที่ต้องการปรับ','error'),false;}
   if(objects.some(objectLocked)){syncFinePositionControls();return announceCatalog('ปลดล็อก Asset ก่อนปรับตำแหน่ง','error'),false;}
   const epsilon=.0001,blocked=objects.some(obj=>{
@@ -4111,11 +4147,11 @@ function fineMoveSelectedObjects(axis,delta){
   }
   const before=objectSnapshot();
   objects.forEach(obj=>{
-    obj.position[axis]=+(Number(obj.position?.[axis]||0)+delta).toFixed(3);
+    obj.position[axis]=+(Number(obj.position?.[axis]||0)+delta).toFixed(objects.length>1?9:3);
     releaseObjectAttachment(obj);
     normalizeSceneObjectModel(obj);
   });
-  recordObjectHistory(before);sync();return true;
+  recordObjectHistory(before);setObjectSelection(objects.map(obj=>obj.id),objectEditor.selectedId);sync();return true;
 }
 function alignSelectedObjects(mode){
   const objects=selectedObjects(),reference=objectById(objectEditor.selectedId);
@@ -4250,7 +4286,11 @@ function syncObjectControls(){
     lockButton.title=locked?'ปลดล็อก Asset':'ล็อก Asset';lockButton.setAttribute('aria-label',locked?'ปลดล็อก Asset ที่เลือก':'ล็อก Asset ที่เลือก');
     lockButton.setAttribute('aria-pressed',String(!!obj&&locked));
   }
-  const rotateButton=document.getElementById('btnRotateObject');if(rotateButton){rotateButton.textContent='↻ หมุน 45°';rotateButton.title=brandSelected&&S.logoMount!=='floor'?'โลโก้ติดผนังรักษาแนวขนานผนัง':'หมุน 45 องศา';}
+  const transformMembers=selectedTransformObjects(),groupLocked=transformMembers.some(objectLocked);
+  const rotateButton=document.getElementById('btnRotateObject');if(rotateButton){rotateButton.textContent='↻ หมุน 45°';rotateButton.title=transformMembers.length>1?'หมุนทั้ง Group รอบจุดกลางร่วมกัน 45 องศา':brandSelected&&S.logoMount!=='floor'?'โลโก้ติดผนังรักษาแนวขนานผนัง':'หมุน 45 องศา';if(transformMembers.length>1)rotateButton.disabled=groupLocked;rotateButton.setAttribute('aria-label',rotateButton.title);}
+  const groupingObjects=selectedObjects(),groupButton=document.getElementById('btnGroupObjects'),ungroupButton=document.getElementById('btnUngroupObjects');
+  if(groupButton)groupButton.disabled=groupingObjects.length<2||groupingObjects.some(objectLocked)||selectionCount!==groupingObjects.length;
+  if(ungroupButton)ungroupButton.disabled=!groupingObjects.some(obj=>obj.groupId)||groupLocked;
   document.getElementById('btnUndoObject').disabled=!objectEditor.past.length;
   document.getElementById('btnRedoObject').disabled=!objectEditor.future.length;
   const snapToggle=document.getElementById('placementSnapEnabled');if(snapToggle)snapToggle.checked=S.placementSnap!==false;
@@ -5323,6 +5363,8 @@ function build(){
   document.getElementById('moveAdvanced').ontoggle=syncFinePositionControls;
   document.getElementById('btnLockObject').onclick=toggleSelectedObjectLock;
   document.getElementById('btnRotateObject').onclick=rotateSelectedObject;
+  document.getElementById('btnGroupObjects').onclick=groupSelectedObjects;
+  document.getElementById('btnUngroupObjects').onclick=ungroupSelectedObjects;
   document.getElementById('btnFlipObjectX').onclick=()=>flipSelectedObject('x');
   document.getElementById('btnFlipObjectY').onclick=()=>flipSelectedObject('y');
   document.getElementById('btnOpenAssetSettings').onclick=openAssetSettings;
@@ -6568,7 +6610,8 @@ class ThreeBoothRenderer{
     const delta={x:next.x-drag.startX,y:next.y-drag.startY,z:next.z-drag.startZ};
     (drag.memberIds||[drag.id]).forEach(memberId=>{
       const member=objectById(memberId),start=drag.memberStarts?.[memberId],memberRoot=this.objectMeshes.get(memberId);if(!member||!start||!memberRoot)return;
-      member.position.x=+(start.x+delta.x).toFixed(3);member.position.y=+(start.y+delta.y).toFixed(3);member.position.z=+(start.z+delta.z).toFixed(3);
+      const digits=drag.memberIds.length>1?9:3;
+      member.position.x=+(start.x+delta.x).toFixed(digits);member.position.y=+(start.y+delta.y).toFixed(digits);member.position.z=+(start.z+delta.z).toFixed(digits);
       if(member.id===drag.id&&drag.memberIds.length===1&&Number.isFinite(Number(next.rotationY)))member.rotationY=Number(next.rotationY);
       if(sceneAttachmentActive(member)&&distance>.003)member.attachment=null;
       normalizeSceneObjectModel(member);member.placement.mode=next.surface?'surface':'free';member.placement.surface=next.surface||'free';member.placement.targetId=next.targetId||null;
