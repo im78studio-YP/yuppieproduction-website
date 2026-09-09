@@ -1746,6 +1746,7 @@ const OBJECT_CATALOG=[
   furnitureItem({catalogId:'panel-standard',category:'display',type:'panel',name:'แผงตกแต่ง / กรอบ',icon:'▯',size:{w:1,d:.12,h:2.4},unitPrice:0,color:'#c6ad82'}),
   furnitureItem({catalogId:'panel-rounded',category:'display',type:'roundedPanel',name:'แผงมุมโค้ง',icon:'▯',size:{w:.7,d:.12,h:1.4},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'panel-swoop',category:'structure',type:'swoopPanel',name:'แผงโค้งไล่ระดับ',icon:'∿',size:{w:5.8,d:.3,h:2.4},unitPrice:0,color:'#ffffff'}),
+  furnitureItem({catalogId:'fascia-step',category:'structure',type:'stepFascia',name:'ป้ายซุ้มยกระดับเฉียง',icon:'▱',size:{w:5.7,d:.18,h:.78},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'panel-ribbon-slant',category:'display',type:'slantRibbon',name:'แผงริบบิ้นเฉียง',icon:'∿',size:{w:2.5,d:.08,h:2.35},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'fascia-curved',category:'structure',type:'fasciaCurve',name:'ป้ายซุ้มโค้งเข้ามุม',icon:'▯',size:{w:4,d:1.8,h:.4},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'fascia-wave',category:'structure',type:'waveHeader',name:'ป้ายซุ้มคลื่น',icon:'∿',size:{w:5.8,d:.45,h:.25},unitPrice:0,color:'#17bad5'}),
@@ -7432,7 +7433,7 @@ class ThreeBoothRenderer{
     normalizeSceneObjectModel(obj);const T=this.THREE,appearance=obj.appearance||{},meshes=[];
     root.traverse(part=>{if(!part.isMesh||!part.material)return;const source=Array.isArray(part.material)?part.material:[part.material];
       const cloned=source.map(material=>{
-        if(appearance.mode==='solid'&&!(obj.type==='ribbonPortal'&&part.name==='ribbon-white-stripe')){
+        if(appearance.mode==='solid'&&!(obj.type==='ribbonPortal'&&part.name==='ribbon-white-stripe')&&part.name!=='step-fascia-accent'){
           const next=new T.MeshStandardMaterial({color:appearance.color||'#f5f5f5',roughness:.72,metalness:.02,
             side:material.side,flatShading:material.flatShading===true,transparent:false,opacity:1});
           next.name=(material.name||'material')+'-solid-override';next.needsUpdate=true;return next;
@@ -7573,6 +7574,12 @@ class ThreeBoothRenderer{
       const radius=Math.min(s.w,s.d)*.44,tube=Math.min(.022,radius*.13),ring=mesh(new T.TorusGeometry(radius,tube,8,48),base,[0,tube,0]);ring.rotation.x=Math.PI/2;
       const glow=mesh(new T.TorusGeometry(radius,tube*.45,8,48),'#fff7df',[0,tube*.45,0],{emissive:'#fff7df',emissiveIntensity:.7});glow.rotation.x=Math.PI/2;
       [-1,1].forEach(sign=>bx([.008,Math.max(.01,s.h-tube*2),.008],[sign*radius*.7,(s.h+tube*2)/2,0],dark,{edges:false}));
+    }else if(obj.type==='stepFascia'){
+      const w=s.w,h=s.h,shape=new T.Shape();
+      [[-.5,0],[.05,0],[.16,.45],[.5,.45],[.5,1],[.16,1],[.05,.55],[-.5,.55]].forEach(([x,y],i)=>i?shape.lineTo(x*w,y*h):shape.moveTo(x*w,y*h));shape.closePath();
+      mesh(new T.ExtrudeGeometry(shape,{depth:s.d,bevelEnabled:false}),base,[0,0,-s.d/2]);
+      const rim=new T.Shape();[[-.5,.55],[.05,.55],[.16,1],[.5,1],[.5,.91],[.18,.91],[.07,.46],[-.5,.46]].forEach(([x,y],i)=>i?rim.lineTo(x*w,y*h):rim.moveTo(x*w,y*h));rim.closePath();
+      mesh(new T.ExtrudeGeometry(rim,{depth:.012,bevelEnabled:false}),obj.structure?.color||'#244bea',[0,0,s.d/2+.002]).name='step-fascia-accent';
     }else if(obj.type==='swoopPanel'){
       const w=s.w,h=s.h,shape=new T.Shape();shape.moveTo(-w/2,0);shape.lineTo(w/2,0);shape.lineTo(w/2,h*.96);
       shape.quadraticCurveTo(w/2,h,w*.43,h);shape.lineTo(w*.22,h);
@@ -9594,8 +9601,8 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/inline-templates.css?v=20260909-3">
 <script src="js/inline-templates.js?v=20260908-2"></script>
 <script src="js/inline-template-ui.js?v=20260909-6"></script>
-<script src="js/peninsular-templates.js?v=20260909-14"></script>
-<script src="js/peninsular-template-ui.js?v=20260909-14"></script>
+<script src="js/peninsular-templates.js?v=20260909-15"></script>
+<script src="js/peninsular-template-ui.js?v=20260909-15"></script>
 <script src="js/corner-templates.js?v=20260909-13"></script>
 <script src="js/corner-template-ui.js?v=20260909-13"></script>
 <script src="js/island-templates.js?v=20260909-11"></script>

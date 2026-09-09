@@ -5,7 +5,7 @@ await import('../../public/yp-web-ai/js/peninsular-templates.js');
 const api=globalThis.YPPeninsularTemplates;
 const html=await readFile(new URL('../../public/yp-web-ai/index.html',import.meta.url),'utf8');
 const catalog=Function('furnitureItem','return '+html.match(/const OBJECT_CATALOG=(\[[\s\S]*?\]);/)[1])(item=>item);
-test('thirteen distinct reference-derived layouts',()=>{assert.equal(api.templates.length,13);assert.equal(new Set(api.templates.map(t=>t.id)).size,13);assert.equal(new Set(api.templates.map(t=>JSON.stringify(t.objects))).size,13);});
+test('fourteen distinct reference-derived layouts',()=>{assert.equal(api.templates.length,14);assert.equal(new Set(api.templates.map(t=>t.id)).size,14);assert.equal(new Set(api.templates.map(t=>JSON.stringify(t.objects))).size,14);});
 for(const t of api.templates)test(t.id+' preserves source and logo, fits a 6x3x2.4 booth, and has editable parts',()=>{
   const initial={W:6,D:6,H:2.4,type:'inline',logo:'data:image/png;base64,YQ==',logoColor:'#ee3c96',objects:[],sceneItemState:{}};
   const before=structuredClone(initial),snapshot=api.build(t.id,initial,catalog),s=snapshot.spec;
@@ -27,6 +27,13 @@ test('latest three references have shaped 30cm rear walls and paired TV parts',(
     assert.equal(s.logoScale,0);
     assert.ok(s.objects.some(o=>o.transform?.flipX===true));
   }
+});
+test('Blue Step excludes hanging shrubs but retains lower planters and reference features',()=>{
+  const s=api.build('penin-blue-step',{logo:'data:yp'},catalog).spec;
+  for(const [type,count] of [['trailingPlant',0],['grassPlanter',2],['glassCase',3],['stepFascia',1],['table',2],['chair',8]])assert.equal(s.objects.filter(o=>o.type===type).length,count);
+  const header=s.objects.find(o=>o.type==='stepFascia');assert.equal(header.structure.color,'#244bea');
+  const tv=s.objects.filter(o=>o.groupId);assert.equal(tv.length,2);assert.equal(tv[0].groupId,tv[1].groupId);
+  assert.ok(s.objects.some(o=>o.appearance.textureData==='data:yp'));assert.notEqual(s.sceneItemState?.['structure.wall.back']?.visible,false);
 });
 test('unknown template rejects explicitly',()=>assert.throws(()=>api.build('invalid',{},catalog)));
 test('Blue Pavilion keeps fascia branding, curved signs and four inward-facing chairs',()=>{

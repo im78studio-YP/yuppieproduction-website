@@ -149,6 +149,26 @@
         ...cases([3.05,3.74],2.49,'#b861a4'),...curvedCounter(5.03,2.57,1.72,'#b861a4')
       ])
   );
+  templates.push({id:'penin-blue-step',name:'14 · Blue Step Showcase',tagline:'ซุ้มเฉียงน้ำเงิน–ฟ้า + ระแนงไม้ + ตู้โชว์ 3 ใบ',
+    description:'อ้างอิงภาพซุ้มขาวขอบน้ำเงิน–ฟ้า: ป้ายยกระดับเฉียง ระแนงไม้หน้าซ้าย เคาน์เตอร์โค้ง ตู้โชว์ 3 ใบ โต๊ะเจรจา 2 ชุด และประตูตกแต่งจำลอง ไม่ใส่พุ่มไม้แขวนทั้งสองมุม คงกระบะต้นไม้ด้านล่างไว้',
+    primary:'#244bea',secondary:'#119cb8',background:'#f4f4ec',floor:'tile',tile:'woodL',graphic:'',purpose:'display',logoU:3,logoY:1.9,logoScale:0,
+    objects:[
+      part('fascia-step',3,1.35,5.7,.18,.78,'#ffffff',1.62,{structure:{color:'#244bea'}}),
+      panel(.23,.8,.16,1.27,.429,'#ffffff',1.62),panel(.23,.8,.172,1.27,.07,'#244bea',1.979),
+      logo(1.94,1.458,1.61,1.695),logo(4.87,1.458,1.3,2.083),
+      ...Array.from({length:5},(_,i)=>panel(.6+i*.23,1.35,.105,.16,1.62,'#b69a78')),
+      ...[.55,.87,1.19].map(y=>panel(1.06,1.444,1.16,.025,.13,'#343a3c',y)),logo(1.06,1.469,.72,.9),
+      ...pairedScreen('left-wall',1.05,.36,1.28,.87),grass(1.02,.53,1.48),
+      panel(3.23,.64,.84,.63,1.63,'#f1f0e8'),panel(3.23,.968,.69,.018,1.51,'#f7f6ef',.035),
+      panel(2.878,.983,.016,.018,1.52,'#535956',.035),panel(3.582,.983,.016,.018,1.52,'#535956',.035),panel(3.23,.983,.72,.018,.016,'#535956',1.548),panel(3.49,1.003,.12,.015,.028,'#817d6f',.78),
+      panel(4.79,.72,1.99,.84,.07,'#119cb8',1.69),panel(4.79,.71,1.83,.73,.032,'#f4f4ec',1.76),
+      graphicPanel('blue-info',4.46,.331,1.16,.83,.66),
+      ...[.65,1,1.35].map(y=>panel(5.48,.49,.66,.31,.055,'#119cb8',y)),grass(5.08,.56,1.54),
+      ...fourSeats(2.5,1.25),...fourSeats(4.92,1.38),
+      ...cases([3.13,3.72,4.31],2.5,'#ffffff'),
+      ...[3.13,3.72,4.31].map(x=>panel(x,2.5,.49,.46,.035,'#119cb8')),
+      ...curvedCounter(1.22,2.57,1.65,'#119cb8')
+    ]});
   function build(id,initial,catalog){
     const t=templates.find(t=>t.id===id);if(!t)throw new Error('ไม่พบเทมเพลต Peninsular');
     const spec=structuredClone(initial);Object.assign(spec,{W:6,D:3,H:2.4,type:'penin',primary:t.primary,secondary:t.secondary,colTouched:true,secTouched:true,wallCol:'white',wallMat:'paint',floor:t.floor,tile:t.tile,carpet:'cream',raise:0,stSize:'none',logoWallU:t.id==='penin-adventure'?2:t.id==='penin-connect'?1.42:3,logoWallY:1.91,logoScale:t.id==='penin-connect'?24:30,nameScale:0,designPurpose:t.purpose,boothTemplate:{id:t.id,type:'penin',name:t.name,version:1},objects:[],view:'three'});
