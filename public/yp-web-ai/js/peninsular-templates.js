@@ -100,14 +100,65 @@
         part('counter-corner-round',5.15,2.46,1.35,.87,.8,null),logo(5.08,2.902,.84,.33)
       ]}
   ];
+  const swoop=(x,z,w,d,h,color,y=0,flipX=false)=>part('panel-swoop',x,z,w,d,h,color,y,{flipX});
+  const grass=(x,z,w)=>part('planter-grass',x,z,w,.25,.5,null);
+  const cases=(xs,z,color)=>xs.flatMap(x=>[panel(x,z,.48,.45,.73,color),part('display-glass-case',x,z,.48,.45,.24,null,.73)]);
+  const curvedCounter=(x,z,w,color)=>[swoop(x,z,w,.52,.88,'#ffffff',0,true),swoop(x,z+.271,w-.16,.022,.7,color,.08,true),logo(x,z+.29,w*.6,.22),panel(x,z-.09,w*.7,.27,.045,'#ffffff',.51)];
+  const curvedTemplate=(id,name,tagline,description,primary,secondary,background,objects)=>({id,name,tagline,description,primary,secondary,background,objects,floor:'tile',tile:'woodL',graphic:'',purpose:'display',logoU:3,logoY:1.9,logoScale:0,customBack:true});
+  templates.push(
+    curvedTemplate('penin-crimson-flow','11 · Crimson Flow','ขาว–แดง + ซุ้มโค้ง + ตู้โชว์',
+      'อ้างอิงภาพขาว–แดง: ผนังโค้งไล่ระดับ ซุ้มหน้าซ้ายบนเสาสีแดง–เทา ตู้โชว์ 3 ใบ โต๊ะเจรจา 2 ชุด และเคาน์เตอร์โค้ง เปิดทางเข้าด้านหน้าและสองข้าง', '#c93351','#9d9c98','#e2e0db',[
+        swoop(3,.15,6,.3,2.4,'#e2e0db',0,true),graphicPanel('red-line',3,.313,5.72,1.3,.2),
+        logo(1.14,.328,1.54,2.045),
+        part('fascia-curved',1.08,1.27,1.74,1.77,.28,'#ffffff',1.81,{flipX:true}),logo(1.06,2.169,1.16,1.855),
+        ...[.65,.9,1.15].map((x,i)=>panel(x,2.02,.15,.19,1.81,i===2?'#6e7170':'#c93351')),
+        panel(.9,2.132,.84,.03,.36,'#ffffff',.83),logo(.9,2.155,.71,.92),
+        ...cases([.32,1.69,2.25],2.48,'#ffffff'),
+        part('portal-ribbon',4.56,.58,2.65,.35,1.54,'#ffffff',0,{flipX:true}),
+        panel(4.61,.352,2.09,.045,.46,'#383b3b',.76),...pairedScreen('demo',5.22,.39,.72,.8),
+        graphicPanel('light-rings',4.33,.382,.51,.33,.81),logo(3.89,.384,.37,.89),
+        ...fourSeats(1.7,1.13),...fourSeats(4.54,1.34),grass(3.07,.56,1.08),
+        ...curvedCounter(4.55,2.59,1.8,'#c93351')
+      ]),
+    curvedTemplate('penin-sage-ribbon','12 · Sage Ribbon','เขียว–ขาว + ริบบิ้นเฉียง + โซนเจรจา',
+      'อ้างอิงภาพเขียว–ขาว: ผนังริบบิ้นเฉียงพร้อมจอ ซุ้มโค้งสูงด้านขวาพร้อมกราฟิก โต๊ะเจรจา 2 ชุด กระบะต้นไม้ และเคาน์เตอร์รับรองโค้ง', '#59985d','#d4dec9','#59985d',[
+        swoop(3,.15,6,.3,2.4,'#59985d'),
+        part('panel-ribbon-slant',1.62,.365,2.5,.09,2.35,'#f8f7ee'),logo(1.03,.418,1.1,2.03),
+        ...pairedScreen('ribbon',1.98,.439,1.16,1.03),
+        part('portal-ribbon',4.84,1.45,2.08,.45,2.4,'#ffffff',0,{flipX:true}),
+        rounded(5.45,1.45,.65,.43,2.15,'#ffffff'),graphicPanel('sage-rings',5.45,1.68,.54,1.1,.42),
+        panel(4.84,.99,2.08,1.5,.16,'#ffffff',2.24),
+        logo(5.45,1.68,.5,1.8),panel(3.91,.333,1.29,.035,.41,'#f0f3e9',1.19),
+        graphicPanel('sage-rings',3.77,.358,.45,.31,1.24),graphicPanel('sage-rings',4.28,.358,.45,.31,1.24),
+        ...fourSeats(1.46,1.36),...fourSeats(4.22,1.27),
+        grass(.95,.57,1.37),grass(3.74,.56,1.13),grass(5.43,1.84,.83),
+        ...curvedCounter(3.13,2.59,1.87,'#59985d')
+      ]),
+    curvedTemplate('penin-blush-gallery','13 · Blush Gallery','ดำ–ชมพู + ระแนงไม้ + ผนังโชว์สินค้า',
+      'อ้างอิงภาพดำ–ชมพู: ผนังโค้งไล่ระดับขอบขาว แผงกราฟิกบิวตี้ ชั้นสินค้า ระแนงไม้พร้อมสวนแขวน ตู้โชว์ 2 ใบ และเคาน์เตอร์โค้ง', '#b861a4','#b99a75','#333431',[
+        swoop(3,.15,6,.3,2.4,'#ffffff'),swoop(3,.32,5.87,.04,2.33,'#333431',.025),
+        logo(4.8,.353,1.45,2.03),
+        rounded(3.98,.395,3.64,.1,1.44,'#f7efe8',.2),graphicPanel('blush-beauty',3.47,.453,2.52,1.29,.275),
+        ...[.43,.73,1.03,1.33].map(y=>panel(5.35,.54,.77,.27,.035,'#ebe7de',y)),
+        ...Array.from({length:5},(_,i)=>panel(.29+i*.23,2.04,.09,.14,1.73,'#b99a75')),
+        rounded(.91,2.04,1.48,.19,.7,'#ffffff',1.7),rounded(.91,2.147,1.32,.025,.55,'#333431',1.78),logo(.91,2.173,1.1,1.96),
+        panel(.91,1.22,1.48,1.73,.16,'#ffffff',2.24),part('plant-trailing',1.58,1.27,.42,.21,.78,null,1.38),
+        ...[.72,1.03,1.34].map(y=>panel(.86,2.128,1.24,.025,.13,'#333431',y)),
+        logo(.86,2.155,.87,1.055),grass(.86,2.31,1.57),
+        ...pairedScreen('lounge',1.34,.387,1.16,.89),...fourSeats(1.58,1.25),
+        ...cases([3.05,3.74],2.49,'#b861a4'),...curvedCounter(5.03,2.57,1.72,'#b861a4')
+      ])
+  );
   function build(id,initial,catalog){
     const t=templates.find(t=>t.id===id);if(!t)throw new Error('ไม่พบเทมเพลต Peninsular');
     const spec=structuredClone(initial);Object.assign(spec,{W:6,D:3,H:2.4,type:'penin',primary:t.primary,secondary:t.secondary,colTouched:true,secTouched:true,wallCol:'white',wallMat:'paint',floor:t.floor,tile:t.tile,carpet:'cream',raise:0,stSize:'none',logoWallU:t.id==='penin-adventure'?2:t.id==='penin-connect'?1.42:3,logoWallY:1.91,logoScale:t.id==='penin-connect'?24:30,nameScale:0,designPurpose:t.purpose,boothTemplate:{id:t.id,type:'penin',name:t.name,version:1},objects:[],view:'three'});
     if(t.logoU!==undefined)Object.assign(spec,{logoWallU:t.logoU,logoWallY:t.logoY,logoScale:t.logoScale});
+    // Shaped 30 cm rear panels replace only this template's rectangular system wall.
+    if(t.customBack)spec.sceneItemState={...spec.sceneItemState,'structure.wall.back':{visible:false},'branding.graphic.wall.back':{visible:false}};
     // This layout brands the upper header; keep the default wall logo available
     // in the asset list, but hidden so the foreground timber does not cut it.
     if(t.id==='penin-timber-noir')spec.sceneItemState={...spec.sceneItemState,'branding.logo.main':{visible:false}};
-    spec.objects=t.objects.map((o,i)=>{const item=catalog.find(v=>v.catalogId===o.catalogId);if(!item)throw new Error('ไม่พบอุปกรณ์ '+o.catalogId);return {id:t.id+'-'+i,catalogId:item.catalogId,type:item.type,...(o.label?{label:o.label}:{}),...(o.tv?{groupId:t.id+'-tv-'+o.tv}:{}),position:{...o.position},size:{...o.size},rotationX:0,rotationY:o.rotationY||0,rotationZ:0,orientation:'horizontal',locked:false,unitPrice:item.unitPrice,geometryMode:o.geometryMode==='model'?'model':'parametric',appearance:o.brandLogo&&spec.logo?{mode:'original',textureData:spec.logo,textureName:'YP logo',textureId:t.id+'-logo'}:o.color?{mode:'solid',color:o.color}:{mode:'original'},...(o.structure?{structure:{...o.structure}}:{})};});return {spec,assets:[]};
+    spec.objects=t.objects.map((o,i)=>{const item=catalog.find(v=>v.catalogId===o.catalogId);if(!item)throw new Error('ไม่พบอุปกรณ์ '+o.catalogId);return {id:t.id+'-'+i,catalogId:item.catalogId,type:item.type,...(o.label?{label:o.label}:{}),...(o.tv?{groupId:t.id+'-tv-'+o.tv}:{}),...(o.flipX?{transform:{flipX:true}}:{}),position:{...o.position},size:{...o.size},rotationX:0,rotationY:o.rotationY||0,rotationZ:0,orientation:'horizontal',locked:false,unitPrice:item.unitPrice,geometryMode:o.geometryMode==='model'?'model':'parametric',appearance:o.brandLogo&&spec.logo?{mode:'original',textureData:spec.logo,textureName:'YP logo',textureId:t.id+'-logo'}:o.color?{mode:'solid',color:o.color}:{mode:'original'},...(o.structure?{structure:{...o.structure}}:{})};});return {spec,assets:[]};
   }
   root.YPPeninsularTemplates={templates,build:(...args)=>{const result=build(...args);root.YPTemplateTVGroups?.apply(result.spec);return result;}};
 })(globalThis);

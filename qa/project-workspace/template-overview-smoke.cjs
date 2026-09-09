@@ -2,7 +2,7 @@ const {chromium}=require('C:/Users/Admin/.cache/codex-runtimes/codex-primary-run
 const assert=require('node:assert/strict');
 const base='http://127.0.0.1:4173/yp-web-ai/';
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
-  for(const [folder,count,id] of [['peninsular-templates',10,'penin-orchard'],['inline-templates',5,'gallery']]){
+  for(const [folder,count,id] of [['peninsular-templates',13,'penin-orchard'],['inline-templates',5,'gallery']]){
     const context=await browser.newContext(),page=await context.newPage({viewport:{width:1365,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(base+'assets/'+folder+'/overview.html');
     assert.equal(await page.locator('.use-template').count(),count);assert.equal(await page.locator('[download]').count(),0);
@@ -35,5 +35,5 @@ const base='http://127.0.0.1:4173/yp-web-ai/';
   await page.goto(base+'assets/peninsular-templates/overview.html');await page.setViewportSize({width:390,height:844});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   assert.ok((await page.locator('.use-template').first().boundingBox()).height>=44);
-  console.log('PASS: 15 overview use buttons; both template types open selected editable A; no template download links; saved draft cancel/recover and preserved A/new B; consumed URL; invalid ID safe; mobile CTA');
+  console.log('PASS: 18 overview use buttons; both template types open selected editable A; no template download links; saved draft cancel/recover and preserved A/new B; consumed URL; invalid ID safe; mobile CTA');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

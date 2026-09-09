@@ -5,7 +5,7 @@ await import('../../public/yp-web-ai/js/peninsular-templates.js');
 const api=globalThis.YPPeninsularTemplates;
 const html=await readFile(new URL('../../public/yp-web-ai/index.html',import.meta.url),'utf8');
 const catalog=Function('furnitureItem','return '+html.match(/const OBJECT_CATALOG=(\[[\s\S]*?\]);/)[1])(item=>item);
-test('ten distinct reference-derived layouts',()=>{assert.equal(api.templates.length,10);assert.equal(new Set(api.templates.map(t=>t.id)).size,10);assert.equal(new Set(api.templates.map(t=>JSON.stringify(t.objects))).size,10);});
+test('thirteen distinct reference-derived layouts',()=>{assert.equal(api.templates.length,13);assert.equal(new Set(api.templates.map(t=>t.id)).size,13);assert.equal(new Set(api.templates.map(t=>JSON.stringify(t.objects))).size,13);});
 for(const t of api.templates)test(t.id+' preserves source and logo, fits a 6x3x2.4 booth, and has editable parts',()=>{
   const initial={W:6,D:6,H:2.4,type:'inline',logo:'data:image/png;base64,YQ==',logoColor:'#ee3c96',objects:[],sceneItemState:{}};
   const before=structuredClone(initial),snapshot=api.build(t.id,initial,catalog),s=snapshot.spec;
@@ -13,6 +13,20 @@ for(const t of api.templates)test(t.id+' preserves source and logo, fits a 6x3x2
   assert.equal(new Set(s.objects.map(o=>o.id)).size,s.objects.length);
   for(const o of s.objects){assert.equal(o.locked,false);assert.ok(catalog.some(c=>c.catalogId===o.catalogId));assert.ok(o.position.x-o.size.w/2>=-.001);assert.ok(o.position.x+o.size.w/2<=6.001);assert.ok(o.position.z-o.size.d/2>=-.001);assert.ok(o.position.z+o.size.d/2<=3.001);assert.ok(o.position.y>=0&&o.position.y+o.size.h<=2.401);}
   s.objects[0].size.w=900;assert.notEqual(api.build(t.id,initial,catalog).spec.objects[0].size.w,900);
+});
+test('latest three references have shaped 30cm rear walls and paired TV parts',()=>{
+  for(const [id,seats,glass] of [['penin-crimson-flow',8,3],['penin-sage-ribbon',8,0],['penin-blush-gallery',4,2]]){
+    const s=api.build(id,{logo:'data:yp'},catalog).spec,wall=s.objects[0];
+    assert.equal(wall.type,'swoopPanel');assert.equal(wall.size.d,.3);assert.equal(wall.size.w,6);
+    assert.equal(s.sceneItemState['structure.wall.back'].visible,false);
+    assert.equal(s.objects.filter(o=>o.type==='chair').length,seats);
+    assert.equal(s.objects.filter(o=>o.type==='glassCase').length,glass);
+    const groups=Object.groupBy(s.objects.filter(o=>o.groupId),o=>o.groupId);
+    assert.equal(Object.keys(groups).length,1);assert.equal(Object.values(groups)[0].length,2);
+    assert.ok(s.objects.filter(o=>o.type==='brandCopy').some(o=>o.appearance.textureData==='data:yp'));
+    assert.equal(s.logoScale,0);
+    assert.ok(s.objects.some(o=>o.transform?.flipX===true));
+  }
 });
 test('unknown template rejects explicitly',()=>assert.throws(()=>api.build('invalid',{},catalog)));
 test('Blue Pavilion keeps fascia branding, curved signs and four inward-facing chairs',()=>{
