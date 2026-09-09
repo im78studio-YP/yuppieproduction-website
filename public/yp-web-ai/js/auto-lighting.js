@@ -136,6 +136,7 @@
   }
 
   function applyAutomaticBrandWallLayout(spec={}){
+    if(spec.boothTemplate||spec.inlineTemplate)return null;
     const layout=automaticBrandWallLayout(spec);if(!layout)return null;
     spec.logoWallU=layout.center;
     const W=Math.max(1,num(spec.W||spec.width,6)),ratio=layout.center/W;spec.logoPos=ratio<.34?'left':ratio>.66?'right':'center';
@@ -399,6 +400,7 @@
   }
 
   function generateLightingPlan({spec={},sceneRevision=0,lighting=null}={}){
+    if(global.YPTemplateLighting?.profile(spec))return global.YPTemplateLighting.generate({spec,sceneRevision,lighting});
     const state=normalizeLightingState(lighting||spec.lighting||defaultLightingState()),targets=collectTargets(spec).sort((a,b)=>targetScore(a,state.intent)-targetScore(b,state.intent));
     const mounts=collectMountSurfaces(spec),sideWallMounts=mounts.filter(mount=>mount.type==='wall'&&(mount.face==='left'||mount.face==='right')),nextRevision=state.lightingRevision+1,fixtures=[];
     const important=targets.filter(target=>target.type!=='general').slice(0,state.intent==='balanced'?5:6);
@@ -463,6 +465,7 @@
   }
 
   function recalculateLightingPlan(args={}){
+    if(global.YPTemplateLighting?.profile(args.spec||{}))return global.YPTemplateLighting.generate(args,true);
     const current=normalizeLightingState(args.lighting||args.spec?.lighting),approved=current.approvedFixtures;
     const next=generateLightingPlan({...args,lighting:{...current,suggestions:[]}}),approvedLayout=applyBackWallObstructions(approved,args.spec||{}),keptApproved=approvedLayout.fixtures;
     next.approvedFixtures=keptApproved;

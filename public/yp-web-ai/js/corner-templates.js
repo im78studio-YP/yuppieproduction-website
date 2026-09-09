@@ -22,7 +22,7 @@
     if(out.logoWall==='back'||!out.logoWall){if(Number.isFinite(out.logoWallU))out.logoWallU=out.W-out.logoWallU;}else out.logoWall=swap(out.logoWall);
     if(out.stPos==='left'||out.stPos==='right')out.stPos=swap(out.stPos);
     if(out.stDoor==='left'||out.stDoor==='right')out.stDoor=swap(out.stDoor);
-    out.cornerSide=side;return out;
+    out.cornerSide=side;globalThis.YPTemplateLighting?.mirror(out);return out;
   }
   function build(id,initial,catalog,side='right'){
     const t=templates.find(t=>t.id===id);if(!t)throw new Error('ไม่พบเทมเพลตบูธหัวมุม');
@@ -30,5 +30,5 @@
     spec.objects=t.objects.map((o,i)=>{const item=catalog.find(c=>c.catalogId===o.catalogId);if(!item)throw new Error('ไม่พบอุปกรณ์ '+o.catalogId);return {id:t.id+'-'+i,catalogId:item.catalogId,type:item.type,position:{...o.position},size:{...o.size},rotationX:0,rotationY:o.rotationY||0,rotationZ:0,locked:false,orientation:'horizontal',geometryMode:'parametric',unitPrice:item.unitPrice,appearance:o.color?{mode:'solid',color:o.color}:{mode:'original'}};});
     if(side!=='right')spec=mirror(spec,side);return {spec,assets:[]};
   }
-  root.YPCornerTemplates={templates,build,mirror};
+  root.YPCornerTemplates={templates,build:(...args)=>{const result=build(...args);root.YPTemplateTVGroups?.apply(result.spec);return result;},mirror};
 })(globalThis);

@@ -78,5 +78,5 @@
     if(t.id==='penin-timber-noir')spec.sceneItemState={...spec.sceneItemState,'branding.logo.main':{visible:false}};
     spec.objects=t.objects.map((o,i)=>{const item=catalog.find(v=>v.catalogId===o.catalogId);if(!item)throw new Error('ไม่พบอุปกรณ์ '+o.catalogId);return {id:t.id+'-'+i,catalogId:item.catalogId,type:item.type,...(o.label?{label:o.label}:{}),position:{...o.position},size:{...o.size},rotationX:0,rotationY:o.rotationY||0,rotationZ:0,orientation:'horizontal',locked:false,unitPrice:item.unitPrice,geometryMode:o.geometryMode==='model'?'model':'parametric',appearance:o.brandLogo&&spec.logo?{mode:'original',textureData:spec.logo,textureName:'YP logo',textureId:t.id+'-logo'}:o.color?{mode:'solid',color:o.color}:{mode:'original'},...(o.structure?{structure:{...o.structure}}:{})};});return {spec,assets:[]};
   }
-  root.YPPeninsularTemplates={templates,build};
+  root.YPPeninsularTemplates={templates,build:(...args)=>{const result=build(...args);root.YPTemplateTVGroups?.apply(result.spec);return result;}};
 })(globalThis);

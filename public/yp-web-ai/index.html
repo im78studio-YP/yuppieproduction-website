@@ -1683,7 +1683,9 @@ select:focus{border-color:var(--acc)}
 <script src="js/ai-staging.js?v=20260830-1"></script>
 <script src="js/ai-render-intent.js?v=20260831-1"></script>
 <script src="js/ai-render-pipeline.js?v=20260830-1"></script>
-<script src="js/auto-lighting.js?v=20260902-17"></script>
+<script src="js/auto-lighting.js?v=20260909-8"></script>
+<script src="js/template-lighting.js?v=20260909-8"></script>
+<script src="js/template-tv-groups.js?v=20260909-9"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
 <script src="js/smart-snap-engine.js?v=20260902-2"></script>
 <script src="js/asset-attachment-graph.js?v=20260901-1"></script>
@@ -6111,7 +6113,10 @@ class ThreeBoothRenderer{
     root.traverse(node=>{
       if(!node.isMesh||node.userData?.systemHelper||node.userData?.anchorGuide||!node.geometry)return;
       if(!node.geometry.boundingBox)node.geometry.computeBoundingBox();const box=node.geometry.boundingBox;if(!box||box.isEmpty())return;
-      this.handleDrag.getBoxCorners(box).forEach(corner=>{point.copy(corner).applyMatrix4(node.matrixWorld).applyMatrix4(inverseRoot);bounds.expandByPoint(point);});
+      // Bounds are also needed before interactive drag helpers finish initializing.
+      for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){
+        point.set(x,y,z).applyMatrix4(node.matrixWorld).applyMatrix4(inverseRoot);bounds.expandByPoint(point);
+      }
     });
     return bounds.isEmpty()?null:bounds;
   }
@@ -7526,6 +7531,7 @@ class ThreeBoothRenderer{
     });
   }
   resolveAutoLightingFixture(data,spec,allFixtures=[]){
+    if(globalThis.YPTemplateLighting?.profile(spec))return {fixture:YPTemplateLighting.resolve(spec,data),mountQuaternion:null};
     const T=this.THREE,attachment=data.mountAttachment,parentId=String(attachment?.parentAssetId||data.targetAssetId||''),obj=(spec.objects||[]).find(item=>item.id===parentId);
     if(data.fixtureType!=='downlight'||data.targetType!=='entrance'||!isEntranceFrameObject(obj))return{fixture:data,mountQuaternion:null};
     normalizeEntranceFrameObject(obj,spec);normalizeSceneObjectModel(obj);const cfg=obj.structure,
@@ -7550,6 +7556,7 @@ class ThreeBoothRenderer{
     const T=this.THREE,fixtures=state.approvedFixtures.concat(state.suggestions),span=Math.max(spec.W,spec.D,spec.H),temperatureColor=k=>k<=3200?0xffc17a:k>=4800?0xdbe8ff:0xffefd2;
     fixtures.forEach((data,index)=>{
       const runtime=this.resolveAutoLightingFixture(data,spec,fixtures),fixture=runtime.fixture,approved=fixture.status==='approved',root=new T.Group();root.name='auto-light-root-'+fixture.id;root.userData.lightingFixtureId=fixture.id;root.userData.status=fixture.status;
+      if(fixture.valid===false&&fixture.fixtureType!=='invisible')return;
       root.position.set(Number(fixture.position.x)||0,floorY+(Number(fixture.position.y)||0),Number(fixture.position.z)||0);
       const mountRotation=fixture.mountRotation||{x:0,y:0,z:0};if(runtime.mountQuaternion)root.quaternion.copy(runtime.mountQuaternion);else root.rotation.set(Number(mountRotation.x)||0,Number(mountRotation.y)||0,Number(mountRotation.z)||0);
       const modelKey=fixture.fixtureType==='arm'?'arm':fixture.fixtureType==='downlight'?'downlight':'clear100',visibleFixture=fixture.fixtureType!=='invisible';
@@ -8328,9 +8335,10 @@ function autoLightingSceneSignature(){
   return JSON.stringify({type:S.type,cornerSide:S.cornerSide,W:S.W,D:S.D,H:S.H,raise:S.raise,floor:S.floor,stSize:S.stSize,stW:S.stW,stD:S.stD,stHv:S.stHv,stPos:S.stPos,
     logoScale:S.logoScale,nameScale:S.nameScale,logoMount:S.logoMount,logoWall:S.logoWall,logoWallU:S.logoWallU,logoWallY:S.logoWallY,wallStickerFaces:S.wallStickerFaces,
     objects:(S.objects||[]).map(obj=>({id:obj.id,visible:obj.visible!==false,position:obj.position,size:obj.size,transform:obj.transform,rotationX:obj.rotationX,rotationY:obj.rotationY,rotationZ:obj.rotationZ})),
-    camera:camera?{cameraViewType:camera.cameraViewType,position:camera.position||camera.cameraPosition,target:camera.target||camera.cameraTarget,fov:camera.fov}:null});
+    camera:globalThis.YPTemplateLighting?.profile(S)?null:camera?{cameraViewType:camera.cameraViewType,position:camera.position||camera.cameraPosition,target:camera.target||camera.cameraTarget,fov:camera.fov}:null});
 }
 function refreshAutoLightingStale(){
+  if(globalThis.YPTemplateLighting?.profile(S)){const current=normalizeAutoLighting();for(const key of ['suggestions','approvedFixtures'])current[key]=current[key].map(f=>YPTemplateLighting.resolve(S,f));current.validationWarnings=[...new Set(current.suggestions.concat(current.approvedFixtures).flatMap(f=>f.validationWarnings))];}
   const state=normalizeAutoLighting();if(state.mode!=='auto'||(!state.suggestions.length&&!state.approvedFixtures.length)||!state.lastCalculatedSceneSignature)return;
   if(state.lastCalculatedSceneSignature===autoLightingSceneSignature())return;
   const stale=globalThis.YPAutoLighting.markStale(state,Math.max(sceneRevision,state.lastCalculatedSceneRevision||0)+1);stale.lastCalculatedSceneSignature=state.lastCalculatedSceneSignature;S.lighting=stale;
@@ -8362,7 +8370,7 @@ function approveAutoLighting(){
   recordObjectHistory(before);sync();announceCatalog(count?'อนุมัติไฟ '+count+' จุดและเพิ่มในรายการโครงการแล้ว':'ไม่มีไฟที่ผ่าน Validation ให้อนุมัติ',count?'success':'error');
 }
 function autoLightingSummaryText(){
-  const state=normalizeAutoLighting(),suggested=state.suggestions.length,approved=state.approvedFixtures.length,invalid=state.suggestions.filter(item=>item.valid===false).length,
+  const state=normalizeAutoLighting(),suggested=state.suggestions.length,approved=state.approvedFixtures.length,invalid=state.suggestions.concat(state.approvedFixtures).filter(item=>item.valid===false).length,
     invisible=state.suggestions.filter(item=>item.fixtureType==='invisible').length;
   if(!state.enabled)return'ระบบ Auto Lighting ปิดอยู่ · ไฟ Manual เดิมยังไม่ถูกลบ';
   if(!suggested&&!approved)return'ยังไม่มีแผนไฟ · กด “จัดแสงอัตโนมัติ” เพื่อวิเคราะห์ Target และพื้นผิวติดตั้ง';
@@ -8406,7 +8414,7 @@ function syncAutoLightingControls(){
   if(panel)panel.hidden=!auto;if(manual){manual.hidden=auto;if(!auto)manual.open=true;}
   const activeMap={oAutoLightingEnabled:state.enabled?'on':'off',oLightIntent:state.intent,oLightTemperature:String(state.temperatureK),oLightBrightness:state.brightness,oLightPreference:state.fixturePreference};
   Object.entries(activeMap).forEach(([id,value])=>document.querySelectorAll('#'+id+' .opt').forEach(button=>button.classList.toggle('on',button.dataset.k===value)));
-  const summary=document.getElementById('autoLightingSummary');if(summary){summary.innerHTML=autoLightingSummaryText();summary.classList.toggle('is-warning',state.stale||state.validationWarnings.length>0);}
+  const summary=document.getElementById('autoLightingSummary');if(summary){summary.innerHTML=autoLightingSummaryText();summary.classList.toggle('is-warning',state.stale||state.validationWarnings.length>0);if(globalThis.YPTemplateLighting?.profile(S)&&state.validationWarnings.length){const detail=document.createElement('p');detail.textContent=[...new Set(state.validationWarnings)].join(' · ');summary.append(detail);}}
   const approve=document.getElementById('btnAutoLightApprove'),approvable=state.suggestions.filter(item=>item.valid!==false&&item.fixtureType!=='invisible').length;if(approve){approve.disabled=!approvable;approve.textContent='ยืนยันชุดโคม'+(approvable?' ('+approvable+')':'');}
   const recalc=document.getElementById('btnAutoLightRecalculate');if(recalc)recalc.disabled=!state.suggestions.length&&!state.approvedFixtures.length;
   syncAutoLightingFixtureEditor();
@@ -8425,6 +8433,7 @@ function syncLightModelStatus(){
 }
 
 function sync(){
+  globalThis.YPTemplateTVGroups?.apply(S);
   normalizeAIRenderingSettings(S);
   normalizeAutoLighting();
   refreshAutoLightingStale();
@@ -9468,9 +9477,9 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/inline-templates.css?v=20260909-3">
 <script src="js/inline-templates.js?v=20260908-2"></script>
 <script src="js/inline-template-ui.js?v=20260909-6"></script>
-<script src="js/peninsular-templates.js?v=20260909-5"></script>
+<script src="js/peninsular-templates.js?v=20260909-9"></script>
 <script src="js/peninsular-template-ui.js?v=20260909-5"></script>
-<script src="js/corner-templates.js?v=20260909-7"></script>
+<script src="js/corner-templates.js?v=20260909-9"></script>
 <script src="js/corner-template-ui.js?v=20260909-7"></script>
 <script src="js/inline-wizard.js?v=20260909-7"></script>
 <script src="js/template-entry.js?v=20260909-7"></script>
