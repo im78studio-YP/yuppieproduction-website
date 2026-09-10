@@ -15,8 +15,11 @@
     <input id="projectFile" type="file" accept=".ypbooth.json,.json,application/json" hidden>`;
   viewer.prepend(bar);
   const recovery=document.createElement('div');recovery.className='project-recovery';recovery.hidden=true;
-  recovery.innerHTML='<span id="projectRecoveryText"></span><button class="btn sm" id="projectRecover" type="button">เปิดร่างเดิม</button><button class="btn sm" id="projectReset" type="button" title="คืนค่าการออกแบบทั้งหมดของแบบที่กำลังแก้ไข">Reset</button>';
+  recovery.innerHTML='<span id="projectRecoveryText"></span><button class="btn sm" id="projectRecover" type="button">เปิดร่างเดิม</button>';
   bar.after(recovery);
+  const restart=document.createElement('button');restart.id='projectReset';restart.className='btn sm';restart.type='button';
+  restart.textContent='เริ่มใหม่';restart.title='คืนค่าการออกแบบทั้งหมดของแบบที่กำลังแก้ไข';
+  document.getElementById('tagSize').after(restart);
   const $=id=>document.getElementById(id),status=(message,error=false)=>{ $('projectStatus').textContent=message;$('projectStatus').dataset.error=String(error); };
   let project=null,timer=0,ready=false,loading=false,busy=false,pendingDraft=null,revision=0,savedRevision=0,writeQueue=Promise.resolve(),advanced=false;
   const dialog=document.createElement('dialog');dialog.className='project-dialog';dialog.setAttribute('aria-labelledby','projectDialogTitle');
@@ -55,7 +58,7 @@
     $('projectName').value=project.name;
     for(const slot of ['A','B']){const button=$('project'+slot);button.disabled=busy||!ready||!!pendingDraft;button.classList.toggle('on',project.active===slot);button.setAttribute('aria-pressed',String(project.active===slot));}
     for(const id of ['projectSave','projectOpen','projectWizard','projectName','projectRecover','projectReset'])$(id).disabled=busy;
-    recovery.hidden=false;
+    recovery.hidden=!pendingDraft;
     $('projectRecoveryText').hidden=!pendingDraft;
     $('projectRecover').hidden=!pendingDraft;
     for(const id of ['projectEntryRecover','projectEntryNew'])$(id).disabled=busy||!ready;
@@ -131,7 +134,7 @@
     const message=pendingDraft
       ?'ร่างอัตโนมัติเดิมทั้งโปรเจกต์จะถูกแทนที่ด้วยค่าเริ่มต้น หากต้องการเก็บร่างเดิม ให้ยกเลิกแล้วเปิดร่างเดิมและบันทึกไฟล์ก่อน'
       :'ขนาด รูปแบบบูธ วัสดุ สี โลโก้ แสง อุปกรณ์ และมุมกล้องในแบบ '+project.active+' จะกลับเป็นค่าเริ่มต้นทั้งหมด โดยไม่เปลี่ยนอีกแบบ A/B';
-    if(!await ask('Reset แบบเป็นค่าเริ่มต้น?',message+' ไฟล์ที่ดาวน์โหลดและคลังอุปกรณ์ส่วนตัวจะไม่ถูกลบ','Reset แบบ'))return false;
+    if(!await ask('เริ่มแบบใหม่เป็นค่าเริ่มต้น?',message+' ไฟล์ที่ดาวน์โหลดและคลังอุปกรณ์ส่วนตัวจะไม่ถูกลบ','เริ่มใหม่'))return false;
     clearTimeout(timer);
     loading=true;
     try{bridge.reset();}finally{loading=false;}

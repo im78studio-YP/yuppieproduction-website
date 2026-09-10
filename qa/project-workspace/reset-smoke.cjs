@@ -17,7 +17,10 @@ const assert=require('node:assert/strict');
     }
     assert.equal(await page.locator('.three-tools .reset').count(),0);
     assert.equal(await page.locator('#projectKeepCurrent').count(),0);
-    assert.ok(await page.locator('.project-recovery #projectReset').isVisible());
+    assert.ok(await page.locator('.vtop #projectReset').isVisible());
+    assert.equal(await page.locator('#projectReset').textContent(),'เริ่มใหม่');
+    assert.equal(await page.locator('#tagSize + #projectReset').count(),1);
+    assert.equal(await page.locator('.project-recovery').isVisible(),false);
     await page.evaluate(async()=>{
       const a=YPProjectBridge.capture();a.spec.brand='KEEP A';a.spec.primary='#123456';
       YPProjectBridge.restore(a);
@@ -63,10 +66,11 @@ const assert=require('node:assert/strict');
     assert.equal(await page.evaluate(()=>YPProjectWorkspace.state().pendingDraft),false);
     assert.equal(await page.locator('#projectRecover').isVisible(),false);
     await page.evaluate(()=>YPQuickSetupBridge.close());
-    for(const width of [390,768,1440]){
+    for(const width of [320,390,768,1440]){
       await page.setViewportSize({width,height:1000});
       assert.ok(await page.locator('#projectReset').isVisible());
       const box=await page.locator('#projectReset').boundingBox();assert.ok(box.x>=0&&box.x+box.width<=width);
+      const viewer=await page.locator('.vtop').boundingBox();assert.ok(box.x+box.width<=viewer.x+viewer.width+.5,'button stays inside viewer');
     }
     await page.screenshot({path:'qa/project-workspace/reset-fixed.png'});
     assert.deepEqual(errors,[]);
