@@ -38,9 +38,21 @@
   function entryError(){if(pendingDraft)$('projectEntryText').textContent='ยังเปิดร่างไม่สำเร็จ ร่างเดิมยังเก็บไว้ กรุณาลองอีกครั้ง';}
   $('projectEntryRecover').onclick=async()=>{const ok=await run(recoverDraft);if(!ok)entryError();};
   $('projectEntryNew').onclick=async()=>{const ok=await run(startNewDraft);if(ok&&!templateIntent)window.YPQuickSetupBridge.open({start:'business'});};
-  function ask(title,message,action){return new Promise(resolve=>{
+  function ask(title,message,action,{area=null}={}){return new Promise(resolve=>{
     $('projectDialogTitle').textContent=title;$('projectDialogText').textContent=message;$('projectConfirm').textContent=action;
-    const done=value=>{dialog.close();resolve(value);};$('projectConfirm').onclick=()=>done(true);$('projectCancel').onclick=()=>done(false);dialog.oncancel=event=>{event.preventDefault();done(false);};dialog.showModal();$('projectCancel').focus();
+    let areaField;
+    if(area){
+      areaField=document.createElement('div');areaField.className='template-area-choice';
+      const label=document.createElement('label');label.htmlFor='templateAreaChoice';label.textContent='พื้นที่ที่จะใช้กับเทมเพลต';
+      const select=document.createElement('select');select.id='templateAreaChoice';select.setAttribute('aria-describedby','templateAreaHelp');
+      for(const [value,text] of [['current','ใช้พื้นที่ปัจจุบัน'],['original','ใช้ขนาดต้นฉบับ']]){
+        const d=area[value],option=document.createElement('option');option.value=value;option.textContent=text+' · '+d.W+' × '+d.D+' × '+d.H+' ม.';select.append(option);
+      }
+      select.value=area.preferred;area.selected=select.value;select.onchange=()=>{area.selected=select.value;};
+      const help=document.createElement('p');help.id='templateAreaHelp';help.textContent='ปรับเฉพาะพื้นที่และผนังระบบ ชิ้นส่วนในเทมเพลตคงขนาดและตำแหน่งเดิม คาน ซุ้ม ผนังตกแต่ง และเฟอร์นิเจอร์ย้ายหรือปรับขนาดต่อได้เอง หากเลือกพื้นที่เล็กลง ชิ้นส่วนอาจอยู่นอกบูธ ภาพตัวอย่างยังเป็นขนาดต้นฉบับ';
+      areaField.append(label,select,help);$('projectDialogText').after(areaField);
+    }
+    const done=value=>{areaField?.remove();dialog.close();resolve(value);};$('projectConfirm').onclick=()=>done(true);$('projectCancel').onclick=()=>done(false);dialog.oncancel=event=>{event.preventDefault();done(false);};dialog.showModal();$('projectCancel').focus();
   });}
   // Keep editor Delete/Undo shortcuts from changing the scene under a dialog.
   document.addEventListener('keydown',event=>{
@@ -177,8 +189,11 @@
     useTemplate:({makeSnapshot,name,detailed=false})=>run(async()=>{
       if(pendingDraft)throw Object.assign(new Error('กรุณาเลือกเปิดร่างเดิมหรือเริ่มใหม่ในหน้าต่างเริ่มต้น'),{code:'pending-draft'});
       const target=project.active,other=target==='A'?'B':'A';
-      const replacement=makeSnapshot();store.validateSpec(replacement.spec);const dimensions=replacement.spec;
-      if(!await ask('แทนที่แบบ '+target+' ด้วยเทมเพลตนี้?', 'แบบ '+target+' ปัจจุบันจะถูกแทนที่ด้วย '+name+' ขนาดกว้าง '+dimensions.W+' × ลึก '+dimensions.D+' × สูง '+dimensions.H+' ม. โดยแบบ '+other+' ไม่เปลี่ยน หากต้องการเก็บแบบเดิม ให้ยกเลิกแล้วบันทึกไฟล์ก่อน','ยืนยันใช้ในแบบ '+target))return false;
+      let replacement=makeSnapshot();store.validateSpec(replacement.spec);const dimensions=replacement.spec;
+      const area=window.YPTemplateArea.options(dimensions,bridge.capture().spec);
+      if(!await ask('แทนที่แบบ '+target+' ด้วยเทมเพลตนี้?', 'แบบ '+target+' ปัจจุบันจะถูกแทนที่ด้วย '+name+' ต้นฉบับขนาดกว้าง '+dimensions.W+' × ลึก '+dimensions.D+' × สูง '+dimensions.H+' ม. โดยแบบ '+other+' ไม่เปลี่ยน หากต้องการเก็บแบบเดิม ให้ยกเลิกแล้วบันทึกไฟล์ก่อน','ยืนยันใช้ในแบบ '+target,{area}))return false;
+      if(area)replacement=window.YPTemplateArea.apply(replacement,area[area.selected]);
+      store.validateSpec(replacement.spec);
       snapshot();const next=store.clone(project);
       next.active=target;next.variants[target]=replacement;apply(next);await persist();return true;
     },{detailed}),

@@ -2,7 +2,7 @@
 for(const t of YPCornerTemplates.templates){
   for(const [side,label,detail] of [['left','หัวมุมซ้าย','ผนังหลัง + ขวา · เปิดหน้า + ซ้าย'],['right','หัวมุมขวา','ผนังหลัง + ซ้าย · เปิดหน้า + ขวา']]){
     const card=document.createElement('article');card.className='card';
-    card.innerHTML='<img loading="lazy" src="'+t.id+'-'+side+'.png" alt="'+t.name+' '+label+'"><div class="copy"><h2>'+t.name+' · '+label+'</h2><p>'+t.tagline+'</p><p>'+t.description+'</p><p>'+detail+'</p><a class="use-template" href="../../index.html?useTemplate='+t.id+'&amp;cornerSide='+side+'">ใช้แบบนี้</a></div>';
+    card.innerHTML='<img loading="lazy" src="'+t.id+'-'+side+'.png?v=20260911-brand-audit" alt="'+t.name+' '+label+'"><div class="copy"><h2>'+t.name+' · '+label+'</h2><p>'+t.tagline+'</p><p>'+t.description+'</p><p>'+detail+'</p><a class="use-template" href="../../index.html?useTemplate='+t.id+'&amp;cornerSide='+side+'">ใช้แบบนี้</a></div>';
     document.getElementById('cards').append(card);
   }
 }

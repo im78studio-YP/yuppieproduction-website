@@ -25,6 +25,32 @@
       primary:'#633c63',secondary:'#c19b79',background:'#eee4dc',ink:'#633c63',floor:'tile',tile:'woodD',graphic:'CURATED GOODS / EVERYDAY FINDS',storage:true,
       objects:[p('shelf-standard',.85,.4,1.25,.45,1.65,'#c19b79'),p('shelf-standard',2.3,.4,1.25,.45,1.65,'#c19b79'),p('counter-standard',.95,2.35,1.3,.6,1,'#633c63'),p('display-standard',3.15,1.65,.7,.6,1,'#c19b79'),p('display-standard',4.45,2.25,.75,.6,1.15,'#633c63')]}
   ];
+  const raised=(catalogId,x,z,w,d,h,color,y=0,rotationY=0)=>({...p(catalogId,x,z,w,d,h,color,rotationY),y});
+  const panel=(x,z,w,d,h,color,y=0)=>raised('panel-standard',x,z,w,d,h,color,y);
+  const detailed=(part,design)=>({...part,structure:{design}});
+  templates.push({id:'timber-ribbon',name:'06 · Timber Ribbon',brand:'EXHIBITION BRAND',purpose:'meeting',tagline:'ซุ้มระแนงไม้โค้ง + ป้ายขาว + เคาน์เตอร์สวน',
+    description:'อ้างอิงซุ้มไม้โค้งด้านซ้าย ป้ายขาวยื่นด้านบนขวา จอติดผนัง โต๊ะเจรจา 4 ที่นั่ง ตู้โชว์หน้าขวา และเคาน์เตอร์ช่องต้นไม้หน้าซ้าย ไม่ใส่พุ่มไม้แขวน',
+    primary:'#21598c',secondary:'#b99a72',background:'#ede6d9',ink:'#21598c',floor:'tile',tile:'woodL',graphic:'',reference:true,
+    objects:[
+      // Separate curved ribs keep the ceiling open and every piece editable.
+      ...Array.from({length:7},(_,i)=>detailed(raised('portal-ribbon',2.19,1.9+i*.095,4.06,.045,2.25,null),'timber-rib')),
+      panel(4.65,.38,1.98,.12,2.28,'#b99a72'),
+      detailed(raised('canopy-ribbon',4.66,1.53,2.12,2.32,.70,null,1.70),'timber-folded-canopy'),
+      {...raised('brand-artwork-copy',4.66,2.697,1.91,.012,.52,null,1.78),graphic:'header'},
+      panel(2.87,.39,1.43,.13,.86,'#b99a72',1.13),panel(2.87,.463,1.29,.028,.72,'#17232c',1.2),
+      {...raised('brand-artwork-copy',2.87,.484,1.17,.012,.6,null,1.26),graphic:'screen'},
+      {...raised('brand-artwork-copy',5.64,1.28,1.43,.012,1.02,null,.85,-90),graphic:'poster'},
+      panel(5.7,1.28,.09,1.61,1.19,'#b99a72',.77),
+      detailed(raised('table-standard',4.3,1.39,.86,.86,.73,null),'timber-glass-table'),
+      detailed(raised('chair-standard',3.62,1.39,.55,.55,.81,null,0,90),'timber-shell-chair'),detailed(raised('chair-standard',4.98,1.39,.55,.55,.81,null,0,-90),'timber-shell-chair'),
+      detailed(raised('chair-standard',4.3,.76,.55,.55,.81,null),'timber-shell-chair'),detailed(raised('chair-standard',4.3,2.05,.55,.55,.81,null,0,180),'timber-shell-chair'),
+      // An actual open recess holds the planter inside the counter.
+      detailed(raised('panel-standard',1.13,2.39,1.82,.62,.93,null),'timber-counter'),
+      detailed(raised('planter-grass',.83,2.45,.80,.30,.56,null,.12),'timber-grass'),
+      {...raised('brand-artwork-copy',1.57,2.722,.55,.012,.24,null,.34),graphic:'counter'},
+      raised('glass-panel',1.14,2.38,1.28,.42,.018,null,.977),detailed(raised('chair-standard',1.18,1.65,.55,.55,.81,null),'timber-shell-chair'),
+      panel(5.46,2.52,.64,.6,.77,'#ffffff'),raised('display-glass-case',5.46,2.52,.64,.6,.28,null,.77)
+    ]});
   function build(id,initial,catalog){
     const t=templates.find(v=>v.id===id);if(!t)throw new Error('ไม่พบเทมเพลต');
     const spec=structuredClone(initial);
@@ -33,10 +59,11 @@
       logoScale:initial.logo?35:0,nameScale:initial.logo?0:22,logoColor:initial.logo?initial.logoColor:t.ink,logoColorTouched:true,logoWallU:t.storage?2.2:3,logoWallY:1.95,logoPos:t.storage?'left':'center',
       stSize:t.storage?'a':'none',stPos:'right',stDoor:'left',doorTouched:true,stDoorType:'swing',stHmode:2.4,stHv:2.4,
       designPurpose:t.purpose,inlineTemplate:{id:t.id,version:1,name:t.name},objects:[],view:'three'});
+    if(t.reference)Object.assign(spec,{logoScale:initial.logo?16:0,nameScale:initial.logo?0:12,logoWallU:1.35,logoWallY:2.02});
     spec.objects=t.objects.map((o,i)=>{
       const item=catalog.find(c=>c.catalogId===o.catalogId);if(!item)throw new Error('ไม่พบอุปกรณ์ '+o.catalogId);
-      return {id:'inline-'+id+'-'+i,type:item.type,catalogId:o.catalogId,locked:false,geometryMode:'parametric',position:{x:o.x,y:0,z:o.z},rotationX:0,rotationY:o.rotationY,rotationZ:0,orientation:'horizontal',size:{...o.size},unitPrice:item.unitPrice,
-        appearance:o.color?{mode:'solid',color:o.color}:{mode:'original'}};
+      return {id:'inline-'+id+'-'+i,type:item.type,catalogId:o.catalogId,locked:false,geometryMode:'parametric',position:{x:o.x,y:o.y||0,z:o.z},rotationX:0,rotationY:o.rotationY,rotationZ:0,orientation:'horizontal',size:{...o.size},unitPrice:item.unitPrice,
+        ...(o.structure?{structure:{...o.structure}}:{}),appearance:o.color?{mode:'solid',color:o.color}:{mode:'original'}};
     });
     return {spec,assets:[]};
   }

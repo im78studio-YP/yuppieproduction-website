@@ -1,0 +1,306 @@
+[
+  {
+    "group": "inline",
+    "id": "gallery",
+    "side": "",
+    "logos": 0,
+    "details": 0,
+    "objects": 7
+  },
+  {
+    "group": "inline",
+    "id": "tasting",
+    "side": "",
+    "logos": 0,
+    "details": 0,
+    "objects": 6
+  },
+  {
+    "group": "inline",
+    "id": "meeting",
+    "side": "",
+    "logos": 0,
+    "details": 6,
+    "objects": 8
+  },
+  {
+    "group": "inline",
+    "id": "technology",
+    "side": "",
+    "logos": 0,
+    "details": 4,
+    "objects": 8
+  },
+  {
+    "group": "inline",
+    "id": "retail",
+    "side": "",
+    "logos": 0,
+    "details": 0,
+    "objects": 5
+  },
+  {
+    "group": "inline",
+    "id": "timber-ribbon",
+    "side": "",
+    "logos": 4,
+    "details": 16,
+    "objects": 27
+  },
+  {
+    "group": "corner",
+    "id": "corner-timber-lounge",
+    "side": "right",
+    "logos": 0,
+    "details": 3,
+    "objects": 32
+  },
+  {
+    "group": "corner",
+    "id": "corner-sunshine-garden",
+    "side": "right",
+    "logos": 2,
+    "details": 7,
+    "objects": 20
+  },
+  {
+    "group": "corner",
+    "id": "corner-graphite-grid",
+    "side": "right",
+    "logos": 4,
+    "details": 11,
+    "objects": 39
+  },
+  {
+    "group": "corner",
+    "id": "corner-orchid-studio",
+    "side": "right",
+    "logos": 3,
+    "details": 8,
+    "objects": 29
+  },
+  {
+    "group": "corner",
+    "id": "corner-green-link",
+    "side": "right",
+    "logos": 3,
+    "details": 6,
+    "objects": 25
+  },
+  {
+    "group": "corner",
+    "id": "corner-timber-angle",
+    "side": "right",
+    "logos": 4,
+    "details": 5,
+    "objects": 35
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-adventure",
+    "side": "",
+    "logos": 0,
+    "details": 0,
+    "objects": 32
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-connect",
+    "side": "",
+    "logos": 0,
+    "details": 0,
+    "objects": 7
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-natural",
+    "side": "",
+    "logos": 0,
+    "details": 0,
+    "objects": 10
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-blue-pavilion",
+    "side": "",
+    "logos": 1,
+    "details": 6,
+    "objects": 29
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-aqua-curve",
+    "side": "",
+    "logos": 1,
+    "details": 3,
+    "objects": 32
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-timber-noir",
+    "side": "",
+    "logos": 1,
+    "details": 3,
+    "objects": 25
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-blue-axis",
+    "side": "",
+    "logos": 1,
+    "details": 3,
+    "objects": 22
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-orchard",
+    "side": "",
+    "logos": 1,
+    "details": 6,
+    "objects": 54
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-noir-lounge",
+    "side": "",
+    "logos": 4,
+    "details": 9,
+    "objects": 37
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-aqua-wave",
+    "side": "",
+    "logos": 4,
+    "details": 6,
+    "objects": 31
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-crimson-flow",
+    "side": "",
+    "logos": 6,
+    "details": 11,
+    "objects": 37
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-sage-ribbon",
+    "side": "",
+    "logos": 3,
+    "details": 13,
+    "objects": 30
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-blush-gallery",
+    "side": "",
+    "logos": 5,
+    "details": 6,
+    "objects": 39
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-blue-step",
+    "side": "",
+    "logos": 5,
+    "details": 12,
+    "objects": 53
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-golden-oculus",
+    "side": "",
+    "logos": 5,
+    "details": 6,
+    "objects": 32
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-blue-horizon-6",
+    "side": "",
+    "logos": 6,
+    "details": 19,
+    "objects": 36
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-noir-mobile-6",
+    "side": "",
+    "logos": 15,
+    "details": 11,
+    "objects": 40
+  },
+  {
+    "group": "island",
+    "id": "island-canopy-garden",
+    "side": "",
+    "logos": 4,
+    "details": 8,
+    "objects": 42
+  },
+  {
+    "group": "island",
+    "id": "island-blue-ribbon",
+    "side": "",
+    "logos": 4,
+    "details": 6,
+    "objects": 43
+  },
+  {
+    "group": "corner",
+    "id": "corner-timber-lounge",
+    "side": "left",
+    "logos": 0,
+    "details": 3,
+    "objects": 32
+  },
+  {
+    "group": "corner",
+    "id": "corner-sunshine-garden",
+    "side": "left",
+    "logos": 2,
+    "details": 7,
+    "objects": 20
+  },
+  {
+    "group": "corner",
+    "id": "corner-graphite-grid",
+    "side": "left",
+    "logos": 4,
+    "details": 11,
+    "objects": 39
+  },
+  {
+    "group": "corner",
+    "id": "corner-orchid-studio",
+    "side": "left",
+    "logos": 3,
+    "details": 8,
+    "objects": 29
+  },
+  {
+    "group": "corner",
+    "id": "corner-green-link",
+    "side": "left",
+    "logos": 3,
+    "details": 6,
+    "objects": 25
+  },
+  {
+    "group": "corner",
+    "id": "corner-timber-angle",
+    "side": "left",
+    "logos": 4,
+    "details": 5,
+    "objects": 35
+  },
+  {
+    "group": "island",
+    "id": "island-yellow-frame",
+    "side": "",
+    "logos": 3,
+    "details": 15,
+    "objects": 64
+  }
+]

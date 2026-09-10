@@ -25,7 +25,7 @@
     if(/^#[\da-f]{6}$/i.test(options.primary||'')){const original=t.primary;t.primary=options.primary;out.spec.primary=t.primary;for(const o of out.spec.objects)if(o.appearance?.color===original)o.appearance.color=t.primary;}
     out.spec.wallStickerFaces=['back','left'];
     for(const face of ['back','left'])Object.assign(out.spec.wallStickers[face],{data:artwork(t,face==='left'),name:t.name+' · '+face,id:1,ar:face==='back'?2.5:1.25,w:face==='back'?6:3,h:2.4,mode:'cover'});
-    out.spec=library.mirror(out.spec,options.cornerSide||'right');YPProjectStore.validateSpec(out.spec);return out;
+    YPTemplateBranding.apply(out.spec,t);out.spec=library.mirror(out.spec,options.cornerSide||'right');YPProjectStore.validateSpec(out.spec);return out;
   }
   function switchSide(side){
     const state=window.YPProjectWorkspace?.state();if(state&&(!state.ready||state.busy||state.pendingDraft))throw new Error('กรุณารอระบบพร้อม และจัดการร่างเดิมก่อนสลับหัวมุม');
@@ -43,7 +43,7 @@
   function feedbackResult(result){feedback.hidden=false;status.textContent=result.message;actions.replaceChildren();dialog.scrollTo({top:0,behavior:'instant'});}
   async function apply(t){if(busy)return;setBusy(true);feedbackResult({message:'กำลังเตรียมแบบ… หากมีหน้าต่างยืนยัน กรุณายืนยันหรือยกเลิก'});try{const r=await YPProjectWorkspace.useTemplate({makeSnapshot:()=>snapshot(t.id,{cornerSide:side.value}),name:t.name,detailed:true});if(r.ok){setBusy(false);close();}else feedbackResult(r);}catch(e){feedbackResult({message:'ใช้เทมเพลตไม่สำเร็จ: '+e.message});}finally{setBusy(false);}}
   for(const t of library.templates){const card=document.createElement('article');card.className='inline-template-card';const img=document.createElement('img');img.dataset.template=t.id;img.alt=t.name;img.width=960;img.height=720;const h=document.createElement('h3');h.textContent=t.name;const p=document.createElement('p');p.textContent=t.description;const wrap=document.createElement('div');wrap.className='inline-template-actions';const b=document.createElement('button');b.className='btn pri';b.type='button';b.dataset.cornerTemplate=t.id;b.textContent='ใช้แบบนี้';b.onclick=()=>apply(t);wrap.append(b);card.append(img,h,p,wrap);document.getElementById('cornerCards').append(card);}
-  const updateImages=()=>{for(const img of dialog.querySelectorAll('img[data-template]'))img.src='assets/corner-templates/'+img.dataset.template+'-'+side.value+'.png';};side.onchange=updateImages;
+  const updateImages=()=>{for(const img of dialog.querySelectorAll('img[data-template]'))img.src='assets/corner-templates/'+img.dataset.template+'-'+side.value+'.png?v=20260911-brand-audit';};side.onchange=updateImages;
   const open=async()=>{opener=document.activeElement;await YPProjectWorkspace.enter();side.value=getBoothSpec().cornerSide||'right';updateImages();feedback.hidden=true;actions.replaceChildren();for(const b of dialog.querySelectorAll('[data-corner-template]'))b.textContent=YPProjectWorkspace.templateLabel();dialog.showModal();};
   document.getElementById('cornerTemplatesOpen').onclick=open;document.getElementById('cornerTemplatesClose').onclick=close;dialog.oncancel=e=>{e.preventDefault();close();};document.addEventListener('keydown',e=>{if(dialog.open)e.stopPropagation();},true);
   const syncType=type=>{entry.hidden=type!=='corner';};syncType(getBoothSpec().type);window.YPCornerTemplateUI={open,syncType};

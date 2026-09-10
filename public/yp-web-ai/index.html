@@ -782,7 +782,7 @@ select:focus{border-color:var(--acc)}
 @media(prefers-reduced-motion:reduce){.quick-setup-step.is-entering{animation:none}}
 </style>
 <link rel="stylesheet" href="css/asset-editor.css?v=20260829-3">
-<link rel="stylesheet" href="css/project-workspace.css?v=20260910-restart-position">
+<link rel="stylesheet" href="css/project-workspace.css?v=20260910-template-area">
 </head>
 <body>
 
@@ -1735,6 +1735,7 @@ select:focus{border-color:var(--acc)}
 <script src="js/asset-attachment-graph.js?v=20260910-structure-support"></script>
 <script src="js/brand-visible-bounds.js?v=20260902-1"></script>
 <script src="assets/branding/default-logo.js?v=20260908-1"></script>
+<script src="js/template-branding.js?v=20260911-brand-audit"></script>
 <script>
 /* ================= ข้อมูล ================= */
 const CATGROUPS=[
@@ -7711,7 +7712,9 @@ class ThreeBoothRenderer{
         metalness:options.metalness??.02,emissive:options.emissive||0x000000,emissiveIntensity:options.emissiveIntensity||0});
       const part=new T.Mesh(geometry,material);part.position.set(...position);part.castShadow=true;part.receiveShadow=true;root.add(part);return part;
     };
-    if(isEntranceFrameObject(obj)){
+    if(globalThis.YPTimberRibbonGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularSixGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPIslandYellowGeometry?.build({T,obj,mesh,bx,root})){
+      // Reference-specific compound geometry; generic assets retain their original shapes.
+    }else if(isEntranceFrameObject(obj)){
       const cfg=normalizeEntranceFrameObject(obj).structure,finish=new T.MeshStandardMaterial({color:cfg.color,roughness:.72,metalness:.01});
       bx([cfg.pierWidth,cfg.thickness,cfg.projection],[0,cfg.height-cfg.thickness/2,0],cfg.color,{material:finish.clone(),name:'entrance-frame-canopy'});
       bx([cfg.pierWidth,Math.max(.05,cfg.height-cfg.thickness),cfg.thickness],[0,Math.max(.05,cfg.height-cfg.thickness)/2,cfg.projection/2-cfg.thickness/2],cfg.color,{material:finish.clone(),name:'entrance-frame-front-pier'});
@@ -9638,7 +9641,7 @@ function updateQuickLayoutStep(){
   document.querySelectorAll('#quickCornerSides [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===quickSetupDraft?.cornerSide)));
   const type=TYPES.find(item=>item.k===quickSetupDraft?.boothType),preset=quickBoothDefaults(quickSetupDraft?.boothType),error=quickLayoutValidation(),side=CORNER_SIDES.find(item=>item.k===quickSetupDraft?.cornerSide);
   window.YPInlineWizard?.update(quickSetupDraft);
-  document.getElementById('quickLayoutSummary').textContent=type&&preset?'รูปแบบ '+type.n+(corner&&side?' · '+side.n:'')+' · '+(quickSetupDraft.templateId?'เทมเพลต 3 × 6 ม.':preset.displaySize)+' (กว้าง '+quickSetupDraft.width+' × ลึก '+quickSetupDraft.depth+' × สูง '+quickSetupDraft.height+' ม.) · เปิด '+preset.openSides+' ด้าน':'กรุณาเลือกรูปแบบบูธ';
+  document.getElementById('quickLayoutSummary').textContent=type&&preset?'รูปแบบ '+type.n+(corner&&side?' · '+side.n:'')+' · '+(quickSetupDraft.templateId?'เทมเพลต '+quickSetupDraft.width+' × '+quickSetupDraft.depth+' ม.':preset.displaySize)+' (กว้าง '+quickSetupDraft.width+' × ลึก '+quickSetupDraft.depth+' × สูง '+quickSetupDraft.height+' ม.) · เปิด '+preset.openSides+' ด้าน':'กรุณาเลือกรูปแบบบูธ';
   document.getElementById('quickLayoutError').textContent=quickLayoutAttempted?error:'';document.getElementById('quickLayoutNext').disabled=!!error;
   window.YPInlineWizard?.update(quickSetupDraft);
 }
@@ -9988,7 +9991,8 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 </script>
 <script type="module" src="js/asset-editor/asset-editor.js?v=20260829-3"></script>
 <script src="js/project-store.js?v=20260905-1"></script>
-<script src="js/project-workspace.js?v=20260910-restart-position"></script>
+<script src="js/template-area.js?v=20260910-template-area"></script>
+<script src="js/project-workspace.js?v=20260910-template-area"></script>
 <script src="js/starter-layouts.js?v=20260905-1"></script>
 <!-- Template selection replaces the legacy purpose card and post-setup prompt. -->
 <link rel="stylesheet" href="css/handoff.css?v=20260905-1">
@@ -10002,14 +10006,19 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/compare-preview.js?v=20260910-framing"></script>
 <script src="js/compare-ui.js?v=20260910-framing"></script>
 <link rel="stylesheet" href="css/inline-templates.css?v=20260909-3">
-<script src="js/inline-templates.js?v=20260908-2"></script>
-<script src="js/inline-template-ui.js?v=20260910-active-template"></script>
-<script src="js/peninsular-templates.js?v=20260909-16"></script>
-<script src="js/peninsular-template-ui.js?v=20260910-active-template"></script>
+<script src="js/timber-ribbon-geometry.js?v=20260911-brand-audit"></script>
+<script src="js/inline-templates.js?v=20260911-detail"></script>
+<script src="js/inline-template-ui.js?v=20260911-brand-audit"></script>
+<script src="js/peninsular-six-geometry.js?v=20260911-six"></script>
+<script src="js/peninsular-six-templates.js?v=20260911-six"></script>
+<script src="js/peninsular-templates.js?v=20260911-six"></script>
+<script src="js/peninsular-six-artwork.js?v=20260911-brand-audit"></script>
+<script src="js/peninsular-template-ui.js?v=20260911-brand-audit"></script>
 <script src="js/corner-templates.js?v=20260909-13"></script>
-<script src="js/corner-template-ui.js?v=20260910-active-template"></script>
-<script src="js/island-templates.js?v=20260909-11"></script>
-<script src="js/island-template-ui.js?v=20260910-active-template"></script>
+<script src="js/corner-template-ui.js?v=20260911-brand-audit"></script>
+<script src="js/island-yellow-geometry.js?v=20260911-yellow"></script>
+<script src="js/island-templates.js?v=20260911-yellow"></script>
+<script src="js/island-template-ui.js?v=20260911-yellow"></script>
 <script src="js/inline-wizard.js?v=20260909-10"></script>
 <script src="js/template-entry.js?v=20260910-entry-flow"></script>
 <link rel="stylesheet" href="css/responsive-tools.css?v=20260910-2">

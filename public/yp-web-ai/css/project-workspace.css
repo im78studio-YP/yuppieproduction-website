@@ -16,6 +16,8 @@
 .project-dialog h2{font-size:19px;margin-bottom:10px}.project-dialog p{font-size:13px;color:var(--tx2);margin-bottom:14px}
 .project-dialog-actions{display:flex;flex-wrap:wrap;gap:8px}.project-dialog-actions button{min-height:40px}
 .project-dialog-actions[hidden]{display:none}
+.template-area-choice label{display:block;font-size:13px;font-weight:600;margin-bottom:8px}
+.template-area-choice select{width:100%;min-width:0;min-height:44px;padding:8px;background:var(--bg3);color:var(--tx);border:1px solid var(--line);border-radius:8px;margin-bottom:10px}
 body[data-editor-level=basic] #btnScaleObject,
 body[data-editor-level=basic] #moveAdvanced,
 body[data-editor-level=basic] #btnFlipObjectX,

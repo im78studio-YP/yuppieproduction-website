@@ -12,7 +12,7 @@ test('default vector bundle matches the supplied SVG byte for byte',async()=>{
 test('template honors the default logo, aspect, and brand color',()=>{
   const catalog=Function('furnitureItem','return '+html.match(/const OBJECT_CATALOG=(\[[\s\S]*?\]);/)[1])(item=>item);
   const initial={logo:YPDefaultLogo.data,logoAR:YPDefaultLogo.aspect,logoColor:YPDefaultLogo.color,brand:YPDefaultLogo.brand};
-  for(const t of YPInlineTemplates.templates){const s=YPInlineTemplates.build(t.id,initial,catalog).spec;assert.equal(s.logo,initial.logo);assert.equal(s.logoAR,initial.logoAR);assert.equal(s.logoColor,initial.logoColor);assert.equal(s.logoScale,35);assert.equal(s.nameScale,0);}
+  for(const t of YPInlineTemplates.templates){const s=YPInlineTemplates.build(t.id,initial,catalog).spec;assert.equal(s.logo,initial.logo);assert.equal(s.logoAR,initial.logoAR);assert.equal(s.logoColor,initial.logoColor);assert.equal(s.logoScale,t.reference?16:35);assert.equal(s.nameScale,0);}
 });
 test('image export includes logo loads and refuses unresolved logo placeholders',()=>{
   assert.ok(html.includes('this.brandImageLoads.forEach(promise=>promises.push(promise))'));
