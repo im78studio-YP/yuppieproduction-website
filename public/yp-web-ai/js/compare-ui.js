@@ -2,7 +2,7 @@
   'use strict';
   if(new URLSearchParams(location.search).get('comparePreview')==='1')return;
   const $=id=>document.getElementById(id),core=window.YPCompare;
-  const openButton=document.createElement('button');openButton.id='projectCompare';openButton.type='button';openButton.className='btn';openButton.textContent='เปรียบเทียบ A/B';$('projectDuplicate').after(openButton);
+  const openButton=document.createElement('button');openButton.id='projectCompare';openButton.type='button';openButton.className='btn';openButton.textContent='เปรียบเทียบ A/B';$('projectSave').before(openButton);
   const dialog=document.createElement('dialog');dialog.className='project-dialog compare-dialog';dialog.setAttribute('aria-labelledby','compareTitle');
   dialog.innerHTML='<div class="compare-heading"><h2 id="compareTitle">เปรียบเทียบแบบ A/B</h2><button class="btn" id="compareClose" type="button">กลับไปออกแบบ</button></div><p>มุมมองเดียวกันและสเกลภาพเท่ากัน · เลือกแบบไปเตรียมส่งงานได้โดยเก็บอีกแบบไว้</p><div id="compareCards" class="compare-cards"></div><p id="compareStatus" role="status" aria-live="polite"></p><button class="btn" id="compareRetry" type="button">สร้างภาพทั้งคู่ใหม่</button><h3>สรุปความต่าง</h3><div class="compare-table-wrap"><table><thead><tr><th scope="col">รายการ</th><th scope="col">แบบ A</th><th scope="col">แบบ B</th></tr></thead><tbody id="compareRows"></tbody></table></div><p class="compare-note">เน้นแถวที่ต่างกัน จำนวนอุปกรณ์นับตามวัตถุในแบบ (ชุดเฟอร์นิเจอร์นับเป็น 1 วัตถุ) ไม่ใช่ BOM หรือใบเสนอราคา แม้จำนวนเท่ากัน ตำแหน่ง ขนาดรายชิ้น และพื้นผิวอาจต่างกัน ควรตรวจภาพประกอบด้วย</p>';
   document.body.append(dialog);
@@ -13,7 +13,7 @@
   function stillCurrent(){const now=YPProjectWorkspace.capture();if(core.signature(now)!==signature)throw new Error('แบบเปลี่ยนหลังเปิดเปรียบเทียบ กรุณาปิดแล้วเปิดเปรียบเทียบใหม่');}
   function message(event){
     const data=event.data;if(event.source!==frame?.contentWindow||data?.channel!=='yp-compare'||data.token!==token||!pending)return;
-    if(data.type!=='ready'&&data.type!=='error'&&data.type!=='result')return;
+    if(!['ready','error','result','measured'].includes(data.type))return;
     if(data.type!=='ready'&&data.id!==pending.id&&data.id!==undefined)return;
     const task=pending;pending=null;clearTimeout(task.timer);data.type==='error'?task.reject(new Error(data.message||'สร้างภาพไม่ได้')):task.resolve(data);
   }
@@ -23,8 +23,18 @@
     release();const run=generation;setBusy(true);status('กำลังเตรียมภาพเปรียบเทียบ…');
     for(const image of dialog.querySelectorAll('.compare-card img')){image.hidden=true;image.removeAttribute('src');}
     try{
-      stillCurrent();const cameras=core.cameras(project);token=crypto.randomUUID();const url=new URL(location.href);url.searchParams.set('comparePreview','1');url.searchParams.set('compareToken',token);url.hash='';
+      stillCurrent();token=crypto.randomUUID();const url=new URL(location.href);url.searchParams.set('comparePreview','1');url.searchParams.set('compareToken',token);url.hash='';
       const ready=waitFor('ready');frame=document.createElement('iframe');frame.className='compare-render-frame';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.src=url.href;document.body.append(frame);await ready;
+      const measured={};
+      for(const slot of ['A','B']){
+        if(!project.variants[slot])continue;
+        status('กำลังจัดกรอบภาพแบบ '+slot+'…');const id=token+'-measure-'+slot,response=waitFor(id);
+        frame.contentWindow.postMessage({channel:'yp-compare',token,type:'measure',id,snapshot:project.variants[slot]},location.protocol==='file:'?'*':location.origin);
+        const result=await response;if(run!==generation)return;stillCurrent();
+        if(!result.bounds)throw new Error('ไม่ได้รับขนาดชิ้นงานแบบ '+slot);measured[slot]=result.bounds;
+      }
+      // Fit the larger measured design, then reuse its scale for both images.
+      const cameras=core.cameras(project,measured);
       for(const slot of ['A','B']){
         if(!project.variants[slot])continue;
         status('กำลังสร้างภาพแบบ '+slot+'…');const id=token+'-'+slot,response=waitFor(id);

@@ -13,6 +13,7 @@
 .project-dialog::backdrop{background:#000a}
 .project-dialog h2{font-size:19px;margin-bottom:10px}.project-dialog p{font-size:13px;color:var(--tx2);margin-bottom:14px}
 .project-dialog-actions{display:flex;flex-wrap:wrap;gap:8px}.project-dialog-actions button{min-height:40px}
+.project-dialog-actions[hidden]{display:none}
 body[data-editor-level=basic] #btnScaleObject,
 body[data-editor-level=basic] #moveAdvanced,
 body[data-editor-level=basic] #btnFlipObjectX,

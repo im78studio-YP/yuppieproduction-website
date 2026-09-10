@@ -43,13 +43,13 @@
     const apply=document.createElement('button');apply.className='btn pri';apply.type='button';apply.textContent='ใช้แบบนี้';apply.dataset.template=t.id;
     apply.onclick=async()=>{
       for(const b of grid.querySelectorAll('button'))b.disabled=true;
-      try{const ok=await YPProjectWorkspace.useTemplate({makeSnapshot:()=>snapshot(t.id),name:t.name});if(ok)close();else document.getElementById('inlineTemplateStatus').textContent='ยังไม่เปลี่ยนแบบ หากระบบยังไม่พร้อม ให้เลือกร่างเดิมหรือใช้แบบปัจจุบันก่อน';}
+      try{const ok=await YPProjectWorkspace.useTemplate({makeSnapshot:()=>snapshot(t.id),name:t.name});if(ok)close();else document.getElementById('inlineTemplateStatus').textContent='ยังไม่เปลี่ยนแบบ การยืนยันถูกยกเลิกหรือระบบยังไม่พร้อม กรุณาลองอีกครั้ง';}
       catch(error){document.getElementById('inlineTemplateStatus').textContent=error.message;}
       finally{for(const b of grid.querySelectorAll('button'))b.disabled=false;}
     };
     const actions=document.createElement('div');actions.className='inline-template-actions';actions.append(apply);card.append(img,title,tag,description,actions);grid.append(card);
   });
-  function open(){opener=document.activeElement;const state=YPProjectWorkspace?.state();document.getElementById('inlineTemplateDestination').textContent='จะสร้างในแบบ '+(state?.active==='A'?'B':'A')+' โดยเก็บแบบ '+(state?.active||'A')+' ปัจจุบันไว้ หากช่องปลายทางมีงานอยู่ ระบบจะถามก่อนแทนที่';document.getElementById('inlineTemplateStatus').textContent='';dialog.showModal();}
+  async function open(){opener=document.activeElement;await YPProjectWorkspace.enter();const state=YPProjectWorkspace.state();document.getElementById('inlineTemplateDestination').textContent='จะใช้ในแบบ '+state.active+' ที่กำลังเลือกอยู่ โดยถามยืนยันก่อนแทนที่ และไม่เปลี่ยนอีกแบบ';for(const b of grid.querySelectorAll('button[data-template]'))b.textContent=YPProjectWorkspace.templateLabel();document.getElementById('inlineTemplateStatus').textContent='';dialog.showModal();}
   document.getElementById('inlineTemplatesOpen').onclick=open;document.getElementById('inlineTemplatesClose').onclick=close;
   dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
   document.addEventListener('keydown',e=>{if(dialog.open)e.stopPropagation();},true);

@@ -40,8 +40,13 @@
     const half=max.map((v,i)=>(v-min[i])/2);
     return {center:min.map((v,i)=>(v+max[i])/2),half,radius:Math.hypot(...half)};
   }
-  function cameras(project){
-    const boxes=Object.fromEntries(['A','B'].filter(k=>project.variants[k]).map(k=>[k,extent(project.variants[k].spec)]));
+  function cameras(project,measured={}){
+    const boxes=Object.fromEntries(['A','B'].filter(k=>project.variants[k]).map(k=>{
+      const bounds=measured[k];if(!bounds)return[k,extent(project.variants[k].spec)];
+      if(!['min','max'].every(key=>Array.isArray(bounds[key])&&bounds[key].length===3&&bounds[key].every(Number.isFinite))||bounds.max.some((v,i)=>v<bounds.min[i]))throw new Error('กรอบภาพแบบ '+k+' ไม่ถูกต้อง');
+      const half=bounds.max.map((v,i)=>(v-bounds.min[i])/2);
+      return[k,{center:bounds.min.map((v,i)=>(v+bounds.max[i])/2),half,radius:Math.hypot(...half)}];
+    }));
     const radius=Math.max(1,...Object.values(boxes).map(b=>b.radius)),aspect=4/3,distance=radius*4,dir=[1,.7,1],len=Math.hypot(...dir);
     const right=[Math.SQRT1_2,0,-Math.SQRT1_2],up=[-.7*Math.SQRT1_2/len,Math.SQRT2/len,-.7*Math.SQRT1_2/len];
     const span=(half,axis)=>half.reduce((n,value,i)=>n+value*Math.abs(axis[i]),0);

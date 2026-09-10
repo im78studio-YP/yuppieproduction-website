@@ -48,7 +48,7 @@
   const entry=document.createElement('section');entry.id='peninsularTemplateSubmenu';entry.className='starter-entry';entry.innerHTML='<h3>เทมเพลต Peninsular 3×6 ม.</h3><p>'+library.templates.length+' แบบตามภาพอ้างอิง · เปิดหน้า ซ้าย และขวา</p><button type="button" class="btn pri" id="peninsularTemplatesOpen">เลือกเทมเพลต '+library.templates.length+' แบบ</button>';
   document.getElementById('oType').after(entry);
   const dialog=document.createElement('dialog');dialog.className='project-dialog inline-template-dialog';dialog.setAttribute('aria-labelledby','peninsularTemplatesTitle');
-  dialog.innerHTML='<div class="starter-heading"><h2 id="peninsularTemplatesTitle">Peninsular · กว้าง 6 × ลึก 3 ม.</h2><button type="button" class="btn" id="peninsularTemplatesClose" aria-label="ปิด">×</button></div><p>ใช้โลโก้ YP ตั้งต้น · สัดส่วนรายชิ้นประมาณจากภาพอ้างอิง ไม่ใช่แบบผลิต</p><p>เลือกใช้ใน A/B อีกช่องเพื่อเก็บแบบปัจจุบันไว้ ระบบจะถามก่อนแทนที่งานที่มีอยู่หรือเปลี่ยนขนาด</p><section class="template-feedback" id="peninsularFeedback" hidden><p id="peninsularTemplateStatus" role="status" aria-live="polite" aria-atomic="true"></p><div class="inline-template-actions" id="peninsularFeedbackActions"></div></section><div class="inline-template-grid" id="peninsularCards"></div>';
+  dialog.innerHTML='<div class="starter-heading"><h2 id="peninsularTemplatesTitle">Peninsular · กว้าง 6 × ลึก 3 ม.</h2><button type="button" class="btn" id="peninsularTemplatesClose" aria-label="ปิด">×</button></div><p>ใช้โลโก้ YP ตั้งต้น · สัดส่วนรายชิ้นประมาณจากภาพอ้างอิง ไม่ใช่แบบผลิต</p><p>เทมเพลตจะใช้ในแบบ A/B ที่กำลังเลือกอยู่ โดยถามยืนยันก่อนแทนที่ และไม่เปลี่ยนอีกแบบ</p><section class="template-feedback" id="peninsularFeedback" hidden><p id="peninsularTemplateStatus" role="status" aria-live="polite" aria-atomic="true"></p><div class="inline-template-actions" id="peninsularFeedbackActions"></div></section><div class="inline-template-grid" id="peninsularCards"></div>';
   document.body.append(dialog);
   const grid=document.getElementById('peninsularCards'),feedback=document.getElementById('peninsularFeedback'),status=document.getElementById('peninsularTemplateStatus'),feedbackActions=document.getElementById('peninsularFeedbackActions');
   let opener,working=false,lastChoice=null;
@@ -58,10 +58,7 @@
   function action(label,handler,id){const button=document.createElement('button');button.type='button';button.className='btn';button.textContent=label;button.id=id;button.onclick=handler;button.disabled=working;feedbackActions.append(button);}
   function showFeedback(result){
     feedback.hidden=false;feedback.dataset.code=result.code;status.textContent=result.message;feedbackActions.replaceChildren();
-    if(result.code==='pending-draft'||window.YPProjectWorkspace?.state().pendingDraft){
-      action('เปิดร่างเดิม',()=>resolveDraft('recover'),'peninsularRecoverDraft');
-      action('ใช้แบบปัจจุบัน',()=>resolveDraft('current'),'peninsularKeepCurrent');
-    }else if(result.code!=='working'){
+    if(result.code!=='working'){
       action(lastChoice?'ลองใช้แบบนี้อีกครั้ง':'ตรวจความพร้อมอีกครั้ง',()=>lastChoice?applyTemplate(lastChoice):checkReadiness(),'peninsularRetry');
     }
     if(dialog.open)dialog.scrollTo({top:0,behavior:'instant'});
@@ -71,16 +68,6 @@
     if(working)return showFeedback({code:'working',message:'กำลังดำเนินการ กรุณารอสักครู่'});
     if(!state?.ready)return showFeedback({code:'not-ready',message:'ระบบโปรเจกต์ยังโหลดไม่เสร็จ กรุณารอสักครู่แล้วตรวจอีกครั้ง'});
     if(state.busy)return showFeedback({code:'busy',message:'กำลังทำรายการอื่นอยู่ กรุณารอให้เสร็จแล้วตรวจอีกครั้ง'});
-    if(state.pendingDraft)return showFeedback({code:'pending-draft',message:'พบร่างที่บันทึกไว้ เลือกเปิดร่างเดิมหรือใช้แบบปัจจุบันก่อนใช้เทมเพลต — ยังไม่เขียนทับร่างเดิม'});
-  }
-  async function resolveDraft(choice){
-    if(working)return;setWorking(true);
-    try{
-      const result=await YPProjectWorkspace.resolveTemplateDraft(choice);
-      if(result.ok)showFeedback({code:'ready',message:(choice==='recover'?'เปิดร่างเดิมแล้ว':'เลือกใช้แบบปัจจุบันแล้ว')+' — เลือกเทมเพลตที่ต้องการได้เลย'});
-      else showFeedback(result);
-    }catch(error){showFeedback({code:'error',message:'ทำรายการไม่สำเร็จ: '+error.message});}
-    finally{setWorking(false);}
   }
   async function applyTemplate(t){
     if(working)return;lastChoice=t;clearFeedback();setWorking(true);
@@ -100,7 +87,7 @@
     const button=document.createElement('button');button.type='button';button.className='btn pri';button.textContent='ใช้แบบนี้';button.dataset.peninTemplate=t.id;button.onclick=()=>applyTemplate(t);
     actions.append(button);card.append(img,h,desc,actions);grid.append(card);
   }
-  const open=()=>{opener=document.activeElement;lastChoice=null;clearFeedback();if(!dialog.open)dialog.showModal();checkReadiness();};
+  const open=async()=>{opener=document.activeElement;await YPProjectWorkspace.enter();lastChoice=null;clearFeedback();for(const b of grid.querySelectorAll('[data-penin-template]'))b.textContent=YPProjectWorkspace.templateLabel();if(!dialog.open)dialog.showModal();checkReadiness();};
   document.getElementById('peninsularTemplatesOpen').onclick=open;document.getElementById('peninsularTemplatesClose').onclick=close;
   dialog.oncancel=e=>{e.preventDefault();close();};document.addEventListener('keydown',e=>{if(dialog.open)e.stopPropagation();},true);
   const syncType=type=>{entry.hidden=type!=='penin';};syncType(getBoothSpec().type);window.YPPeninsularTemplateUI={open,syncType};

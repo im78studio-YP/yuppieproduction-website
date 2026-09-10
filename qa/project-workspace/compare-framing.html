@@ -1,0 +1,33 @@
+<!doctype html><html lang="th"><meta charset="utf-8"><title>Compare framing regression</title>
+<style>body{margin:20px;background:#141016;color:white;font:16px sans-serif}main{display:flex;gap:16px}section{flex:1;min-width:0}img{width:100%;aspect-ratio:4/3;object-fit:contain;background:#e8eaee}iframe{position:fixed;left:-10000px;top:0;width:1024px;height:768px}pre{white-space:pre-wrap}@media(max-width:600px){main{display:block}}</style>
+<h1>Compare framing regression</h1><button id="run">Run isolated comparison</button><p id="status">Ready — does not read or write workspace drafts.</p><main><section><h2>A · Adventure</h2><img id="A"></section><section><h2>B · Connect</h2><img id="B"></section></main><pre id="result"></pre>
+<script src="/yp-web-ai/js/compare.js"></script><script src="/yp-web-ai/js/peninsular-templates.js"></script>
+<script>
+document.querySelector('#run').onclick=async()=>{
+ const status=document.querySelector('#status'),button=document.querySelector('#run');button.disabled=true;
+ let frame,pending,timer;const token=crypto.randomUUID();
+ const wait=id=>new Promise((resolve,reject)=>{timer=setTimeout(()=>reject(new Error('Timeout '+id)),45000);pending={id,resolve,reject};});
+ const message=e=>{const d=e.data;if(e.source!==frame?.contentWindow||d?.channel!=='yp-compare'||d.token!==token||!pending)return;if(d.type!=='ready'&&d.id!==pending.id)return;clearTimeout(timer);const p=pending;pending=null;d.type==='error'?p.reject(new Error(d.message)):p.resolve(d);};
+ window.addEventListener('message',message);
+ try{
+  const fixture=await(await fetch('./handoff-extracted/project.ypbooth.json')).json(),initial=fixture.variants.A.spec;
+  initial.sceneItemState={};initial.wallStickerFaces=[];
+  const ids=[...new Set(YPPeninsularTemplates.templates.flatMap(t=>t.objects.map(o=>o.catalogId)))],catalog=ids.map(catalogId=>({catalogId,type:'fixture',unitPrice:0}));
+  const project={variants:{A:{spec:YPPeninsularTemplates.build('penin-adventure',initial,catalog).spec,assets:[]},B:{spec:YPPeninsularTemplates.build('penin-connect',initial,catalog).spec,assets:[]}}};
+  const ready=wait('ready');frame=document.createElement('iframe');frame.src='/yp-web-ai/index.html?comparePreview=1&compareToken='+token;document.body.append(frame);await ready;
+  const request=async(type,slot,camera)=>{const id=type+slot,response=wait(id);frame.contentWindow.postMessage({channel:'yp-compare',token,type,id,snapshot:project.variants[slot],camera},location.origin);return response;};
+  const measured={};for(const slot of ['A','B']){status.textContent='Measuring '+slot;measured[slot]=(await request('measure',slot)).bounds;}
+  const cameras=YPCompare.cameras(project,measured),old=YPCompare.cameras(project),metrics={measured,cameras,zoomGain:old.A.frustum.top/cameras.A.frustum.top};
+  if(JSON.stringify(cameras.A.frustum)!==JSON.stringify(cameras.B.frustum))throw new Error('Unequal scale');
+  metrics.occupancy={};
+  for(const slot of ['A','B']){status.textContent='Rendering '+slot;const data=await request('render',slot,cameras[slot]);const img=document.getElementById(slot);img.src=URL.createObjectURL(data.blob);await img.decode();
+   const canvas=document.createElement('canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;let x0=canvas.width,y0=canvas.height,x1=0,y1=0;
+   for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){const i=(y*canvas.width+x)*4;if(Math.abs(pixels[i]-232)+Math.abs(pixels[i+1]-234)+Math.abs(pixels[i+2]-238)>45){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}}
+   metrics.occupancy[slot]={width:(x1-x0)/canvas.width,height:(y1-y0)/canvas.height,x0,y0,x1,y1};
+   if(x0<5||y0<5||x1>canvas.width-5||y1>canvas.height-5)throw new Error('Clipped booth '+slot);
+   if(metrics.occupancy[slot].width<.65)throw new Error('Booth too small '+slot);
+  }
+  document.querySelector('#result').textContent=JSON.stringify(metrics,null,2);status.textContent='PASS — larger framing, equal A/B scale, no clipped edges';
+ }catch(error){status.textContent='FAIL: '+error.message;}finally{clearTimeout(timer);frame?.remove();window.removeEventListener('message',message);button.disabled=false;}
+};
+</script></html>

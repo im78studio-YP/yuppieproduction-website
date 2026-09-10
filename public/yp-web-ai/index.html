@@ -782,7 +782,7 @@ select:focus{border-color:var(--acc)}
 @media(prefers-reduced-motion:reduce){.quick-setup-step.is-entering{animation:none}}
 </style>
 <link rel="stylesheet" href="css/asset-editor.css?v=20260829-3">
-<link rel="stylesheet" href="css/project-workspace.css?v=20260905-1">
+<link rel="stylesheet" href="css/project-workspace.css?v=20260910-entry-flow">
 </head>
 <body>
 
@@ -2404,12 +2404,14 @@ function restoreObjectSnapshot(snapshot){
   ['lights','lightFixture','lightCol','lightWall','lightWatts','lightAdj'].forEach(key=>{if(parsed&&Object.prototype.hasOwnProperty.call(parsed,key))S[key]=parsed[key];});
 }
 function resetBoothToInitialState(){
-  const confirmed=window.confirm('คืนค่าการออกแบบทั้งหมดให้เหมือนตอนเปิดเว็บครั้งแรก?\nAsset และการแก้ไขปัจจุบันทั้งหมดจะถูกล้าง');
-  if(!confirmed)return;
-
-  const initial=JSON.parse(INITIAL_BOOTH_SPEC_JSON);
-  Object.keys(S).forEach(key=>delete S[key]);
-  Object.assign(S,initial);
+  // The workspace owns confirmation, draft persistence and the active A/B slot.
+  // Use the same restore path as project loading to clear registries and attachments.
+  window.YPProjectBridge.restore({spec:JSON.parse(INITIAL_BOOTH_SPEC_JSON),assets:[]});
+  viewGridVisible=false;wallGridVisible=false;
+  for(const id of ['dockGridToggle','dockWallGridToggle'])document.getElementById(id).setAttribute('aria-pressed','false');
+  document.getElementById('dockGridToggle').title='เปิดกริดหลัก 1 ม. / ย่อย 10 ซม.';
+  document.getElementById('dockWallGridToggle').title='เปิดกริดผนังหลัก 1 ม. / ย่อย 10 ซม.';
+  syncGridMenuState();closeGridSubmenu();
 
   setObjectSelection([]);
   objectEditor.multiSelect=false;
@@ -2440,6 +2442,7 @@ function resetBoothToInitialState(){
   syncDims();
   syncLayoutInputs();
   sync();
+  document.querySelectorAll('[data-v]').forEach(button=>{const active=button.dataset.v===S.view;button.classList.toggle('on',active);button.setAttribute('aria-selected',String(active));});
 }
 const objectCatalogDef=id=>allObjectCatalog().find(o=>o.catalogId===id)||null;
 function normalizeAIStagingSettings(spec=S){
@@ -5817,10 +5820,6 @@ class ThreeBoothRenderer{
       const b=el('button','',label);b.type='button';b.onclick=()=>this.setCameraView(key);
       this.tools.appendChild(b);this.viewButtons.set(key,b);
     });
-    const reset=el('button','reset','Reset');reset.type='button';
-    reset.title='คืนค่าการออกแบบทั้งหมดเหมือนตอนเปิดเว็บครั้งแรก';
-    reset.setAttribute('aria-label','คืนค่าการออกแบบทั้งหมด');
-    reset.onclick=resetBoothToInitialState;this.tools.appendChild(reset);
 
     const probe=document.createElement('canvas');
     if(!probe.getContext('webgl2')&&!probe.getContext('webgl'))throw new Error('WebGL unavailable');
@@ -9587,7 +9586,7 @@ document.addEventListener('keydown',event=>{
 });
 initQuickSetup();requestAnimationFrame(()=>document.getElementById('releaseClose').focus());
 window.YPQuickSetupBridge={getState:()=>({step:quickSetupStep,firstRun:quickSetupFirstRun,draft:quickSetupDraft?{...quickSetupDraft}:null,open:releaseNotesModal.classList.contains('show')}),
-  open(){quickSetupDraft=quickSetupDraftFromEditor();quickSetupCompleting=false;releaseNotesModal.classList.add('show');releaseNotesModal.setAttribute('aria-hidden','false');setQuickSetupStep('intro');},close:()=>closeReleaseNotes(true)};
+  open({start='intro'}={}){quickSetupDraft=quickSetupDraftFromEditor();quickSetupCompleting=false;releaseNotesModal.classList.add('show');releaseNotesModal.setAttribute('aria-hidden','false');setQuickSetupStep(start==='business'?'business':'intro');},close:()=>closeReleaseNotes(true)};
 
 function openM(id){document.getElementById(id).classList.add('show');}
 function closeM(id){document.getElementById(id).classList.remove('show');}
@@ -9606,6 +9605,8 @@ window.getBoothSpec=()=>JSON.parse(serializeBoothSpec());
 /* Project I/O keeps the existing state object and renderer integrations intact. */
 window.YPProjectBridge={
   ready:projectAssetsReady,
+  initialSnapshot:()=>({spec:JSON.parse(INITIAL_BOOTH_SPEC_JSON),assets:[]}),
+  reset:resetBoothToInitialState,
   handoffGeometry(spec){
     // Collision helpers normalize objects; only pass clones so inspection never edits the scene.
     return spec.objects.map(source=>{
@@ -9824,7 +9825,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 </script>
 <script type="module" src="js/asset-editor/asset-editor.js?v=20260829-3"></script>
 <script src="js/project-store.js?v=20260905-1"></script>
-<script src="js/project-workspace.js?v=20260909-10"></script>
+<script src="js/project-workspace.js?v=20260910-active-template"></script>
 <script src="js/starter-layouts.js?v=20260905-1"></script>
 <!-- Template selection replaces the legacy purpose card and post-setup prompt. -->
 <link rel="stylesheet" href="css/handoff.css?v=20260905-1">
@@ -9834,20 +9835,20 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/prompt-output.css?v=20260910-2">
 <script src="js/presentation-board-ui.js?v=20260910-2"></script>
 <link rel="stylesheet" href="css/compare.css?v=20260907-1">
-<script src="js/compare.js?v=20260907-1"></script>
-<script src="js/compare-preview.js?v=20260907-1"></script>
-<script src="js/compare-ui.js?v=20260907-1"></script>
+<script src="js/compare.js?v=20260910-framing"></script>
+<script src="js/compare-preview.js?v=20260910-framing"></script>
+<script src="js/compare-ui.js?v=20260910-framing"></script>
 <link rel="stylesheet" href="css/inline-templates.css?v=20260909-3">
 <script src="js/inline-templates.js?v=20260908-2"></script>
-<script src="js/inline-template-ui.js?v=20260909-6"></script>
+<script src="js/inline-template-ui.js?v=20260910-active-template"></script>
 <script src="js/peninsular-templates.js?v=20260909-16"></script>
-<script src="js/peninsular-template-ui.js?v=20260909-16"></script>
+<script src="js/peninsular-template-ui.js?v=20260910-active-template"></script>
 <script src="js/corner-templates.js?v=20260909-13"></script>
-<script src="js/corner-template-ui.js?v=20260909-13"></script>
+<script src="js/corner-template-ui.js?v=20260910-active-template"></script>
 <script src="js/island-templates.js?v=20260909-11"></script>
-<script src="js/island-template-ui.js?v=20260909-11"></script>
+<script src="js/island-template-ui.js?v=20260910-active-template"></script>
 <script src="js/inline-wizard.js?v=20260909-10"></script>
-<script src="js/template-entry.js?v=20260909-10"></script>
+<script src="js/template-entry.js?v=20260910-entry-flow"></script>
 <link rel="stylesheet" href="css/responsive-tools.css?v=20260910-2">
 <script src="js/responsive-tools.js?v=20260910-2"></script>
 </body>

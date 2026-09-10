@@ -17,13 +17,7 @@
   function button(label,handler,key){const b=document.createElement('button');b.className='btn pri';b.type='button';b.textContent=label;b.id=key;b.disabled=busy;b.onclick=handler;actions.append(b);}
   function feedback(message){status.textContent=message;actions.replaceChildren();
     if(!template)return;
-    if(window.YPProjectWorkspace?.state().pendingDraft){button('เปิดร่างเดิม',()=>resolve('recover'),'templateEntryRecover');button('ใช้แบบปัจจุบัน',()=>resolve('current'),'templateEntryCurrent');}
-    else button('ใช้แบบนี้',apply,'templateEntryApply');
-  }
-  async function resolve(choice){
-    if(busy)return;setBusy(true);
-    try{const result=await YPProjectWorkspace.resolveTemplateDraft(choice);feedback(result.ok?'พร้อมแล้ว กด “ใช้แบบนี้” เพื่อใช้เทมเพลตที่เลือก โดยระบบจะเก็บแบบปัจจุบันไว้ใน A/B':result.message);}
-    catch(error){feedback('ทำรายการไม่สำเร็จ: '+error.message);}finally{setBusy(false);}
+    button(YPProjectWorkspace.templateLabel({initialWizard:true}),apply,'templateEntryApply');
   }
   async function apply(){
     if(busy||!template||!dialog.open)return;attempted=true;setBusy(true);status.textContent='กำลังเตรียมแบบที่เลือก…';actions.replaceChildren();
@@ -37,9 +31,9 @@
   }
   close.onclick=()=>{if(!busy)dialog.close();};dialog.oncancel=e=>{if(busy)e.preventDefault();};
   document.addEventListener('keydown',e=>{if(dialog.open)e.stopPropagation();},true);
+  await YPProjectWorkspace.enter();
+  window.YPQuickSetupBridge.close();
   dialog.showModal();feedback(template?'กำลังเตรียมตัวออกแบบ…':'ลิงก์นี้ไม่ตรงกับเทมเพลตที่มีอยู่ กรุณากลับไปเลือกจากหน้ารวมเทมเพลต');
   if(!template)return;
-  const deadline=Date.now()+15000;
-  while(dialog.open&&!window.YPProjectWorkspace?.state().ready&&Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,100));
   if(dialog.open&&!attempted)await apply();
 })();
