@@ -1,0 +1,7 @@
+.prompt-output-tabs{display:flex;gap:6px;margin-bottom:12px}
+.prompt-output-tabs .btn{flex:1;min-width:0;white-space:normal;padding:10px 6px;font-size:11px}
+.prompt-output-tabs .btn[aria-selected="true"]{background:var(--acc);color:#170b12;border-color:var(--acc)}
+#promptImagePanel[hidden],#promptBoardPanel[hidden]{display:none!important}
+#promptImagePanel #designPrompt,#promptBoardPanel #boardPrompt{display:block!important;min-height:240px;max-height:420px;margin:10px 0}
+#promptImageTextCopy{width:100%;margin-bottom:12px}
+#promptBoardPanel label{display:block;margin-top:12px;font-size:12px}

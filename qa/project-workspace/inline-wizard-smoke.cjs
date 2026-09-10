@@ -30,7 +30,7 @@ const assert=require('node:assert/strict');
     await page.locator('#quickRoomFinish').click();await page.waitForFunction(()=>!YPQuickSetupBridge.getState().open&&!YPProjectWorkspace.state().busy);
     const result=await page.evaluate(()=>YPProjectWorkspace.capture());assert.equal(result.active,'A');assert.equal(result.variants.B,null);
     assert.equal(result.variants.A.spec.inlineTemplate.id,'retail');assert.equal(result.variants.A.spec.tile,'woodL');assert.equal(result.variants.A.spec.primary.toUpperCase(),'#156F80');assert.equal(result.variants.A.spec.stSize,'a');assert.equal(result.variants.A.spec.stDoor,'left');
-    assert.equal(result.variants.A.spec.logoColor,'#ee3c96');assert.equal(await page.locator('.starter-dialog').evaluate(d=>d.open),false);
+    assert.equal(result.variants.A.spec.logoColor,'#ee3c96');assert.equal(await page.locator('.starter-dialog').count(),0);
     // Submenu follows the real editor type, including restore/sync.
     await page.evaluate(()=>selectBoothType('corner'));assert.equal(await page.locator('#inlineTemplateSubmenu').evaluate(e=>e.hidden),true);
     await page.evaluate(()=>selectBoothType('inline'));assert.equal(await page.locator('#inlineTemplateSubmenu').evaluate(e=>e.hidden),false);

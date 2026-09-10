@@ -20,8 +20,8 @@ test('image export includes logo loads and refuses unresolved logo placeholders'
   assert.ok(html.includes('const raster=image._ypRasterSource||image'));
 });
 test('nullable legacy logo fields remain supported',()=>assert.ok(html.includes("['logo','logoAcc','logoHasTransparency'].includes(key)")));
-test('wizard template completion bypasses a second starter prompt',async()=>{
-  const ui=await readFile(new URL('../../public/yp-web-ai/js/starter-layout-ui.js',import.meta.url),'utf8');
-  assert.ok(ui.includes('if(!event.detail?.templateId)open()'));
+test('wizard uses templates without loading the legacy purpose prompt',()=>{
+  assert.ok(!html.includes('src="js/starter-layout-ui.js'));
+  assert.ok(html.includes('src="js/inline-wizard.js'));
   assert.ok(html.includes("new CustomEvent('yp:quick-setup-complete',{detail:{templateId}})"));
 });

@@ -869,8 +869,12 @@ select:focus{border-color:var(--acc)}
       <p>สร้างข้อความคำสั่งจากข้อมูลการออกแบบบูธที่เลือกไว้</p>
     </div>
     <div class="tool-page-body" id="dockPromptBody">
-      <div class="prompt-card">
-        <div class="sech"><h3>PROMPT จากแบบปัจจุบัน</h3><span class="hint">อัปเดตอัตโนมัติ</span></div>
+      <div class="prompt-output-tabs" role="tablist" aria-label="ประเภท Prompt">
+        <button class="btn on" type="button" id="promptImageTab" role="tab" aria-selected="true" aria-controls="promptImagePanel">สร้างภาพ</button>
+        <button class="btn" type="button" id="promptBoardTab" role="tab" aria-selected="false" aria-controls="promptBoardPanel" tabindex="-1">Presentation Board</button>
+      </div>
+      <div class="prompt-card" id="promptImagePanel" role="tabpanel" aria-labelledby="promptImageTab">
+        <div class="sech"><h3>Prompt สร้างภาพบูธ</h3><span class="hint">ภาพสมจริง 1 มุม</span></div>
         <div class="prompt-style-field">
           <label for="promptRenderStyle">สไตล์ในการเรนเดอร์</label>
           <select id="promptRenderStyle" aria-label="เลือกสไตล์ในการเรนเดอร์">
@@ -907,6 +911,7 @@ select:focus{border-color:var(--acc)}
           <div class="prompt-staging-note">องค์ประกอบที่ AI เติมเป็นเพียง Render Staging ไม่ใช่อุปกรณ์ที่ลูกค้ายืนยัน สโคปผลิต หรือ Geometry ของแบบ</div>
         </div>
         <textarea id="designPrompt" class="prompt-textarea" readonly spellcheck="false" aria-label="PROMPT จากแบบปัจจุบัน"></textarea>
+        <button class="btn sm" type="button" id="promptImageTextCopy">คัดลอก Prompt สร้างภาพ</button>
         <div class="prompt-fidelity" id="promptFidelityControl">
           <div class="prompt-fidelity-head">
             <label for="promptFidelityRange">ระดับอิสระของการจัดฉาก</label>
@@ -979,6 +984,19 @@ select:focus{border-color:var(--acc)}
         </div>
         <div class="prompt-status" id="promptStatus" role="status" aria-live="polite"></div>
         <div class="note">PROMPT นี้รวมตัวเลือกปัจจุบันของบูธ เช่น ขนาด รูปแบบ วัสดุ สี โลโก้ แสง และอุปกรณ์ที่จัดวางไว้ เพื่อใช้ต่อในขั้นตอน Render AI</div>
+      </div>
+      <div class="prompt-card" id="promptBoardPanel" role="tabpanel" aria-labelledby="promptBoardTab" hidden>
+        <div class="sech"><h3>Prompt Presentation Board</h3></div>
+        <p class="note">จัดบอร์ด A3 แนวนอน 1 แผ่น รวมภาพหลัก รูปด้าน ผังบน โลโก้ และข้อมูลบูธ โดยคงแบบเดียวกันทุกมุม</p>
+        <label for="boardPrompt">คำสั่งสำหรับจัดบอร์ดโดยเฉพาะ</label>
+        <textarea id="boardPrompt" class="prompt-textarea" readonly spellcheck="false"></textarea>
+        <div class="prompt-actions">
+          <button class="btn sm prompt-copy" type="button" id="promptBoardTextCopy">คัดลอก Prompt บอร์ด</button>
+          <button class="btn pri sm prompt-copy" type="button" id="promptBoard">เตรียมชุดสร้างพรีเซนเทชั่นบอร์ด</button>
+        </div>
+        <p class="prompt-package-note" id="promptBoardPreviewNote">คำสั่งร่างจากแบบปัจจุบัน · กดเตรียมชุดเพื่อรับคำสั่งและภาพอ้างอิงที่ตรงกัน</p>
+        <p class="note">ZIP มี board-prompt.txt ข้อมูลบูธ และภาพอ้างอิง 6 มุม ให้นำไปแนบใน AI — ยังไม่ได้สร้างบอร์ดอัตโนมัติ</p>
+        <p class="prompt-status" id="promptBoardStatus" role="status" aria-live="polite"></p>
       </div>
     </div>
   </section>
@@ -4815,6 +4833,7 @@ function setRenderQuality(value,{update=true}={}){
   return currentRenderQuality();
 }
 function updatePromptPreview(){
+  window.YPPresentationBoardUI?.refreshPreview();
   syncPromptRenderStyleControls();
   syncPromptStagingControls();
   const draft=syncSceneRevision(),summary=document.getElementById('promptProjectSummary');if(summary)summary.textContent=renderPackageSummary(draft);
@@ -9595,10 +9614,13 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/project-store.js?v=20260905-1"></script>
 <script src="js/project-workspace.js?v=20260909-10"></script>
 <script src="js/starter-layouts.js?v=20260905-1"></script>
-<script src="js/starter-layout-ui.js?v=20260908-2"></script>
+<!-- Template selection replaces the legacy purpose card and post-setup prompt. -->
 <link rel="stylesheet" href="css/handoff.css?v=20260905-1">
 <script src="js/handoff-package.js?v=20260905-1"></script>
 <script src="js/handoff-ui.js?v=20260905-1"></script>
+<script src="js/presentation-board-package.js?v=20260910-1"></script>
+<link rel="stylesheet" href="css/prompt-output.css?v=20260910-2">
+<script src="js/presentation-board-ui.js?v=20260910-2"></script>
 <link rel="stylesheet" href="css/compare.css?v=20260907-1">
 <script src="js/compare.js?v=20260907-1"></script>
 <script src="js/compare-preview.js?v=20260907-1"></script>
