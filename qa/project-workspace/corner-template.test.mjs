@@ -4,8 +4,8 @@ import '../../public/yp-web-ai/js/corner-templates.js';
 const lib=globalThis.YPCornerTemplates,t=lib.templates[0];
 const initial={wallStickerFaces:['back','left'],wallStickers:{left:{data:'readable left'},right:{data:'right'},back:{data:'back'}},assetAttachmentGraph:{attachments:[]}};
 const catalog=[...new Set(lib.templates.flatMap(t=>t.objects.map(o=>o.catalogId)))].map(catalogId=>({catalogId,type:catalogId==='brand-artwork-copy'?'brandCopy':'panel',unitPrice:0}));
-test('seven distinct layouts fit the 6x3 footprint in both orientations',()=>{
-  assert.equal(lib.templates.length,7);assert.equal(new Set(lib.templates.map(t=>t.id)).size,7);
+test('eight distinct layouts fit the 6x3 footprint in both orientations',()=>{
+  assert.equal(lib.templates.length,8);assert.equal(new Set(lib.templates.map(t=>t.id)).size,8);
   for(const t of lib.templates)for(const side of ['left','right']){
     const s=lib.build(t.id,initial,catalog,side).spec;
     for(const o of s.objects){const a=o.rotationY*Math.PI/180,w=Math.abs(Math.cos(a))*o.size.w+Math.abs(Math.sin(a))*o.size.d,d=Math.abs(Math.sin(a))*o.size.w+Math.abs(Math.cos(a))*o.size.d;
@@ -44,4 +44,8 @@ test('mirror preserves edits and readable graphics without mutating source',()=>
 });
 test('invalid side or attachment constraints cannot silently change the scene',()=>{
   const s=lib.build(t.id,initial,catalog).spec;s.assetAttachmentGraph.attachments.push({id:'anchor'});const before=structuredClone(s);assert.throws(()=>lib.mirror(s,'left'),/จุดยึด/);assert.throws(()=>lib.mirror(s,'invalid'));assert.deepEqual(s,before);
+});
+test('Aqua asymmetric geometry mirrors in the renderer transform while lettering stays readable',()=>{
+ const s=lib.build('corner-aqua-wave',initial,catalog).spec,m=lib.mirror(s,'left'),again=lib.mirror(m,'right');
+ for(let i=0;i<s.objects.length;i++){const o=s.objects[i];if(o.structure?.design?.startsWith('aqua-')){assert.equal(m.objects[i].transform.flipX,true);assert.equal(again.objects[i].transform.flipX,false);}if(o.type==='brandCopy')assert.notEqual(m.objects[i].transform?.flipX,true);}
 });

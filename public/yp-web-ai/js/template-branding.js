@@ -20,9 +20,10 @@
    const source=t.objects[i],o=spec.objects[i];if(!o)continue;
    if(source.brandLogo){Object.assign(o.appearance,{mode:'original',textureData:artwork(null,o.size.w,o.size.h),textureName:'Yuppie Production',textureId:REV+'-'+o.id});}
    else if(source.graphic){
-    const key=source.graphic,needsLogo=key.startsWith('six-')||key.startsWith('beauty-')||['header','poster','counter','screen','blue-info','light-rings','blue-rings','blush-beauty'].includes(key);
+    const key=source.graphic,needsLogo=key.startsWith('botanical-')||key==='aqua-screen'||key.startsWith('six-')||key.startsWith('beauty-')||['header','poster','counter','screen','blue-info','light-rings','blue-rings','blush-beauty'].includes(key);
     if(needsLogo){const poster=key.startsWith('beauty-')||/six-(technology|gold|digital|mobile|inventors|product|devices)$/.test(key)||['poster','screen','blush-beauty','blue-info','blue-rings','light-rings'].includes(key);
-     Object.assign(o.appearance,{textureData:artwork(o.appearance.textureData,o.size.w,o.size.h,{zone:poster?[.08,.07,.84,.25]:[.06,.06,.88,.88]}),textureName:'Yuppie Production · '+key,textureId:REV+'-'+o.id});}
+     const zone=key==='botanical-wide'?[.04,.12,.39,.42]:key==='botanical-portrait'?[.10,.04,.80,.18]:poster?[.08,.07,.84,.25]:[.06,.06,.88,.88];
+     Object.assign(o.appearance,{textureData:artwork(o.appearance.textureData,o.size.w,o.size.h,{zone}),textureName:'Yuppie Production · '+key,textureId:REV+'-'+o.id});}
    }
    // Opt-in detail on template instances only. No change to dimensions, placement,
    // catalogue defaults, saved objects, grouping, prices or snapping behaviour.

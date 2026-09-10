@@ -1,7 +1,7 @@
 (function(){
   'use strict';const library=YPPeninsularTemplates;
   function artwork(t){const canvas=document.createElement('canvas');canvas.width=1800;canvas.height=720;const c=canvas.getContext('2d');c.fillStyle=t.background;c.fillRect(0,0,1800,720);
-    if(['penin-blue-step','penin-golden-oculus'].includes(t.id))return canvas.toDataURL('image/png');
+    if(['penin-blue-step','penin-golden-oculus','penin-botanical-atelier'].includes(t.id))return canvas.toDataURL('image/png');
     if(t.id==='penin-adventure'){
       ['#8c9382','#6a746a','#454e4b'].forEach((color,k)=>{c.fillStyle=color;c.beginPath();c.moveTo(0,720);for(let i=0;i<=12;i++)c.lineTo(i*150,270+k*120+Math.sin(i*2.1+k)*90);c.lineTo(1800,720);c.fill();});
       c.fillStyle=t.primary;c.fillRect(0,0,1800,22);
@@ -41,7 +41,7 @@
     return canvas.toDataURL('image/png');
   }
   function snapshot(id,options={}){const t={...library.templates.find(t=>t.id===id)},result=library.build(id,JSON.parse(INITIAL_BOOTH_SPEC_JSON),OBJECT_CATALOG);
-    t.objects.forEach((o,i)=>{if(o.graphic)Object.assign(result.spec.objects[i].appearance,{mode:'original',textureData:o.graphic.startsWith('six-')?YPPeninsularSixArtwork(o.graphic):panelArtwork(o.graphic),textureName:o.graphic,textureId:id+'-'+o.graphic});});
+    t.objects.forEach((o,i)=>{if(o.graphic)Object.assign(result.spec.objects[i].appearance,{mode:'original',textureData:o.graphic.startsWith('botanical-')?YPPeninsularBotanical.artwork(o.graphic):o.graphic.startsWith('six-')?YPPeninsularSixArtwork(o.graphic):panelArtwork(o.graphic),textureName:o.graphic,textureId:id+'-'+o.graphic});});
     if(/^#[\da-f]{6}$/i.test(options.primary||'')){const original=t.primary;t.primary=options.primary;result.spec.primary=t.primary;for(const o of result.spec.objects){if(o.appearance?.color===original)o.appearance.color=t.primary;if(o.structure?.color===original)o.structure.color=t.primary;}}
     result.spec.wallStickerFaces=t.customBack?[]:['back'];Object.assign(result.spec.wallStickers.back,{data:artwork(t),name:t.name+' · กราฟิกตัวอย่าง',id:1,ar:2.5,w:6,h:2.4,mode:'cover'});YPTemplateBranding.apply(result.spec,t);YPProjectStore.validateSpec(result.spec);return result;}
   window.YPPeninsularTemplateBridge={snapshot};if(new URLSearchParams(location.search).get('comparePreview')==='1')return;

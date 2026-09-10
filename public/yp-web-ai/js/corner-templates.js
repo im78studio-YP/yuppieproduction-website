@@ -107,6 +107,34 @@
       beautyPart('beauty-chair','chair-standard',4.15,1.32,.44,.47,.85,0,160),
       part('table-standard',4.75,1.55,.60,.60,.73,'#ffffff')
     ]),height:2.9,overallHeight:3.52,tile:'conc'});
+  const aqua=(design,id,x,z,w,d,h,y=0,rotationY=0)=>({...part(id,x,z,w,d,h,null,y,rotationY),structure:{design}});
+  const aquaLogo=(x,z,w,y,rotationY=0,h=w*.252)=>({...logo(x,z,w,y,rotationY),size:{w,d:.01,h}});
+  templates.push({...collection('corner-aqua-wave','08 · Aqua Wave Lounge','คานโค้งเทา + ป้ายฟ้า + เคาน์เตอร์โค้ง',
+    'ตามภาพอ้างอิง: คานโค้งสีเทา ป้ายฟ้าปลายเฉียง เสาตกแต่งซี่ฟ้า ห้องเก็บของจำลองพร้อมประตูและลายแผนที่ ตู้โชว์ 2 ตู้ ชั้นไม้ 3 ชั้น มุมนั่งคุยและเคาน์เตอร์โค้งขาว–ฟ้า · ใช้โลโก้ Yuppie ทุกป้าย · ผนัง 2.5 ม. รวมป้ายประมาณ 3.3 ม.',
+    '#008da7','#cbb18a','#f5f4ef',[
+      // Front-left sculpted pier supports the curved overhead band.
+      panel(.65,2.45,1.05,.16,2.50,'#f5f4ef'),
+      ...[.26,.51,.76,1.01].map((x,i)=>panel(x,2.537,.11,.014,i%2?1.52:1.90,'#00869c',i%2?.16:.26)),
+      aqua('aqua-wave-fascia','panel-standard',2.10,1.59,4.10,2.20,.65,2.50),aquaLogo(.70,2.545,1.05,2.69),
+      aqua('aqua-wood-shelf','panel-standard',4.10,.38,3.78,.60,.12,2.50),
+      aqua('aqua-slanted-sign','panel-standard',4.77,.19,2.26,.20,.70,2.62),aquaLogo(5.00,.302,1.35,2.79,0,.34),
+      // A closed, editable room mock-up; no hidden automatic storage-room generation.
+      panel(1.78,.60,1.40,.90,2.48,'#4b4a4c'),panel(2.18,1.064,.52,.018,2.12,'#a4a49f',.02),panel(2.18,1.076,.48,.012,2.08,'#4b4a4c',.04),panel(2.01,1.089,.09,.02,.02,'#bdbfba',.94),
+      {...graphic('aqua-map',1.60,1.059,.75,.66,.70),structure:{design:'beauty-lit-artwork'}},
+      panel(.98,1.04,.66,.07,2.45,'#f5f4ef'),
+      {...part('panel-standard',.98,1.086,.62,.055,.43,'#272c30',1.20),tv:'side'},
+      {...graphic('aqua-screen',.98,1.12,.55,.36,1.235),tv:'side'},
+      part('lounge-sofa',1.13,1.46,1.10,.62,.69,'#f5f4ef'),part('planter-grass',1.24,1.98,1.12,.24,.97,null),
+      aqua('aqua-display-plinth','display-standard',1.35,2.47,.50,.50,.94),aqua('aqua-display-plinth','display-standard',1.95,2.47,.50,.50,.94),
+      aquaLogo(1.35,2.731,.35,.28),aquaLogo(1.95,2.731,.35,.28),
+      ...[.80,1.12,1.44].map(y=>aqua('aqua-wood-shelf','shelf-standard',3.18,.30,1.33,.35,.045,y)),
+      ...meet(3.15,1.32),
+      aqua('aqua-timber-backdrop','panel-standard',4.85,.175,2.20,.10,1.35),aquaLogo(4.80,.233,1.10,1.00),panel(4.8,.35,1.25,.28,.055,'#f5f4ef',.79),
+      ...tv('main',4.87,.17,1.35,1.64).map(o=>({...o,color:'#141518'})),
+      aqua('aqua-curved-counter','counter-standard',4.68,2.50,2.52,.80,.89),
+      aquaLogo(4.10,2.83,.85,.31,-7,.19),aquaLogo(5.22,2.835,.85,.31,7,.19),
+      ...[2.65,3.6,4.55,5.5].map(x=>beautyPart('beauty-downlight','panel-standard',x,.48,.085,.085,.024,2.474))
+    ]),height:2.50,overallHeight:3.32});
   function mirror(spec,side){
     if(!['left','right'].includes(side))throw new Error('กรุณาเลือกหัวมุมซ้ายหรือขวา');
     const out=structuredClone(spec);if(out.cornerSide===side)return out;
@@ -114,7 +142,11 @@
     const flip=a=>(360-(Number(a)||0)%360)%360;
     for(const o of out.objects||[]){o.position.x=out.W-o.position.x;o.rotationY=flip(o.rotationY);o.rotationZ=flip(o.rotationZ);
       // Reflect asymmetric geometry too, but keep lettering/front-facing artwork readable.
-      if((o.type!=='brandCopy'&&o.catalogId!=='brand-artwork-copy')||['slanted','diagonal-white'].includes(o.appearance?.textureName))o.flipX=!o.flipX;
+      if((o.type!=='brandCopy'&&o.catalogId!=='brand-artwork-copy')||['slanted','diagonal-white'].includes(o.appearance?.textureName)){
+        o.flipX=!o.flipX;
+        // Native Aqua meshes use the renderer's normalized transform, not the legacy flag.
+        if(o.structure?.design?.startsWith('aqua-'))o.transform={...o.transform,flipX:!o.transform?.flipX};
+      }
     }
     const swap=face=>face==='left'?'right':face==='right'?'left':face;
     if(out.wallStickers)[out.wallStickers.left,out.wallStickers.right]=[out.wallStickers.right,out.wallStickers.left];

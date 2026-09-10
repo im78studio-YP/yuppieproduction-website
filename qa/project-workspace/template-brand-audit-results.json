@@ -318,5 +318,29 @@
     "logos": 16,
     "details": 46,
     "objects": 49
+  },
+  {
+    "group": "corner",
+    "id": "corner-aqua-wave",
+    "side": "right",
+    "logos": 8,
+    "details": 22,
+    "objects": 44
+  },
+  {
+    "group": "corner",
+    "id": "corner-aqua-wave",
+    "side": "left",
+    "logos": 8,
+    "details": 22,
+    "objects": 44
+  },
+  {
+    "group": "peninsular",
+    "id": "penin-botanical-atelier",
+    "side": "",
+    "logos": 6,
+    "details": 42,
+    "objects": 51
   }
 ]

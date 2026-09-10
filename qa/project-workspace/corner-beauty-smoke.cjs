@@ -12,12 +12,12 @@ const assert=require('node:assert/strict');
   }
   const text=await YPProjectStore.toText(YPProjectStore.create(b,'Beauty'));YPProjectStore.fromText(text);if(!text.includes('beauty-vitrine')||!text.includes('beauty-charcoal-floor'))throw Error('Portable assets lost');
   return {branded,bottles:a.spec.objects.filter(o=>o.structure?.design==='beauty-bottle').length,height:a.spec.H,cards:YPCornerTemplates.templates.length};
- });assert.deepEqual(result,{branded:16,bottles:18,height:2.9,cards:7});
+ });assert.deepEqual(result,{branded:16,bottles:18,height:2.9,cards:8});
  await page.evaluate(()=>YPCornerTemplateUI.open());await page.locator('#cornerTemplateSide').selectOption('left');await page.locator('[data-corner-template="corner-luminous-beauty"]').click();await page.locator('#projectConfirm').click();await page.waitForFunction(()=>!YPProjectWorkspace.state().busy);
  assert.equal(await page.evaluate(()=>getBoothSpec().boothTemplate.id),'corner-luminous-beauty');assert.equal(await page.evaluate(()=>getBoothSpec().cornerSide),'left');const a=await page.evaluate(()=>YPProjectWorkspace.capture().variants.A);
  await page.locator('#projectB').click();await page.waitForFunction(()=>!YPProjectWorkspace.state().busy);
  await page.evaluate(()=>YPCornerTemplateUI.open());const b=await page.evaluate(()=>YPProjectWorkspace.capture().variants.B);await page.locator('[data-corner-template="corner-luminous-beauty"]').click();await page.locator('#projectCancel').click();await page.waitForFunction(()=>!YPProjectWorkspace.state().busy);assert.deepEqual(await page.evaluate(()=>YPProjectWorkspace.capture().variants.B),b);assert.deepEqual(await page.evaluate(()=>YPProjectWorkspace.capture().variants.A),a);
  await page.setViewportSize({width:390,height:844});assert.ok(await page.locator('#cornerTemplatesDialog').evaluate(d=>d.scrollWidth<=d.clientWidth+1));
- await page.goto('http://127.0.0.1:4173/yp-web-ai/assets/corner-templates/overview.html');assert.equal(await page.locator('.card').count(),14);assert.equal(await page.locator('#count').textContent(),'7');assert.deepEqual(errors,[]);
- console.log('PASS: 16 branded panels, readable mirrored logos, glass case, 18 bottles, portable assets, A/B confirmation and cancellation, mobile, 14 gallery orientations');
+ await page.goto('http://127.0.0.1:4173/yp-web-ai/assets/corner-templates/overview.html');assert.equal(await page.locator('.card').count(),16);assert.equal(await page.locator('#count').textContent(),'8');assert.deepEqual(errors,[]);
+ console.log('PASS: 16 branded panels, readable mirrored logos, glass case, 18 bottles, portable assets, A/B confirmation and cancellation, mobile, 16 gallery orientations');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

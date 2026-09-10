@@ -6,7 +6,7 @@ async function writeAsset(path,data){const bytes=Buffer.isBuffer(data)?data:Buff
  const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'index.html?comparePreview=1');await page.waitForFunction(()=>window.YPIslandTemplateBridge);
  const groups=await page.evaluate(()=>[['inline',YPInlineTemplates],['corner',YPCornerTemplates],['peninsular',YPPeninsularTemplates],['island',YPIslandTemplates]].map(([group,l])=>({group,templates:l.templates.map(t=>({id:t.id,name:t.name}))})));
- assert.equal(groups.reduce((n,g)=>n+g.templates.length,0),33);
+ assert.equal(groups.reduce((n,g)=>n+g.templates.length,0),35);
  const report=[];
  for(const group of groups)for(const t of group.templates)for(const side of group.group==='corner'?['right','left']:['']){
   const selection=process.argv.slice(2);if(selection.length&&!selection.includes(t.id+(side?'-'+side:'')))continue;
@@ -16,7 +16,7 @@ async function writeAsset(path,data){const bytes=Buffer.isBuffer(data)?data:Buff
    if(snapshot.spec.logo!==YPDefaultLogo.data||snapshot.spec.brand!==YPDefaultLogo.brand)throw Error('Wrong brand '+id);
    let logos=0,details=0;
    for(let i=0;i<t.objects.length;i++){
-    const o=snapshot.spec.objects[i],part=t.objects[i];if(part.brandLogo||part.graphic?.startsWith('six-')||part.graphic?.startsWith('beauty-')||['header','poster','counter','screen','blue-info','light-rings','blue-rings','blush-beauty'].includes(part.graphic)){
+    const o=snapshot.spec.objects[i],part=t.objects[i];if(part.brandLogo||part.graphic?.startsWith('botanical-')||part.graphic==='aqua-screen'||part.graphic?.startsWith('six-')||part.graphic?.startsWith('beauty-')||['header','poster','counter','screen','blue-info','light-rings','blue-rings','blush-beauty'].includes(part.graphic)){
      if(!o.appearance.textureId.startsWith(YPTemplateBranding.revision))throw Error('Unbranded '+o.id);
      const svg=atob(o.appearance.textureData.split(',')[1]);if(!svg.includes('xMidYMid meet')||/<text[\s>]/.test(svg))throw Error('Distorted/text logo '+o.id);
      const image=new Image();image.src=o.appearance.textureData;await image.decode();logos++;
@@ -29,6 +29,8 @@ async function writeAsset(path,data){const bytes=Buffer.isBuffer(data)?data:Buff
    const deep=snapshot.spec.D>3.5,black=id.includes('noir-mobile'),yellow=id==='island-yellow-frame',h=snapshot.spec.H,span=deep?4.9:4.2;
    const camera={projection:'orthographic',cameraViewType:'comparison',position:{x:yellow?-.8:deep?-4:side==='left'?-3:9,y:yellow?6.4:black?4.5:deep?10:7,z:deep?13:11},target:{x:3,y:h*.44,z:snapshot.spec.D*.45},up:{x:0,y:1,z:0},zoom:1,near:.01,far:1000,frustum:{left:-span,right:span,top:span*.75,bottom:-span*.75}};
    if(id==='corner-luminous-beauty'){camera.position={x:side==='left'?-2:8,y:4.2,z:12};camera.target.y=1.55;}
+   if(id==='corner-aqua-wave'){camera.position={x:side==='left'?-1:7,y:4.5,z:12};camera.target.y=1.5;}
+   if(id==='penin-botanical-atelier'){camera.position={x:-3,y:4.7,z:12};camera.target.y=1.6;}
    const capture=await exportCleanScreenshot({camera,aspectRatio:4/3,minLongEdge:1280,maxLongEdge:1280,download:false,assetTimeoutMs:20000});const png=await new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(',')[1]);r.readAsDataURL(capture.blob);});
    // Restoring a customer-authored logo is deliberately NOT a template migration.
    const custom=structuredClone(snapshot);custom.spec.brand='Customer retained';YPProjectBridge.restore(custom);if(YPProjectBridge.capture().spec.brand!=='Customer retained')throw Error('Customer brand overwritten');
