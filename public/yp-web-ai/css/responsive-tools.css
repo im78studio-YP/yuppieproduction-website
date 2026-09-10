@@ -1,0 +1,14 @@
+#objectToolbar.covered-by-panel{display:none!important}
+#promptBoardPreviewNote{margin:10px 0 0;font-size:12px;line-height:1.6}
+@media(max-width:1100px){
+  header{gap:8px;padding:8px 10px;min-height:54px}.logo small,.badge,.header-status,.header-total span{display:none}
+  .header-actions{gap:5px}.header-total{min-width:78px;padding:4px 8px}.header-actions .btn{min-height:40px}
+  .wrap{min-height:0}.stage,.viewer{min-height:0}#view.three-active{min-height:0}
+  .dock-close{width:44px;height:44px;top:8px;right:8px}.panel-intro{padding-right:60px}
+  .three-tools{max-width:calc(100% - 24px);overflow-x:auto}.three-tools button,.vtop .tab{min-height:40px}
+  .dock-label{font-size:10px}.prompt-package-note,.prompt-style-note{font-size:12px;line-height:1.6}
+  .project-bar{gap:5px;padding:7px}.project-bar .btn{min-height:40px}.project-name{font-size:16px}
+}
+@media(max-width:1100px) and (max-height:500px){
+  .project-bar{max-height:86px;overflow:auto}.project-status{display:none}.vtop{padding:4px 8px}
+}

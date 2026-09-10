@@ -60,7 +60,9 @@ const assert=require('node:assert/strict');
   assert.equal(result.edgeResult,false);assert.deepEqual(result.edgeBefore,result.edgeAfter);assert.equal(result.edgeHistoryDelta,0);
   close(distance(result.tvAfter),distance(result.tvBefore));assert.ok(result.tvAfter.every(o=>o.rotationY===45));
   await page.locator('#btnGroupObjects').waitFor({state:'visible'});assert.ok(await page.locator('#btnUngroupObjects').isVisible());
-  await page.setViewportSize({width:390,height:844});assert.ok(await page.locator('#btnGroupObjects').isVisible());assert.ok(await page.locator('#btnUngroupObjects').isVisible());
+  // Responsive UI hides the object toolbar while a dock panel covers the canvas.
+  await page.evaluate(()=>closeDockPanel(false));
+  await page.setViewportSize({width:390,height:844});await page.locator('#btnGroupObjects').waitFor({state:'visible'});assert.ok(await page.locator('#btnUngroupObjects').isVisible());
   await page.waitForFunction(()=>{const b=document.getElementById('objectToolbar').getBoundingClientRect();return b.x>=-1&&b.right<=innerWidth+1;});
   assert.deepEqual(errors,[]);
   console.log('PASS shared-pivot rotation, 360-degree stability, renderer, rotate-then-move, selection, lock, atomic boundary, Undo/Redo, save/reopen, TV and popup Group/Ungroup desktop/mobile');

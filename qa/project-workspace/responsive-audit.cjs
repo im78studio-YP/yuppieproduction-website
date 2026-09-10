@@ -11,7 +11,8 @@ const output='qa/project-workspace/responsive-audit';
   await page.waitForFunction(()=>window.YPProjectWorkspace?.state().ready&&window.YPPresentationBoardUI);
   await page.locator('#releaseStart').click();await page.locator('#quickBusinessNext').click();await page.locator('#quickBoothTypes [data-value=penin]').click();
   async function capture(size,state){
-   await page.screenshot({path:output+'/'+size+'-'+state+'.png'});
+   await page.waitForTimeout(350);
+   await page.screenshot({path:output+'/'+size+'-'+state+'.png',animations:'disabled'});
    const result=await page.evaluate(()=>{
     const visible=e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return r.width>0&&r.height>0&&s.visibility!=='hidden'&&s.display!=='none'&&!e.closest('[hidden],[aria-hidden="true"]')&&r.bottom>0&&r.top<innerHeight;};
     const info=e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return {id:e.id||e.className,text:(e.getAttribute('aria-label')||e.textContent||'').trim().slice(0,65),x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height),font:s.fontSize};};
@@ -45,7 +46,7 @@ const output='qa/project-workspace/responsive-audit';
    console.log('AUDITED',size);
   }
   await fs.writeFile(output+'/results.json',JSON.stringify({errors,results},null,2));
-  console.log(JSON.stringify(results.map(r=>({size:r.size,state:r.state,overflow:r.overflowing,clipped:r.clipped.length,small:r.smallTargets.length})),null,2));
+  console.log(JSON.stringify(results.map(r=>({size:r.size,state:r.state,overflow:r.overflowing,clipped:r.clipped?.length,small:r.smallTargets?.length,actionError:r.actionError?.slice(0,100)})),null,2));
   console.log('PAGE ERRORS',errors);
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

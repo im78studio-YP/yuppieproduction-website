@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "width": 320,
+  "height": 240,
+  "items": [
+    {
+      "id": "panel-standard",
+      "name": "แผงตกแต่ง / กรอบ"
+    },
+    {
+      "id": "panel-rounded",
+      "name": "แผงมุมโค้ง"
+    },
+    {
+      "id": "panel-swoop",
+      "name": "แผงโค้งไล่ระดับ"
+    },
+    {
+      "id": "fascia-step",
+      "name": "ป้ายซุ้มยกระดับเฉียง"
+    },
+    {
+      "id": "panel-ribbon-slant",
+      "name": "แผงริบบิ้นเฉียง"
+    },
+    {
+      "id": "fascia-curved",
+      "name": "ป้ายซุ้มโค้งเข้ามุม"
+    },
+    {
+      "id": "fascia-wave",
+      "name": "ป้ายซุ้มคลื่น"
+    },
+    {
+      "id": "glass-panel",
+      "name": "แผงกระจกจำลอง"
+    },
+    {
+      "id": "display-glass-case",
+      "name": "ฝาตู้โชว์กระจกจำลอง"
+    },
+    {
+      "id": "lounge-sofa",
+      "name": "โซฟารับรอง"
+    },
+    {
+      "id": "pier-cross",
+      "name": "เสาตกแต่งทรง X"
+    },
+    {
+      "id": "pendant-ring",
+      "name": "โคมห้อยวงแหวน (จำลอง)"
+    },
+    {
+      "id": "canopy-organic",
+      "name": "ซุ้มโค้งออร์แกนิก"
+    },
+    {
+      "id": "portal-ribbon",
+      "name": "ซุ้มริบบิ้นโค้ง"
+    },
+    {
+      "id": "canopy-ribbon",
+      "name": "หลังคาริบบิ้นมุมมน"
+    },
+    {
+      "id": "counter-corner-round",
+      "name": "เคาน์เตอร์โค้งเข้ามุม"
+    },
+    {
+      "id": "display-ring",
+      "name": "ป้ายโชว์วงรี"
+    },
+    {
+      "id": "panel-oculus",
+      "name": "แผงช่องวงกลมทะลุ"
+    },
+    {
+      "id": "plant-trailing",
+      "name": "สวนแขวนจำลอง"
+    },
+    {
+      "id": "planter-grass",
+      "name": "กระบะต้นไม้ใบยาว"
+    },
+    {
+      "id": "pier-tree",
+      "name": "เสาตกแต่งกิ่งไม้"
+    },
+    {
+      "id": "display-organic",
+      "name": "ผนังโชว์ช่องโค้ง"
+    },
+    {
+      "id": "counter-fluted",
+      "name": "เคาน์เตอร์โค้งหน้าระแนง"
+    },
+    {
+      "id": "entrance-frame",
+      "name": "กรอบทางเข้า"
+    },
+    {
+      "id": "downlight-beam",
+      "name": "คานไฟดาวน์ไลท์"
+    },
+    {
+      "id": "counter-standard",
+      "name": "เคาน์เตอร์"
+    },
+    {
+      "id": "shelf-standard",
+      "name": "ชั้นโชว์"
+    },
+    {
+      "id": "display-standard",
+      "name": "แท่นโชว์สินค้า"
+    },
+    {
+      "id": "screen-43",
+      "name": "จอแสดงผล"
+    },
+    {
+      "id": "sign-floor",
+      "name": "ป้ายตั้งพื้น"
+    },
+    {
+      "id": "table-standard",
+      "name": "โต๊ะ"
+    },
+    {
+      "id": "chair-standard",
+      "name": "เก้าอี้"
+    },
+    {
+      "id": "bar-stool",
+      "name": "สตูลบาร์"
+    },
+    {
+      "id": "high-table-stool-set",
+      "name": "ชุดโต๊ะสูง + เก้าอี้ 2 ตัว"
+    },
+    {
+      "id": "plant-medium",
+      "name": "ต้นไม้"
+    }
+  ]
+}

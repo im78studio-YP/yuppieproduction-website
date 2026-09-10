@@ -170,7 +170,7 @@ select:focus{border-color:var(--acc)}
 .tag{font-size:11px;padding:4px 10px;border-radius:999px;background:var(--bg3);border:1px solid var(--line);color:var(--tx2)}
 #view{flex:1;display:grid;place-items:center;padding:6px;min-height:0}
 #view svg{width:100%;height:100%;max-height:50vh}
-#view .plan-object{cursor:pointer;outline:none}
+#view .plan-object{cursor:grab;outline:none;touch-action:none}
 #view .plan-object .plan-footprint{transition:stroke .15s,stroke-width .15s,filter .15s}
 #view .plan-object:hover .plan-footprint,#view .plan-object:focus .plan-footprint{stroke:#ff7ab8;stroke-width:2.2;filter:brightness(1.08)}
 #view.three-active{display:block;padding:0;position:relative;min-height:420px}
@@ -307,7 +307,17 @@ select:focus{border-color:var(--acc)}
 .dock-tool{position:relative;width:60px;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
   padding:5px 3px;border-radius:8px;color:var(--tx3);transition:.15s}
 .dock-tool:hover{background:var(--bg3);color:var(--tx)}
-.dock-tool.on{background:var(--acc);color:var(--acc-ink);box-shadow:inset 3px 0 0 var(--acc2),0 7px 18px rgba(var(--acc-rgb),.12)}
+.dock-tool.on,.dock-grid-toggle[aria-pressed="true"],
+.dock-grid-menu[aria-expanded="true"],.dock-grid-menu.has-active-grid{
+  background:var(--acc);color:var(--acc-ink);box-shadow:inset 3px 0 0 var(--acc2),0 7px 18px rgba(var(--acc-rgb),.12)}
+.grid-submenu{position:fixed;z-index:80;display:flex;flex-direction:column;gap:5px;padding:6px;
+  width:74px;background:#07090c;border:1px solid #4b5058;border-radius:10px;box-shadow:0 8px 24px #0006;
+  animation:grid-submenu-in .14s ease-out}
+.grid-submenu[hidden]{display:none!important}
+.grid-submenu .dock-tool{width:60px;min-height:58px;flex-shrink:0}
+.grid-submenu .dock-tool:focus-visible,.dock-grid-menu:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+@keyframes grid-submenu-in{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.grid-submenu{animation:none}}
 .dock-tool svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .dock-label{max-width:100%;font-size:9px;font-weight:500;line-height:1.15;text-align:center;white-space:normal}
 .dock-tool .dock-count{position:absolute;right:2px;top:2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;
@@ -818,12 +828,12 @@ select:focus{border-color:var(--acc)}
   </div>
 
   <div class="asset-grid-card" id="assetGridCard">
-    <div class="asset-grid-head"><b>ช่วยจัดวาง Asset</b><span>Snap 5 ซม. · ไม่แสดงเส้นกริด</span></div>
+    <div class="asset-grid-head"><b>ช่วยจัดวาง Asset</b><span id="placementSnapSummary">Snap to Grid 10 ซม. · ไม่แสดงเส้นกริด</span></div>
     <div class="asset-grid-options">
-      <label class="grid-check"><input type="checkbox" id="placementSnapEnabled" checked> Snap ทุก 5 ซม.</label>
+      <label class="grid-check"><input type="checkbox" id="placementSnapEnabled" checked> Snap to Grid 10 ซม.</label>
       <label class="grid-check"><input type="checkbox" id="magneticSnapEnabled" checked> แม่เหล็กมุม 15 ซม.</label>
     </div>
-    <div class="placement-readout" id="placementGridInfo">Snap 5 ซม. · คลิก Asset เพื่อดูพิกัด</div>
+    <div class="placement-readout" id="placementGridInfo">Snap to Grid 10 ซม. · คลิก Asset เพื่อดูพิกัด</div>
     <div class="note" style="margin-top:0">Smart Move: ลากตัว Asset เพื่อย้ายบนระดับเดิม · ชี้ Point ให้ขยายเป็นสีแดง แล้วคลิกค้างเพื่อลาก · Point เปลี่ยนเป็นสีเขียวเมื่อ Snap สำเร็จและปล่อยเมาส์ได้ · โหมดแยกแกนยังอยู่ใน “ปรับละเอียด”</div>
   </div>
 
@@ -1434,11 +1444,11 @@ select:focus{border-color:var(--acc)}
   <button class="dock-tool" type="button" data-dock-page="booth" aria-pressed="false" aria-label="พื้นที่และรูปแบบบูธ" title="พื้นที่และรูปแบบบูธ">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V8l8-4 8 4v12M8 20V9h8v11M3 20h18M7 5l2 2M15 4l2 2"/></svg><span class="dock-label">ขนาดบูธ</span>
   </button>
-  <button class="dock-tool" type="button" data-dock-page="brand" aria-pressed="false" aria-label="สีอัตลักษณ์แบรนด์" title="สีอัตลักษณ์แบรนด์">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.5a2 2 0 0 0 0-4H12a1.7 1.7 0 0 1 0-3.4h2.7A6.3 6.3 0 0 0 21 7.3C21 4.9 17 3 12 3Z"/><path d="M7.5 8h.01M11 6.5h.01M7 12h.01"/></svg><span class="dock-label">สีแบรนด์</span>
-  </button>
   <button class="dock-tool" type="button" data-dock-page="finish" aria-pressed="false" aria-label="พื้นและผนัง" title="พื้นและผนัง">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></svg><span class="dock-label">พื้น–ผนัง</span>
+  </button>
+  <button class="dock-tool" type="button" data-dock-page="catalog" aria-pressed="false" aria-label="จัดวาง Asset" title="จัดวาง Asset">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg><span class="dock-count" id="dockCount"></span><span class="dock-label">อุปกรณ์</span>
   </button>
   <button class="dock-tool" type="button" data-dock-page="storage" aria-pressed="false" aria-label="เพิ่มห้อง" title="เพิ่มห้อง">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V3h14v18M8 21V6h8v15M13.5 13h.01"/></svg><span class="dock-label">เพิ่มห้อง</span>
@@ -1446,16 +1456,28 @@ select:focus{border-color:var(--acc)}
   <button class="dock-tool" type="button" data-dock-page="signage" aria-pressed="false" aria-label="โลโก้และป้ายแบรนด์" title="โลโก้และป้ายแบรนด์">
     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M9 15h6M12 5V2M9 2h6"/></svg><span class="dock-label">โลโก้–ป้าย</span>
   </button>
-  <button class="dock-tool" type="button" data-dock-page="lighting" aria-pressed="false" aria-label="แสงสว่าง" title="แสงสว่าง">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 22h4M8.5 15.5A6 6 0 1 1 15.5 15.5c-.9.7-1.3 1.3-1.5 2.5h-4c-.2-1.2-.6-1.8-1.5-2.5Z"/></svg><span class="dock-label">แสง</span>
-  </button>
-  <button class="dock-tool" type="button" data-dock-page="catalog" aria-pressed="false" aria-label="จัดวาง Asset" title="จัดวาง Asset">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg><span class="dock-count" id="dockCount"></span><span class="dock-label">จัดวาง</span>
+  <button class="dock-tool dock-grid-menu" id="dockGridMenu" type="button" aria-expanded="false" aria-controls="gridSubmenu" aria-label="กริด" title="เลือกเปิด/ปิดกริดพื้นหรือกริดผนัง">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg><span class="dock-label">กริด</span>
   </button>
   <button class="dock-tool" type="button" data-dock-page="prompt" aria-pressed="false" aria-label="สร้าง PROMPT" title="สร้าง PROMPT">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h5M8 16h8"/><path d="m18 2 .7 1.8L20.5 4.5l-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L18 2Z"/></svg><span class="dock-label">PROMPT</span>
   </button>
+  <button class="dock-tool" type="button" data-dock-page="brand" aria-pressed="false" aria-label="สีอัตลักษณ์แบรนด์" title="สีอัตลักษณ์แบรนด์">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.5a2 2 0 0 0 0-4H12a1.7 1.7 0 0 1 0-3.4h2.7A6.3 6.3 0 0 0 21 7.3C21 4.9 17 3 12 3Z"/><path d="M7.5 8h.01M11 6.5h.01M7 12h.01"/></svg><span class="dock-label">สีแบรนด์</span>
+  </button>
+  <button class="dock-tool" type="button" data-dock-page="lighting" aria-pressed="false" aria-label="แสงสว่าง" title="แสงสว่าง">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 22h4M8.5 15.5A6 6 0 1 1 15.5 15.5c-.9.7-1.3 1.3-1.5 2.5h-4c-.2-1.2-.6-1.8-1.5-2.5Z"/></svg><span class="dock-label">แสง</span>
+  </button>
 </nav>
+</div>
+
+<div id="gridSubmenu" class="grid-submenu" role="group" aria-label="ตัวเลือกกริด" hidden>
+  <button class="dock-tool dock-grid-toggle" id="dockGridToggle" type="button" aria-pressed="false" aria-label="เปิด/ปิดกริดพื้น" title="เปิดกริดหลัก 1 ม. / ย่อย 10 ซม.">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg><span class="dock-label">กริดพื้น</span>
+  </button>
+  <button class="dock-tool dock-grid-toggle" id="dockWallGridToggle" type="button" aria-pressed="false" aria-label="เปิด/ปิดกริดผนัง" title="เปิดกริดผนังหลัก 1 ม. / ย่อย 10 ซม.">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20V5l18-3v18H3ZM9 4v16M15 3v17M3 10l18-2M3 15l18-1"/></svg><span class="dock-label">กริดผนัง</span>
+  </button>
 </div>
 
 <div class="modal asset-settings-modal" id="mAssetSettings" role="dialog" aria-modal="true" aria-labelledby="assetSettingsTitle" aria-hidden="true" onclick="if(event.target===this)closeAssetSettings()">
@@ -1709,7 +1731,7 @@ select:focus{border-color:var(--acc)}
 <script src="js/template-lighting.js?v=20260909-8"></script>
 <script src="js/template-tv-groups.js?v=20260909-9"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
-<script src="js/smart-snap-engine.js?v=20260902-2"></script>
+<script src="js/smart-snap-engine.js?v=20260910-grid"></script>
 <script src="js/asset-attachment-graph.js?v=20260901-1"></script>
 <script src="js/brand-visible-bounds.js?v=20260902-1"></script>
 <script src="assets/branding/default-logo.js?v=20260908-1"></script>
@@ -1750,6 +1772,13 @@ const PAIRS=[
  {k:'contrast',n:'คู่ตรงข้าม',s:'สีตรงข้ามตัดกัน',warm:0,
   sec:p=>adjust(rotate(p,180),{s:.55,l:.46}),base:()=>'#e6e0d6',floor:()=>'#3a3d44'}];
 
+// Editor-only aid: not part of project state, placement snapping, or clean exports.
+let viewGridVisible=false,wallGridVisible=false;
+const VIEW_GRID_STEP=.1,VIEW_GRID_MAJOR_STEP=1;
+function viewGridLines(length){
+  const ratio=Math.round(VIEW_GRID_MAJOR_STEP/VIEW_GRID_STEP);
+  return Array.from({length:Math.floor(length/VIEW_GRID_STEP+.000001)+1},(_,i)=>({position:+(i*VIEW_GRID_STEP).toFixed(6),major:i%ratio===0}));
+}
 const PRESETS=[{w:3,d:3},{w:6,d:3},{w:6,d:4},{w:6,d:6},{w:9,d:6},{w:12,d:6}];
 const FURNITURE_CATEGORIES=[
   {k:'structure',n:'โครงสร้างบูธ'},
@@ -1758,7 +1787,7 @@ const FURNITURE_CATEGORIES=[
   {k:'media',n:'สื่อและป้าย'},
   {k:'hospitality',n:'ประชุมและรับรอง'},
   {k:'decor',n:'ตกแต่ง'}];
-const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:null,modelScale:1,modelRotationY:0,initialRotation:0,
+const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:item.customAsset||item.hiddenFromCatalog?null:'assets/catalog-thumbnails/'+item.catalogId+'.webp?v=1',modelScale:1,modelRotationY:0,initialRotation:0,
   capabilities:null,ports:[],collision:null,...item});
 const OBJECT_CATALOG=[
   furnitureItem({catalogId:'panel-standard',category:'display',type:'panel',name:'แผงตกแต่ง / กรอบ',icon:'▯',size:{w:1,d:.12,h:2.4},unitPrice:0,color:'#c6ad82'}),
@@ -1787,17 +1816,17 @@ const OBJECT_CATALOG=[
   furnitureItem({catalogId:'entrance-frame',category:'structure',type:'entranceFrame',name:'กรอบทางเข้า',icon:'FRAME',size:{w:1,d:2.4,h:2.4},unitPrice:0,color:'#f2f3f5',
     clearance:0,anchor:'back-right',backWallOnly:true,rotationStep:45,placementPolicy:{preferredTarget:'back-wall',allowedTargets:['floor','wall','storage-room','structure','asset','free'],requiresSurface:false,defaultSpawn:'front-staging',allowOutsideBooth:true},
     capabilities:['floorPlaceable','attachable','resizable','styleable','compound'],
-    ports:['frame-left-front','frame-right-front'],collision:{layer:'structure',shapeMode:'compound'},thumbUrl:'assets/structure/entrance-frame-reference.png'}),
+    ports:['frame-left-front','frame-right-front'],collision:{layer:'structure',shapeMode:'compound'}}),
   furnitureItem({catalogId:'downlight-beam',category:'structure',type:'downlightBeam',name:'คานไฟดาวน์ไลท์',icon:'BEAM',size:{w:6,d:.3,h:2.4},unitPrice:0,color:'#f2f3f5',
     mount:'ceiling',clearance:0,anchor:'back-center',rotationStep:45,capabilities:['ceilingMountable','attachable','resizable','styleable','compound'],
-    collision:{layer:'structure',shapeMode:'box'},thumbUrl:'assets/structure/downlight-beam-reference.png'}),
+    collision:{layer:'structure',shapeMode:'box'}}),
   furnitureItem({catalogId:'counter-standard',category:'reception',type:'counter',name:'เคาน์เตอร์',icon:'▰',size:{w:1.2,d:.6,h:1},unitPrice:28000,color:'#b88142',
-    modelUrl:'assets/furniture/counter-standard.glb',thumbUrl:'assets/furniture/counter-standard.webp'}),
+    modelUrl:'assets/furniture/counter-standard.glb'}),
   furnitureItem({catalogId:'shelf-standard',category:'display',type:'shelf',name:'ชั้นโชว์',icon:'▥',size:{w:1,d:.45,h:2},unitPrice:18000,color:'#b99668'}),
   furnitureItem({catalogId:'display-standard',category:'display',type:'display',name:'แท่นโชว์สินค้า',icon:'▤',size:{w:1,d:.6,h:1.4},unitPrice:16000,color:'#c8cbd0'}),
   furnitureItem({catalogId:'screen-43',category:'media',type:'screen',name:'จอแสดงผล',icon:'▣',size:{w:.9,d:.3,h:1.7},unitPrice:22000,color:'#30343b'}),
   furnitureItem({catalogId:'sign-floor',category:'media',type:'sign',name:'ป้ายตั้งพื้น',icon:'◇',size:{w:.8,d:.35,h:1.8},unitPrice:8500,color:'#d4a33f'}),
-  furnitureItem({catalogId:'brand-artwork-copy',category:'media',type:'brandCopy',name:'สำเนาโลโก้',icon:'LOGO',size:{w:1.4,d:.03,h:.7},unitPrice:0,color:'#ffffff',hiddenFromCatalog:true,
+  furnitureItem({catalogId:'brand-artwork-copy',category:'media',type:'brandCopy',name:'สำเนาโลโก้',icon:'LOGO',size:{w:1.4,d:.03,h:.7},unitPrice:0,color:'#ffffff',hiddenFromCatalog:true,thumbUrl:null,
     sceneAssetType:'Logo',sceneAssetCategory:'branding',sceneListGroup:'branding',mount:'free',clearance:0,
     placementPolicy:{preferredTarget:'wall',allowedTargets:['wall','storage-room','structure','asset','free'],requiresSurface:false,defaultSpawn:'duplicate-current',allowOutsideBooth:false},
     capabilities:['wallMountable','free3DPlaceable','surfaceSnappable','attachable','resizable','scalable','rotatable','repeatable','styleable'],
@@ -2651,10 +2680,19 @@ const FRONT_ASSET_STAGING_GAP=.25;
 /* ทดลองเปิดการซ้อน Asset: ขอบบูธ ห้องเก็บของ และแท่น 360 ยังเป็นพื้นที่ห้ามวาง
    การวางอัตโนมัติยังค้นหาช่องว่างก่อน เพื่อลดการกอง Asset โดยไม่ตั้งใจ */
 const ALLOW_ASSET_OVERLAP=true;
-const placementStepLabel=()=>Math.round(PLACEMENT_GRID*100)+' ซม.';
+const placementStepLabel=()=>Math.round(VIEW_GRID_STEP*100)+' ซม.';
 const placementMeters=value=>Number.isFinite(Number(value))?Number(value).toFixed(2):'0.00';
 const placementRound=value=>Math.round(value/PLACEMENT_GRID)*PLACEMENT_GRID;
-const placementValue=value=>S.placementSnap===false?Number(value):placementRound(value);
+const placementValue=value=>S.placementSnap===false?Number(value):Math.round(Number(value)/VIEW_GRID_STEP)*VIEW_GRID_STEP;
+function snapDragToGrid(next,drag={}){
+  if(S.placementSnap===false||drag.mode==='height')return next;
+  const offset=drag.sourceAnchorOffset||{x:0,z:0};
+  return{...next,x:+(placementValue(next.x+(offset.x||0))-(offset.x||0)).toFixed(3),z:+(placementValue(next.z+(offset.z||0))-(offset.z||0)).toFixed(3)};
+}
+function syncPlacementSnapSummary(){
+  const hint=document.getElementById('placementSnapSummary');
+  if(hint)hint.textContent=(S.placementSnap===false?'วางอิสระ':'Snap to Grid 10 ซม.')+' · '+(viewGridVisible?'กริดหลัก 1 ม. / ย่อย 10 ซม.':'ไม่แสดงเส้นกริด');
+}
 const clampNumber=(value,min,max)=>Math.max(min,Math.min(max,value));
 const isEntranceFrameItem=item=>item?.type==='entranceFrame';
 const isEntranceFrameObject=obj=>obj?.type==='entranceFrame'||obj?.catalogId==='entrance-frame';
@@ -2768,7 +2806,7 @@ function normalizeSceneObjectModel(obj,item=objectCatalogDef(obj?.catalogId)){
   const placement=obj.placement&&typeof obj.placement==='object'?obj.placement:{};
   const persistentAttachment=assetAttachmentGraph?.getAttachment?.(obj.id);
   placement.mode=obj.attachment?.targetId||persistentAttachment?.attached?'attached':(placement.mode==='surface'?'surface':'free');
-  placement.surface=String(placement.surface||item?.mount||'floor');placement.snapGrid=PLACEMENT_GRID;
+  placement.surface=String(placement.surface||item?.mount||'floor');placement.snapGrid=VIEW_GRID_STEP;
   placement.axes=['x','y','z'];placement.snapSurfaces=['floor','wall','ceiling','structure','asset'];
   const policyDefaults=defaultScenePlacementPolicy(item),declaredPolicy=placement.policy&&typeof placement.policy==='object'?placement.policy:{};
   placement.policy={preferredTarget:String(declaredPolicy.preferredTarget||policyDefaults.preferredTarget),
@@ -4273,7 +4311,7 @@ function syncObjectControls(){
   box.classList.toggle('structure-active',!!obj&&(isEntranceFrameObject(obj)||isDownlightBeamObject(obj)));
   const info=document.getElementById('placementGridInfo');
   if(obj){
-    const name=selectedAssetName(obj),p=obj.position||{},snap=S.placementSnap===false?'วางอิสระ':'Snap 5 ซม.',
+    const name=selectedAssetName(obj),p=obj.position||{},snap=S.placementSnap===false?'วางอิสระ':'Snap to Grid 10 ซม.',
       scale=sceneObjectScaleValue(obj),worldSize=sceneObjectWorldSize(obj),moveLabel=objectEditor.transformMode==='resize'?'Resize Dimensions':objectEditor.transformMode==='scale'?'Scale Transform '+Math.round(scale*100)+'%':({smart:'Smart Move',plane:'ย้ายพื้น X/Z',height:'ยก–ลด Y',surface:'Snap พื้นผิว'}[objectEditor.moveMode]);
     const anchor=obj.placement?.anchorAttachment,anchorLabel=anchor?' · แม่เหล็ก '+esc(anchor.sourceAnchorId)+' → '+esc(anchor.targetId)+' / '+esc(anchor.targetAnchorId):'';
     const orientationLabel=ASSET_ORIENTATION_PRESETS[obj.orientation]?.label||'แนวนอน';
@@ -4320,6 +4358,7 @@ function syncObjectControls(){
   document.getElementById('btnUndoObject').disabled=!objectEditor.past.length;
   document.getElementById('btnRedoObject').disabled=!objectEditor.future.length;
   const snapToggle=document.getElementById('placementSnapEnabled');if(snapToggle)snapToggle.checked=S.placementSnap!==false;
+  syncPlacementSnapSummary();
   const magneticToggle=document.getElementById('magneticSnapEnabled');if(magneticToggle)magneticToggle.checked=S.magneticSnap!==false;
   const count=document.getElementById('dockCount');if(count)count.textContent=S.objects.length?String(S.objects.length):'';
   const toolbar=document.getElementById('objectToolbar'),workspaceNode=document.getElementById('workspace'),positionButton=document.getElementById('btnPositionLogo3D');
@@ -4436,7 +4475,7 @@ function objectLayoutPrompt(){
   const header=[
     'ข้อมูลผังบูธและตำแหน่งอุปกรณ์ (ต้องคงตามแบบ 3D)',
     'ระบบอ้างอิงตำแหน่ง: มุมหลังซ้ายของพื้นบูธเป็นจุดเริ่มต้น; แกน X จากซ้ายไปขวา, แกน Y จากพื้นขึ้นด้านบน, แกน Z จากด้านหลังไปด้านหน้า; หน่วยเมตร',
-    'การจัดวาง Asset ใช้ Snap ระยะ 5 ซม. (0.05 ม.) โดยไม่แสดงเส้นกริด · พิกัดที่ระบุคือจุดกึ่งกลางฐานและต้องคงตามค่า',
+    'กริดช่วยจัดวางมีระยะ 10 ซม. (0.10 ม.) · พิกัดที่ระบุคือจุดกึ่งกลางฐานและต้องคงตามค่า ห้ามปัดตำแหน่งใหม่และห้ามแสดงเส้นกริดในภาพผลลัพธ์',
     'ขนาดบูธ: กว้าง '+promptNumber(width)+' ม. × ลึก '+promptNumber(depth)+' ม. × สูง '+promptNumber(height)+' ม.',
     'ผนังที่มีจริง: '+walls,
     'ด้านเปิดและทางเดิน: '+(openFaces.length?openFaces.join(', ')+' และด้านหน้า':'ด้านหน้าเท่านั้น')
@@ -5359,14 +5398,14 @@ function build(){
   const knownCategories=new Set(FURNITURE_CATEGORIES.map(category=>category.k));
   const catalogGroups=FURNITURE_CATEGORIES.map(category=>[category.n,category.k]);
   if(OBJECT_CATALOG.some(item=>!knownCategories.has(item.category)))catalogGroups.push(['อื่น ๆ','other']);
-  document.querySelector('#catalogSection .hint').textContent=OBJECT_CATALOG.length+' รายการ';
+  document.querySelector('#catalogSection .hint').textContent=OBJECT_CATALOG.filter(item=>!item.hiddenFromCatalog).length+' รายการ';
   catalogGroups.forEach(([name,category])=>{
     const group=el('div','catalog-group'),title=el('h5',null,name),grid=el('div','catalog-grid');
     OBJECT_CATALOG.filter(item=>!item.hiddenFromCatalog&&(category==='other'?!knownCategories.has(item.category):item.category===category)).forEach(item=>{
       const b=el('button','catalog-item'),media=el('span','catalog-icon',item.icon),copy=el('span','catalog-copy',
         '<b>'+item.name+'</b><small>'+(isEntranceFrameItem(item)?'เสา 1.00 ม. · ยื่น 2.40 ม. · สูง 2.40 ม.':isDownlightBeamItem(item)?'ยาวเต็มบูธ · 0.30 × 0.20 ม. · ไฟ 5 ดวง':item.size.w+' × '+item.size.d+' × '+item.size.h+' ม.')+'</small>');
       if(item.thumbUrl){const img=document.createElement('img');img.className='catalog-thumb';img.src=item.thumbUrl;
-        img.alt='';img.loading='lazy';img.setAttribute('aria-hidden','true');img.onerror=()=>img.remove();media.appendChild(img);}
+        img.alt='';img.loading='lazy';img.decoding='async';img.width=320;img.height=240;img.setAttribute('aria-hidden','true');img.onerror=()=>img.remove();media.appendChild(img);}
       b.type='button';b.dataset.catalogId=item.catalogId;b.setAttribute('aria-label','เพิ่ม'+item.name+'ไว้ด้านหน้าบูธ');
       b.title='คลิกเพื่อเพิ่ม'+item.name+'ไว้ด้านหน้าบูธ';b.onclick=()=>addCatalogObject(item.catalogId);b.append(media,copy);
       grid.appendChild(b);
@@ -5994,7 +6033,7 @@ class ThreeBoothRenderer{
     const hidden=[];
     this.boothGroup.traverse(object=>{
       const name=object.name||'';
-      if(name==='scene-ground'||name==='object-selection'||name==='brand-selection'||name==='brand-artwork-hit-target'||
+      if(name==='scene-ground'||name==='booth-editing-grid'||name.startsWith('booth-wall-editing-grid-')||name==='object-selection'||name==='brand-selection'||name==='brand-artwork-hit-target'||
         name==='object-anchor-guides'||name==='magnetic-snap-preview'||name==='attachment-invalid-warning'||name==='attachment-surface-highlight'||
         name==='booth-wall-back-curved-edge'||name.startsWith('booth-dimension-')){
         hidden.push([object,object.visible]);object.visible=false;
@@ -6173,8 +6212,20 @@ class ThreeBoothRenderer{
       const normal=hitSurface.surface.worldNormal,grab={x:drag.grabOffset.x,y:drag.grabOffset.y,z:drag.grabOffset.z},normalPart=grab.x*normal.x+grab.y*normal.y+grab.z*normal.z;
       point={x:point.x-(grab.x-normal.x*normalPart),y:point.y-(grab.y-normal.y*normalPart),z:point.z-(grab.z-normal.z*normalPart)};
     }
+    // Floor grid is anchored to booth origin, not to the surface centre (which may be off-grid).
+    const floorGrid=hitSurface.owner.id===SCENE_ASSET_IDS.floor;
+    if(floorGrid)point={...point,x:placementValue(point.x),z:placementValue(point.z)};
+    const gridAnchor=floorGrid&&drag.sourceAnchorId&&registrySceneObjectSnapAnchors(obj).find(anchor=>anchor.id===drag.sourceAnchorId);
+    if(S.placementSnap!==false&&gridAnchor?.kind==='corner'){
+      // Corner anchors normally only accept edges. Snap their floor projection without lowering top corners into the floor.
+      const offset=drag.sourceAnchorOffset||{x:gridAnchor.position.x-obj.position.x,z:gridAnchor.position.z-obj.position.z},
+        next={x:+(point.x-offset.x).toFixed(3),y:Number.isFinite(drag.startY)?drag.startY:Number(obj.position.y)||0,z:+(point.z-offset.z).toFixed(3)},candidate={...obj,position:next},
+        valid=isCatalogPlacementValid(obj.catalogId,next.x,next.z,obj.rotationY||0,obj.id,obj.size,ALLOW_ASSET_OVERLAP,candidate);
+      return{...next,surface:'floor',targetId:hitSurface.owner.id,snapValid:valid,
+        preview:{sourceAnchorId:gridAnchor.id,targetId:hitSurface.owner.id,targetAnchorId:'grid-10cm',kind:'grid',valid,previewFrom:{...gridAnchor.position},previewTo:{x:point.x,y:next.y+(gridAnchor.position.y-obj.position.y),z:point.z}}};
+    }
     const uniformScale=sceneObjectScaleValue(obj),currentTransform={position:{...obj.position},rotation:{x:(Number(obj.rotationX)||0)*Math.PI/180,y:(Number(obj.rotationY)||0)*Math.PI/180,z:(Number(obj.rotationZ)||0)*Math.PI/180},scale:{x:obj.transform?.flipX===true?-uniformScale:uniformScale,y:obj.transform?.flipY===true?-uniformScale:uniformScale,z:uniformScale}},
-      solved=smartSnapEngine.solve({sourceAssetId:obj.id,anchorId:drag.sourceAnchorId,surface:hitSurface.surface,targetAssetId:hitSurface.owner.id,surfacePoint:point,currentTransform});
+      solved=smartSnapEngine.solve({sourceAssetId:obj.id,anchorId:drag.sourceAnchorId,surface:hitSurface.surface,targetAssetId:hitSurface.owner.id,surfacePoint:point,currentTransform,gridStep:floorGrid||S.placementSnap===false?0:smartSnapEngine.gridStep});
     if(!solved)return null;
     const collision=solved.valid?smartSnapCandidateCollision(obj,solved,hitSurface.owner.id):{valid:false,reason:solved.reason},valid=solved.valid&&collision.valid,
       source=registrySceneObjectSnapAnchors(obj).find(anchor=>anchor.id===solved.anchor.id),position=solved.transform.position,surface=hitSurface.surface.surfaceType,
@@ -6630,6 +6681,7 @@ class ThreeBoothRenderer{
     drag.invalidSnap=false;
     if(!anchorMatch&&!next.surface){const magneticMode=drag.mode==='smart'?(drag.sourceAnchorId?'smart':'plane'):drag.mode;
       anchorMatch=magneticSnapPlacement(obj,next,magneticMode,drag.sourceAnchorId);if(anchorMatch)next={...next,...anchorMatch.position};}
+    if(!anchorMatch&&!next.surface)next=snapDragToGrid(next,drag);
     if(drag.handleDragState){next=this.resolveTransformHandleMove(drag,next,root,obj);if(!next){drag.invalidSnap=true;this.setActiveAnchorSnapped(false);this.renderer.render(this.scene,this.camera);return;}}
     if(drag.mode==='smart'&&drag.sourceAnchorId)this.setActiveAnchorSnapped(!!(anchorMatch||snapPreview&&snapPreview.valid!==false));
     const distance=Math.hypot(next.x-drag.startX,next.y-drag.startY,next.z-drag.startZ);
@@ -7797,6 +7849,69 @@ class ThreeBoothRenderer{
     this.selectionHelper.material.depthTest=false;this.selectionHelper.material.transparent=true;this.selectionHelper.material.opacity=.95;
     this.selectionHelper.renderOrder=20;this.boothGroup.add(this.selectionHelper);this.selectionHelpers=[this.selectionHelper];
   }
+  addEditingGrid(group,spec,floorY){
+    if(!viewGridVisible)return;
+    const T=this.THREE,minor=[],major=[],height=floorY+.006,halfWidth=.007;
+    const grid=new T.Group();grid.name='booth-editing-grid';grid.visible=viewGridVisible;
+    // Flat strips give major lines real width; WebGL ignores LineBasicMaterial.linewidth.
+    const strip=(x0,z0,x1,z1)=>major.push(x0,height,z0,x1,height,z0,x1,height,z1,x0,height,z0,x1,height,z1,x0,height,z1);
+    viewGridLines(spec.W).forEach(({position:x,major:isMajor})=>{
+      if(isMajor)strip(Math.max(0,x-halfWidth),0,Math.min(spec.W,x+halfWidth),spec.D);
+      else minor.push(x,height,0,x,height,spec.D);
+    });
+    viewGridLines(spec.D).forEach(({position:z,major:isMajor})=>{
+      if(isMajor)strip(0,Math.max(0,z-halfWidth),spec.W,Math.min(spec.D,z+halfWidth));
+      else minor.push(0,height,z,spec.W,height,z);
+    });
+    const geometry=points=>{const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points,3));return g;};
+    const thin=new T.LineSegments(geometry(minor),new T.LineBasicMaterial({color:0x8299b0,transparent:true,opacity:.32,depthWrite:false}));
+    const thick=new T.Mesh(geometry(major),new T.MeshBasicMaterial({color:0x506d8b,transparent:true,opacity:.85,depthWrite:false,side:T.DoubleSide}));
+    thin.name='editing-grid-minor';thick.name='editing-grid-major';grid.add(thin,thick);
+    grid.traverse(part=>{part.userData.systemHelper=true;part.raycast=()=>{};});group.add(grid);
+  }
+  addWallEditingGrids(group,spec,floorY){
+    if(!wallGridVisible)return;
+    const T=this.THREE,curve=wallCurveInfo(spec),t=boothWallThickness(spec),gap=.008,halfWidth=.007;
+    group.updateMatrixWorld(true);
+    for(const face of ['back','left','right']){
+      const curved=face==='back'&&curve,wall=group.getObjectByName('booth-wall-'+face+(curved?'-curved':''));if(!wall)continue;
+      const bounds=new T.Box3().setFromObject(wall),height=Math.max(0,bounds.max.y-floorY),length=curved?curve.arcLength:face==='back'?spec.W:spec.D;
+      if(height<=0)continue;
+      const at=(u,v)=>{
+        if(curved){const angle=u/curve.radius-curve.arcAngle/2,x=curve.half+curve.radius*Math.sin(angle),p=curve.pointAtX(x,t/2+gap);return[p.x,floorY+v,p.z];}
+        return face==='back'?[u,floorY+v,bounds.max.z+gap]:face==='left'?[bounds.max.x+gap,floorY+v,u]:[bounds.min.x-gap,floorY+v,u];
+      };
+      const minor=[],major=[],line=(a,b)=>minor.push(...a,...b),quad=(a,b,c,d)=>major.push(...a,...b,...c,...a,...c,...d),
+        segments=curved?Math.max(64,Math.ceil(length/.1)):1;
+      viewGridLines(length).forEach(({position:u,major:thick})=>{
+        if(thick)quad(at(Math.max(0,u-halfWidth),0),at(Math.min(length,u+halfWidth),0),at(Math.min(length,u+halfWidth),height),at(Math.max(0,u-halfWidth),height));
+        else line(at(u,0),at(u,height));
+      });
+      viewGridLines(height).forEach(({position:v,major:thick})=>{
+        for(let i=0;i<segments;i++){const a=length*i/segments,b=length*(i+1)/segments;
+          if(thick)quad(at(a,Math.max(0,v-halfWidth)),at(b,Math.max(0,v-halfWidth)),at(b,Math.min(height,v+halfWidth)),at(a,Math.min(height,v+halfWidth)));
+          else line(at(a,v),at(b,v));
+        }
+      });
+      const geometry=points=>{const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points,3));return g;},grid=new T.Group();
+      grid.name='booth-wall-editing-grid-'+face;grid.userData.gridLength=length;grid.userData.gridHeight=height;
+      const thin=new T.LineSegments(geometry(minor),new T.LineBasicMaterial({color:0x8299b0,transparent:true,opacity:.42,depthWrite:false})),
+        thick=new T.Mesh(geometry(major),new T.MeshBasicMaterial({color:0x506d8b,transparent:true,opacity:.9,depthWrite:false,side:T.DoubleSide}));
+      thin.name='wall-grid-minor';thick.name='wall-grid-major';grid.add(thin,thick);
+      // Wall artwork is transparent and renders at order 2. Draw the grid afterwards,
+      // retaining depth testing so foreground assets still occlude these helpers.
+      thin.renderOrder=thick.renderOrder=3;
+      grid.traverse(part=>{part.userData.systemHelper=true;part.raycast=()=>{};});
+      // Follow wall visibility and transforms; helper meshes cannot intercept placement clicks.
+      group.add(grid);wall.attach(grid);
+    }
+  }
+  refreshEditingGrids(spec=BoothSpec){
+    const old=[];this.boothGroup.traverse(part=>{if(part.name==='booth-editing-grid'||part.name.startsWith('booth-wall-editing-grid-'))old.push(part);});
+    old.forEach(part=>{part.removeFromParent();disposeThreeObject(part);});
+    this.addEditingGrid(this.boothGroup,spec,spec.raise/100);this.addWallEditingGrids(this.boothGroup,spec,spec.raise/100);
+    this.renderer.render(this.scene,this.camera);
+  }
   buildBooth(spec){
     const T=this.THREE,g=this.boothGroup,t=boothWallThickness(spec),floorY=spec.raise/100,a=palette();
     const span=Math.max(spec.W,spec.D,spec.H),groundGeo=new T.PlaneGeometry(span*5,span*5);
@@ -7811,6 +7926,7 @@ class ThreeBoothRenderer{
     this.box(g,[spec.W,slabHeight,spec.D],[spec.W/2,slabCenterY,spec.D/2],floorColor(),
       {material:this.floorMaterial(spec),castShadow:false,name:'booth-floor'});
     this.addFloorSticker(g,spec,floorY);
+    this.addEditingGrid(g,spec,floorY);
     const walls=typ().walls;
     if(walls.includes('back')){
       if(isCurvedWallType(spec))this.curvedWall(g,spec,t,floorY);
@@ -7822,6 +7938,7 @@ class ThreeBoothRenderer{
     if(walls.includes('right'))this.box(g,[t,spec.H,spec.D],[spec.W-t/2,spec.H/2,spec.D/2],a.wall,
       {material:this.wallMaterial(spec,spec.D,'right'),name:'booth-wall-right'});
     this.addWallStickers(g,spec,t,floorY);
+    this.addWallEditingGrids(g,spec,floorY);
 
     if(hasStore()){
       const panels=storagePanels(t),G=panels.G,storeColor=stPaintColor(a);
@@ -8036,6 +8153,16 @@ function planSVG(){
       <g clip-path="url(#floor-sticker-clip)">${artwork}</g>
       <rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sd.toFixed(1)}" fill="none" stroke="#f72585" stroke-width="1"/>`;
   }
+  if(viewGridVisible){
+    g+='<g id="plan-editing-grid" pointer-events="none">';
+    for(const major of [false,true]){
+      g+=`<g data-grid-level="${major?'major':'minor'}" stroke="#a2bad2" stroke-width="${major?1.2:.35}" opacity="${major?.85:.35}">`;
+      viewGridLines(W).filter(line=>line.major===major).forEach(({position:x})=>{g+=`<path d="M${ox+x*sc} ${oy}v${D*sc}"/>`;});
+      viewGridLines(D).filter(line=>line.major===major).forEach(({position:y})=>{g+=`<path d="M${ox} ${oy+y*sc}h${W*sc}"/>`;});
+      g+='</g>';
+    }
+    g+='</g>';
+  }
   const wall=(x,y,w,d)=>{const p=P(x,y);
     return `<rect x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" width="${(w*sc).toFixed(1)}"
       height="${(d*sc).toFixed(1)}" fill="${a.wall}" stroke="rgba(0,0,0,.45)" stroke-width=".8"/>`;};
@@ -8145,12 +8272,46 @@ function planSVG(){
 }
 
 function bindPlanObjectInteractions(container){
+  let drag=null;
+  const point=event=>{const svg=container.querySelector('svg'),matrix=svg?.getScreenCTM();return matrix?new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse()):null;};
+  container.onpointerdown=event=>{
+    const node=event.target.closest?.('.plan-object');if(!node||event.button!==0||event.isPrimary===false||event.shiftKey||event.ctrlKey||event.metaKey||objectEditor.multiSelect)return;
+    const obj=objectById(node.dataset.objectId);if(!obj)return;
+    const ids=obj.groupId?groupObjectIds(obj.groupId):[obj.id],members=ids.map(objectById).filter(Boolean),start=point(event);
+    if(!start||members.some(objectLocked))return;
+    setObjectSelection(ids,obj.id);syncObjectControls();
+    drag={pointerId:event.pointerId,id:obj.id,ids,start,before:objectSnapshot(),positions:Object.fromEntries(members.map(o=>[o.id,{...o.position}])),moved:false,
+      sc:Math.min((420-88)/S.W,(300-88)/S.D)};
+    container.setPointerCapture(event.pointerId);event.preventDefault();
+  };
+  container.onpointermove=event=>{
+    if(!drag||event.pointerId!==drag.pointerId)return;const p=point(event);if(!p)return;
+    const start=drag.positions[drag.id],dx=(p.x-drag.start.x)/drag.sc,dz=(p.y-drag.start.y)/drag.sc;
+    if(!drag.moved&&Math.hypot(p.x-drag.start.x,p.y-drag.start.y)<1)return;
+    const next=snapDragToGrid({...start,x:start.x+dx,z:start.z+dz}),delta={x:next.x-start.x,z:next.z-start.z};drag.moved=true;
+    drag.ids.forEach(id=>{const obj=objectById(id),initial=drag.positions[id];if(!obj)return;
+      obj.position={...initial,x:+(initial.x+delta.x).toFixed(9),z:+(initial.z+delta.z).toFixed(9)};
+      const node=[...container.querySelectorAll('.plan-object')].find(n=>n.dataset.objectId===id);if(node)node.setAttribute('transform',`translate(${delta.x*drag.sc} ${delta.z*drag.sc})`);
+    });event.preventDefault();
+  };
+  const finish=event=>{
+    if(!drag||event.pointerId!==drag.pointerId)return;const state=drag;drag=null;
+    if(container.hasPointerCapture(event.pointerId))container.releasePointerCapture(event.pointerId);
+    if(!state.moved)return;
+    container._planIgnoreClickUntil=Date.now()+300;
+    const members=state.ids.map(objectById).filter(Boolean),invalid=members.some(o=>!isCatalogPlacementValid(o.catalogId,o.position.x,o.position.z,o.rotationY||0,o.id,o.size,ALLOW_ASSET_OVERLAP,o));
+    if(event.type==='pointercancel'||invalid){restoreObjectSnapshot(state.before);sync();if(invalid)announceCatalog('ย้ายไม่ได้ เพราะตำแหน่งชนโครงสร้างหรืออยู่นอกพื้นที่ที่อนุญาต','error');return;}
+    members.forEach(o=>{o.attachment=null;normalizeSceneObjectModel(o);o.placement.mode='free';o.placement.surface='free';o.placement.targetId=null;o.placement.anchorAttachment=null;o.placement.snapCandidate=null;
+      if(isDownlightBeamObject(o)&&o.structure)o.structure.wallAttached=false;detachPersistentAttachment(o.id,{reason:'manual-move'});propagatePersistentAttachmentChildren(o.id,threeRenderer);
+    });recordObjectHistory(state.before);if(threeRenderer)threeRenderer.currentKey='';sync();announceCatalog('ย้ายอุปกรณ์ในผังพื้นแล้ว'+(S.placementSnap===false?'':' · Snap to Grid 10 ซม.'),'success');
+  };
+  container.onpointerup=finish;container.onpointercancel=finish;
   container.querySelectorAll('.plan-object').forEach(node=>{
     const activate=restoreFocus=>{
       const id=node.dataset.objectId;selectObject(id);
       if(restoreFocus)requestAnimationFrame(()=>[...container.querySelectorAll('.plan-object')].find(item=>item.dataset.objectId===id)?.focus());
     };
-    node.addEventListener('click',()=>activate(false));
+    node.addEventListener('click',()=>{if(Date.now()<(container._planIgnoreClickUntil||0))return;activate(false);});
     node.addEventListener('keydown',event=>{
       if(event.key==='Enter'||event.key===' '){event.preventDefault();activate(true);}
     });
@@ -8898,7 +9059,7 @@ const summaryRow=document.querySelector('.row2'),selectedCard=summaryRow&&summar
 if(selectedCard&&dockCatalogPage)dockCatalogPage.appendChild(selectedCard);
 if(summaryRow)summaryRow.remove();
 document.querySelectorAll('.dock-page').forEach(p=>p.dataset.toolPage=p.dataset.dockPage);
-document.querySelectorAll('.dock-tool').forEach(b=>{
+document.querySelectorAll('.dock-tool[data-dock-page]').forEach(b=>{
   b.dataset.tool=b.dataset.dockPage;
   const page=document.querySelector('.dock-page[data-dock-page="'+b.dataset.dockPage+'"]');
   if(page)b.setAttribute('aria-controls',page.id||'dockPanel');
@@ -8911,15 +9072,66 @@ function showDockPage(page,source){
   document.querySelectorAll('.dock-page').forEach(p=>{
     const active=p.dataset.dockPage===page;p.classList.toggle('on',active);p.setAttribute('aria-hidden',String(!active));
   });
-  document.querySelectorAll('.dock-tool').forEach(b=>{
+  document.querySelectorAll('.dock-tool[data-dock-page]').forEach(b=>{
     const active=b===source;b.classList.toggle('on',active);b.setAttribute('aria-pressed',String(active));
   });
   const activePage=document.querySelector('.dock-page.on');
   if(activePage)activePage.scrollTop=0;
   if(page==='prompt')updatePromptPreview();
 }
-document.querySelectorAll('.dock-tool').forEach(b=>b.onclick=()=>showDockPage(b.dataset.dockPage,b));
+document.querySelectorAll('.dock-tool[data-dock-page]').forEach(b=>b.onclick=()=>showDockPage(b.dataset.dockPage,b));
+const gridMenuButton=document.getElementById('dockGridMenu'),gridSubmenu=document.getElementById('gridSubmenu');
+function closeGridSubmenu(returnFocus=false){
+  gridSubmenu.hidden=true;gridMenuButton.setAttribute('aria-expanded','false');
+  if(returnFocus)gridMenuButton.focus({preventScroll:true});
+}
+function positionGridSubmenu(){
+  const anchor=gridMenuButton.getBoundingClientRect(),popup=gridSubmenu.getBoundingClientRect();
+  gridSubmenu.style.left=Math.max(8,anchor.left-popup.width-8)+'px';
+  gridSubmenu.style.top=Math.max(8,Math.min(innerHeight-popup.height-8,anchor.top+(anchor.height-popup.height)/2))+'px';
+}
+function syncGridMenuState(){
+  gridMenuButton.classList.toggle('has-active-grid',viewGridVisible||wallGridVisible);
+  gridMenuButton.title='กริดพื้น: '+(viewGridVisible?'เปิด':'ปิด')+' · กริดผนัง: '+(wallGridVisible?'เปิด':'ปิด');
+}
+gridMenuButton.onclick=()=>{
+  if(!gridSubmenu.hidden){closeGridSubmenu();return;}
+  gridSubmenu.hidden=false;gridMenuButton.setAttribute('aria-expanded','true');positionGridSubmenu();
+  document.getElementById('dockGridToggle').focus({preventScroll:true});
+};
+document.addEventListener('pointerdown',event=>{
+  if(!gridSubmenu.hidden&&!gridSubmenu.contains(event.target)&&!gridMenuButton.contains(event.target))closeGridSubmenu();
+});
+document.addEventListener('focusin',event=>{
+  if(!gridSubmenu.hidden&&!gridSubmenu.contains(event.target)&&event.target!==gridMenuButton)closeGridSubmenu();
+});
+document.addEventListener('keydown',event=>{
+  if(gridSubmenu.hidden)return;
+  if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();closeGridSubmenu(true);}
+  else if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){
+    event.preventDefault();const buttons=[...gridSubmenu.querySelectorAll('button')],i=buttons.indexOf(document.activeElement);
+    buttons[event.key==='Home'?0:event.key==='End'?buttons.length-1:(i+(event.key==='ArrowUp'?-1:1)+buttons.length)%buttons.length].focus();
+  }
+},true);
+window.addEventListener('resize',()=>{if(!gridSubmenu.hidden)closeGridSubmenu(true);});
+document.querySelector('.dock-rail').addEventListener('scroll',()=>{if(!gridSubmenu.hidden)closeGridSubmenu(true);},{passive:true});
+document.getElementById('dockGridToggle').onclick=()=>{
+  viewGridVisible=!viewGridVisible;
+  const button=document.getElementById('dockGridToggle');button.setAttribute('aria-pressed',String(viewGridVisible));
+  button.title=(viewGridVisible?'ปิด':'เปิด')+'กริดหลัก 1 ม. / ย่อย 10 ซม.';
+  syncPlacementSnapSummary();
+  if(threeRenderer)threeRenderer.refreshEditingGrids();
+  if(S.view==='plan'){const view=document.getElementById('view');view.innerHTML=planSVG();bindPlanObjectInteractions(view);}
+  syncGridMenuState();closeGridSubmenu(true);
+};
 const promptCopyButton=document.getElementById('promptCopy');
+document.getElementById('dockWallGridToggle').onclick=()=>{
+  wallGridVisible=!wallGridVisible;
+  const button=document.getElementById('dockWallGridToggle');button.setAttribute('aria-pressed',String(wallGridVisible));
+  button.title=(wallGridVisible?'ปิด':'เปิด')+'กริดผนังหลัก 1 ม. / ย่อย 10 ซม.';
+  if(threeRenderer)threeRenderer.refreshEditingGrids();
+  syncGridMenuState();closeGridSubmenu(true);
+};
 if(promptCopyButton)promptCopyButton.onclick=prepareRenderPackage;
 document.querySelectorAll('[data-render-quality]').forEach(button=>button.onclick=()=>setRenderQuality(button.dataset.renderQuality));
 const conceptAddAll=document.getElementById('conceptAddAll');if(conceptAddAll)conceptAddAll.onclick=()=>confirmAIConceptSuggestions('all');
@@ -9636,5 +9848,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/island-template-ui.js?v=20260909-11"></script>
 <script src="js/inline-wizard.js?v=20260909-10"></script>
 <script src="js/template-entry.js?v=20260909-10"></script>
+<link rel="stylesheet" href="css/responsive-tools.css?v=20260910-2">
+<script src="js/responsive-tools.js?v=20260910-2"></script>
 </body>
 </html>

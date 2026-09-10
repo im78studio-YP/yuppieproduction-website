@@ -1,4 +1,32 @@
-# Design QA — Lightbox ชั้นสีหน้า 5D
+# Design QA — Grid disclosure menu (2026-09-10)
+
+## Current scoped change
+
+Source visual truth: `C:/Users/Admin/AppData/Local/Temp/codex-clipboard-9ea94d80-5d93-41bf-b2b4-00ddfc7421f4.png` (244 × 760 px, cropped rail reference).
+Implementation: `qa/project-workspace/grid-submenu-desktop.png` (1288 × 912), `grid-submenu-mobile.png` (390 × 844), `grid-submenu-tablet.png` (768 × 1024), all in `qa/project-workspace/`, CSS px at density 1.
+
+State: disclosure open. Source and desktop/mobile captures were opened together in one comparison input. Compared the rail and its left-hand flyout, not the surrounding scene or checkerboard; the reference is a cropped annotation rather than a full viewport. Existing 60 × 58 px controls are retained, with a 74 × 135 px flyout. The blank white annotation is intentionally replaced with the requested grid icon, label, and white outline. Existing Prompt remains in place (removal was not requested).
+
+## Fidelity review and findings
+
+- Typography: existing Thai font, 9 px labels and line heights retained; both option names remain readable without truncation.
+- Spacing/layout: one parent control after signage, two vertically stacked controls to its left, consistent gaps and rounded corners. Mobile flyout remains within viewport; no added overflow.
+- Colors/tokens: existing dark rail and white icons/outline preserved. Enabled grid options receive the existing highlighted state.
+- Assets: reused the app's existing grid icons; no generated imagery or placeholder art required.
+- Copy: parent “กริด”, choices “กริดพื้น” and “กริดผนัง”, descriptive accessible names preserved.
+- No actionable P0/P1/P2 findings in this scoped change. The pre-existing camera-strip scrolling and project recovery notice are outside scope.
+
+## Interaction verification
+
+Verified in Codex in-app browser: floor selection closes flyout; wall selection closes flyout; both can be enabled independently; choosing an enabled option switches it off; Escape closes and returns focus to parent; ArrowDown moves focus to wall; Enter activates wall; click outside closes; resize closes. Tested desktop, 390 px mobile and 768 px tablet. Browser error log returned no errors. Existing regression scripts updated to open the disclosure before selecting a grid; those standalone Chrome scripts were not rerun in this turn.
+
+Comparison history: first visual comparison passed without P0/P1/P2 corrections. No rendering, snapping, project-state, or export behavior was changed in this menu-only update.
+
+final result: passed
+
+---
+
+# Previous Design QA — Lightbox ชั้นสีหน้า 5D
 
 ## Source visual truth
 

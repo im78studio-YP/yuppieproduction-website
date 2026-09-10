@@ -21,7 +21,7 @@
   const add=(a,b)=>({x:finite(a?.x)+finite(b?.x),y:finite(a?.y)+finite(b?.y),z:finite(a?.z)+finite(b?.z)});
   const subtract=(a,b)=>({x:finite(a?.x)-finite(b?.x),y:finite(a?.y)-finite(b?.y),z:finite(a?.z)-finite(b?.z)});
   const scale=(value,amount)=>({x:finite(value?.x)*amount,y:finite(value?.y)*amount,z:finite(value?.z)*amount});
-  const quantize=(value,step=GRID_STEP)=>Math.round(finite(value)/step)*step;
+  const quantize=(value,step=GRID_STEP)=>step>0?Math.round(finite(value)/step)*step:finite(value);
 
   function rotateVector(value,rotation={}){
     let {x,y,z}=vector(value),rx=finite(rotation.x),ry=finite(rotation.y),rz=finite(rotation.z);
@@ -240,14 +240,14 @@
         if(alignment<.64||distance>maxDistance||best&&distance>=best.distance)return;best={surface,distance,alignment};});
       return best?.surface||null;
     }
-    solve({sourceAssetId,anchorId='',surface,targetAssetId='',surfacePoint,currentTransform=null}={}){
+    solve({sourceAssetId,anchorId='',surface,targetAssetId='',surfacePoint,currentTransform=null,gridStep=this.gridStep}={}){
       const asset=this.registry?.getAssetById?.(sourceAssetId),owner=this.registry?.getAssetById?.(targetAssetId||surface?.ownerAssetId);
       if(!asset||!surface||!surfaceAcceptsAsset(surface,asset))return null;
       const world=worldSurface(surface,owner),available=anchorsForSurface(this.getAnchors(asset.id),world),anchors=anchorId?available.filter(anchor=>anchor.id===anchorId):available;
       if(!anchors.length)return null;
       const anchor=anchors[0],rotation=alignRotation(anchor,world,currentTransform?.rotation||asset.transform.rotation),scaledAnchor={x:anchor.localPosition.x*finite(asset.transform.scale?.x,1),y:anchor.localPosition.y*finite(asset.transform.scale?.y,1),z:anchor.localPosition.z*finite(asset.transform.scale?.z,1)},
         rotatedAnchor=rotateVector(scaledAnchor,rotation),keepFloorContact=asset.metadata?.installFreely!==true&&anchor.anchorType==='back'&&Math.abs(world.worldNormal.y)<.7&&(/counter|shelf|furniture|เคาน์เตอร์|ชั้น/.test((asset.assetType+' '+asset.name).toLowerCase())||asset.category==='furniture');
-      let point=quantizeSurfacePoint(surfacePoint,world,this.gridStep);
+      let point=quantizeSurfacePoint(surfacePoint,world,gridStep);
       if(keepFloorContact)point={...point,y:finite(currentTransform?.position?.y,finite(asset.transform.position?.y))+rotatedAnchor.y};
       const desiredAnchor=add(point,scale(world.worldNormal,Math.max(.001,finite(world.padding)))),position=subtract(desiredAnchor,rotatedAnchor),valid=fitsSurface(asset,rotation,point,keepFloorContact?{...world,padding:0}:world,owner);
       return{valid,reason:valid?'':'out-of-surface-bounds',priority:SNAP_PRIORITIES['anchor-surface'],snapType:'anchor-surface',sourceAssetId:asset.id,anchor:clone(anchor),surface:clone(world),targetAssetId:targetAssetId||world.ownerAssetId,

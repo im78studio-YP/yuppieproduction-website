@@ -115,6 +115,16 @@ test('Furniture → Floor ใช้ Bottom Anchor, Grid 5 ซม. และไ�
   assert.equal(result.transform.position.x,2.15);assert.equal(result.transform.position.z,1.25);assert.ok(result.transform.position.y>=0&&result.transform.position.y<=.002);
 });
 
+test('Surface solver supports per-drag 10 cm grid and unsnapped placement without mutating engine defaults',()=>{
+  const floor=asset('floor','Floor','surface',{width:6,height:.003,depth:3},{x:3,y:-.0015,z:1.5},{system:true,locked:true});
+  const chair=asset('chair','Furniture','furniture',{width:.5,height:.85,depth:.5},{x:1,y:0,z:1});
+  const {engine}=setup([floor,chair]),surface=engine.getWorldSurfaces(floor.id).find(s=>s.surfaceType==='floor-top');
+  const input={sourceAssetId:'chair',surface,targetAssetId:'floor',surfacePoint:{x:2.13,y:0,z:1.27}};
+  const snapped=engine.solve({...input,gridStep:.1}),free=engine.solve({...input,gridStep:0});
+  assert.ok(Math.abs(snapped.transform.position.x-2.1)<1e-9);assert.ok(Math.abs(snapped.transform.position.z-1.3)<1e-9);
+  assert.ok(Math.abs(free.transform.position.x-2.13)<1e-9);assert.ok(Math.abs(free.transform.position.z-1.27)<1e-9);assert.equal(engine.gridStep,.05);
+});
+
 test('Logo/TV → Back/Left Wall แนบหน้าผิวและ Align Rotation ตาม Normal',()=>{
   const back=asset('structure.wall.back','Back Wall','surface',{width:6,height:2.4,depth:.1},{x:3,y:1.2,z:.05},{system:true,locked:true,movable:false});
   const left=asset('structure.wall.left','Left Wall','surface',{width:.1,height:2.4,depth:3},{x:.05,y:1.2,z:1.5},{system:true,locked:true,movable:false});
