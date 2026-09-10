@@ -20,6 +20,75 @@ const asset=(id,assetType,category,bounds,position={x:0,y:0,z:0},extra={})=>({id
   snapEnabled:extra.snapEnabled!==false,metadata:{system:extra.system===true,fixtureType:extra.fixtureType||''}});
 const setup=(records)=>{const registry=registryApi.createRegistry();records.forEach(record=>registry.registerAsset(record));return{registry,engine:snapApi.createEngine(registry)};};
 
+test('Free design accepts any explicit Point and asset type, overhang, negative elevation, and preserves rotation',()=>{
+  const source=asset('free','Furniture','furniture',{width:8,height:3,depth:2},{x:9,y:20,z:-4});source.metadata.installFreely=true;
+  source.transform.rotation.y=.73;
+  const wall=asset('structure.wall.back','Back Wall','surface',{width:2,height:2,depth:.1},{x:1,y:1,z:0},{system:true});
+  const {engine}=setup([source,wall]),surface=engine.getWorldSurfaces(wall.id).find(s=>s.surfaceType==='wall-inside');
+  surface.allowedAssetTypes=['Screen/TV'];
+  for(const anchor of engine.getAnchors(source.id)){
+    const solved=engine.solve({sourceAssetId:source.id,anchorId:anchor.id,surface,surfacePoint:{x:-3,y:-4,z:.05},gridStep:0});
+    assert.ok(solved?.valid,anchor.id);assert.equal(solved.transform.rotation.y,.73);
+    assert.ok(solved.transform.position.y<0);
+  }
+  assert.equal(engine.solve({sourceAssetId:source.id,surface,surfacePoint:{x:NaN,y:0,z:0}}),null);
+});
+
+test('Structural fascia snaps above a smaller room regardless of its display name',()=>{
+  for(const name of ['ป้ายซุ้มโค้งเข้ามุม','fascia curved','โครงสร้างใหม่']){
+    const room=asset('room','Room','structure',{width:1.2,height:2.4,depth:1.2},{x:3,y:1.2,z:1.5},{system:true}),
+      fascia=asset('fascia','Fascia','structure',{width:4,height:.4,depth:1.8});
+    fascia.name=name;
+    const {engine}=setup([room,fascia]),surface=engine.getWorldSurfaces('room').find(s=>s.surfaceType==='horizontal-top'),
+      result=engine.solve({sourceAssetId:'fascia',surface,surfacePoint:{x:3,y:2.4,z:1.5}});
+    assert.ok(result,name);assert.equal(result.valid,true,name);assert.equal(result.anchor.anchorType,'bottom');
+    assert.ok(Math.abs(result.transform.position.y-2.401)<1e-9);
+    assert.notEqual(fascia.metadata.installFreely,true,'support snapping must not disable collision validation');
+  }
+});
+
+test('Structural overhang needs support overlap and does not relax floor containment',()=>{
+  const room=asset('room','Room','structure',{width:1.2,height:2.4,depth:1.2},{x:3,y:1.2,z:1.5},{system:true}),
+    beam=asset('beam','Beam','structure',{width:4,height:.3,depth:.3}),
+    floor=asset('floor','Floor','surface',{width:6,height:.01,depth:3},{x:3,y:-.005,z:1.5},{system:true}),
+    {engine}=setup([room,beam,floor]),top=engine.getWorldSurfaces('room').find(s=>s.surfaceType==='horizontal-top');
+  const place=(x,z=1.5)=>engine.solve({sourceAssetId:'beam',surface:top,surfacePoint:{x,y:2.4,z},gridStep:0});
+  assert.equal(place(1).valid,true,'beam may span beyond the room while its end is supported');
+  assert.equal(place(0).valid,false,'no overlap with support');assert.equal(place(3,3).valid,false);
+  const ground=engine.getWorldSurfaces('floor').find(s=>s.surfaceType==='floor-top');
+  assert.equal(engine.solve({sourceAssetId:'beam',surface:ground,surfacePoint:{x:1,y:0,z:1.5}}).valid,false);
+});
+
+test('Structural bottom corner can be placed directly on a room rim',()=>{
+  const room=asset('room','Room','structure',{width:1.2,height:2.4,depth:1.2},{x:3,y:1.2,z:1.5},{system:true}),
+    beam=asset('beam','Beam','structure',{width:4,height:.3,depth:.3}),{engine}=setup([room,beam]),
+    surface=engine.getWorldSurfaces('room').find(s=>s.surfaceType==='horizontal-top'),
+    anchor=engine.getAnchors('beam').find(a=>a.id.endsWith('max-x.min-y.max-z')),
+    result=engine.solve({sourceAssetId:'beam',anchorId:anchor.id,surface,surfacePoint:{x:3.5,y:2.4,z:2},gridStep:0});
+  assert.ok(result);assert.equal(result.valid,true);
+  const world=snapApi.worldAnchor(anchor,beam,result.transform).worldPosition;
+  assert.ok(Math.hypot(world.x-3.5,world.y-2.401,world.z-2)<1e-9);
+});
+
+test('Wall tops provide horizontal support faces as well as edge anchors',()=>{
+  const wall=asset('structure.wall.back','Back Wall','surface',{width:6,height:2.4,depth:.1},{x:3,y:1.2,z:.05},{system:true}),
+    beam=asset('beam','Beam','structure',{width:4,height:.3,depth:.4}),{engine}=setup([wall,beam]),
+    surface=engine.matchSurface(wall.id,{x:3,y:2.4,z:.05},{x:0,y:1,z:0});
+  assert.equal(surface.surfaceType,'horizontal-top');
+  assert.equal(engine.solve({sourceAssetId:'beam',surface,surfacePoint:{x:3,y:2.4,z:.05}}).valid,true);
+  assert.ok(engine.getSurfaces(wall.id).some(s=>s.id.endsWith('edge.top')));
+});
+
+test('Support overlap uses rotated and scaled structural bounds',()=>{
+  const room=asset('room','Room','structure',{width:1,height:2.4,depth:1},{x:0,y:1.2,z:0},{system:true}),
+    beam=asset('beam','Beam','structure',{width:2,height:.3,depth:.2});
+  beam.transform.scale={x:2,y:2,z:2};beam.transform.rotation.y=Math.PI/2;
+  const {engine}=setup([room,beam]),surface=engine.getWorldSurfaces('room').find(s=>s.surfaceType==='horizontal-top'),
+    place=z=>engine.solve({sourceAssetId:'beam',surface,surfacePoint:{x:0,y:2.4,z},gridStep:0});
+  assert.equal(place(2).valid,true);assert.equal(place(3).valid,false);
+  assert.deepEqual(plain(place(2).transform.scale),beam.transform.scale);
+});
+
 test('Logo Alpha Bounds ตัดพื้นที่โปร่งใสและรักษาอัตราส่วน Artwork จริง',()=>{
   const width=10,height=8,data=new Uint8ClampedArray(width*height*4);
   for(let y=2;y<=5;y++)for(let x=3;x<=8;x++)data[(y*width+x)*4+3]=255;
@@ -221,7 +290,8 @@ test('Handle Drag Module ป้องกัน Matrix ค้างและร�
 test('Smart Move ใช้ Handle Drag Module กับ Anchor Point และ Cleanup เมื่อ Cancel',()=>{
   for(const token of ["import('./js/handle-drag.js?v=20260902-1')",'this.handleDrag=handleDrag','beginTransformHandleDrag(root,handleWorld)',
     "this.handleDrag.beginHandleDrag({object:root,mode:'move',handleLocal})",'resolveTransformHandleMove(drag,next,root,obj)',
-    'this.handleDrag.updateHandleDrag(state,target)',"event.type==='pointercancel'&&drag.handleDragState",'this.handleDrag.cancelHandleDrag(drag.handleDragState)'])assert.ok(html.includes(token),token);
+    'this.handleDrag.updateHandleDrag(state,target)',"event.type==='pointercancel'&&drag.kind==='asset'",'this.handleDrag.cancelHandleDrag(drag.handleDragState)',
+    'finally{this.handleDrag.restoreTransform(root,displayed);}','this.dragPlacementCheck(obj,next,drag,anchorMatch)'])assert.ok(html.includes(token),token);
   assert.match(html,/drag\.memberIds\?\.length!==1/);
   assert.match(html,/sceneObjectOrientationLift\(obj\)/);
   assert.match(html,/window\.HandleDragAPI=/);

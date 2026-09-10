@@ -31,6 +31,24 @@ const attachLogo=setup=>{
   assert.equal(result.ok,true);return{surface,anchor,result};
 };
 
+test('Oversized structural support remains attached after save/reload and room movement',()=>{
+  const room=asset('room','Room','structure',{width:1.2,height:2.4,depth:1.2},{x:3,y:1.2,z:1.5},{system:true}),
+    beam=asset('fascia','Fascia','structure',{width:4,height:.4,depth:1.8},{x:3,y:0,z:1.5},{name:'ป้ายซุ้มโค้งเข้ามุม'}),
+    setup=createSetup([room,beam]),surface=setup.engine.getWorldSurfaces(room.id).find(s=>s.surfaceType==='horizontal-top'),
+    solved=setup.engine.solve({sourceAssetId:beam.id,surface,surfacePoint:{x:2,y:2.4,z:1.5},gridStep:0});
+  assert.equal(solved.valid,true);
+  setup.registry.updateAssetTransform(beam.id,solved.transform);
+  const attached=setup.graph.attachFromCurrent(beam.id,{targetAssetId:room.id,targetSurfaceId:surface.id,sourceAnchorId:solved.anchor.id});
+  assert.equal(attached.valid,true);
+  const saved=plain(setup.graph.serialize()),restored=createSetup([room,{...beam,transform:plain(solved.transform)}]);
+  restored.graph.load(saved,{resolve:true});assert.equal(restored.graph.getAttachment(beam.id).valid,true);
+  assert.deepEqual(plain(restored.registry.getAssetById(beam.id).transform),plain(solved.transform));
+  restored.registry.updateAssetTransform(room.id,{...room.transform,position:{x:4,y:1.5,z:1.5}});
+  assert.equal(restored.graph.propagateFrom(room.id)[0].valid,true);
+  const moved=restored.registry.getAssetById(beam.id).transform.position;
+  assert.ok(Math.abs(moved.x-3)<1e-9);assert.ok(Math.abs(moved.y-2.701)<1e-9);
+});
+
 test('Attachment Schema และ SceneAsset relation fields ตรงตาม Task 3',()=>{
   assert.deepEqual(Array.from(attachmentApi.SNAP_MODES),['surface','edge','center','grid']);
   const normalized=attachmentApi.normalizeAttachment({targetAssetId:'p',targetSurfaceId:'s',sourceAnchorId:'a',localSurfacePosition:{u:1,v:2,normalOffset:.03},rotationOffset:{x:.1,y:.2,z:.3},snapMode:'edge'});
@@ -113,7 +131,8 @@ test('Editor integration: Atomic history, UI commands, Clean Screenshot แล�
     'parentAssetId','targetSurfaceId','sourceAnchorId','localSurfacePosition','validationStatus','legacyPortAttachment','window.AssetAttachmentGraphAPI'])assert.ok(html.includes(token),token);
   for(const helper of ['attachment-invalid-warning','attachment-surface-highlight','smart-snap-surface-highlight','smart-snap-ghost-preview'])assert.ok(html.includes(helper),helper);
   assert.match(html,/Project เก่าไม่ถูกเดาความสัมพันธ์จากระยะใกล้หรือ snapCandidate เดิม/);
-  assert.match(html,/if\(member\.id===obj\.id&&member\.placement\?\.snapCandidate\?\.valid\)commitPersistentAttachmentFromSnap/);
+  assert.match(html,/members\.forEach\(member=>detachPersistentAttachment\(member\.id,\{reason:'manual-move'\}\)\)/);
+  assert.doesNotMatch(html,/if\(member\.id===obj\.id&&member\.placement\?\.snapCandidate\?\.valid\)commitPersistentAttachmentFromSnap/);
 });
 
 test('Integration matrix ครบ Inline, Corner ซ้าย/ขวา, Peninsular, Island และชนิด Asset หลัก',()=>{

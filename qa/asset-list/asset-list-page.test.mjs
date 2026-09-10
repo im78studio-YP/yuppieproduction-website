@@ -46,7 +46,8 @@ test('สำเนาโลโก้ใช้ Mount Anchor สีเขียว
   assert.match(html,/function commitPersistentAttachmentFromSnap[\s\S]*attachFromCurrent/);
   assert.match(html,/surfaceSnapTargets\(selectedRoot\)[\s\S]*asset\.id===selectedAssetId[\s\S]*targets\.push\(node\)/);
   assert.match(html,/if\(targetObject&&sceneObjectAllowsOutsideBooth\(targetItem,targetObject\)\)proxy\.placement\.allowOutsideBooth=true/);
-  assert.match(html,/other\.id===obj\.id\|\|other\.id===mountTargetId/);
+  assert.match(html,/other\.id===obj\.id\|\|ignoreIds\.includes\(other\.id\)/);
+  assert.match(html,/other\.id===mountTargetId&&!proxy\.placement\.anchorAttachment/);
 });
 
 test('สำเนา Asset ทุกชนิดใช้ Free Install โดยไม่ติดขอบเขตหรือขนาด Surface',()=>{

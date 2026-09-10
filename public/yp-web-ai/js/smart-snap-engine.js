@@ -52,6 +52,11 @@
     return asset?.metadata?.system===true||/(floor|wall|room|door)/.test(type)?'center':'base';
   }
 
+  // Structural semantics come from the catalog/registry, never from a translated label.
+  function isStructuralSource(asset){
+    return asset?.category==='structure'&&asset?.metadata?.system!==true;
+  }
+
   function anchorDefinition(asset,anchorType,compatibleSurfaceTypes,rotationPolicy='preserve'){
     const b=asset.bounds||{},w=finite(b.width),h=finite(b.height),d=finite(b.depth),centerY=assetOriginMode(asset)==='base'?h/2:0;
     const positions={bottom:{x:0,y:assetOriginMode(asset)==='base'?0:-h/2,z:0},back:{x:0,y:centerY,z:-d/2},front:{x:0,y:centerY,z:d/2},
@@ -67,7 +72,8 @@
     const anchors=[];
     xs.forEach(([xId,x])=>ys.forEach(([yId,y])=>zs.forEach(([zId,z])=>{
       anchors.push(normalizeSnapAnchor({id:asset.id+'.anchor.corner.'+[xId,yId,zId].join('.'),ownerAssetId:asset.id,anchorType:'corner',
-        localPosition:{x,y,z},localNormal:normalize({x:x<0?-1:1,y:y===ys[0][1]?-1:1,z:z<0?-1:1}),compatibleSurfaceTypes:['edge','center-line'],rotationPolicy:'preserve'}));
+        localPosition:{x,y,z},localNormal:normalize({x:x<0?-1:1,y:y===ys[0][1]?-1:1,z:z<0?-1:1}),
+        compatibleSurfaceTypes:['edge','center-line',...(isStructuralSource(asset)?[y===ys[0][1]?'horizontal-top':'horizontal-bottom']:[])],rotationPolicy:'preserve'}));
     })));
     return anchors;
   }
@@ -97,7 +103,8 @@
     if(asset.snapEnabled===false)return[];
     const type=(String(asset.assetType||'')+' '+String(asset.name||'')+' '+String(asset.metadata?.fixtureType||'')).toLowerCase(),anchors=[];
     const add=(kind,surfaces,policy='preserve')=>{if(!anchors.some(anchor=>anchor.anchorType===kind))anchors.push(anchorDefinition(asset,kind,surfaces,policy));};
-    if(/logo|โลโก้|brandcopy|graphic|screen|tv|จอ|ป้าย/.test(type))add('mount',['wall-inside','wall-outside','vertical-face'],'align-normal');
+    if(isStructuralSource(asset))add('bottom',['floor-top','horizontal-top'],'align-horizontal');
+    else if(/logo|โลโก้|brandcopy|graphic|screen|tv|จอ|ป้าย/.test(type))add('mount',['wall-inside','wall-outside','vertical-face'],'align-normal');
     else if(/arm light|wall light|ไฟกิ่ง|โคมติดผนัง/.test(type))add('mount',['wall-inside','wall-outside','vertical-face'],'align-normal');
     else if(/clear light|downlight|ceiling light|ไฟดาวน์ไลท์|โคมใต้คาน/.test(type))add('top',['horizontal-bottom'],'align-horizontal');
     else if(/counter|shelf|เคาน์เตอร์|ชั้น/.test(type)){
@@ -144,6 +151,7 @@
         insideOrigin=back?{x:0,y:0,z:d/2}:left?{x:w/2,y:0,z:0}:{x:-w/2,y:0,z:0},outsideOrigin=scale(insideOrigin,-1),surfaceWidth=back?w:d;
       return[
         surfaceDefinition(asset,'inside','wall-inside',insideOrigin,insideNormal,surfaceWidth,h),surfaceDefinition(asset,'outside','wall-outside',outsideOrigin,scale(insideNormal,-1),surfaceWidth,h),
+        surfaceDefinition(asset,'top','horizontal-top',{x:0,y:h/2,z:0},{x:0,y:1,z:0},w,d),
         surfaceDefinition(asset,'edge.top','edge',{x:0,y:h/2,z:0},{x:0,y:1,z:0},surfaceWidth,0),surfaceDefinition(asset,'edge.left','edge',{x:-w/2,y:0,z:-d/2},insideNormal,h,0),
         surfaceDefinition(asset,'edge.right','edge',{x:w/2,y:0,z:d/2},insideNormal,h,0),surfaceDefinition(asset,'center','center-line',insideOrigin,insideNormal,surfaceWidth,h)
       ];
@@ -180,7 +188,7 @@
   }
 
   function projectedHalfExtents(asset,rotation,basis){
-    const b=asset.bounds||{},axes=[rotateVector({x:1,y:0,z:0},rotation),rotateVector({x:0,y:1,z:0},rotation),rotateVector({x:0,y:0,z:1},rotation)],half=[finite(b.width)/2,finite(b.height)/2,finite(b.depth)/2];
+    const b=asset.bounds||{},s=asset.transform?.scale||{},axes=[rotateVector({x:1,y:0,z:0},rotation),rotateVector({x:0,y:1,z:0},rotation),rotateVector({x:0,y:0,z:1},rotation)],half=[finite(b.width)*Math.abs(finite(s.x,1))/2,finite(b.height)*Math.abs(finite(s.y,1))/2,finite(b.depth)*Math.abs(finite(s.z,1))/2];
     const extent=axis=>half.reduce((sum,value,index)=>sum+value*Math.abs(dot(axes[index],axis)),0);
     return{u:extent(basis.u),v:extent(basis.v)};
   }
@@ -196,10 +204,22 @@
     return true;
   }
 
-  function fitsSurface(asset,rotation,point,surface,owner=null){
+  function fitsSurface(asset,rotation,point,surface,owner=null,position=null,anchor=null){
+    if(asset?.metadata?.installFreely===true)return true;
     if(surface.surfaceType==='edge'||surface.surfaceType==='center-line')return true;
     const origin=surface.worldOrigin||surface.localOrigin,normal=surface.worldNormal||surface.localNormal,basis=surfaceBasis(normal),delta=subtract(point,origin),ext=projectedHalfExtents(asset,rotation,basis),padding=finite(surface.padding),
       rawMaxU=finite(surface.width)/2-ext.u-padding,rawMaxV=finite(surface.height)/2-ext.v-padding;
+    if(isStructuralSource(asset)&&['horizontal-top','horizontal-bottom'].includes(surface.surfaceType)&&position){
+      // Beams/fascias may bridge a smaller support. Require a real projected overlap,
+      // not full containment; the editor still checks booth limits and collisions.
+      const center=add(position,rotateVector({x:0,y:assetOriginMode(asset)==='base'?finite(asset.bounds?.height)*finite(asset.transform?.scale?.y,1)/2:0,z:0},rotation)),
+        offset=subtract(center,origin),halfU=finite(surface.width)/2,halfV=finite(surface.height)/2,
+        du=dot(offset,basis.u),dv=dot(offset,basis.v),
+        overlapU=Math.min(du+ext.u,halfU)-Math.max(du-ext.u,-halfU),
+        overlapV=Math.min(dv+ext.v,halfV)-Math.max(dv-ext.v,-halfV);
+      const contactInside=anchor?.anchorType!=='corner'||(Math.abs(dot(delta,basis.u))<=halfU+.0001&&Math.abs(dot(delta,basis.v))<=halfV+.0001);
+      return contactInside&&overlapU>.0001&&overlapV>.0001;
+    }
     if(allowsFreeInstallOverhang(asset,surface)||allowsBrandingOverhang(asset,owner,surface))return Math.abs(dot(delta,basis.u))<=finite(surface.width)/2-padding+.0001&&Math.abs(dot(delta,basis.v))<=finite(surface.height)/2-padding+.0001;
     if(rawMaxU<0||rawMaxV<0)return false;
     return Math.abs(dot(delta,basis.u))<=rawMaxU+.0001&&Math.abs(dot(delta,basis.v))<=rawMaxV+.0001;
@@ -207,7 +227,7 @@
 
   function surfaceAcceptsAsset(surface,asset){
     if(!surface?.enabled||asset?.snapEnabled===false)return false;
-    if(surface.allowedAssetTypes?.length&&!surface.allowedAssetTypes.includes(asset.assetType))return false;
+    if(asset?.metadata?.installFreely!==true&&surface.allowedAssetTypes?.length&&!surface.allowedAssetTypes.includes(asset.assetType))return false;
     return true;
   }
 
@@ -243,13 +263,15 @@
     solve({sourceAssetId,anchorId='',surface,targetAssetId='',surfacePoint,currentTransform=null,gridStep=this.gridStep}={}){
       const asset=this.registry?.getAssetById?.(sourceAssetId),owner=this.registry?.getAssetById?.(targetAssetId||surface?.ownerAssetId);
       if(!asset||!surface||!surfaceAcceptsAsset(surface,asset))return null;
-      const world=worldSurface(surface,owner),available=anchorsForSurface(this.getAnchors(asset.id),world),anchors=anchorId?available.filter(anchor=>anchor.id===anchorId):available;
+      const free=asset.metadata?.installFreely===true,world=worldSurface(surface,owner),available=anchorsForSurface(this.getAnchors(asset.id),world),
+        anchors=anchorId?(free?this.getAnchors(asset.id):available).filter(anchor=>anchor.id===anchorId):available;
       if(!anchors.length)return null;
-      const anchor=anchors[0],rotation=alignRotation(anchor,world,currentTransform?.rotation||asset.transform.rotation),scaledAnchor={x:anchor.localPosition.x*finite(asset.transform.scale?.x,1),y:anchor.localPosition.y*finite(asset.transform.scale?.y,1),z:anchor.localPosition.z*finite(asset.transform.scale?.z,1)},
+      if(!['x','y','z'].every(axis=>Number.isFinite(surfacePoint?.[axis])))return null;
+      const anchor=anchors[0],rotation=free?clone(currentTransform?.rotation||asset.transform.rotation):alignRotation(anchor,world,currentTransform?.rotation||asset.transform.rotation),scaledAnchor={x:anchor.localPosition.x*finite(asset.transform.scale?.x,1),y:anchor.localPosition.y*finite(asset.transform.scale?.y,1),z:anchor.localPosition.z*finite(asset.transform.scale?.z,1)},
         rotatedAnchor=rotateVector(scaledAnchor,rotation),keepFloorContact=asset.metadata?.installFreely!==true&&anchor.anchorType==='back'&&Math.abs(world.worldNormal.y)<.7&&(/counter|shelf|furniture|เคาน์เตอร์|ชั้น/.test((asset.assetType+' '+asset.name).toLowerCase())||asset.category==='furniture');
       let point=quantizeSurfacePoint(surfacePoint,world,gridStep);
       if(keepFloorContact)point={...point,y:finite(currentTransform?.position?.y,finite(asset.transform.position?.y))+rotatedAnchor.y};
-      const desiredAnchor=add(point,scale(world.worldNormal,Math.max(.001,finite(world.padding)))),position=subtract(desiredAnchor,rotatedAnchor),valid=fitsSurface(asset,rotation,point,keepFloorContact?{...world,padding:0}:world,owner);
+      const desiredAnchor=add(point,scale(world.worldNormal,Math.max(.001,finite(world.padding)))),position=subtract(desiredAnchor,rotatedAnchor),valid=fitsSurface(asset,rotation,point,keepFloorContact?{...world,padding:0}:world,owner,position,anchor);
       return{valid,reason:valid?'':'out-of-surface-bounds',priority:SNAP_PRIORITIES['anchor-surface'],snapType:'anchor-surface',sourceAssetId:asset.id,anchor:clone(anchor),surface:clone(world),targetAssetId:targetAssetId||world.ownerAssetId,
         transform:{position,rotation,scale:clone(asset.transform.scale)},surfacePoint:point,requiredOffset:Math.max(.001,finite(world.padding))};
     }
@@ -268,5 +290,5 @@
   const createEngine=(registry,options)=>new SmartSnapEngine(registry,options);
   global.YPSmartSnap=Object.freeze({SMART_SNAP_VERSION,GRID_STEP,SURFACE_DETECTION_DISTANCE,SCREEN_THRESHOLD,SNAP_RELEASE_DISTANCE,SNAP_RELEASE_SCREEN_THRESHOLD,
     ANCHOR_TYPES,SURFACE_TYPES,ROTATION_POLICIES,SNAP_PRIORITIES,SmartSnapEngine,createEngine,normalizeSnapAnchor,normalizeSnapSurface,
-    createAnchorsForAsset,createCornerAnchorsForAsset,createSurfacesForAsset,remapAnchorToLocalBounds,worldAnchor,worldSurface,quantizeSurfacePoint,rotateVector,anchorKindsCompatible});
+    createAnchorsForAsset,createCornerAnchorsForAsset,createSurfacesForAsset,remapAnchorToLocalBounds,worldAnchor,worldSurface,quantizeSurfacePoint,rotateVector,anchorKindsCompatible,fitsSurface});
 })(typeof globalThis!=='undefined'?globalThis:window);

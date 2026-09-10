@@ -22,12 +22,12 @@ test('Fine Position ใช้ระยะ 5 ซม. สะสมและ Select
   assert.doesNotMatch(html,/finePositionSelectionState|assetListSelectionState/);
 });
 
-test('Fine Position รองรับ Lock, Bounding Box และ History',()=>{
+test('Fine Position รองรับ Lock, พิกัดอิสระ และ History',()=>{
   assert.match(html,/objects\.some\(objectLocked\)/);
   assert.ok(html.includes('ปลดล็อก Asset ก่อนปรับตำแหน่ง'));
   assert.ok(html.includes('เลือก Asset ที่ต้องการปรับ'));
-  assert.match(html,/selectedAlignmentBounds\(obj\)[\s\S]*finePositionAxisOverflow/);
-  assert.ok(html.includes('Bounding Box ของ Asset จะอยู่นอกพื้นที่บูธ'));
+  assert.ok(html.includes('!Number.isFinite(Number(obj.position?.[axis])+delta)'));
+  assert.ok(!html.includes('if(finePositionAxisOverflow(next,worldAxis)>.0001)'));
   assert.match(html,/const before=objectSnapshot\(\)[\s\S]*recordObjectHistory\(before\);sync\(\)/);
 });
 
@@ -66,7 +66,7 @@ test('Z-up แปลงพิกัดเฉพาะ UI ทั้งปุ่�
   assert.ok(html.includes("function finePositionWorldAxis(axis){return {x:'x',y:'z',z:'y'}[axis];}"));
   assert.ok(html.includes('fineMoveSelectedObjects(finePositionWorldAxis(button.dataset.fineAxis),button.dataset.fineDelta)'));
   assert.ok(html.includes('obj.position[worldAxis]=+numeric.toFixed(3)'));
-  assert.ok(html.includes('finePositionAxisOverflow(next,worldAxis)'));
+  assert.ok(html.includes("Number.isFinite(next['center'+worldAxis.toUpperCase()])"));
   assert.ok(html.includes('title="Z+ ขึ้น 5 ซม."'));
   assert.ok(html.includes('title="Z− ลง 5 ซม."'));
   assert.ok(html.includes('title="Y+ ด้านหน้า 5 ซม."'));

@@ -148,12 +148,15 @@
       const basis=surfaceBasis(surface.worldNormal||surface.localNormal),local=attachment.localSurfacePosition,
         desiredAnchor=add(surface.worldOrigin||surface.localOrigin,add(scale(basis.u,local.u),add(scale(basis.v,local.v),scale(basis.normal,local.normalOffset)))),
         baseRotation=alignedRotation(anchor,surface,child.transform.rotation||{}),rotation={x:wrapAngle(baseRotation.x+attachment.rotationOffset.x),y:wrapAngle(baseRotation.y+attachment.rotationOffset.y),z:wrapAngle(baseRotation.z+attachment.rotationOffset.z)},
+        scaledAnchor={x:anchor.localPosition.x*finite(child.transform.scale?.x,1),y:anchor.localPosition.y*finite(child.transform.scale?.y,1),z:anchor.localPosition.z*finite(child.transform.scale?.z,1)},
+        transform={position:subtract(desiredAnchor,rotateVector(scaledAnchor,rotation)),rotation,scale:clone(child.transform.scale)},
         extents=projectedHalfExtents(child,rotation,basis),padding=finite(surface.padding),freeInstall=child.metadata?.installFreely===true,
         maxU=freeInstall?finite(surface.width)/2-padding:finite(surface.width)/2-extents.u-padding,maxV=freeInstall?finite(surface.height)/2-padding:finite(surface.height)/2-extents.v-padding,
-        bounded=surface.surfaceType==='edge'||surface.surfaceType==='center-line'||(Math.abs(local.u)<=maxU+.0001&&Math.abs(local.v)<=maxV+.0001);
+        structuralSupport=child.category==='structure'&&child.metadata?.system!==true&&['horizontal-top','horizontal-bottom'].includes(surface.surfaceType),
+        // Persisted support uses the same overhang/contact rule as the drag preview.
+        bounded=structuralSupport?global.YPSmartSnap.fitsSurface(child,rotation,desiredAnchor,surface,parent,transform.position,anchor):
+          surface.surfaceType==='edge'||surface.surfaceType==='center-line'||(Math.abs(local.u)<=maxU+.0001&&Math.abs(local.v)<=maxV+.0001);
       if(!bounded)return{valid:false,warnings:[OUT_OF_BOUNDS_WARNING]};
-      const scaledAnchor={x:anchor.localPosition.x*finite(child.transform.scale?.x,1),y:anchor.localPosition.y*finite(child.transform.scale?.y,1),z:anchor.localPosition.z*finite(child.transform.scale?.z,1)},
-        transform={position:subtract(desiredAnchor,rotateVector(scaledAnchor,rotation)),rotation,scale:clone(child.transform.scale)};
       if(options.apply!==false){this.registry.updateAssetTransform(id,transform,{applyToObject3D:true,notifyWorkflow:false,attachmentPropagation:true});if(this.applyTransform)this.applyTransform(id,clone(transform),{attachment:clone(attachment)});}
       return{valid:true,transform,warnings:[]};
     }
