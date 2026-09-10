@@ -38,7 +38,7 @@
   const yellow='#f2c52e',coal='#252628';
   const detail=(design,id,x,z,w,d,h,y=0,extra={})=>part(id,x,z,w,d,h,null,y,{structure:{design},...extra});
   templates.push({id:'island-yellow-frame',name:'03 · Yellow Frame Pavilion',tagline:'ดำ–เหลือง · ระแนงพาดหลังคาและโต๊ะบาร์',
-    description:'ตามภาพอ้างอิง: โครงเหลี่ยมดำขอบเหลือง ระแนงต่อเนื่องขึ้นหลังคา ช่องวงกลมทะลุ 2 จุด รางสปอตไลต์ จอติดแผงระแนง โต๊ะบาร์ผิวหิน 2 ตัว สตูลขาโครเมียมและกระถางดำ · โลโก้ Yuppie · สูงประมาณ 3.5 ม.',
+    description:'ตามภาพอ้างอิง: โครงเหลี่ยมดำขอบเหลือง ระแนงต่อเนื่องขึ้นหลังคา แอ่งวงกลมสีเหลือง 2 จุด รางสปอตไลต์ จอติดแผงระแนง โต๊ะบาร์ผิวหิน 2 ตัว สตูลขาโครเมียมและกระถางดำ · โลโก้ Yuppie · สูงประมาณ 3.5 ม.',
     width:6,depth:6,height:3.5,primary:yellow,secondary:coal,floor:'tile',tile:'woodD',purpose:'meeting',objects:[
       // Left brand pier, open central portal and deep right pier, not perimeter walls.
       panel(.92,4.83,1.42,.20,3.42,coal),panel(1.69,4.83,.16,.24,3.5,yellow),
@@ -46,24 +46,24 @@
       panel(2.8725,4.83,2.495,.25,.18,yellow,3.32),
       panel(.30,.87,.18,.24,3.32,yellow),panel(3.8825,.87,4.125,.24,.18,yellow,3.32),
       panel(5.77,1.5,.16,1.48,3.32,coal),
-      // Real circular openings at diagonally opposite corners.
+      // Recessed yellow circles in the stone-faced roof caps, as visible in the reference.
       detail('yellow-oculus-roof','panel-standard',.99,.92,1.66,1.44,.18,3.32),
       detail('yellow-oculus-roof','panel-standard',4.95,4.235,1.66,1.44,.18,3.32),
       ...Array.from({length:10},(_,i)=>{
         const x=.27+i*.14;return [panel(x,4.968,.065,.085,3.5,'#161719'),panel(x,3.335,.065,3.35,.075,'#242527',3.425)];
       }).flat(),
       // Screen wall is a freestanding narrow pier, with open routes either side.
-      panel(3.92,1.23,1.60,.20,1.12,yellow),
-      ...Array.from({length:8},(_,i)=>panel(3.17+i*.213,1.23,.105,.20,2.20,yellow,1.12)),
-      panel(3.92,1.23,1.60,.20,.10,yellow,3.22),
-      ...tv(3.92,1.39,1.42,1.32,'main'),
-      part('brand-artwork-copy',3.92,1.454,1.29,.014,.70,null,1.37,{graphic:'six-technology',tv:'main'}),
-      panel(3.92,1.46,1.86,.43,.055,coal,1.11),
-      detail('yellow-track','panel-standard',3.28,2.94,3.06,2.45,.33,2.90),
+      panel(3.92,2.30,1.60,.20,1.12,yellow),
+      ...Array.from({length:8},(_,i)=>panel(3.17+i*.213,2.30,.105,.20,2.20,yellow,1.12)),
+      panel(3.92,2.30,1.60,.20,.10,yellow,3.22),
+      ...tv(3.92,2.46,1.42,1.32,'main'),
+      part('brand-artwork-copy',3.92,2.524,1.29,.014,.70,null,1.37,{graphic:'six-technology',tv:'main'}),
+      panel(3.92,2.53,1.86,.43,.055,coal,1.11),
+      detail('yellow-track','panel-standard',3.28,3.525,3.06,2.53,.42,2.90),
       detail('yellow-bar','table-standard',3.89,4.54,2.64,.59,1.08),
       detail('yellow-bar','table-standard',1.71,1.77,2.26,.57,1.08),
       ...[[3.14,5.28],[4.64,5.28],[3.95,3.78],[1.17,2.5],[2.12,2.5],[1.73,1.06]].map(([x,z])=>detail('yellow-stool','bar-stool',x,z,.40,.45,.72)),
-      ...[[2.58,5.43,.32,.37,.73],[3.18,1.94,.42,.4,.74],[4.47,1.93,.42,.4,.66]].map(([x,z,w,d,h])=>detail('yellow-planter','plant-medium',x,z,w,d,h)),
+      ...[[2.58,5.43,.32,.37,.73],[3.18,3.01,.42,.4,.74],[4.47,3.00,.42,.4,.66]].map(([x,z,w,d,h])=>detail('yellow-planter','plant-medium',x,z,w,d,h)),
       detail('yellow-planter','plant-medium',2.38,1.77,.24,.24,.32,1.08),
       ...[[3.13,4.53],[3.78,4.54],[4.47,4.50],[1.10,1.77],[1.67,1.78]].map(([x,z],i)=>part('panel-standard',x,z,.30,.21,.003,'#f7f6ef',1.083,{rotationY:i%2?13:-11})),
       logo(.92,5.019,1.34,1.80),logo(.92,4.722,1.13,1.87,180),

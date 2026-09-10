@@ -19,6 +19,7 @@
    const g=new T.ExtrudeGeometry(shape,{depth:s.h,bevelEnabled:false,curveSegments:64});g.rotateX(Math.PI/2);const m=mesh(g,gold,[0,s.h,0]);
    // Stone horizontal faces; yellow inner bore and edge reveal.
    m.material=[stone(),new T.MeshStandardMaterial({color:gold,roughness:.48})];
+   const inset=mesh(new T.CircleGeometry(Math.min(s.w,s.d)*.255,64),gold,[0,s.h-.045,0],{roughness:.48});inset.rotation.x=-Math.PI/2;
   }else if(design==='yellow-bar'){
    const leg=.15,top=.075;
    bx([s.w,top,s.d],[0,s.h-top/2,0],black,{material:stone(),edges:false});
@@ -39,11 +40,14 @@
     const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();mesh(g,black,[0,0,0],{material:new T.MeshStandardMaterial({color:['#538f36','#7cb94a','#3e792a'][i%3],side:T.DoubleSide,roughness:.6})});
    }
   }else if(design==='yellow-track'){
-   for(const z of [-s.d/2+.025,s.d/2-.025])bx([s.w,.05,.05],[0,s.h-.025,z],black,{edges:false});
-   for(const x of [-s.w/2+.025,s.w/2-.025])bx([.05,.05,s.d],[x,s.h-.025,0],black,{edges:false});
+   const trackY=s.h-.13;
+   for(const z of [-s.d/2+.025,s.d/2-.025])bx([s.w,.05,.05],[0,trackY,z],black,{edges:false});
+   for(const x of [-s.w/2+.025,s.w/2-.025])bx([.05,.05,s.d],[x,trackY,0],black,{edges:false});
+   // Two hangers meet the front header; the third meets the freestanding TV pier.
+   for(const [x,z] of [[-s.w*.35,s.d/2-.025],[s.w*.35,s.d/2-.025],[s.w*.21,-s.d/2+.025]])rod([x,trackY+.025,z],[x,s.h,z],.012,black);
    for(const [x,z,angle] of [[-s.w*.28,-s.d/2+.04,.6],[s.w*.28,-s.d/2+.04,-.6],[-s.w*.28,s.d/2-.04,-.6],[s.w*.28,s.d/2-.04,.6]]){
-    rod([x,s.h-.035,z],[x,s.h-.13,z],.012,black);const cylinder=mesh(new T.CylinderGeometry(.045,.045,.19,20),black,[x,s.h-.20,z],{roughness:.48});cylinder.rotation.z=angle;
-    const lens=mesh(new T.CircleGeometry(.039,20),'#fff1d2',[x+Math.sin(angle)*.096,s.h-.20-Math.cos(angle)*.096,z],{material:new T.MeshStandardMaterial({color:'#fff2dd',emissive:'#fff2dd',emissiveIntensity:.8,side:T.DoubleSide})});lens.rotation.x=Math.PI/2;lens.rotation.y=angle;
+    rod([x,trackY-.01,z],[x,trackY-.09,z],.012,black);const cylinder=mesh(new T.CylinderGeometry(.045,.045,.19,20),black,[x,trackY-.17,z],{roughness:.48});cylinder.rotation.z=angle;
+    const lens=mesh(new T.CircleGeometry(.039,20),'#fff1d2',[x+Math.sin(angle)*.096,trackY-.17-Math.cos(angle)*.096,z],{material:new T.MeshStandardMaterial({color:'#fff2dd',emissive:'#fff2dd',emissiveIntensity:.8,side:T.DoubleSide})});lens.rotation.x=Math.PI/2;lens.rotation.y=angle;
    }
   }else return false;
   return true;

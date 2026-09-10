@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
   YPQuickSetupBridge.close();const s=YPIslandTemplateBridge.snapshot('island-yellow-frame'),renderer=await loadThreeRenderer(),T=renderer.THREE;
   if(s.spec.H!==3.5||s.spec.type!=='island'||s.spec.logo!==YPDefaultLogo.data)throw Error('Wrong template state');
   const roofs=s.spec.objects.filter(o=>o.structure?.design==='yellow-oculus-roof');
-  for(const roof of roofs){const o={...roof,position:{x:0,y:0,z:0}},mesh=renderer.buildCatalogObject(o);mesh.updateMatrixWorld(true);const ray=new T.Raycaster(new T.Vector3(0,1,0),new T.Vector3(0,-1,0));if(ray.intersectObject(mesh,true).length)throw Error('Roof opening is filled');ray.set(new T.Vector3(.6,1,0),new T.Vector3(0,-1,0));if(!ray.intersectObject(mesh,true).length)throw Error('Roof surface missing');}
+  for(const roof of roofs){const o={...roof,position:{x:0,y:0,z:0}},mesh=renderer.buildCatalogObject(o);mesh.updateMatrixWorld(true);const ray=new T.Raycaster(new T.Vector3(0,1,0),new T.Vector3(0,-1,0));const center=ray.intersectObject(mesh,true)[0];if(!center||Math.abs(center.point.y-(roof.size.h-.045))>.001)throw Error('Yellow circle is not recessed');ray.set(new T.Vector3(.6,1,0),new T.Vector3(0,-1,0));const edge=ray.intersectObject(mesh,true)[0];if(!edge||Math.abs(edge.point.y-roof.size.h)>.001)throw Error('Roof surface missing');}
   const original=s.spec.objects.find(o=>o.structure?.design==='yellow-stool'),roundTrip=YPProjectStore.fromText(await YPProjectStore.toText(YPProjectStore.create(s,'test')));
   if(!JSON.stringify(roundTrip).includes('yellow-stool'))throw Error('Custom stool lost after serialization');
   return {roofs:roofs.length,stools:s.spec.objects.filter(o=>o.structure?.design==='yellow-stool').length,bars:s.spec.objects.filter(o=>o.structure?.design==='yellow-bar').length};
@@ -21,5 +21,5 @@ const assert=require('node:assert/strict');
  assert.deepEqual(await page.evaluate(()=>YPProjectWorkspace.capture().variants.A),a);
  await page.evaluate(()=>YPIslandTemplateUI.open());await page.setViewportSize({width:390,height:844});assert.ok(await page.locator('#islandTemplatesDialog').evaluate(d=>d.scrollWidth<=d.clientWidth+1));
  await page.goto('http://127.0.0.1:4173/yp-web-ai/assets/island-templates/overview.html');assert.equal(await page.locator('.card').count(),3);
- assert.deepEqual(errors,[]);console.log('PASS: true roof holes, 6 stools, 2 bars, portable geometry, 3 Island cards, A/B preservation, cancel and mobile');
+ assert.deepEqual(errors,[]);console.log('PASS: recessed roof circles, 6 stools, 2 bars, portable geometry, 3 Island cards, A/B preservation, cancel and mobile');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
