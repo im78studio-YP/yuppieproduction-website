@@ -1735,7 +1735,7 @@ select:focus{border-color:var(--acc)}
 <script src="js/asset-attachment-graph.js?v=20260910-structure-support"></script>
 <script src="js/brand-visible-bounds.js?v=20260902-1"></script>
 <script src="assets/branding/default-logo.js?v=20260908-1"></script>
-<script src="js/template-branding.js?v=20260911-brand-audit"></script>
+<script src="js/template-branding.js?v=20260911-beauty"></script>
 <script>
 /* ================= ข้อมูล ================= */
 const CATGROUPS=[
@@ -7712,7 +7712,7 @@ class ThreeBoothRenderer{
         metalness:options.metalness??.02,emissive:options.emissive||0x000000,emissiveIntensity:options.emissiveIntensity||0});
       const part=new T.Mesh(geometry,material);part.position.set(...position);part.castShadow=true;part.receiveShadow=true;root.add(part);return part;
     };
-    if(globalThis.YPTimberRibbonGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularSixGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPIslandYellowGeometry?.build({T,obj,mesh,bx,root})){
+    if(globalThis.YPTimberRibbonGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularSixGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPIslandYellowGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPCornerBeauty?.build({T,obj,mesh,bx,root})){
       // Reference-specific compound geometry; generic assets retain their original shapes.
     }else if(isEntranceFrameObject(obj)){
       const cfg=normalizeEntranceFrameObject(obj).structure,finish=new T.MeshStandardMaterial({color:cfg.color,roughness:.72,metalness:.01});
@@ -10014,8 +10014,9 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/peninsular-templates.js?v=20260911-six"></script>
 <script src="js/peninsular-six-artwork.js?v=20260911-brand-audit"></script>
 <script src="js/peninsular-template-ui.js?v=20260911-brand-audit"></script>
-<script src="js/corner-templates.js?v=20260909-13"></script>
-<script src="js/corner-template-ui.js?v=20260911-brand-audit"></script>
+<script src="js/corner-beauty.js?v=20260911-beauty"></script>
+<script src="js/corner-templates.js?v=20260911-beauty"></script>
+<script src="js/corner-template-ui.js?v=20260911-beauty"></script>
 <script src="js/island-yellow-geometry.js?v=20260911-yellow"></script>
 <script src="js/island-templates.js?v=20260911-yellow"></script>
 <script src="js/island-template-ui.js?v=20260911-yellow"></script>

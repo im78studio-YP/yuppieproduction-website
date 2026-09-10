@@ -84,6 +84,29 @@
         logo(4.61,2.877,1.23,.44),logo(5.627,2.2,.49,.46,90)
       ])
   );
+  const beautyPart=(design,catalogId,x,z,w,d,h,y=0,rotationY=0,extra={})=>({...part(catalogId,x,z,w,d,h,null,y,rotationY),structure:{design,...extra}});
+  const beautyArt=(kind,x,z,w,h,y,rotationY=0)=>({...graphic(kind,x,z,w,h,y,rotationY),structure:{design:'beauty-lit-artwork'}});
+  templates.push({...collection('corner-luminous-beauty','07 · Luminous Beauty','ผนังขาว + กราฟิกพาสเทล + ตู้โชว์กระจก',
+    'อ้างอิงภาพ: ผนังหัวมุมสีขาว คิ้วบนพร้อมดาวน์ไลต์ กราฟิกสินค้า 4 สี ตู้โชว์กระจกยาวหน้าบูธพร้อมขวดจำลอง จอด้านข้าง และที่นั่งด้านใน · เปลี่ยนทุกแบรนด์เป็น Yuppie · ผนังสูงประมาณ 2.9 ม. รวมป้าย 3.5 ม.',
+    '#ee3c96','#ffffff','#ffffff',[
+      panel(3,.20,6,.36,.14,'#ffffff',2.76),panel(.20,1.64,.36,2.72,.14,'#ffffff',2.76),
+      ...[.65,1.8,3,4.2,5.4].map(x=>beautyPart('beauty-downlight','panel-standard',x,.31,.09,.09,.025,2.735)),
+      ...[.85,1.8,2.6].map(z=>beautyPart('beauty-downlight','panel-standard',.31,z,.09,.09,.025,2.735)),
+      {...logo(3.25,.20,2.25,2.96),size:{w:2.25,d:.01,h:.56},structure:{design:'beauty-lit-artwork'}},
+      ...['yellow','pink','white','blue'].flatMap((tone,i)=>{
+        const x=.90+i*1.40;return [beautyArt('beauty-'+tone,x,.112,1.25,1.55,.85),{...logo(x,.117,.88,2.46),size:{w:.88,d:.01,h:.20},structure:{design:'beauty-lit-artwork'}}];
+      }),
+      {...logo(.112,1.64,1.95,2.17,90),size:{w:1.95,d:.01,h:.49},structure:{design:'beauty-lit-artwork'}},
+      {...part('panel-standard',.15,1.64,1.22,.08,.70,'#282a2d',1.36,90),tv:'side'},
+      {...graphic('beauty-pink',.199,1.64,1.12,.60,1.41,90),tv:'side',structure:{design:'beauty-lit-artwork'}},
+      beautyPart('beauty-vitrine','counter-standard',2.63,2.56,4.70,.64,1.34),
+      beautyArt('beauty-wide',1.205,2.89,1.77,.77,.095),
+      ...['magenta','coral','pink','cyan'].map((tone,i)=>beautyArt('beauty-'+tone,2.455+i*.685,2.89,.66,.77,.095)),
+      ...Array.from({length:18},(_,i)=>beautyPart('beauty-bottle','panel-standard',.50+i*.249,2.54,.043,.043,.15+(i%3)*.025,.952,0,{color:i%5===0?'#526368':'#242a2b'})),
+      beautyPart('beauty-chair','chair-standard',4.9,.82,.44,.47,.85,0,20),
+      beautyPart('beauty-chair','chair-standard',4.15,1.32,.44,.47,.85,0,160),
+      part('table-standard',4.75,1.55,.60,.60,.73,'#ffffff')
+    ]),height:2.9,overallHeight:3.52,tile:'conc'});
   function mirror(spec,side){
     if(!['left','right'].includes(side))throw new Error('กรุณาเลือกหัวมุมซ้ายหรือขวา');
     const out=structuredClone(spec);if(out.cornerSide===side)return out;
@@ -104,8 +127,10 @@
   function build(id,initial,catalog,side='right'){
     const t=templates.find(t=>t.id===id);if(!t)throw new Error('ไม่พบเทมเพลตบูธหัวมุม');
     let spec=structuredClone(initial);Object.assign(spec,{W:6,D:3,H:2.4,type:'corner',cornerSide:'right',primary:t.primary,secondary:t.secondary,colTouched:true,secTouched:true,wallCol:'white',wallMat:'paint',floor:t.floor,tile:t.tile,raise:0,stSize:'none',logoWall:'back',logoMount:'wall',sideLogo:false,logoWallU:4.2,logoWallY:1.98,logoScale:22,nameScale:0,designPurpose:t.purpose,boothTemplate:{id:t.id,type:'corner',name:t.name,version:1},objects:[],view:'three'});
+    if(t.height)spec.H=t.height;
     if(t.logoScale!==undefined)spec.logoScale=t.logoScale;
     spec.objects=t.objects.map((o,i)=>{const item=catalog.find(c=>c.catalogId===o.catalogId);if(!item)throw new Error('ไม่พบอุปกรณ์ '+o.catalogId);return {id:t.id+'-'+i,catalogId:item.catalogId,type:item.type,...(o.tv?{groupId:t.id+'-tv-'+o.tv}:{}),position:{...o.position},size:{...o.size},rotationX:0,rotationY:o.rotationY||0,rotationZ:0,locked:false,orientation:'horizontal',geometryMode:'parametric',unitPrice:item.unitPrice,appearance:o.brandLogo&&spec.logo?{mode:'original',textureData:spec.logo,textureName:'YP logo',textureId:t.id+'-logo'}:o.color?{mode:'solid',color:o.color}:{mode:'original'}};});
+    t.objects.forEach((o,i)=>{if(o.structure)spec.objects[i].structure={...o.structure};});
     if(side!=='right')spec=mirror(spec,side);return {spec,assets:[]};
   }
   root.YPCornerTemplates={templates,build:(...args)=>{const result=build(...args);root.YPTemplateTVGroups?.apply(result.spec);return result;},mirror};

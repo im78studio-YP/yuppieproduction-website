@@ -302,5 +302,21 @@
     "logos": 3,
     "details": 15,
     "objects": 64
+  },
+  {
+    "group": "corner",
+    "id": "corner-luminous-beauty",
+    "side": "right",
+    "logos": 16,
+    "details": 46,
+    "objects": 49
+  },
+  {
+    "group": "corner",
+    "id": "corner-luminous-beauty",
+    "side": "left",
+    "logos": 16,
+    "details": 46,
+    "objects": 49
   }
 ]

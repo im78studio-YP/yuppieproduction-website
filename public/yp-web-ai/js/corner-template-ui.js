@@ -9,6 +9,7 @@
     return c.toDataURL('image/png');
   }
   function panelArtwork(kind){
+    if(kind.startsWith('beauty-'))return YPCornerBeauty.artwork(kind);
     const c=document.createElement('canvas');c.width=900;c.height=900;const g=c.getContext('2d');
     if(kind==='diagonal-white'){g.fillStyle='#f3f4ee';g.beginPath();g.moveTo(0,0);g.lineTo(900,0);g.lineTo(0,870);g.closePath();g.fill();}
     else if(kind==='slanted'){g.fillStyle='#e6e5de';g.fillRect(0,0,900,900);g.fillStyle='#999f9e';g.beginPath();g.moveTo(50,30);g.lineTo(850,30);g.lineTo(850,870);g.lineTo(720,870);g.closePath();g.fill();g.strokeStyle='#ffffff';g.lineWidth=18;g.stroke();}
@@ -21,10 +22,11 @@
   }
   function snapshot(id,options={}){
     const t={...library.templates.find(t=>t.id===id)},out=library.build(id,JSON.parse(INITIAL_BOOTH_SPEC_JSON),OBJECT_CATALOG);
+    if(id==='corner-luminous-beauty')Object.assign(out.spec,{tileTextureMode:'custom',tileTextureActiveId:'beauty-charcoal-floor',tileTextureId:1,tileTextureUploads:[{id:'beauty-charcoal-floor',name:'Luminous Beauty · พื้นเทาเข้ม',data:YPCornerBeauty.floor}]});
     t.objects.forEach((o,i)=>{if(o.graphic)Object.assign(out.spec.objects[i].appearance,{mode:'original',textureData:panelArtwork(o.graphic),textureName:o.graphic,textureId:id+'-'+o.graphic});});
     if(/^#[\da-f]{6}$/i.test(options.primary||'')){const original=t.primary;t.primary=options.primary;out.spec.primary=t.primary;for(const o of out.spec.objects)if(o.appearance?.color===original)o.appearance.color=t.primary;}
     out.spec.wallStickerFaces=['back','left'];
-    for(const face of ['back','left'])Object.assign(out.spec.wallStickers[face],{data:artwork(t,face==='left'),name:t.name+' · '+face,id:1,ar:face==='back'?2.5:1.25,w:face==='back'?6:3,h:2.4,mode:'cover'});
+    for(const face of ['back','left'])Object.assign(out.spec.wallStickers[face],{data:artwork(t,face==='left'),name:t.name+' · '+face,id:1,ar:(face==='back'?6:3)/out.spec.H,w:face==='back'?6:3,h:out.spec.H,mode:'cover'});
     YPTemplateBranding.apply(out.spec,t);out.spec=library.mirror(out.spec,options.cornerSide||'right');YPProjectStore.validateSpec(out.spec);return out;
   }
   function switchSide(side){
@@ -43,7 +45,7 @@
   function feedbackResult(result){feedback.hidden=false;status.textContent=result.message;actions.replaceChildren();dialog.scrollTo({top:0,behavior:'instant'});}
   async function apply(t){if(busy)return;setBusy(true);feedbackResult({message:'กำลังเตรียมแบบ… หากมีหน้าต่างยืนยัน กรุณายืนยันหรือยกเลิก'});try{const r=await YPProjectWorkspace.useTemplate({makeSnapshot:()=>snapshot(t.id,{cornerSide:side.value}),name:t.name,detailed:true});if(r.ok){setBusy(false);close();}else feedbackResult(r);}catch(e){feedbackResult({message:'ใช้เทมเพลตไม่สำเร็จ: '+e.message});}finally{setBusy(false);}}
   for(const t of library.templates){const card=document.createElement('article');card.className='inline-template-card';const img=document.createElement('img');img.dataset.template=t.id;img.alt=t.name;img.width=960;img.height=720;const h=document.createElement('h3');h.textContent=t.name;const p=document.createElement('p');p.textContent=t.description;const wrap=document.createElement('div');wrap.className='inline-template-actions';const b=document.createElement('button');b.className='btn pri';b.type='button';b.dataset.cornerTemplate=t.id;b.textContent='ใช้แบบนี้';b.onclick=()=>apply(t);wrap.append(b);card.append(img,h,p,wrap);document.getElementById('cornerCards').append(card);}
-  const updateImages=()=>{for(const img of dialog.querySelectorAll('img[data-template]'))img.src='assets/corner-templates/'+img.dataset.template+'-'+side.value+'.png?v=20260911-brand-audit';};side.onchange=updateImages;
+  const updateImages=()=>{for(const img of dialog.querySelectorAll('img[data-template]'))img.src='assets/corner-templates/'+img.dataset.template+'-'+side.value+'.png?v=20260911-beauty';};side.onchange=updateImages;
   const open=async()=>{opener=document.activeElement;await YPProjectWorkspace.enter();side.value=getBoothSpec().cornerSide||'right';updateImages();feedback.hidden=true;actions.replaceChildren();for(const b of dialog.querySelectorAll('[data-corner-template]'))b.textContent=YPProjectWorkspace.templateLabel();dialog.showModal();};
   document.getElementById('cornerTemplatesOpen').onclick=open;document.getElementById('cornerTemplatesClose').onclick=close;dialog.oncancel=e=>{e.preventDefault();close();};document.addEventListener('keydown',e=>{if(dialog.open)e.stopPropagation();},true);
   const syncType=type=>{entry.hidden=type!=='corner';};syncType(getBoothSpec().type);window.YPCornerTemplateUI={open,syncType};

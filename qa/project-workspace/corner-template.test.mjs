@@ -4,15 +4,15 @@ import '../../public/yp-web-ai/js/corner-templates.js';
 const lib=globalThis.YPCornerTemplates,t=lib.templates[0];
 const initial={wallStickerFaces:['back','left'],wallStickers:{left:{data:'readable left'},right:{data:'right'},back:{data:'back'}},assetAttachmentGraph:{attachments:[]}};
 const catalog=[...new Set(lib.templates.flatMap(t=>t.objects.map(o=>o.catalogId)))].map(catalogId=>({catalogId,type:catalogId==='brand-artwork-copy'?'brandCopy':'panel',unitPrice:0}));
-test('five distinct reference layouts added, all fit the 6x3 footprint in both orientations',()=>{
-  assert.equal(lib.templates.length,6);assert.equal(new Set(lib.templates.map(t=>t.id)).size,6);
+test('seven distinct layouts fit the 6x3 footprint in both orientations',()=>{
+  assert.equal(lib.templates.length,7);assert.equal(new Set(lib.templates.map(t=>t.id)).size,7);
   for(const t of lib.templates)for(const side of ['left','right']){
     const s=lib.build(t.id,initial,catalog,side).spec;
     for(const o of s.objects){const a=o.rotationY*Math.PI/180,w=Math.abs(Math.cos(a))*o.size.w+Math.abs(Math.sin(a))*o.size.d,d=Math.abs(Math.sin(a))*o.size.w+Math.abs(Math.cos(a))*o.size.d;
       const message=t.id+' '+side+' '+o.id;
       assert.ok(o.position.x-w/2>=-1e-8&&o.position.x+w/2<=6+1e-8,message+' X');
       assert.ok(o.position.z-d/2>=-1e-8&&o.position.z+d/2<=3+1e-8,message+' depth');
-      assert.ok(o.position.y>=0&&o.position.y+o.size.h<=2.4+1e-8,message+' height');
+      assert.ok(o.position.y>=0&&o.position.y+o.size.h<=(t.overallHeight||t.height||2.4)+1e-8,message+' height');
     }
   }
 });
