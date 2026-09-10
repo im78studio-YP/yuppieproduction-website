@@ -5911,7 +5911,8 @@ class ThreeBoothRenderer{
     if(!probe.getContext('webgl2')&&!probe.getContext('webgl'))throw new Error('WebGL unavailable');
 
     this.scene=new THREE.Scene();
-    this.scene.background=new THREE.Color('#101217');
+    // Neutral, bright studio surrounds the booth; the editing UI keeps its dark theme.
+    this.scene.background=new THREE.Color('#d5d5d3');
     this.perspectiveCamera=new THREE.PerspectiveCamera(42,1,.05,250);
     this.orthographicCamera=new THREE.OrthographicCamera(-1,1,1,-1,.05,250);
     this.orthographicFrameHeight=6;this.camera=this.perspectiveCamera;
@@ -5966,12 +5967,17 @@ class ThreeBoothRenderer{
     this.renderer.domElement.addEventListener('lostpointercapture',this.onObjectLostPointerCapture);
     this.renderer.domElement.addEventListener('pointerleave',this.onObjectPointerLeave);
 
-    this.scene.add(new THREE.HemisphereLight(0xe9f0ff,0x242017,1.15));
-    const key=new THREE.DirectionalLight(0xffffff,1.8);
-    key.position.set(8,12,10);key.castShadow=true;
-    key.shadow.mapSize.set(1024,1024);key.shadow.bias=-.0003;
-    this.scene.add(key);
-    const fill=new THREE.DirectionalLight(0xffd9a0,.45);fill.position.set(-7,6,5);this.scene.add(fill);
+    // A directional studio key models the surfaces; restrained bounce keeps cavities readable.
+    this.scene.add(new THREE.HemisphereLight(0xf4f5f6,0x858078,.80));
+    this.studioKey=new THREE.DirectionalLight(0xfff7eb,2.7);
+    this.studioKey.name='studio-key';this.studioKey.castShadow=true;
+    this.studioKey.shadow.mapSize.set(2048,2048);
+    this.studioKey.shadow.bias=-.00015;this.studioKey.shadow.normalBias=.012;
+    this.studioKey.shadow.radius=3;
+    this.scene.add(this.studioKey,this.studioKey.target);
+    this.studioFill=new THREE.DirectionalLight(0xf2f5ff,.65);this.studioFill.name='studio-fill';
+    this.studioRim=new THREE.DirectionalLight(0xffffff,.40);this.studioRim.name='studio-rim';
+    this.scene.add(this.studioFill,this.studioFill.target,this.studioRim,this.studioRim.target);
 
     this.boothGroup=new THREE.Group();this.scene.add(this.boothGroup);
     this.currentKey='';this.currentView='perspective';this.renderCameraProfile=null;this.topViewHidden=[];this.cameraTransitionRaf=0;this.lastSize=[0,0];this.active=false;this.raf=0;
@@ -6937,6 +6943,7 @@ class ThreeBoothRenderer{
     this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.selectionHelpers=[];this.anchorGuideGroup=null;this.snapPreviewGroup=null;this.resizeHandleGroup=null;
     this.hoveredAnchorMarker=null;this.activeAnchorMarker=null;this.hoveredResizeHandle=null;this.activeResizeHandle=null;
     this.boothGroup=new this.THREE.Group();this.scene.add(this.boothGroup);this.buildBooth(spec);this.applySceneVisibility();bindSceneAssetRegistryObjects(this,spec);
+    this.fitStudioLighting(spec);
     if(this.currentView==='orthographic_top')this.hideTopViewOverheadAssets(spec);
     this.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
     const span=Math.max(spec.W,spec.D,spec.H);
@@ -8077,7 +8084,7 @@ class ThreeBoothRenderer{
   buildBooth(spec){
     const T=this.THREE,g=this.boothGroup,t=boothWallThickness(spec),floorY=spec.raise/100,a=palette();
     const span=Math.max(spec.W,spec.D,spec.H),groundGeo=new T.PlaneGeometry(span*5,span*5);
-    const groundMat=new T.MeshStandardMaterial({color:0x15181d,roughness:1});
+    const groundMat=new T.MeshStandardMaterial({color:0xbab9b4,roughness:1});
     const ground=new T.Mesh(groundGeo,groundMat);ground.name='scene-ground';ground.rotation.x=-Math.PI/2;
     ground.position.set(spec.W/2,-.045,spec.D/2);ground.receiveShadow=true;ground.userData.systemHelper=true;g.add(ground);
 
@@ -8115,6 +8122,19 @@ class ThreeBoothRenderer{
     if(spec.type!=='island')this.addBranding(g,spec,t,floorY);
     this.addSpotlights(g,spec,t,floorY);
     this.addBoothDimensions(g,spec,floorY);
+  }
+  fitStudioLighting(spec){
+    const T=this.THREE,bounds=this.presentationBounds(spec),center=bounds.getCenter(new T.Vector3()),size=bounds.getSize(new T.Vector3());
+    const span=Math.max(size.x,size.y,size.z,1),distance=span*2.4;
+    for(const [light,direction] of [[this.studioKey,[-.85,1.35,.8]],[this.studioFill,[1,.6,.4]],[this.studioRim,[.4,1,-1]]]){
+      light.target.position.copy(center);light.position.copy(center).addScaledVector(new T.Vector3(...direction).normalize(),distance);
+      light.target.updateMatrixWorld(true);light.updateMatrixWorld(true);
+    }
+    // Default Three.js shadow bounds are centred on the world origin and clipped larger booths.
+    // Fit the booth AND free-positioned assets, with room for their cast shadows on the floor.
+    const radius=size.length()*.65+1.5,shadow=this.studioKey.shadow,camera=shadow.camera;
+    Object.assign(camera,{left:-radius,right:radius,top:radius,bottom:-radius,near:.1,far:distance+radius*3});
+    camera.updateProjectionMatrix();shadow.needsUpdate=true;
   }
   presentationBounds(spec=BoothSpec){
     const T=this.THREE,floorY=(Number(spec.raise)||0)/100,box=new T.Box3(new T.Vector3(0,floorY,0),new T.Vector3(Number(spec.W),floorY+Number(spec.H),Number(spec.D)));
