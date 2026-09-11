@@ -2172,7 +2172,7 @@ const assetAttachmentGraph=globalThis.YPAssetAttachmentGraph.createGraph(sceneAs
   onWarning:(message,assetId)=>announceCatalog((selectedAssetName(objectById(assetId))||'Asset')+' · '+message,'error')
 });
 const persistentAttachmentWarningKeys=new Set();
-const objectSnapshot=()=>JSON.stringify({objects:S.objects,sceneItemState:S.sceneItemState||{},sceneAssetRegistry:S.sceneAssetRegistry||null,sceneSnapData:S.sceneSnapData||null,assetAttachmentGraph:S.assetAttachmentGraph||null,
+const objectSnapshot=()=>JSON.stringify({objects:S.objects,sceneItemState:S.sceneItemState||{},sceneAssetRegistry:S.sceneAssetRegistry||null,sceneSnapData:S.sceneSnapData||null,assetAttachmentGraph:S.assetAttachmentGraph||null,boothColorTheme:S.boothColorTheme||null,
   brandState:{brand:S.brand,logoScale:S.logoScale,nameScale:S.nameScale,logoAR:S.logoAR,logoVisibleBounds:S.logoVisibleBounds||null,logoMount:S.logoMount,logoWall:S.logoWall,
     logoWallU:S.logoWallU,logoWallY:S.logoWallY,logoFloorX:S.logoFloorX,logoFloorZ:S.logoFloorZ,logoFloorRotation:S.logoFloorRotation,logoDepth:S.logoDepth,logoShape:S.logoShape,lockup:S.lockup},
   lighting:S.lighting||null,lights:S.lights,lightFixture:S.lightFixture,lightCol:S.lightCol,lightWall:S.lightWall,lightWatts:S.lightWatts,lightAdj:S.lightAdj});
@@ -2395,6 +2395,7 @@ function setObjectSelection(ids=[],primaryId=null){
 }
 function restoreObjectSnapshot(snapshot){
   const parsed=JSON.parse(snapshot);if(Array.isArray(parsed)){S.objects=parsed;return;}
+  S.boothColorTheme=parsed.boothColorTheme||null;
   S.objects=Array.isArray(parsed?.objects)?parsed.objects:[];S.sceneItemState=parsed?.sceneItemState&&typeof parsed.sceneItemState==='object'?parsed.sceneItemState:{};
   S.sceneAssetRegistry=parsed?.sceneAssetRegistry&&Array.isArray(parsed.sceneAssetRegistry.assets)?parsed.sceneAssetRegistry:{version:2,assets:[]};
   S.sceneSnapData=parsed?.sceneSnapData&&Array.isArray(parsed.sceneSnapData.anchors)&&Array.isArray(parsed.sceneSnapData.surfaces)?parsed.sceneSnapData:{version:1,anchors:[],surfaces:[]};
@@ -5336,7 +5337,7 @@ function autoDoorFor(){
 const suggestedSec=()=>pair().sec(S.primary);
 function palette(){const t=pair(),p=S.primary;
   const sec=S.secTouched?S.secondary:suggestedSec();
-  const wall=S.wallCol==='white'?WHITE:p;
+  const wall=window.YPBoothTheme?.valid(S.boothColorTheme)?S.boothColorTheme.secondary:(S.wallCol==='white'?WHITE:p);
   return{acc:p,sec:sec,wall:wall,base:t.base(p),floor:t.floor(p),warm:t.warm};}
 function wallFinishKind(spec,face){
   if(spec.wallMat==='sticker')return'sticker';
@@ -6956,7 +6957,7 @@ class ThreeBoothRenderer{
       o.size.w,o.size.d,o.size.h,o.unitPrice,o.structure?.projection,o.structure?.height,o.structure?.pierWidth,o.structure?.thickness,o.structure?.color,
       o.attachment?.targetId,o.attachment?.sourcePort,o.attachment?.targetPort,o.attachment?.status,o.transform?.flipX===true,o.transform?.flipY===true,sceneObjectScaleValue(o),o.production?.reviewRequired===true,
       o.label||'',o.groupId||'',o.appearance?.color||'',o.appearance?.textureId||'']);
-    return JSON.stringify([spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
+    return JSON.stringify([spec.boothColorTheme||null,spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),wallStickers,spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
       spec.lightWall,spec.lightWatts,spec.lightAdj,spec.brand,logoKey,spec.logoType,spec.logoShape,spec.lockup,spec.logoPos,
@@ -8150,6 +8151,7 @@ class ThreeBoothRenderer{
     this.addCatalogObjects(g,spec,floorY);
     if(spec.type!=='island')this.addBranding(g,spec,t,floorY);
     this.addSpotlights(g,spec,t,floorY);
+    window.YPBoothTheme?.apply(this,spec);
     this.addBoothDimensions(g,spec,floorY);
   }
   fitStudioLighting(spec){
@@ -10084,5 +10086,8 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/asset-replace.css?v=20260911-1">
 <script src="js/asset-replace-ui.js?v=20260911-1"></script>
 <script src="js/asset-settings-enter.js?v=20260911-1"></script>
+<script src="js/booth-theme.js?v=20260911-1"></script>
+<link rel="stylesheet" href="css/booth-theme.css?v=20260911-1">
+<script src="js/booth-theme-ui.js?v=20260911-1"></script>
 </body>
 </html>
