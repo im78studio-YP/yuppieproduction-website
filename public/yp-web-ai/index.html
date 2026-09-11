@@ -7937,6 +7937,42 @@ class ThreeBoothRenderer{
       normalizeSceneObjectModel(obj);const root=this.buildCatalogObject(obj);this.applyCatalogObjectTransform(root,obj,floorY);
       root.visible=obj.visible!==false;group.add(root);this.objectMeshes.set(obj.id,root);
     });
+    this.applyTemplateFloorFinishes(group,spec);
+  }
+  applyTemplateFloorFinishes(group,spec){
+    const T=this.THREE,sticker=group.getObjectByName('floor-sticker-graphic'),surfaces=[];
+    group.updateMatrixWorld(true);
+    group.traverse(part=>{if(part.isMesh&&part.userData.boothFloorFinish)surfaces.push(part);});
+    surfaces.forEach(part=>{
+      // Leave the object, dimensions, transforms and surrounding edge trims intact.
+      part.material=this.floorMaterial(spec);
+      if(!sticker)return;
+      for(let node=part;node;node=node.parent)if(!node.visible)return;
+      const {width:w,depth:d}=part.userData.boothFloorFinish;
+      let polygon=[[-w/2,0,-d/2],[-w/2,0,d/2],[w/2,0,d/2],[w/2,0,-d/2]]
+        .map(v=>group.worldToLocal(part.localToWorld(new T.Vector3(...v))));
+      // Project floor graphics onto horizontal skins only; never move/flatten edited objects.
+      if(Math.max(...polygon.map(v=>v.y))-Math.min(...polygon.map(v=>v.y))>.0001)return;
+      const sw=sticker.geometry.parameters.width,sd=sticker.geometry.parameters.height,
+        left=sticker.position.x-sw/2,right=left+sw,back=sticker.position.z-sd/2,front=back+sd;
+      // Clip the skin to the sticker rectangle, including rotated or partly outside skins.
+      for(const [axis,limit,sign] of [['x',left,1],['x',right,-1],['z',back,1],['z',front,-1]]){
+        const input=polygon;polygon=[];
+        for(let i=0;i<input.length;i++){
+          const a=input[i],b=input[(i+1)%input.length],insideA=(a[axis]-limit)*sign>=0,insideB=(b[axis]-limit)*sign>=0;
+          if(insideA)polygon.push(a);
+          if(insideA!==insideB)polygon.push(a.clone().lerp(b,(limit-a[axis])/(b[axis]-a[axis])));
+        }
+      }
+      if(polygon.length<3||polygon[0].y<sticker.position.y-.002)return;
+      const positions=[],uv=[],indices=[];
+      polygon.forEach(v=>{positions.push(v.x,v.y+.002,v.z);uv.push((v.x-left)/sw,1-(v.z-back)/sd);});
+      for(let i=1;i<polygon.length-1;i++)indices.push(0,i,i+1);
+      const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+      geometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geometry.setIndex(indices);geometry.computeVertexNormals();
+      const overlay=new T.Mesh(geometry,sticker.material.clone());overlay.name='template-floor-sticker-graphic';
+      overlay.userData.objectId=part.userData.objectId;overlay.receiveShadow=true;overlay.renderOrder=2;group.add(overlay);
+    });
   }
   resolveAutoLightingFixture(data,spec,allFixtures=[]){
     if(globalThis.YPTemplateLighting?.profile(spec))return {fixture:YPTemplateLighting.resolve(spec,data),mountQuaternion:null};
@@ -10074,7 +10110,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/peninsular-six-geometry.js?v=20260911-six"></script>
 <script src="js/peninsular-six-templates.js?v=20260911-six"></script>
 <script src="js/botanical-images.js?v=20260911-botanical"></script>
-<script src="js/peninsular-botanical.js?v=20260911-botanical"></script>
+<script src="js/peninsular-botanical.js?v=20260911-floor-finish"></script>
 <script src="js/peninsular-templates.js?v=20260911-botanical"></script>
 <script src="js/peninsular-six-artwork.js?v=20260911-brand-audit"></script>
 <script src="js/peninsular-template-ui.js?v=20260911-botanical"></script>

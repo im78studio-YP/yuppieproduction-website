@@ -91,9 +91,9 @@
    for(let i=0;i<28;i++){const a=i*Math.PI/14;rod([Math.cos(a)*w*.15,0,Math.sin(a)*d*.15],[Math.cos(a)*w*.22,h*.27,Math.sin(a)*d*.22],w*.005,'#d3cbb9');}
    for(let k=0;k<7;k++){const a=k*2.4,x=Math.cos(a)*w*.15,z=Math.sin(a)*d*.15;rod([x*.3,h*.2,z*.3],[x,h*.96,z],.004,'#638333');for(let j=0;j<9;j++){const y=h*(.31+j*.067+(k%3)*.013),angle=a+j*2.39,dx=Math.cos(angle)*w*.25,dz=Math.sin(angle)*d*.25;rod([x,y,z],[x+dx,y+h*.04,z+dz],.002,'#6a8a2e');const l=ell([x+dx*.7,y+h*.025,z+dz*.7],[w*.18,h*.009,w*.027],j%2?'#5f912c':'#407324');l.rotation.y=-angle;l.rotation.z=.20*Math.sin(j+k);}}
   }else if(design==='botanical-floor'){
-   const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=512;const ctx=canvas.getContext('2d');
-   for(let row=0;row<14;row++)for(let col=-1;col<6;col++){const x=col*205+(row%2)*102,y=row*37;ctx.fillStyle=['#d4b180','#dabb8e','#caa574','#e0c096'][(row*3+col+12)%4];ctx.fillRect(x,y,204,36);for(let j=0;j<13;j++){ctx.strokeStyle=j%2?'#855e2820':'#ffedc52c';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(x,y+j*2.7);ctx.bezierCurveTo(x+60,y+j*2.7+2,x+140,y+j*2.7-2,x+204,y+j*2.7);ctx.stroke();}}
-   const map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;const g=new T.PlaneGeometry(w,d);g.rotateX(-Math.PI/2);mesh(g,wood,[0,h,0],{material:new T.MeshStandardMaterial({map,roughness:.66})});
+   const g=new T.PlaneGeometry(w,d);g.rotateX(-Math.PI/2);const surface=mesh(g,wood,[0,h,0]);
+   // A template floor skin follows the booth flooring controls, not a fixed wood finish.
+   surface.userData.boothFloorFinish={width:w,depth:d};
   }else if(design==='botanical-helix-display'){
    cyl(w*.56,w*.56,.012,[0,.006,0],'#eee9d8',64);for(let r=1;r<=3;r++){const ring=mesh(new T.TorusGeometry(w*(.27+r*.065),.003,6,64),'#51534c',[0,.015,0]);ring.rotation.x=Math.PI/2;}
    [[-.17,0,.80],[.14,-.06,.96],[.10,.18,.66]].forEach(([x,z,ht])=>{cyl(.12,.12,h*ht,[x,h*ht/2,z],white);cyl(.125,.125,.025,[x,h*ht,z],wood);bottle(x,h*ht+.015,z,.032,.18);});
