@@ -211,7 +211,7 @@
   };
   window.addEventListener('beforeunload',event=>{if(ready&&revision>savedRevision){event.preventDefault();event.returnValue='';}});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persist();});
-  document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'&&!dialog.open&&!entry.open){event.preventDefault();run(saveFile);}});
+  // Keyboard commands use the same guarded button handlers via keyboard-shortcuts.js.
   await bridge.ready;
   project=store.create(bridge.capture());refresh();
   try{

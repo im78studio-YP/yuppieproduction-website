@@ -9603,6 +9603,7 @@ photo360RadiusMobileInput.onchange=e=>setPhoto360Radius(e.target.value);
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&photo360RadiusModal.classList.contains('show')){event.preventDefault();closePhoto360RadiusModal();}});
 if(window.matchMedia){window.matchMedia('(min-width:821px)').addEventListener('change',event=>{if(event.matches&&photo360RadiusModal.classList.contains('show'))closePhoto360RadiusModal(false);});}
 document.addEventListener('keydown',e=>{
+  if(e.defaultPrevented||e.isComposing||globalThis.YPKeyboardShortcuts?.isEditing(e)||globalThis.YPKeyboardShortcuts?.isModalOpen())return;
   if(e.key==='Escape'&&threeRenderer?.cancelActiveResizeDrag?.()){e.preventDefault();return;}
   if(e.key==='Escape'&&threeRenderer?.pointerDrag?.kind==='asset'){
     e.preventDefault();threeRenderer.finishObjectDrag({pointerId:threeRenderer.pointerDrag.pointerId,type:'pointercancel'});return;
@@ -9610,11 +9611,6 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&selectedSceneItemIds().length&&!document.querySelector('.modal.show')){
     e.preventDefault();setObjectSelection([]);logoEditor.selected=false;syncObjectControls();if(threeRenderer)threeRenderer.setSceneSelection([],null);if(S.view==='plan')render();return;
   }
-  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))return;
-  const mod=e.ctrlKey||e.metaKey;
-  if(mod&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redoObjectChange():undoObjectChange();}
-  else if(mod&&e.key.toLowerCase()==='y'){e.preventDefault();redoObjectChange();}
-  else if((e.key==='Delete'||e.key==='Backspace')&&objectEditor.selectedId){e.preventDefault();deleteSelectedObject();}
 });
 
 function dominantColor(img){try{
@@ -10088,7 +10084,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script type="module" src="js/asset-editor/asset-editor.js?v=20260829-3"></script>
 <script src="js/project-store.js?v=20260905-1"></script>
 <script src="js/template-area.js?v=20260910-template-area"></script>
-<script src="js/project-workspace.js?v=20260911-mixer"></script>
+<script src="js/project-workspace.js?v=20260911-shortcuts"></script>
 <script src="js/starter-layouts.js?v=20260905-1"></script>
 <!-- Template selection replaces the legacy purpose card and post-setup prompt. -->
 <link rel="stylesheet" href="css/handoff.css?v=20260905-1">
@@ -10136,5 +10132,6 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/booth-theme.css?v=20260911-1">
 <script src="js/booth-theme-ui.js?v=20260911-1"></script>
 <script src="js/wall-finish-ui.js?v=20260911-1"></script>
+<script src="js/keyboard-shortcuts.js?v=20260911-1"></script>
 </body>
 </html>
