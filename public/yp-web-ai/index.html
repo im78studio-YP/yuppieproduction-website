@@ -1373,6 +1373,7 @@ select:focus{border-color:var(--acc)}
       <button class="btn" id="btnOpenAssetSettings" type="button" title="ตั้งค่าขนาดและพื้นผิวของ Asset" aria-label="เปิดหน้าตั้งค่า Asset">ตั้งค่า Asset</button>
       <button class="btn asset-list-trigger" id="btnAssetList" type="button" title="เปิดรายการวัตถุทั้งหมด" aria-label="เปิด Asset List" aria-expanded="false" aria-controls="assetListPanel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg> Asset List</button>
       <button class="btn" id="btnDuplicateObject" type="button" title="ทำสำเนา" aria-label="ทำสำเนาวัตถุ">⧉ สำเนา</button>
+      <button class="btn" id="btnReplaceObject" type="button" title="เลือกอุปกรณ์จากคลังมาแทนชิ้นที่เลือก">⇄ เปลี่ยนอุปกรณ์</button>
       <button class="btn" id="btnGroupObjects" type="button" title="รวม Asset ที่เลือกเป็น Group" aria-label="รวมวัตถุที่เลือกเป็น Group">Group</button>
       <button class="btn" id="btnUngroupObjects" type="button" title="แยก Group โดยคงตำแหน่งเดิม" aria-label="แยก Group ที่เลือก">Ungroup</button>
       <button class="btn danger" id="btnDeleteObject" type="button" title="ลบ" aria-label="ลบวัตถุ">ลบ</button>
@@ -2710,7 +2711,7 @@ function assetDimensionValue(value,fallback=MIN_ASSET_DIMENSION){
   return+clampNumber(resolved,MIN_ASSET_DIMENSION,MAX_ASSET_DIMENSION).toFixed(2);
 }
 const SCENE_CAPABILITY_KEYS=Object.freeze(['floorPlaceable','wallMountable','ceilingMountable','free3DPlaceable','surfaceSnappable','attachable','resizable','scalable','rotatable','repeatable','styleable','compound']);
-const ASSET_TRANSFORM_POLICY_VERSION=3,TRANSFORM_MODES=Object.freeze(['move','resize','scale']);
+const ASSET_TRANSFORM_POLICY_VERSION=4,TRANSFORM_MODES=Object.freeze(['move','resize','scale']);
 const SCENE_COLLISION_LAYERS=Object.freeze(['structure','furniture','decoration','surface','optional-prop']);
 const SCENE_PLACEMENT_TARGETS=Object.freeze(['floor','wall','ceiling','storage-room','structure','asset','free']);
 const SCENE_APPEARANCE_MODES=Object.freeze(['original','tint','solid']);
@@ -2769,7 +2770,7 @@ function defaultSceneCapabilities(item={}){
 function defaultAssetTransformPolicy(obj,item=objectCatalogDef(obj?.catalogId)){
   const type=String(obj?.type||item?.type||'').toLowerCase(),category=String(item?.category||''),custom=item?.customAsset===true||/^my-asset-/.test(String(obj?.catalogId||'')),
     structural=isEntranceFrameObject(obj)||isDownlightBeamObject(obj)||category==='structure',
-    parametric=structural||['counter','shelf','display','screen','sign'].includes(type)||(['table','chair'].includes(type)&&!item?.modelUrl),
+    parametric=structural||['counter','roundedcornercounter','flutedcounter','shelf','display','screen','sign'].includes(type)||(['table','chair'].includes(type)&&!item?.modelUrl),
     graphic=['logo','graphic','brand'].includes(type)||category==='media',decorative=category==='decor',readyMade=custom||!!item?.modelUrl&&!parametric,
     explicit=item?.transformPolicy&&typeof item.transformPolicy==='object'?item.transformPolicy:{},declaredResizable=Array.isArray(item?.capabilities)&&item.capabilities.includes('resizable');
   const canResize=typeof explicit.canResize==='boolean'?explicit.canResize:(parametric||custom||declaredResizable),
@@ -2785,8 +2786,10 @@ function defaultAssetTransformPolicy(obj,item=objectCatalogDef(obj?.catalogId)){
 }
 function normalizeAssetTransformPolicy(obj,item=objectCatalogDef(obj?.catalogId)){
   const defaults=defaultAssetTransformPolicy(obj,item),declared=obj?.transformPolicy&&typeof obj.transformPolicy==='object'?obj.transformPolicy:{},
-    stalePolicy=(Number(declared.version)||0)<ASSET_TRANSFORM_POLICY_VERSION;
+    counterUpgrade=(Number(declared.version)||0)<4&&['roundedCornerCounter','flutedCounter'].includes(obj?.type),
+    stalePolicy=(Number(declared.version)||0)<3||counterUpgrade;
   const policy={...defaults,...declared,version:ASSET_TRANSFORM_POLICY_VERSION};
+  if(counterUpgrade)policy.family=defaults.family;
   /* Older policies persisted the derived canResize value on every object.  That
      stale value can incorrectly keep Resize disabled after an Asset is
      reclassified or a GLB declares the resizable capability.  Recompute only
@@ -3685,6 +3688,29 @@ function addCatalogObject(catalogId){
   const preferredUnavailable=item.backWallOnly&&(!typ().walls.includes('back')||isCurvedWallType(S));
   announceCatalog('เพิ่ม'+item.name+'และวางไว้ด้านหน้าบูธแล้ว'+(preferredUnavailable?' · บูธนี้ไม่มีผนังหลังแบบตรง จึงเริ่มเป็นวัตถุวางอิสระ':''),'success');return true;
 }
+// Replacement is a single history transaction; never reuse old custom geometry or scale.
+function makeReplacementObject(source,catalogId){
+  const next=makeCatalogObject(catalogId,source.position.x,source.position.z);if(!next)return null;
+  if(isDownlightBeamObject(next)){next.structure.wallAttached=false;normalizeDownlightBeamObject(next,S);}
+  next.id=source.id;next.position={...source.position};
+  ['rotationX','rotationY','rotationZ','orientation','flipX','flipY','flipZ'].forEach(key=>{if(source[key]!==undefined)next[key]=source[key];});
+  next.transform.flipX=source.transform?.flipX===true;next.transform.flipY=source.transform?.flipY===true;
+  next.visible=source.visible!==false;next.attachment=null;
+  next.placement={...next.placement,mode:'free',surface:'free',targetId:null,anchorAttachment:null,snapCandidate:null,installFreely:true,allowOutsideBooth:true};
+  return next;
+}
+function clearReplacementLinks(spec,id){
+  if(spec.assetAttachmentGraph?.attachments)spec.assetAttachmentGraph.attachments=spec.assetAttachmentGraph.attachments.filter(row=>row.childAssetId!==id&&row.attachment?.targetAssetId!==id);
+  spec.objects.forEach(obj=>{if(obj.id===id||obj.attachment?.targetId===id||obj.placement?.targetId===id||obj.placement?.anchorAttachment?.targetId===id){
+    obj.attachment=null;obj.placement={...obj.placement,mode:'free',surface:'free',targetId:null,anchorAttachment:null,snapCandidate:null};
+  }});
+}
+function commitReplacementObject(sourceText,next){
+  const source=objectById(next.id);
+  if(!source||objectLocked(source)||source.groupId||JSON.stringify(source)!==sourceText)throw Error('ชิ้นงานเดิมเปลี่ยนไปแล้ว กรุณาปิดและเลือกใหม่');
+  mutateObjects(()=>{preparePersistentAttachmentDeletion([source.id]);clearReplacementLinks(S,source.id);S.objects[S.objects.findIndex(o=>o.id===source.id)]=JSON.parse(JSON.stringify(next));},source.id);
+  announceCatalog('เปลี่ยนเป็น'+selectedAssetName(next)+'แล้ว · กด Undo เพื่อคืนชิ้นเดิม','success');
+}
 function positionObjectToolbar(){
   const toolbar=document.getElementById('objectToolbar');if(!toolbar||matchMedia('(max-width:820px)').matches)return;
   const view=document.getElementById('view'),rect=view?.getBoundingClientRect(),pad=14,
@@ -4021,6 +4047,7 @@ function selectedAssetName(obj=objectById(objectEditor.selectedId)){
   const item=obj&&objectCatalogDef(obj.catalogId);return obj?.label||item?.name||'Asset';
 }
 function closeAssetSettings(){
+  window.YPAssetSettingsEnter?.reset();
   const modal=document.getElementById('mAssetSettings');if(!modal)return;modal.classList.remove('show');modal.setAttribute('aria-hidden','true');
 }
 function attachmentSurfaceLabel(surface){
@@ -4074,6 +4101,7 @@ function syncAssetSettingsForm(){
   const notes={original:'ใช้ Material และ Texture เดิมจากไฟล์'+(item?.customAsset?' GLB':' Asset'),tint:'ย้อมสีทับ Material เดิม โดยยังคงลายและรายละเอียดเดิม',solid:'แทน Material เดิมด้วยพื้นผิวสีล้วนแบบ PBR'};
   document.getElementById('assetSurfaceNote').textContent=(notes[mode]||notes.original)+(obj.appearance.textureData?' · มีสติ๊กเกอร์ภาพซ้อนอยู่':'');
   syncAssetAttachmentForm(obj);
+  window.YPAssetSettingsEnter?.sync(obj);
 }
 function openAssetSettings(){
   const obj=objectById(objectEditor.selectedId);if(!obj){
@@ -4430,7 +4458,7 @@ function syncObjectControls(){
     if(info)info.textContent='Snap 5 ซม. · คลิก Asset เพื่อดูพิกัด';
     if(document.getElementById('mAssetSettings')?.classList.contains('show'))closeAssetSettings();
   }
-  ['btnRotateObject','btnFlipObjectX','btnFlipObjectY','btnOpenAssetSettings','btnDuplicateObject','btnDeleteObject'].forEach(id=>{
+  ['btnRotateObject','btnFlipObjectX','btnFlipObjectY','btnOpenAssetSettings','btnDuplicateObject','btnDeleteObject','btnReplaceObject'].forEach(id=>{
     const systemAction=systemAssetSelected&&(['btnOpenAssetSettings','btnDeleteObject'].includes(id)||brandSelected&&['btnRotateObject','btnDuplicateObject'].includes(id));
     document.getElementById(id).disabled=!obj&&!systemAction||!!obj&&locked&&id!=='btnOpenAssetSettings';
   });
@@ -5537,6 +5565,7 @@ function build(){
   document.getElementById('assetListVisibility').onclick=()=>{const items=selectedSceneItemIds().map(sceneItemById).filter(Boolean);if(items.length)setSceneItemsVisibility(items.map(item=>item.id),!items.some(item=>item.visible));};
   document.getElementById('assetListDelete').onclick=deleteSceneSelection;
   document.getElementById('btnDuplicateObject').onclick=duplicateSelectedObject;
+  document.getElementById('btnReplaceObject').onclick=()=>window.YPAssetReplaceUI?.open();
   document.getElementById('btnDeleteObject').onclick=deleteSelectedObject;
   document.getElementById('assetSettingsClose').onclick=closeAssetSettings;
   document.getElementById('assetSettingsDone').onclick=closeAssetSettings;
@@ -10012,7 +10041,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script type="module" src="js/asset-editor/asset-editor.js?v=20260829-3"></script>
 <script src="js/project-store.js?v=20260905-1"></script>
 <script src="js/template-area.js?v=20260910-template-area"></script>
-<script src="js/project-workspace.js?v=20260910-template-area"></script>
+<script src="js/project-workspace.js?v=20260911-mixer"></script>
 <script src="js/starter-layouts.js?v=20260905-1"></script>
 <!-- Template selection replaces the legacy purpose card and post-setup prompt. -->
 <link rel="stylesheet" href="css/handoff.css?v=20260905-1">
@@ -10047,5 +10076,13 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/template-entry.js?v=20260910-entry-flow"></script>
 <link rel="stylesheet" href="css/responsive-tools.css?v=20260910-2">
 <script src="js/responsive-tools.js?v=20260910-2"></script>
+<link rel="stylesheet" href="css/template-mixer.css?v=20260911-1">
+<script src="js/template-mixer-core.js?v=20260911-1"></script>
+<script src="js/template-mixer-library.js?v=20260911-1"></script>
+<script src="js/template-mixer-preview.js?v=20260911-1"></script>
+<script src="js/template-mixer-ui.js?v=20260911-1"></script>
+<link rel="stylesheet" href="css/asset-replace.css?v=20260911-1">
+<script src="js/asset-replace-ui.js?v=20260911-1"></script>
+<script src="js/asset-settings-enter.js?v=20260911-1"></script>
 </body>
 </html>

@@ -186,11 +186,11 @@
       if(choice==='new'||choice==='current')return startNewDraft();
       throw new Error('กรุณาเลือกเปิดร่างเดิมหรือเริ่มใหม่');
     },{detailed:true}),
-    useTemplate:({makeSnapshot,name,detailed=false})=>run(async()=>{
+    useTemplate:({makeSnapshot,name,detailed=false,exactArea=false})=>run(async()=>{
       if(pendingDraft)throw Object.assign(new Error('กรุณาเลือกเปิดร่างเดิมหรือเริ่มใหม่ในหน้าต่างเริ่มต้น'),{code:'pending-draft'});
       const target=project.active,other=target==='A'?'B':'A';
       let replacement=makeSnapshot();store.validateSpec(replacement.spec);const dimensions=replacement.spec;
-      const area=window.YPTemplateArea.options(dimensions,bridge.capture().spec);
+      const area=exactArea?null:window.YPTemplateArea.options(dimensions,bridge.capture().spec);
       if(!await ask('แทนที่แบบ '+target+' ด้วยเทมเพลตนี้?', 'แบบ '+target+' ปัจจุบันจะถูกแทนที่ด้วย '+name+' ต้นฉบับขนาดกว้าง '+dimensions.W+' × ลึก '+dimensions.D+' × สูง '+dimensions.H+' ม. โดยแบบ '+other+' ไม่เปลี่ยน หากต้องการเก็บแบบเดิม ให้ยกเลิกแล้วบันทึกไฟล์ก่อน','ยืนยันใช้ในแบบ '+target,{area}))return false;
       if(area)replacement=window.YPTemplateArea.apply(replacement,area[area.selected]);
       store.validateSpec(replacement.spec);
