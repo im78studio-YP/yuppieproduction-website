@@ -52,6 +52,7 @@
     return YPProjectWorkspace.useTemplate({initialWizard,name:t.name,makeSnapshot:()=>{
       const result=bridgeFor(draft.boothType).snapshot(t.id,{primary:draft.primary,cornerSide:draft.cornerSide}),s=result.spec;
       Object.assign(s,{cat:draft.businessCategoryId,customBusinessCategory:draft.businessCategoryId==='other'?String(draft.customBusinessCategory||'').trim():'',primary:draft.primary,colTouched:true,
+        businessBrief:YPBusinessBrief.normalize(draft.businessBrief),
         floor:draft.floor,carpet:draft.carpet,tile:draft.tile,raise:Number(draft.raise)||0,stSize:draft.addStorage?'a':'none'});
       if(draft.addStorage){s.stW=1.2;s.stD=1.2;s.stHmode=2.4;s.stHv=2.4;s.stPos='right';s.stDoor='left';s.doorTouched=true;}
       YPProjectStore.validateSpec(s);return result;

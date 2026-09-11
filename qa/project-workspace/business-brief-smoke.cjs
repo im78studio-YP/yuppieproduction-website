@@ -1,0 +1,24 @@
+const {chromium}=require('C:/Users/Admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');const assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});try{
+ const page=await browser.newPage({viewport:{width:1440,height:1050}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:4173/yp-web-ai/index.html',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.YPBusinessBriefUI&&YPProjectWorkspace.state().ready,null,{timeout:60000});await page.evaluate(()=>YPQuickSetupBridge.close());
+ const before=await page.evaluate(()=>({objects:JSON.stringify(S.objects),other:JSON.stringify(YPProjectWorkspace.capture().variants.B),signature:captureRenderDraft().signature}));
+ await page.locator('.dock-tool[data-dock-page="business"]').click();
+ for(const [key,value] of Object.entries({product:'กาแฟพร้อมดื่ม',audience:'ร้านค้าและตัวแทนจำหน่าย',activities:'แจกชิมและเจรจา'}))await page.locator('#businessBrief-'+key).fill(value);
+ await page.locator('#businessBrief-activities').press('Enter');
+ const result=await page.evaluate(()=>{const saved=YPProjectBridge.capture(),draft=captureRenderDraft();const prompt=buildStructureEnhancementPrompt({...draft,renderPackageId:'QA',stateHash:'QA'});return {saved:saved.spec.businessBrief,prompt,signature:draft.signature,objects:JSON.stringify(S.objects),other:JSON.stringify(YPProjectWorkspace.capture().variants.B)};});
+ assert.equal(result.objects,before.objects);assert.equal(result.other,before.other);assert.notEqual(result.signature,before.signature);assert.match(result.prompt,/กาแฟพร้อมดื่ม/);assert.match(result.prompt,/เคาน์เตอร์ชิมสินค้า/);
+ await page.locator('.dock-tool[data-dock-page="prompt"]').click();assert.match(await page.locator('#businessBriefReview').innerText(),/แจกชิมและเจรจา/);await page.locator('#businessBriefReview details').evaluate(d=>d.open=true);await page.locator('#businessBriefReview').scrollIntoViewIfNeeded();await page.screenshot({path:'qa/project-workspace/business-brief-review.png'});
+ // Existing atomic packages become stale when either category or brief changes.
+ const stale=await page.evaluate(async()=>{const old=await createAtomicRenderSnapshot();S.businessBrief.product='ชา';updatePromptPreview();try{assertAtomicRenderSnapshot(old);return false;}catch{return true;}});assert.ok(stale);
+ await page.locator('#businessBriefEdit').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'businessBrief-product');
+ await page.locator('#businessBrief-product').fill('กาแฟพร้อมดื่ม');await page.locator('#businessBrief-product').press('Enter');
+ const saved=await page.evaluate(()=>YPProjectBridge.capture());await page.evaluate(saved=>{S.businessBrief={};YPProjectBridge.restore(saved);},saved);assert.equal(await page.locator('#businessBrief-product').inputValue(),'กาแฟพร้อมดื่ม');
+ await page.evaluate(()=>YPQuickSetupBridge.open({start:'business'}));
+ assert.equal(await page.locator('#quickBusinessBrief-product').inputValue(),'กาแฟพร้อมดื่ม');await page.locator('#quickBusinessBrief-product').fill('ชาสมุนไพร');assert.equal(await page.evaluate(()=>S.businessBrief.product),'กาแฟพร้อมดื่ม');
+ // Exercise the wizard template path, capturing its candidate without committing a project replacement.
+ const wizardBrief=await page.evaluate(async()=>{const draft={...quickSetupDraft,boothType:'penin',templateType:'penin',templateId:'penin-botanical-atelier'};const original=YPProjectWorkspace.useTemplate;let candidate;try{YPProjectWorkspace.useTemplate=async options=>{candidate=options.makeSnapshot();return true;};await YPInlineWizard.complete(draft,false);}finally{YPProjectWorkspace.useTemplate=original;YPQuickSetupBridge.close();}return candidate.spec.businessBrief;});assert.equal(wizardBrief.product,'ชาสมุนไพร');
+ await page.evaluate(()=>{S.aiStaging.enabled=false;updatePromptPreview();});assert.match(await page.locator('#businessBriefPermission').innerText(),/ไม่เพิ่มสิ่งใหม่/);assert.doesNotMatch(await page.evaluate(()=>buildDesignPrompt()),/แนวทางเสริมตามหมวด: เคาน์เตอร์ชิมสินค้า/);
+ await page.setViewportSize({width:390,height:844});await page.locator('.dock-tool[data-dock-page="business"]').click();await page.locator('#businessBriefFields').scrollIntoViewIfNeeded();assert.ok(await page.locator('#businessBriefFields').evaluate(e=>e.scrollWidth<=e.clientWidth+1));await page.screenshot({path:'qa/project-workspace/business-brief-390.png'});
+ assert.deepEqual(errors,[]);console.log('PASS brief inputs, active prompt, atomic invalidation, save/restore, unchanged geometry/B, review/edit link, wizard draft/template transfer, enhancement off and mobile');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

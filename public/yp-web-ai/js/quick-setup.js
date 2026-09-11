@@ -220,8 +220,9 @@
       ? String(customBusinessCategory).trim()
       : String(categoryLabel || '').trim();
     const context = contextForCategory(categoryId);
-    const suggestions = mergeSuggestionLayers(userChoices, categorySuggestionList(categoryId), []);
-    const userCount = Array.isArray(userChoices) ? userChoices.filter(Boolean).length : 0;
+    const uniqueChoices = mergeSuggestionLayers(userChoices, [], []);
+    const suggestions = mergeSuggestionLayers(uniqueChoices, categorySuggestionList(categoryId), []);
+    const userCount = uniqueChoices.length;
     const categoryOnly = suggestions.slice(userCount);
     return [
       'บริบทหมวดธุรกิจ: ' + (label || 'ไม่ระบุ'),

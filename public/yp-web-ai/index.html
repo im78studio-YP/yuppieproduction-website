@@ -1724,7 +1724,8 @@ select:focus{border-color:var(--acc)}
     <button class="btn pri lg" onclick="closeM('mQuote');sendQuote()">กรอกข้อมูลและตรวจแบบ</button>
   </div>
 </div>
-<script src="js/quick-setup.js?v=20260830-1"></script>
+<script src="js/quick-setup.js?v=20260911-business"></script>
+<script src="js/business-brief.js?v=20260911-1"></script>
 <script src="js/ai-staging.js?v=20260830-1"></script>
 <script src="js/ai-render-intent.js?v=20260831-1"></script>
 <script src="js/ai-render-pipeline.js?v=20260830-1"></script>
@@ -4893,6 +4894,7 @@ function renderStatePayload(spec,camera){
   const rendering=spec.aiRendering||{},staging=spec.aiStaging||{};
   return{
     boothType:spec.type,boothTypeLabel:TYPES.find(item=>item.k===spec.type)?.n||spec.type,cornerSide:spec.type==='corner'?spec.cornerSide:null,
+    businessContext:YPBusinessBrief.capture(spec,businessCategoryLabel(spec)),
     width:Number(spec.W),depth:Number(spec.D),height:Number(spec.H),activeWalls,openSides,
     floor:renderFloorSnapshot(spec),room:{enabled:spec.stSize!=='none',size:spec.stSize,width:Number(spec.stW)||0,depth:Number(spec.stD)||0,heightMode:spec.stHmode,height:Number(spec.stHv)||0,position:spec.stPos,door:spec.stDoor,doorType:spec.stDoorType},
     brand:{primary:String(spec.primary||'').toUpperCase(),secondary:String(spec.secondary||'').toUpperCase(),name:spec.brand||'YOUR BRAND',logoVisible:spec.type!=='island'},
@@ -4945,7 +4947,7 @@ function renderCameraPromptLines(snapshot){
 function buildStructureEnhancementPrompt(snapshot){
   const p=snapshot.payload,style=aiRenderStyle(p.renderStyle),assets=p.assets.filter(asset=>asset.visible),room=p.room.enabled?'มีห้องเก็บของ · '+p.room.size+' · ตำแหน่ง '+p.room.position+' · ประตู '+p.room.door:'ไม่มีห้องเก็บของ';
   const assetLines=assets.length?assets.map((asset,index)=>'- '+(index+1)+'. '+asset.name+' ['+asset.id+'] · XYZ '+asset.position.x.toFixed(2)+'/'+asset.position.y.toFixed(2)+'/'+asset.position.z.toFixed(2)+' ม. · หมุน XYZ '+asset.rotation.x.toFixed(1)+'/'+asset.rotation.y.toFixed(1)+'/'+asset.rotation.z.toFixed(1)+'° · Scale '+asset.scale.x.toFixed(2)+'/'+asset.scale.y.toFixed(2)+'/'+asset.scale.z.toFixed(2)):['- ไม่มี Asset ที่ลูกค้าวาง'];
-  const allow=[];if(p.aiEnhancementOptions.allowFurniture)allow.push('สินค้าและเฟอร์นิเจอร์');if(p.aiEnhancementOptions.allowPeople)allow.push('คนและบรรยากาศ');if(p.aiEnhancementOptions.allowDecor||p.aiEnhancementOptions.allowPlants)allow.push('ของตกแต่งและต้นไม้');
+  const allow=[];if(p.aiEnhancementOptions.enabled){if(p.aiEnhancementOptions.allowFurniture)allow.push('เฟอร์นิเจอร์');if(p.aiEnhancementOptions.allowProducts)allow.push('สินค้า');if(p.aiEnhancementOptions.allowPeople)allow.push('คนและบรรยากาศ');if(p.aiEnhancementOptions.allowDecor)allow.push('ของตกแต่ง');if(p.aiEnhancementOptions.allowPlants)allow.push('ต้นไม้');}
   const digitalDisplayLines=p.aiEnhancementOptions.enabled?[
     '',
     'AI DIGITAL DISPLAY PLACEMENT',
@@ -4961,6 +4963,7 @@ function buildStructureEnhancementPrompt(snapshot){
     'STRUCTURE ENHANCEMENT RENDER PACKAGE',
     'renderPackageId: '+snapshot.renderPackageId,'stateHash: '+snapshot.stateHash,'sceneRevision: '+snapshot.sceneRevision,
     'สรุปแบบ: '+renderPackageSummary(snapshot),'ประเภทธุรกิจ: '+businessCategoryLabel(snapshot.spec),'สีแบรนด์: '+p.brand.primary+' / '+p.brand.secondary,
+    ...YPBusinessBrief.promptLines(p.businessContext||YPBusinessBrief.capture(snapshot.spec,businessCategoryLabel(snapshot.spec)),p.aiEnhancementOptions,assets.map(asset=>asset.name)),
     'สไตล์: '+style.th+' ('+style.en+') · '+style.prompt,
     p.qualityMode==='final'?'คุณภาพ: ภาพนำเสนอ Photorealistic รายละเอียดสูง':'คุณภาพ: ร่างเร็ว รายละเอียดปานกลาง',
     '',
@@ -5001,6 +5004,7 @@ function updatePromptPreview(){
   syncPromptRenderStyleControls();
   syncPromptStagingControls();
   const draft=syncSceneRevision(),summary=document.getElementById('promptProjectSummary');if(summary)summary.textContent=renderPackageSummary(draft);
+  globalThis.YPBusinessBriefUI?.sync(draft.payload);
   const variant=document.getElementById('promptVariant');if(variant&&variant.value!==currentPromptVariant())variant.value=currentPromptVariant();
   const field=document.getElementById('designPrompt');
   if(field&&!lastPreparedRenderPackage)field.value=buildStructureEnhancementPrompt({...draft,renderPackageId:'DRAFT-เตรียมชุดสร้างภาพก่อนใช้งาน',stateHash:'pending',sceneRevision});
@@ -9673,6 +9677,7 @@ const normalizedQuickHex=(value,fallback='#2E7D4F')=>window.YPQuickSetupContext?
 function quickSetupDraftFromEditor(){
   const boothType=QUICK_SETUP_TYPE_KEYS.includes(S.type)?S.type:'inline',preset=quickBoothDefaults(boothType)||quickBoothDefaults('inline');
   return{businessCategoryId:S.cat||'',businessCategoryLabel:businessCategoryLabel(S),customBusinessCategory:String(S.customBusinessCategory||''),
+    businessBrief:YPBusinessBrief.normalize(S.businessBrief),
     boothType,cornerSide:boothType==='corner'?(S.cornerSide||'right'):'',width:preset.width,depth:preset.depth,height:preset.height,
     primary:normalizedQuickHex(S.primary||'#2E7D4F'),brandTouched:false,raise:RAISE.some(item=>item.k===S.raise)?S.raise:0,
     floor:FLOORS.some(item=>item.k===S.floor)?S.floor:'carpet',carpet:CARPETS.some(item=>item.k===S.carpet)?S.carpet:'grey',tile:S.tile||'woodL',addStorage:S.stSize!=='none',templateId:null};
@@ -9704,6 +9709,7 @@ function quickBusinessValidation(){
   return'';
 }
 function updateQuickBusinessStep(){
+  globalThis.YPBusinessBriefUI?.syncWizard();
   const selected=quickSetupDraft?.businessCategoryId||'';
   document.querySelectorAll('#quickBusinessGroups [role=radio]').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.value===selected)));
   const customWrap=document.getElementById('quickBusinessCustomWrap'),customInput=document.getElementById('quickBusinessCustom');customWrap.hidden=selected!=='other';
@@ -9799,6 +9805,7 @@ function completeQuickSetup(){
       return;
     }
     const categoryChanged=S.cat!==category.k;S.cat=category.k;S.customBusinessCategory=category.k==='other'?String(quickSetupDraft.customBusinessCategory||'').trim():'';
+    S.businessBrief=YPBusinessBrief.normalize(quickSetupDraft.businessBrief);
     if(categoryChanged&&!S.pairTouched)S.pair=category.pr;
     S.type=type.k;S.cornerSide=type.k==='corner'?quickSetupDraft.cornerSide:'right';S.W=preset.width;S.D=preset.depth;S.H=preset.height;
     S.primary=normalizedQuickHex(quickSetupDraft.primary);S.colTouched=true;if(!S.logoColorTouched)S.logoColor=S.primary;
@@ -10116,7 +10123,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/island-yellow-geometry.js?v=20260911-yellow"></script>
 <script src="js/island-templates.js?v=20260911-yellow"></script>
 <script src="js/island-template-ui.js?v=20260911-yellow"></script>
-<script src="js/inline-wizard.js?v=20260909-10"></script>
+<script src="js/inline-wizard.js?v=20260911-business"></script>
 <script src="js/template-entry.js?v=20260910-entry-flow"></script>
 <link rel="stylesheet" href="css/responsive-tools.css?v=20260910-2">
 <script src="js/responsive-tools.js?v=20260910-2"></script>
@@ -10133,5 +10140,6 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/booth-theme-ui.js?v=20260911-1"></script>
 <script src="js/wall-finish-ui.js?v=20260911-1"></script>
 <script src="js/keyboard-shortcuts.js?v=20260911-1"></script>
+<script src="js/business-brief-ui.js?v=20260911-1"></script>
 </body>
 </html>
