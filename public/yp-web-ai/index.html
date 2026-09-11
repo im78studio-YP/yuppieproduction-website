@@ -5913,6 +5913,7 @@ let threeRenderer=null,threeRendererPromise=null;
 
 function disposeThreeObject(root){
   root.traverse(o=>{
+    o.userData?.disposeResources?.();
     if(o.shadow&&o.shadow.map)o.shadow.map.dispose();
     if(o.userData&&o.userData.sharedAsset)return;
     if(o.geometry)o.geometry.dispose();
@@ -5952,7 +5953,7 @@ class ThreeBoothRenderer{
 
     this.scene=new THREE.Scene();
     // Neutral, bright studio surrounds the booth; the editing UI keeps its dark theme.
-    this.scene.background=new THREE.Color('#d5d5d3');
+    this.scene.background=new THREE.Color(globalThis.YPStudioEnvironment?.background||'#e6e7eb');
     this.perspectiveCamera=new THREE.PerspectiveCamera(42,1,.05,250);
     this.orthographicCamera=new THREE.OrthographicCamera(-1,1,1,-1,.05,250);
     this.orthographicFrameHeight=6;this.camera=this.perspectiveCamera;
@@ -8159,10 +8160,7 @@ class ThreeBoothRenderer{
   }
   buildBooth(spec){
     const T=this.THREE,g=this.boothGroup,t=boothWallThickness(spec),floorY=spec.raise/100,a=palette();
-    const span=Math.max(spec.W,spec.D,spec.H),groundGeo=new T.PlaneGeometry(span*5,span*5);
-    const groundMat=new T.MeshStandardMaterial({color:0xbab9b4,roughness:1});
-    const ground=new T.Mesh(groundGeo,groundMat);ground.name='scene-ground';ground.rotation.x=-Math.PI/2;
-    ground.position.set(spec.W/2,-.045,spec.D/2);ground.receiveShadow=true;ground.userData.systemHelper=true;g.add(ground);
+    g.add(YPStudioEnvironment.create(this,spec));
 
     /* ไม่ยกพื้น = แผ่นพรม/พื้นหนา 3 มม.; ยกพื้นยังใช้ความสูงเดิม 5/10/15 ซม.
        คงผิวด้านบนไว้ที่ระดับ floorY เพื่อไม่ให้วัตถุและผนังขยับตามความหนา */
@@ -10110,6 +10108,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/peninsular-six-geometry.js?v=20260911-six"></script>
 <script src="js/peninsular-six-templates.js?v=20260911-six"></script>
 <script src="js/botanical-images.js?v=20260911-botanical"></script>
+<script src="js/studio-environment.js?v=20260911-1"></script>
 <script src="js/peninsular-botanical.js?v=20260911-floor-finish"></script>
 <script src="js/peninsular-templates.js?v=20260911-botanical"></script>
 <script src="js/peninsular-six-artwork.js?v=20260911-brand-audit"></script>

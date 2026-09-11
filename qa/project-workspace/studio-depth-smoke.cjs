@@ -23,7 +23,7 @@ const assert=require('node:assert/strict');
   const capture=()=>{r.renderer.render(r.scene,r.camera);const c=document.createElement('canvas');c.width=r.renderer.domElement.width;c.height=r.renderer.domElement.height;const ctx=c.getContext('2d');ctx.drawImage(r.renderer.domElement,0,0);return ctx.getImageData(0,0,c.width,c.height).data;};
   const shaded=capture();r.studioKey.castShadow=false;const unshaded=capture();r.studioKey.castShadow=true;capture();
   let pixels=0,maximum=0;for(let i=0;i<shaded.length;i+=4){const delta=(unshaded[i]+unshaded[i+1]+unshaded[i+2]-shaded[i]-shaded[i+1]-shaded[i+2])/3;if(delta>8)pixels++;maximum=Math.max(maximum,delta);}
-  return {pixels,maximum,background:r.scene.background.getHexString(),ground:r.scene.getObjectByName('scene-ground').material.color.getHexString(),shadowLights:r.scene.children.filter(x=>x.isLight&&x.castShadow).length};
- });assert.ok(result.pixels>500,JSON.stringify(result));assert.ok(result.maximum>20);assert.equal(result.background,'d5d5d3');assert.equal(result.ground,'bab9b4');assert.equal(result.shadowLights,1);
+  return {pixels,maximum,background:r.scene.background.getHexString(),ground:r.scene.getObjectByName('studio-satin-floor').material.uniforms.baseColor.value.getHexString(),shadowLights:r.scene.children.filter(x=>x.isLight&&x.castShadow).length};
+ });assert.ok(result.pixels>500,JSON.stringify(result));assert.ok(result.maximum>20);assert.equal(result.background,'e6e7eb');assert.equal(result.ground,'e6e7eb');assert.equal(result.shadowLights,1);
  await page.locator('.three-shell').screenshot({path:'qa/project-workspace/studio-depth-desktop.png'});assert.deepEqual(errors,[]);console.log('PASS: actual cast-shadow pixel contrast; fitted 6x3, 6x6 and free-positioned bounds; unchanged grey palette/layout; one shadow light',result);
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
