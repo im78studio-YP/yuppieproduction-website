@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
     await page.goto(process.env.WIZARD_URL||'http://127.0.0.1:4173/yp-web-ai/index.html');await page.waitForFunction(()=>window.YPInlineWizard&&YPProjectWorkspace.state().ready);
     assert.equal(await page.evaluate(()=>getBoothSpec().logo===YPDefaultLogo.data),true);
     await page.locator('#releaseStart').click();await page.locator('#quickBusinessNext').click();
-    assert.equal(await page.locator('#quickTemplateChoices [role=radio]').count(),6);
+    assert.equal(await page.locator('#quickTemplateChoices [role=radio]').count(),await page.evaluate(()=>YPInlineTemplates.templates.length+1));
     assert.equal(await page.locator('#quickTemplateChoices [data-value=manual]').getAttribute('aria-checked'),'true');
     const before=await page.evaluate(()=>({objects:getBoothSpec().objects,primary:getBoothSpec().primary,stSize:getBoothSpec().stSize}));
     await page.locator('#quickTemplateChoices [data-value=retail]').click();

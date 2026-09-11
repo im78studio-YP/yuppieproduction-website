@@ -7764,7 +7764,7 @@ class ThreeBoothRenderer{
         metalness:options.metalness??.02,emissive:options.emissive||0x000000,emissiveIntensity:options.emissiveIntensity||0});
       const part=new T.Mesh(geometry,material);part.position.set(...position);part.castShadow=true;part.receiveShadow=true;root.add(part);return part;
     };
-    if(globalThis.YPTimberRibbonGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularSixGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPIslandYellowGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPCornerBeauty?.build({T,obj,mesh,bx,root})||globalThis.YPCornerAqua?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularBotanical?.build({T,obj,mesh,bx,root})){
+    if(globalThis.YPInlineSoftWave?.build({T,obj,mesh,bx,root})||globalThis.YPTimberRibbonGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularSixGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPIslandYellowGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPCornerBeauty?.build({T,obj,mesh,bx,root})||globalThis.YPCornerAqua?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularBotanical?.build({T,obj,mesh,bx,root})){
       // Reference-specific compound geometry; generic assets retain their original shapes.
     }else if(isEntranceFrameObject(obj)){
       const cfg=normalizeEntranceFrameObject(obj).structure,finish=new T.MeshStandardMaterial({color:cfg.color,roughness:.72,metalness:.01});
@@ -10106,8 +10106,9 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/compare-ui.js?v=20260910-framing"></script>
 <link rel="stylesheet" href="css/inline-templates.css?v=20260909-3">
 <script src="js/timber-ribbon-geometry.js?v=20260911-brand-audit"></script>
-<script src="js/inline-templates.js?v=20260911-detail"></script>
-<script src="js/inline-template-ui.js?v=20260911-brand-audit"></script>
+<script src="js/inline-templates.js?v=20260911-soft-wave"></script>
+<script src="js/inline-soft-wave.js?v=20260911-1"></script>
+<script src="js/inline-template-ui.js?v=20260911-soft-wave"></script>
 <script src="js/peninsular-six-geometry.js?v=20260911-six"></script>
 <script src="js/peninsular-six-templates.js?v=20260911-six"></script>
 <script src="js/botanical-images.js?v=20260911-botanical"></script>

@@ -33,7 +33,7 @@
       }
       Object.assign(result.spec.objects[i].appearance,{mode:'original',textureData:canvas.toDataURL('image/png'),textureName:part.graphic,textureId:'inline-'+id+'-'+part.graphic});
     });
-    YPTemplateBranding.apply(result.spec,t);YPProjectStore.validateSpec(result.spec);return result;
+    YPTemplateBranding.apply(result.spec,t);window.YPInlineSoftWave?.decorate(result.spec,t);YPProjectStore.validateSpec(result.spec);return result;
   }
   window.YPInlineTemplateBridge={snapshot};
   if(new URLSearchParams(location.search).get('comparePreview')==='1')return;

@@ -54,12 +54,17 @@
   function build(id,initial,catalog){
     const t=templates.find(v=>v.id===id);if(!t)throw new Error('ไม่พบเทมเพลต');
     const spec=structuredClone(initial);
-    Object.assign(spec,{W:6,D:3,H:2.4,type:'inline',brand:initial.logo?initial.brand:t.brand,cat:t.id==='tasting'?'food':initial.cat,
+    Object.assign(spec,{W:6,D:3,H:t.height||2.4,type:'inline',brand:initial.logo?initial.brand:t.brand,cat:t.id==='tasting'?'food':initial.cat,
       primary:t.primary,secondary:t.secondary,colTouched:true,secTouched:true,wallCol:'white',wallMat:'paint',floor:t.floor,tile:t.tile||'woodL',carpet:t.carpet||'cream',
       logoScale:initial.logo?35:0,nameScale:initial.logo?0:22,logoColor:initial.logo?initial.logoColor:t.ink,logoColorTouched:true,logoWallU:t.storage?2.2:3,logoWallY:1.95,logoPos:t.storage?'left':'center',
       stSize:t.storage?'a':'none',stPos:'right',stDoor:'left',doorTouched:true,stDoorType:'swing',stHmode:2.4,stHv:2.4,
       designPurpose:t.purpose,inlineTemplate:{id:t.id,version:1,name:t.name},objects:[],view:'three'});
     if(t.reference)Object.assign(spec,{logoScale:initial.logo?16:0,nameScale:initial.logo?0:12,logoWallU:1.35,logoWallY:2.02});
+    if(t.customShell){
+      spec.logoScale=0;spec.nameScale=0;spec.sceneItemState={...spec.sceneItemState};
+      for(const face of ['back','left','right'])for(const prefix of ['structure.wall.','branding.graphic.wall.'])spec.sceneItemState[prefix+face]={visible:false};
+      spec.sceneItemState['branding.logo.main']={visible:false};
+    }
     spec.objects=t.objects.map((o,i)=>{
       const item=catalog.find(c=>c.catalogId===o.catalogId);if(!item)throw new Error('ไม่พบอุปกรณ์ '+o.catalogId);
       return {id:'inline-'+id+'-'+i,type:item.type,catalogId:o.catalogId,locked:false,geometryMode:'parametric',position:{x:o.x,y:o.y||0,z:o.z},rotationX:0,rotationY:o.rotationY,rotationZ:0,orientation:'horizontal',size:{...o.size},unitPrice:item.unitPrice,

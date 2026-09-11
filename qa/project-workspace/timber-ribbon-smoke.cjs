@@ -25,7 +25,7 @@ async function writeAsset(path,data){const bytes=Buffer.isBuffer(data)?data:Buff
   await writeAsset('public/yp-web-ai/assets/inline-templates/timber-ribbon.png',Buffer.from(result.png,'base64'));
   await writeAsset('public/yp-web-ai/assets/inline-templates/timber-ribbon.ypbooth.json',result.serialized);
   await page.goto(base);await page.waitForFunction(()=>YPProjectWorkspace?.state().ready);await page.evaluate(()=>{YPQuickSetupBridge.close();YPInlineTemplateUI.open();});
-  assert.equal(await page.locator('button[data-template]').count(),6);
+  assert.equal(await page.locator('button[data-template]').count(),await page.evaluate(()=>YPInlineTemplates.templates.length));
   await page.locator('[data-template="timber-ribbon"]').click();await page.locator('#projectCancel').click();await page.waitForFunction(()=>!YPProjectWorkspace.state().busy);
   await page.locator('[data-template="timber-ribbon"]').click();await page.locator('#projectConfirm').click();await page.waitForFunction(()=>!YPProjectWorkspace.state().busy);
   assert.equal(await page.evaluate(()=>getBoothSpec().inlineTemplate.id),'timber-ribbon');
@@ -33,6 +33,6 @@ async function writeAsset(path,data){const bytes=Buffer.isBuffer(data)?data:Buff
   await page.evaluate(()=>YPInlineTemplateUI.open());await page.setViewportSize({width:390,height:844});
   assert.ok(await page.locator('.inline-template-dialog[open]').evaluate(d=>d.scrollWidth<=d.clientWidth+1));
   await page.goto(new URL('assets/inline-templates/overview.html',base).href);await page.locator('img[src="timber-ribbon.png"]').evaluate(i=>i.decode());
-  assert.deepEqual(errors,[]);console.log('PASS: rendered portable Inline template, six cards, apply/cancel, mobile and overview');
+  assert.deepEqual(errors,[]);console.log('PASS: rendered portable Inline template, library cards, apply/cancel, mobile and overview');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
