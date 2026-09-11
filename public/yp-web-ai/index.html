@@ -1050,7 +1050,7 @@ select:focus{border-color:var(--acc)}
       <label class="lbl">ปิดผิวผนังแต่ละด้าน</label>
       <div class="wall-face-list" id="oWallFaceFinish"></div>
       <div class="wall-sticker-settings" id="wallStickerSettings"></div>
-      <div class="note">แต่ละด้านเลือกได้เฉพาะทาสีหรือสติกเกอร์ ระบบจะแสดงเฉพาะผนังที่มีในรูปแบบบูธ โดยด้านที่ทาสีจะใช้สีผนังด้านบน</div>
+      <div class="note">เลือกทาสีหรือสติกเกอร์แยกแต่ละด้านได้ สีเฉพาะด้านมีสิทธิ์เหนือธีม · กด “ตามธีม” เพื่อคืนสีส่วนกลาง · สลับทาสีแล้วไฟล์สติกเกอร์เดิมยังอยู่</div>
     </div>
   </div>
 
@@ -2173,6 +2173,7 @@ const assetAttachmentGraph=globalThis.YPAssetAttachmentGraph.createGraph(sceneAs
 });
 const persistentAttachmentWarningKeys=new Set();
 const objectSnapshot=()=>JSON.stringify({objects:S.objects,sceneItemState:S.sceneItemState||{},sceneAssetRegistry:S.sceneAssetRegistry||null,sceneSnapData:S.sceneSnapData||null,assetAttachmentGraph:S.assetAttachmentGraph||null,boothColorTheme:S.boothColorTheme||null,
+  wallFinishState:{wallCol:S.wallCol,wallMat:S.wallMat,wallPaintOverrides:S.wallPaintOverrides||{},wallStickerFaces:S.wallStickerFaces||[],wallStickers:S.wallStickers||{}},
   brandState:{brand:S.brand,logoScale:S.logoScale,nameScale:S.nameScale,logoAR:S.logoAR,logoVisibleBounds:S.logoVisibleBounds||null,logoMount:S.logoMount,logoWall:S.logoWall,
     logoWallU:S.logoWallU,logoWallY:S.logoWallY,logoFloorX:S.logoFloorX,logoFloorZ:S.logoFloorZ,logoFloorRotation:S.logoFloorRotation,logoDepth:S.logoDepth,logoShape:S.logoShape,lockup:S.lockup},
   lighting:S.lighting||null,lights:S.lights,lightFixture:S.lightFixture,lightCol:S.lightCol,lightWall:S.lightWall,lightWatts:S.lightWatts,lightAdj:S.lightAdj});
@@ -2396,6 +2397,7 @@ function setObjectSelection(ids=[],primaryId=null){
 function restoreObjectSnapshot(snapshot){
   const parsed=JSON.parse(snapshot);if(Array.isArray(parsed)){S.objects=parsed;return;}
   S.boothColorTheme=parsed.boothColorTheme||null;
+  if(parsed.wallFinishState)Object.assign(S,parsed.wallFinishState);
   S.objects=Array.isArray(parsed?.objects)?parsed.objects:[];S.sceneItemState=parsed?.sceneItemState&&typeof parsed.sceneItemState==='object'?parsed.sceneItemState:{};
   S.sceneAssetRegistry=parsed?.sceneAssetRegistry&&Array.isArray(parsed.sceneAssetRegistry.assets)?parsed.sceneAssetRegistry:{version:2,assets:[]};
   S.sceneSnapData=parsed?.sceneSnapData&&Array.isArray(parsed.sceneSnapData.anchors)&&Array.isArray(parsed.sceneSnapData.surfaces)?parsed.sceneSnapData:{version:1,anchors:[],surfaces:[]};
@@ -4107,6 +4109,7 @@ function syncAssetSettingsForm(){
 function openAssetSettings(){
   const obj=objectById(objectEditor.selectedId);if(!obj){
     const item=sceneItemById(objectEditor.selectedId);if(!item?.system)return;
+    const wallFace=window.YPWallFinishUI?.faceFromId(item.id);if(wallFace){window.YPWallFinishUI.openFace(wallFace);return;}
     const page=item.id===SCENE_ASSET_IDS.brand?'signage':item.id.startsWith('structure.wall.')||item.id===SCENE_ASSET_IDS.floor?'finish':item.id===SCENE_ASSET_IDS.room||item.id===SCENE_ASSET_IDS.door?'storage':'catalog',
       source=document.querySelector('.dock-tool[data-dock-page="'+page+'"]');
     if(source)showDockPage(page,source);
@@ -4454,6 +4457,10 @@ function syncObjectControls(){
   }else if(sceneItem){
     box.innerHTML='<b>'+esc(sceneItem.name)+'</b> · System/Structure'+(selectionCount>1?' · เลือก '+selectionCount+' รายการ':'')+'<small>'+esc(sceneItem.type)+' · เลือกและซ่อนได้ แต่ลบหรือแก้ Geometry โดยตรงไม่ได้</small>';
     if(info)info.innerHTML='<b>'+esc(sceneItem.name)+'</b><small>System/Structure · ล็อกเพื่อป้องกันแบบเสียหาย</small>';
+    const wallFace=window.YPWallFinishUI?.faceFromId(sceneItem.id);if(wallFace){
+      const edit=document.createElement('button');edit.className='btn sm';edit.type='button';edit.textContent='ทาสี / สติ๊กเกอร์'+WALL_FACES.find(f=>f.k===wallFace).n;edit.onclick=()=>window.YPWallFinishUI.openFace(wallFace);box.appendChild(edit);
+      if(info)info.innerHTML='<b>'+esc(sceneItem.name)+'</b><small>ล็อกเฉพาะโครงสร้าง · เปลี่ยนสีและสติ๊กเกอร์ได้ที่ “ขนาดและพื้นผิว”</small>';
+    }
   }else{
     box.textContent='ยังไม่ได้เลือกองค์ประกอบ';
     if(info)info.textContent='Snap 5 ซม. · คลิก Asset เพื่อดูพิกัด';
@@ -5344,7 +5351,7 @@ function wallFinishKind(spec,face){
   return Array.isArray(spec.wallStickerFaces)&&spec.wallStickerFaces.includes(face)?'sticker':'paint';
 }
 function wallFaceColor(spec,face,a=palette()){
-  return a.wall;
+  const override=spec.wallPaintOverrides?.[face];return /^#[0-9a-f]{6}$/i.test(override||'')?override:a.wall;
 }
 const activeWallStickerFaces=()=>typ().walls.filter(face=>wallFinishKind(S,face)==='sticker');
 function wallFinishSummary(){
@@ -5356,9 +5363,12 @@ function wallFinishSummary(){
   return color+' · ทาสี: '+names(painted)+' · สติกเกอร์: '+names(stickers);
 }
 function setWallFaceFinish(face,finish){
+  const before=objectSnapshot();
   const selected=new Set(Array.isArray(S.wallStickerFaces)?S.wallStickerFaces:[]);
   if(finish==='sticker')selected.add(face);else selected.delete(face);
   S.wallStickerFaces=WALL_FACES.map(item=>item.k).filter(key=>selected.has(key));
+  if(finish!=='sticker'&&objectEditor.selectedId===registryWallGraphicId(face))setObjectSelection([registryWallId(face)],registryWallId(face));
+  recordObjectHistory(before);
 }
 const inkOn=bg=>lum(bg)<.55?'#ffffff':'#161616';
 function stPaintColor(a){
@@ -5488,7 +5498,7 @@ function build(){
   mk('oLogoFloorRotation',[0,90,180,270].map(k=>({k,n:k+'°'})),v=>{const before=objectSnapshot();S.logoFloorRotation=v;recordObjectHistory(before);sync();},o=>o.n);
   const ow=document.getElementById('oWallCol');ow.innerHTML='';
   WALLCOL.forEach(w=>{const b=el('button','opt',w.n+(w.s?'<small>'+w.s+'</small>':''));b.dataset.k=w.k;
-    b.onclick=()=>{S.wallCol=w.k;sync();};ow.appendChild(b);});
+    b.onclick=()=>{const before=objectSnapshot();S.wallCol=w.k;S.wallPaintOverrides={...(S.wallPaintOverrides||{})};typ().walls.forEach(face=>S.wallPaintOverrides[face]=w.k==='white'?WHITE:S.primary);recordObjectHistory(before);sync();};ow.appendChild(b);});
   const wallFaces=document.getElementById('oWallFaceFinish');wallFaces.innerHTML='';
   WALL_FACES.forEach(face=>{const row=el('div','wall-face-row');row.dataset.face=face.k;
     row.appendChild(el('div','wall-face-name','<b>'+face.n+'</b><small>'+face.s+'</small>'));
@@ -5770,7 +5780,7 @@ function buildWallStickerSettings(){
   const box=document.getElementById('wallStickerSettings');if(!box)return;box.innerHTML='';
   activeWallStickerFaces().forEach(face=>{
     const faceDef=WALL_FACES.find(item=>item.k===face),sticker=wallStickerFor(face),card=el('div','subrow floor-sticker-card');
-    card.appendChild(el('h6',null,'สติ๊กเกอร์'+faceDef.n));
+    card.dataset.wallStickerFace=face;card.appendChild(el('h6',null,'สติ๊กเกอร์'+faceDef.n));
     const preview=el('div','floor-sticker-preview'+(sticker.data?' has-image':''));
     if(sticker.data){const image=document.createElement('img');image.src=sticker.data;image.alt='ตัวอย่างสติ๊กเกอร์'+faceDef.n+' '+(sticker.name||'');preview.appendChild(image);}
     else preview.appendChild(el('span',null,'อัปโหลดภาพกราฟิก แล้วระบบจะวางภาพไว้กึ่งกลาง'+faceDef.n));
@@ -6957,7 +6967,7 @@ class ThreeBoothRenderer{
       o.size.w,o.size.d,o.size.h,o.unitPrice,o.structure?.projection,o.structure?.height,o.structure?.pierWidth,o.structure?.thickness,o.structure?.color,
       o.attachment?.targetId,o.attachment?.sourcePort,o.attachment?.targetPort,o.attachment?.status,o.transform?.flipX===true,o.transform?.flipY===true,sceneObjectScaleValue(o),o.production?.reviewRequired===true,
       o.label||'',o.groupId||'',o.appearance?.color||'',o.appearance?.textureId||'']);
-    return JSON.stringify([spec.boothColorTheme||null,spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
+    return JSON.stringify([spec.wallPaintOverrides||{},spec.boothColorTheme||null,spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),wallStickers,spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
       spec.lightWall,spec.lightWatts,spec.lightAdj,spec.brand,logoKey,spec.logoType,spec.logoShape,spec.lockup,spec.logoPos,
@@ -7138,7 +7148,7 @@ class ThreeBoothRenderer{
     mesh.name='floor-sticker-graphic';mesh.castShadow=false;mesh.receiveShadow=true;mesh.renderOrder=2;group.add(mesh);return mesh;
   }
   wallMaterial(spec,length,face){
-    return this.surfaceMaterial('paint',palette().wall,spec.secondary,[Math.max(1,length/1.2),Math.max(1,spec.H/1.2)]);
+    return this.surfaceMaterial('paint',wallFaceColor(spec,face),spec.secondary,[Math.max(1,length/1.2),Math.max(1,spec.H/1.2)]);
   }
   curvedWallSticker(group,spec,sticker,t,floorY){
     const info=wallCurveInfo(spec),material=this.wallStickerMaterial(sticker.data,sticker.w,sticker.h,sticker);if(!info||!material)return null;
@@ -8376,19 +8386,19 @@ function planSVG(){
     }
     g+='</g>';
   }
-  const wall=(x,y,w,d)=>{const p=P(x,y);
+  const wall=(x,y,w,d,face='back')=>{const p=P(x,y);
     return `<rect x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" width="${(w*sc).toFixed(1)}"
-      height="${(d*sc).toFixed(1)}" fill="${a.wall}" stroke="rgba(0,0,0,.45)" stroke-width=".8"/>`;};
+      height="${(d*sc).toFixed(1)}" fill="${wallFaceColor(S,face,a)}" stroke="rgba(0,0,0,.45)" stroke-width=".8"/>`;};
   const curvedBackWall=()=>{
     if(!curve)return wall(0,0,W,t);
     const front=[],back=[],segments=64;
     for(let i=0;i<=segments;i++){const p=curve.pointAt(i/segments,t/2),q=P(p.x,p.z);front.push(q[0].toFixed(1)+','+q[1].toFixed(1));}
     for(let i=segments;i>=0;i--){const p=curve.pointAt(i/segments,-t/2),q=P(p.x,p.z);back.push(q[0].toFixed(1)+','+q[1].toFixed(1));}
-    return `<polygon points="${front.concat(back).join(' ')}" fill="${a.wall}" stroke="rgba(0,0,0,.45)" stroke-width=".8"/>`;
+    return `<polygon points="${front.concat(back).join(' ')}" fill="${wallFaceColor(S,'back',a)}" stroke="rgba(0,0,0,.45)" stroke-width=".8"/>`;
   };
   const wl=typ().walls;
-  if(wl.indexOf('left')>=0&&sceneItemVisible(SCENE_ASSET_IDS.wallLeft))g+=wall(0,0,t,D);
-  if(wl.indexOf('right')>=0&&sceneItemVisible(SCENE_ASSET_IDS.wallRight))g+=wall(W-t,0,t,D);
+  if(wl.indexOf('left')>=0&&sceneItemVisible(SCENE_ASSET_IDS.wallLeft))g+=wall(0,0,t,D,'left');
+  if(wl.indexOf('right')>=0&&sceneItemVisible(SCENE_ASSET_IDS.wallRight))g+=wall(W-t,0,t,D,'right');
   if(wl.indexOf('back')>=0&&sceneItemVisible(SCENE_ASSET_IDS.wallBack))g+=curvedBackWall();
   if(hasStore()&&sceneItemVisible(SCENE_ASSET_IDS.room)){const G=storeGeom(t),p=P(G.x,G.y);
     g+=`<rect x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" width="${(G.w*sc).toFixed(1)}"
@@ -9027,6 +9037,7 @@ function sync(){
     row.querySelectorAll('.opt').forEach(button=>{const selected=(button.dataset.k==='sticker')===sticker;
       button.classList.toggle('on',selected);button.setAttribute('aria-pressed',String(selected));});});
   buildWallStickerSettings();
+  window.YPWallFinishUI?.sync();
   document.querySelectorAll('#oPair .th').forEach(b=>{
     const t=PAIRS.find(x=>x.k===b.dataset.k),p=S.primary;
     b.innerHTML='<div class="sw"><i style="background:'+p+'"></i><i style="background:'+t.sec(p)+
@@ -10089,5 +10100,6 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/booth-theme.js?v=20260911-1"></script>
 <link rel="stylesheet" href="css/booth-theme.css?v=20260911-1">
 <script src="js/booth-theme-ui.js?v=20260911-1"></script>
+<script src="js/wall-finish-ui.js?v=20260911-1"></script>
 </body>
 </html>

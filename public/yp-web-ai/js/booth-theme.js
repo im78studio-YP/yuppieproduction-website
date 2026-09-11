@@ -32,6 +32,9 @@
    // Only authored objects and booth surfaces, never light fixtures, helpers or scene background.
    if(!obj&&!brand&&!/booth-wall|storage-wall|storage-door|booth-floor/.test(path))return;
    if(obj?.locked)return;
+   // Explicit wall paint has priority over the global theme, including curved walls.
+   const wallFace=path.match(/\bbooth-wall-(back|left|right)(?:-curved)?\b/)?.[1];
+   if(!obj&&wallFace&&hex(spec.wallPaintOverrides?.[wallFace]))return;
    const kind=brand?'graphics':protectedKind(obj,path);
    if(kind==='graphics'&&theme.keepGraphics!==false||kind==='plants'&&theme.keepPlants!==false||kind==='wood'&&theme.keepWood!==false)return;
    if(theme.keepGraphics!==false&&obj?.appearance?.textureData)return;
