@@ -4193,6 +4193,7 @@ function resetSelectedObjectSurface(removeAll=true){
 }
 function duplicateSelectedObject(){
   if(objectEditor.selectedId===SCENE_ASSET_IDS.brand)return duplicateBrandSceneAsset();
+  if(globalThis.YPCopyArrayUI)return globalThis.YPCopyArrayUI.open();
   const source=objectById(objectEditor.selectedId);if(!source)return;
   if(objectLocked(source)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
   const item=objectCatalogDef(source.catalogId),position=findCatalogPlacement(source.catalogId,source.rotationY,
@@ -10136,6 +10137,8 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/asset-replace.css?v=20260911-1">
 <script src="js/asset-replace-ui.js?v=20260911-1"></script>
 <script src="js/asset-settings-enter.js?v=20260911-1"></script>
+<script src="js/copy-array.js?v=20260912-1"></script>
+<script src="js/copy-array-ui.js?v=20260912-1"></script>
 <script src="js/booth-theme.js?v=20260911-1"></script>
 <link rel="stylesheet" href="css/booth-theme.css?v=20260911-1">
 <script src="js/booth-theme-ui.js?v=20260911-1"></script>
