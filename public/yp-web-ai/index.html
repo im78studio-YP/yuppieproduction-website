@@ -1222,6 +1222,15 @@ select:focus{border-color:var(--acc)}
     <label class="lbl">วิธีทำโลโก้</label>
     <select id="logoType"></select>
     <div class="note" id="logoTypeNote"></div>
+    <button class="btn" type="button" id="logoOriginalColor">ใช้สีต้นฉบับจากไฟล์โลโก้</button>
+    <div id="logoLightControls" hidden>
+      <label class="lbl">ไฟโลโก้ · แยกจากไฟส่องบูธ</label>
+      <div class="g2"><button class="btn" id="logoLightOn" type="button">เปิดไฟ</button><button class="btn" id="logoLightOff" type="button">ปิดไฟ</button></div>
+      <div class="g2" style="margin-top:8px"><button class="btn" id="logoLightWhite" type="button">แสงขาว</button><button class="btn" id="logoLightWarm" type="button">แสงวอร์ม</button></div>
+      <label class="lbl" for="logoLightLevel">ความสว่าง <span id="logoLightValue">65%</span></label>
+      <input id="logoLightLevel" type="range" min="0" max="100" step="5" value="65" style="width:100%">
+      <div class="note">แสงนุ่ม ไม่กลบสีหน้าโลโก้ · ไฟเรืองหลังเห็นชัดเมื่อมีผนังรองรับ</div>
+    </div>
     <label class="lbl">รูปทรงชิ้นงาน</label>
     <div class="g2" id="oLogoShape"></div>
     <div class="note" id="logoShapeNote"></div>
@@ -1756,6 +1765,7 @@ select:focus{border-color:var(--acc)}
 <script src="js/template-lighting.js?v=20260909-8"></script>
 <script src="js/booth-light-beams.js?v=20260913-1"></script>
 <script src="js/booth-lighting.js?v=20260913-beams-1"></script>
+<script src="js/logo-finishes.js?v=20260913-lightbox-gain-3"></script>
 <script src="js/template-tv-groups.js?v=20260909-9"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
 <script src="js/smart-snap-engine.js?v=20260910-free-design"></script>
@@ -1983,6 +1993,7 @@ const CARPETS=[{k:'grey',n:'เทาเข้ม',c:'#4a4d52'},{k:'black',n:'�
 const TILES=[{k:'woodL',n:'ไม้อ่อน',c:'#ffffff',grain:1,texture:VINYL_TEXTURE_URL},{k:'woodD',n:'ไม้เข้ม',c:'#ffffff',grain:1,texture:VINYL_DARK_TEXTURE_URL},
   {k:'marble',n:'หินอ่อน',c:'#d8d6d1',grain:0},{k:'conc',n:'ลายปูน',c:'#8b8d90',grain:0}];
 const LOGOTYPES=[{k:'diecut',n:'ทำสีตามแบบ',s:'พ่นหรือทาสีผิวหน้าชิ้นงานตามสีแบรนด์'},
+  {k:'backlit',n:'โลโก้ไดคัท · ไฟเรืองหลัง',s:'หน้าโลโก้เก็บสีเดิม มีความหนาและแสงฟุ้งหลังตามขอบตัวอักษร'},
   {k:'sticker',n:'ติดสติ๊กเกอร์ผิวหน้า',s:'ติดสติ๊กเกอร์พิมพ์สีบนผิวหน้าชิ้นงาน'},
   {k:'light',n:'ทำเป็นกล่องไฟ',s:'ผิวหน้าส่องสว่างจากด้านใน'}];
 const LOGOSHAPES=[{k:'cutout',n:'ไดคัทตามรูปโลโก้',s:'พื้นรอบโลโก้โปร่งใส · แนะนำ'},
@@ -2201,7 +2212,7 @@ const persistentAttachmentWarningKeys=new Set();
 const objectSnapshot=()=>JSON.stringify({objects:S.objects,sceneItemState:S.sceneItemState||{},sceneAssetRegistry:S.sceneAssetRegistry||null,sceneSnapData:S.sceneSnapData||null,assetAttachmentGraph:S.assetAttachmentGraph||null,boothColorTheme:S.boothColorTheme||null,
   wallFinishState:{wallCol:S.wallCol,wallMat:S.wallMat,wallPaintOverrides:S.wallPaintOverrides||{},wallStickerFaces:S.wallStickerFaces||[],wallStickers:S.wallStickers||{}},
   brandState:{brand:S.brand,logoScale:S.logoScale,nameScale:S.nameScale,logoAR:S.logoAR,logoVisibleBounds:S.logoVisibleBounds||null,logoMount:S.logoMount,logoWall:S.logoWall,
-    logoWallU:S.logoWallU,logoWallY:S.logoWallY,logoFloorX:S.logoFloorX,logoFloorZ:S.logoFloorZ,logoFloorRotation:S.logoFloorRotation,logoDepth:S.logoDepth,logoShape:S.logoShape,lockup:S.lockup},
+    logoWallU:S.logoWallU,logoWallY:S.logoWallY,logoFloorX:S.logoFloorX,logoFloorZ:S.logoFloorZ,logoFloorRotation:S.logoFloorRotation,logoDepth:S.logoDepth,logoShape:S.logoShape,logoType:S.logoType,logoLight:S.logoLight||null,logoColorMode:S.logoColorMode||null,lockup:S.lockup},
   lighting:S.lighting||null,lights:S.lights,lightFixture:S.lightFixture,lightCol:S.lightCol,lightWall:S.lightWall,lightWatts:S.lightWatts,lightAdj:S.lightAdj});
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
 const objectLocked=obj=>obj?.locked===true;
@@ -4452,6 +4463,7 @@ function redoObjectChange(){
   const valid=selectedSceneItemIds().filter(sceneItemExists);setObjectSelection(valid,sceneItemExists(selectedId)?selectedId:(valid.at(-1)||null));sync();
 }
 function syncObjectControls(){
+  globalThis.YPLogoFinishes?.updateUI();
   const obj=objectById(objectEditor.selectedId),item=obj&&objectCatalogDef(obj.catalogId),sceneItem=sceneItemById(objectEditor.selectedId),locked=objectLocked(obj),systemAssetSelected=!!sceneItem?.system&&!obj,brandSelected=objectEditor.selectedId===SCENE_ASSET_IDS.brand,box=document.getElementById('objectSelected');
   logoEditor.selected=brandSelected;const selectionCount=selectedSceneItemIds().length;if(!selectionCount)resetAssetContextOpenState();
   if(objectEditor.transformMode!=='move'&&(!obj||locked||selectedObjectIds().length!==1))objectEditor.transformMode='move';
@@ -4740,7 +4752,7 @@ function renderQualityPromptLine(){
     :'คุณภาพภาพ: Preview · แนวคิดรวดเร็ว รายละเอียดปานกลาง เหมาะสำหรับตรวจทิศทางภาพ';
 }
 function lightingPromptForSpec(spec=S){
-  return globalThis.YPBoothLighting.promptLines(spec);
+  return [...globalThis.YPBoothLighting.promptLines(spec),globalThis.YPLogoFinishes.prompt(spec)];
 }
 function buildFullDesignPrompt(){
   const boothType=typ()||{};
@@ -5515,8 +5527,9 @@ function build(){
 
   const lt=document.getElementById('logoType');lt.innerHTML='';
   LOGOTYPES.forEach(t=>{const o=document.createElement('option');o.value=t.k;o.textContent=t.n;lt.appendChild(o);});
-  lt.onchange=()=>{S.logoType=lt.value;sync();};
-  mk('oLogoShape',LOGOSHAPES,v=>{S.logoShape=v;sync();},o=>o.n+'<small>'+o.s+'</small>');
+  lt.onchange=()=>YPLogoFinishes.change({logoType:lt.value});
+  mk('oLogoShape',LOGOSHAPES,v=>YPLogoFinishes.change({logoShape:v}),o=>o.n+'<small>'+o.s+'</small>');
+  YPLogoFinishes.installUI();
   mk('oLogoMount',[{k:'wall',n:'ติดผนัง',s:'ยึดตามผนังที่เลือก'},{k:'floor',n:'ตั้งพื้น',s:'วางบนกริดพื้น'}],v=>{const before=objectSnapshot();S.logoMount=v;recordObjectHistory(before);sync();});
   mk('oLogoWall',WALL_FACES,v=>{const before=objectSnapshot();S.logoWall=v;S.logoWallU=wallFaceLength(S,v)/2;recordObjectHistory(before);sync();},o=>o.n);
   mk('oLogoFloorRotation',[0,90,180,270].map(k=>({k,n:k+'°'})),v=>{const before=objectSnapshot();S.logoFloorRotation=v;recordObjectHistory(before);sync();},o=>o.n);
@@ -6991,13 +7004,13 @@ class ThreeBoothRenderer{
     const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.locked===true,o.visible!==false,o.position.x,o.position.y,o.position.z,o.rotationX,o.rotationY,o.rotationZ,o.orientation,
       o.size.w,o.size.d,o.size.h,o.unitPrice,o.structure?.projection,o.structure?.height,o.structure?.pierWidth,o.structure?.thickness,o.structure?.color,
       o.attachment?.targetId,o.attachment?.sourcePort,o.attachment?.targetPort,o.attachment?.status,o.transform?.flipX===true,o.transform?.flipY===true,sceneObjectScaleValue(o),o.production?.reviewRequired===true,
-      o.label||'',o.groupId||'',o.appearance?.color||'',o.appearance?.textureId||'']);
+      o.label||'',o.groupId||'',o.appearance?.color||'',o.appearance?.textureId||'',o.logoFinish||null]);
     return JSON.stringify([spec.wallPaintOverrides||{},spec.boothColorTheme||null,spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),wallStickers,spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
       spec.lightWall,spec.lightWatts,spec.lightAdj,spec.brand,logoKey,spec.logoType,spec.logoShape,spec.lockup,spec.logoPos,
       spec.logoScale,spec.nameScale,spec.logoMount,spec.logoWall,spec.logoWidth,spec.logoDepth,spec.logoBaseWidth,spec.logoBaseDepth,spec.logoBaseColor,spec.logoColor,spec.logoWallU,spec.logoWallY,
-      spec.logoFloorX,spec.logoFloorZ,spec.logoFloorRotation,spec.sideLogo,spec.sidePos,spec.wallRadius,spec.carpetTextureId||0,
+      spec.logoFloorX,spec.logoFloorZ,spec.logoFloorRotation,spec.logoLight||null,spec.logoColorMode||'',spec.sideLogo,spec.sidePos,spec.wallRadius,spec.carpetTextureId||0,
       spec.carpetTextureMode||'builtin',spec.carpetTextureActiveId||'',spec.tileTextureId||0,
       spec.tileTextureMode||'builtin',spec.tileTextureActiveId||'',spec.floorStickerId||0,spec.floorStickerW,spec.floorStickerD,spec.floorStickerRotation||0,
       spec.floorStickerMode,spec.floorStickerPatternSize,spec.floorStickerOffsetX,spec.floorStickerOffsetY,objects,spec.sceneItemState||{},lightingKey]);
@@ -7007,7 +7020,7 @@ class ThreeBoothRenderer{
     this.restoreTopViewHidden();this.currentKey=key;this.buildId=(this.buildId||0)+1;this.scene.remove(this.boothGroup);disposeThreeObject(this.boothGroup);
     this.objectMeshes=new Map();this.brandingRoot=null;this.brandingHitTarget=null;this.selectionHelper=null;this.selectionHelpers=[];this.anchorGuideGroup=null;this.snapPreviewGroup=null;this.resizeHandleGroup=null;
     this.hoveredAnchorMarker=null;this.activeAnchorMarker=null;this.hoveredResizeHandle=null;this.activeResizeHandle=null;
-    this.boothGroup=new this.THREE.Group();this.scene.add(this.boothGroup);this.buildBooth(spec);this.applySceneVisibility();bindSceneAssetRegistryObjects(this,spec);
+    this.boothGroup=new this.THREE.Group();this.scene.add(this.boothGroup);this.buildBooth(spec);this.applySceneVisibility();YPLogoFinishes.finish(this);bindSceneAssetRegistryObjects(this,spec);
     this.fitStudioLighting(spec);
     if(this.currentView==='orthographic_top')this.hideTopViewOverheadAssets(spec);
     this.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
@@ -7266,7 +7279,7 @@ class ThreeBoothRenderer{
     };
     const draw=image=>{
       sx.clearRect(0,0,stage.width,stage.height);
-      const panel=spec.logoShape==='panel',panelColor=spec.logoType==='light'?'#fff8dc':spec.logoType==='sticker'?'#ffffff':bg;
+      const panel=spec.logoShape==='panel',panelColor=['light','sticker'].includes(spec.logoType)?'#ffffff':bg;
       if(panel){sx.fillStyle=panelColor;sx.fillRect(0,0,stage.width,stage.height);}
       const dark=lum(panel?panelColor:bg)<.55;
       const ink=dark?'#ffffff':shade(a.acc,.68),logoInk=spec.logoColor||spec.primary||'#2e7d4f',brand=(spec.brand||'YOUR BRAND').toUpperCase();
@@ -7286,7 +7299,7 @@ class ThreeBoothRenderer{
         if(image){const tint=document.createElement('canvas'),tw=Math.max(2,Math.ceil(size.w)),th=Math.max(2,Math.ceil(size.h));tint.width=tw;tint.height=th;
           const tx=tint.getContext('2d'),source=crop||{sourceX:0,sourceY:0,sourceWidth:image.naturalWidth,sourceHeight:image.naturalHeight};
           const raster=image._ypRasterSource||image,scaleX=image._ypRasterSource?raster.width/image.naturalWidth:1,scaleY=image._ypRasterSource?raster.height/image.naturalHeight:1;
-          tx.drawImage(raster,source.sourceX*scaleX,source.sourceY*scaleY,source.sourceWidth*scaleX,source.sourceHeight*scaleY,0,0,tw,th);tx.globalCompositeOperation='source-in';tx.fillStyle=logoInk;tx.fillRect(0,0,tw,th);sx.drawImage(tint,dx,dy,size.w,size.h);}
+          tx.drawImage(raster,source.sourceX*scaleX,source.sourceY*scaleY,source.sourceWidth*scaleX,source.sourceHeight*scaleY,0,0,tw,th);if(YPLogoFinishes.colorMode(spec)==='tint'){tx.globalCompositeOperation='source-in';tx.fillStyle=logoInk;tx.fillRect(0,0,tw,th);}sx.drawImage(tint,dx,dy,size.w,size.h);}
         else{sx.strokeStyle=logoInk;sx.lineWidth=7;sx.setLineDash([18,12]);sx.strokeRect(dx,dy,size.w,size.h);sx.setLineDash([]);
           sx.fillStyle=logoInk;sx.globalAlpha=.65;sx.font='700 '+Math.max(16,Math.min(48,size.h*.32))+'px Inter, sans-serif';sx.textAlign='center';sx.textBaseline='middle';sx.fillText('LOGO',cx,cy);sx.globalAlpha=1;}
         return size;
@@ -7330,12 +7343,11 @@ class ThreeBoothRenderer{
     return texture;
   }
   brandMaterial(spec,bg){
-    const T=this.THREE,texture=this.brandTexture(spec,bg),light=spec.logoType==='light';
-    return new T.MeshStandardMaterial({map:texture,transparent:true,alphaTest:.025,side:T.DoubleSide,
-      roughness:light?.28:.64,emissive:light?new T.Color('#ffe0a0'):new T.Color('#000000'),emissiveIntensity:light?.22:0});
+    return YPLogoFinishes.front(this.THREE,this.brandTexture(spec,bg),spec);
   }
   brandPlane(group,spec,width,height,position,rotationY,bg,name,material=null){
     const T=this.THREE,basePosition=[...position],mesh=new T.Mesh(new T.PlaneGeometry(width,height),material||this.brandMaterial(spec,bg));
+    mesh.position.set(...basePosition);mesh.rotation.y=rotationY;
     const applyVisibleBounds=bounds=>{
       const metrics=globalThis.YPBrandVisibleBounds.planeMetrics({width,height,bounds,padding:0}),geometry=new T.PlaneGeometry(metrics.contentWidth,metrics.contentHeight),uv=geometry.getAttribute('uv'),visible=metrics.visibleBounds,
         rangeX=visible.maxX-visible.minX,rangeY=visible.maxY-visible.minY;
@@ -7343,7 +7355,7 @@ class ThreeBoothRenderer{
       uv.needsUpdate=true;if(mesh.geometry)mesh.geometry.dispose();mesh.geometry=geometry;mesh.position.set(...basePosition);mesh.rotation.y=rotationY;
       mesh.translateX(metrics.localX);mesh.position.y+=metrics.localY;mesh.userData.brandVisibleBounds=visible;
     };
-    mesh.name=name;mesh.castShadow=true;mesh.userData.applyBrandVisibleBounds=applyVisibleBounds;group.add(mesh);return mesh;
+    mesh.name=name;mesh.castShadow=true;mesh.userData.applyBrandVisibleBounds=applyVisibleBounds;group.add(mesh);YPLogoFinishes.addBloom(T,group,mesh,spec);return mesh;
   }
   brandCurvedPlane(group,spec,width,height,centerX,centerY,surfaceOffset,bg,name,material=null){
     const info=wallCurveInfo(spec);if(!info)return this.brandPlane(group,spec,width,height,[centerX,centerY,surfaceOffset],0,bg,name,material);
@@ -7406,9 +7418,7 @@ class ThreeBoothRenderer{
     ],fmt(spec.H)+' ม.',[-offset,spec.H/2,-tick],span,'booth-dimension-height');
   }
   brandLayerMaterials(spec,bg){
-    const T=this.THREE,front=this.brandMaterial(spec,bg),edge=new T.MeshStandardMaterial({
-      color:new T.Color(spec.logoColor||spec.primary||'#2e7d4f'),alphaMap:front.map,transparent:true,alphaTest:.025,side:T.DoubleSide,
-      roughness:.68,metalness:.04});
+    const T=this.THREE,front=this.brandMaterial(spec,bg),edge=YPLogoFinishes.edge(T,front.map,spec);
     return{front,edge};
   }
   brandSelectionProxy(holder,spec,width,height,depth,materials,anchor){
@@ -7464,6 +7474,16 @@ class ThreeBoothRenderer{
       }else if(face==='back')this.brandPlane(holder,spec,width,height,[spec.logoWallU,centerY,t+offset],0,bg,name,material);
       else if(face==='left')this.brandPlane(holder,spec,width,height,[t+offset,centerY,spec.logoWallU],Math.PI/2,bg,name,material);
       else this.brandPlane(holder,spec,width,height,[spec.W-t-offset,centerY,spec.logoWallU],-Math.PI/2,bg,name,material);
+    }
+    if(spec.logoType==='backlit'){
+      const mat=YPLogoFinishes.haloMaterial(T,materials.front.map,spec);let halo;
+      if(face==='back'&&isCurvedWallType(spec)){
+        const curve=wallCurveInfo(spec),fraction=clampNumber(spec.logoWallU/Math.max(.001,curve.arcLength),0,1),angle=(fraction-.5)*curve.arcAngle;
+        halo=this.brandCurvedPlane(holder,spec,width,height,curve.half+curve.radius*Math.sin(angle),centerY,t/2+.003,bg,'logo-back-halo',mat);
+      }else if(face==='back')halo=this.brandPlane(holder,spec,width,height,[spec.logoWallU,centerY,t+.003],0,bg,'logo-back-halo',mat);
+      else if(face==='left')halo=this.brandPlane(holder,spec,width,height,[t+.003,centerY,spec.logoWallU],Math.PI/2,bg,'logo-back-halo',mat);
+      else halo=this.brandPlane(holder,spec,width,height,[spec.W-t-.003,centerY,spec.logoWallU],-Math.PI/2,bg,'logo-back-halo',mat);
+      YPLogoFinishes.markHalo(halo);
     }
     let anchor;
     if(face==='back'&&isCurvedWallType(spec)){
@@ -7754,18 +7774,18 @@ class ThreeBoothRenderer{
       const texture=new T.CanvasTexture(brandImage._ypRasterSource||brandImage);texture.colorSpace=T.SRGBColorSpace;
       meshes.forEach(part=>{const materials=Array.isArray(part.material)?part.material:[part.material];materials.forEach(material=>{
         material.map=texture;material.color?.set('#ffffff');material.transparent=true;material.alphaTest=.01;material.needsUpdate=true;
-      });});return;
+      });});YPLogoFinishes.applyCopy(this,root,obj,texture);return;
     }
     const buildId=this.buildId,loader=new T.TextureLoader();loader.load(appearance.textureData,texture=>{
       if(buildId!==this.buildId||!root.parent){texture.dispose();return;}texture.colorSpace=T.SRGBColorSpace;texture.wrapS=T.ClampToEdgeWrapping;texture.wrapT=T.ClampToEdgeWrapping;
       meshes.forEach(part=>{const materials=Array.isArray(part.material)?part.material:[part.material];materials.forEach(material=>{
         material.map=texture;material.color?.set('#ffffff');material.transparent=true;material.alphaTest=.01;material.needsUpdate=true;});});
-      this.renderer.render(this.scene,this.camera);
+      YPLogoFinishes.applyCopy(this,root,obj,texture);this.renderer.render(this.scene,this.camera);
     },undefined,()=>announceCatalog('โหลดสติ๊กเกอร์ของ '+selectedAssetName(obj)+' ไม่สำเร็จ','error'));
   }
   buildCatalogObject(obj){
     const T=this.THREE,item=objectCatalogDef(obj.catalogId),s=obj.size,root=new T.Group(),accent=palette().acc;
-    const furniture=obj.geometryMode==='parametric'?null:this.furnitureModel(item);
+    const furniture=obj.geometryMode==='parametric'||(obj.type==='brandCopy'&&obj.logoFinish)?null:this.furnitureModel(item);
     if(furniture){
       /* GLB templates are normalized once when loaded.  Apply the object's
          current dimensions to the clone so the settings panel changes the
@@ -9245,6 +9265,7 @@ function sync(){
   if(islandBrandNote)islandBrandNote.hidden=!islandBrandDisabled;
   document.getElementById('logoType').value=S.logoType;
   document.getElementById('logoTypeNote').textContent=LOGOTYPES.find(t=>t.k===S.logoType).s;
+  YPLogoFinishes.updateUI();
   document.querySelectorAll('#oLogoShape .opt').forEach(button=>button.classList.toggle('on',button.dataset.k===S.logoShape));
   document.getElementById('logoShapeNote').textContent=S.logoShape==='cutout'
     ?(S.logo&&S.logoHasTransparency===false
@@ -9604,9 +9625,9 @@ document.getElementById('cHex2').oninput=e=>{const v=e.target.value.trim();
 document.getElementById('logoBasePick').oninput=e=>{S.logoBaseColor=e.target.value;sync();};
 document.getElementById('logoBaseHex').oninput=e=>{const v=e.target.value.trim();
   if(/^#?[0-9a-fA-F]{6}$/.test(v)){S.logoBaseColor=(v[0]==='#'?v:'#'+v).toLowerCase();sync();}};
-document.getElementById('logoColorPick').oninput=e=>{S.logoColor=e.target.value;S.logoColorTouched=true;sync();};
+document.getElementById('logoColorPick').oninput=e=>{S.logoColor=e.target.value;S.logoColorTouched=true;S.logoColorMode='tint';sync();};
 document.getElementById('logoColorHex').oninput=e=>{const v=e.target.value.trim();
-  if(/^#?[0-9a-fA-F]{6}$/.test(v)){S.logoColor=(v[0]==='#'?v:'#'+v).toLowerCase();S.logoColorTouched=true;sync();}};
+  if(/^#?[0-9a-fA-F]{6}$/.test(v)){S.logoColor=(v[0]==='#'?v:'#'+v).toLowerCase();S.logoColorTouched=true;S.logoColorMode='tint';sync();}};
 ['dW','dD','dH'].forEach((id,i)=>{document.getElementById(id).oninput=e=>{
   if(isFixedBoothType(S.type)){syncDims();return;}
   const v=parseFloat(e.target.value);if(isNaN(v))return;
