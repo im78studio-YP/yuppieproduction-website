@@ -42,6 +42,11 @@
  footer(choicesPanel,'layout',()=>{if(session.mode==='current'&&!session.base)session.base=structuredClone(session.original);if(!session.base)pick('blank');show('customize');},'wizard-template-next');
  const customize=panel('customize','ปรับแต่งแบบ','ใช้ค่าตามแบบตั้งต้นได้เลย หรือเปิดเฉพาะส่วนที่ต้องการแก้ · แบบจริงยังไม่เปลี่ยน');
  const options=customize.querySelector('.wizard-content');
+ const logoControl=YPWizardLogo.create(options,{getSpec:()=>session?{...session.base.spec,type:quickSetupDraft.boothType}:{},changed:()=>{
+   $('wizard-customize-next').disabled=logoControl.blocked();
+   if(logoControl.blocked()){$('wizard-finish').disabled=true;return;}
+   requestPreview();
+ }});
  options.append(action('คืนค่าตามแบบตั้งต้น',()=>{resetCustom(true);fillCustom();requestPreview();},'wizard-keep-original'));
  const themeDetails=node('details'),themeSummary=node('summary','ธีมสีบูธ');themeDetails.append(themeSummary);
  const themes=node('div',null,'wizard-themes');
@@ -72,9 +77,9 @@
    const ws=YPProjectWorkspace.state();if(!ws.ready||ws.busy||ws.pendingDraft)return;
    const original=YPProjectBridge.capture();session={mode,original,expectedDesign:model.designSignature(original.spec),active:ws.active,target:ws.active,base:mode==='current'?structuredClone(original):YPProjectBridge.initialSnapshot()};
    const s=original.spec;quickSetupDraft={businessCategoryId:s.cat,customBusinessCategory:s.customBusinessCategory||'',businessBrief:YPBusinessBrief.normalize(s.businessBrief),boothType:model.steps&&['inline','corner','penin','island'].includes(s.type)?s.type:'inline',cornerSide:s.cornerSide||'right',width:s.W,depth:s.D,height:s.H,brandTouched:true,primary:s.primary,templateId:null};
-   selected=mode==='current'?'current':'blank';filter='all';resetCustom();show(start);
+   selected=mode==='current'?'current':'blank';filter='all';logoControl.reset();resetCustom();show(start);
  }
- function resetCustom(restoreOriginal=false){Object.assign(quickSetupDraft,{theme:null,...model.floorDefaults(session.base.spec,restoreOriginal||selected==='current'),roomMode:'keep'});}
+ function resetCustom(restoreOriginal=false){if(restoreOriginal)logoControl.reset();Object.assign(quickSetupDraft,{theme:null,...model.floorDefaults(session.base.spec,restoreOriginal||selected==='current'),roomMode:'keep'});}
  function pick(id){
    selected=id;const d=quickSetupDraft;
    session.base=id==='current'?structuredClone(session.original):id==='blank'?YPProjectBridge.initialSnapshot():bridge(d.boothType).snapshot(id,{cornerSide:d.cornerSide});
@@ -105,12 +110,13 @@
  function roomNote(){const d=quickSetupDraft,s=session.base.spec;$('wizard-room-note').textContent=d.roomMode==='add'?'เพิ่มห้องระบบอีก 1 ห้อง โดยไม่ลบห้องที่ประกอบมากับเทมเพลต อาจซ้อนกับของเดิม โปรดตรวจพรีวิวและจัดตำแหน่งต่อในหน้าออกแบบ':d.roomMode==='remove-standard'?'นำออกเฉพาะห้องระบบ ห้องที่ประกอบจากอุปกรณ์ในเทมเพลตยังอยู่ และแก้ต่อได้ในหน้าออกแบบ':(s.stSize!=='none'?'เก็บห้องระบบเดิม พร้อม':'ไม่เพิ่มห้องระบบใหม่ · เก็บ')+'ห้องและโครงสร้างที่ประกอบอยู่ในแบบทั้งหมด';}
  const oldFloorUpdate=updateQuickFloorStep;
  updateQuickFloorStep=function(){oldFloorUpdate();if(quickSetupDraft?.floor==='carpet'&&quickSetupDraft.carpet==='grey')$('quickFloorSummary').textContent=(RAISE.find(v=>v.k===Number(quickSetupDraft.raise))?.n||'ไม่ยกพื้น')+' · พรม เทาดำ';if(session&&quickSetupStep==='customize'&&!session.filling){quickSetupDraft.floorChanged=true;requestPreview();}};
- function fillCustom(){session.filling=true;fillTheme();buildQuickFloorChoices();updateQuickFloorStep();$('wizard-room').value=quickSetupDraft.roomMode;roomNote();session.filling=false;}
- function result(){return model.build(session.base,quickSetupDraft,YPBusinessBrief.normalize);}
+ function fillCustom(){session.filling=true;logoControl.refresh();$('wizard-customize-next').disabled=logoControl.blocked();fillTheme();buildQuickFloorChoices();updateQuickFloorStep();$('wizard-room').value=quickSetupDraft.roomMode;roomNote();session.filling=false;}
+ function result(){const out=model.build(session.base,quickSetupDraft,YPBusinessBrief.normalize);logoControl.apply(out.spec);return out;}
  function reviewSummary(){
    const d=quickSetupDraft,s=result().spec;summary.replaceChildren();
    for(const [k,v] of [['แบบตั้งต้น',template()?.name||(selected==='current'?'งานปัจจุบัน':'บูธเปล่า')],['ธุรกิจ',businessCategoryLabel(s)],['พื้นที่',(TYPES.find(t=>t.k===s.type)?.n||s.type)+' · '+s.W+' × '+s.D+' × '+s.H+' ม.'+(s.type==='corner'?' · '+(s.cornerSide==='left'?'หัวมุมซ้าย':'หัวมุมขวา'):'')],['ธีมสี',d.theme?.name||'เก็บสีเดิมของแบบ'],['พื้น',(FLOORS.find(f=>f.k===s.floor)?.n||s.floor)+' · '+(s.floor==='tile'?TILES.find(t=>t.k===s.tile)?.n||s.tile:s.floor==='carpet'?CARPETS.find(c=>c.k===s.carpet)?.n||s.carpet:'')+' · ยก '+s.raise+' ซม.'],['ห้อง',d.roomMode==='keep'?'เก็บห้องและโครงสร้างเดิม':d.roomMode==='add'?'เพิ่มห้องระบบอีก 1 ห้อง · ตรวจการซ้อน':'เอาเฉพาะห้องระบบออก'],['ปลายทาง','แบบ '+session.target+' · อีกแบบไม่เปลี่ยน']])summary.append(node('dt',k),node('dd',v));
    const floorRow=[...summary.querySelectorAll('dt')].find(n=>n.textContent==='พื้น')?.nextElementSibling;
+   summary.append(node('dt','โลโก้'),node('dd',logoControl.summary()));
    if(floorRow){floorRow.textContent=floorRow.textContent.replace('ยก 0 ซม.','ไม่ยกพื้น');if(s.floor==='carpet'&&s.carpet==='grey')floorRow.textContent=floorRow.textContent.replace(CARPETS.find(c=>c.k==='grey').n,'เทาดำ');}
    for(const field of YPBusinessBrief.fields)if(d.businessBrief[field.key])summary.append(node('dt',field.label),node('dd',d.businessBrief[field.key]));target.value=session.target;
  }
@@ -143,11 +149,11 @@
    if(m.type==='ready'){p.ready=true;pump();return;}
    if(!['rendered','error'].includes(m.type))return;clearTimeout(p.timer);p.busy=false;
    if(m.type==='error'&&(!m.revision||m.revision===p.revision)){failPreview(m.message||'โหลดพรีวิวไม่สำเร็จ');return;}
-   if(m.revision===p.revision){p.rendered=m.revision;$('wizard-preview-status').textContent='พรีวิวพร้อม · หมุนตรวจแบบได้ก่อนยืนยัน';$('wizard-finish').disabled=false;}
+   if(m.revision===p.revision){p.rendered=m.revision;$('wizard-preview-status').textContent='พรีวิวพร้อม · หมุนตรวจแบบได้ก่อนยืนยัน';$('wizard-finish').disabled=logoControl.blocked();}
    pump();
  });
  async function finish(){
-   if(quickSetupCompleting||!preview||preview.rendered!==preview.revision||$('wizard-finish').disabled)return;
+   if(quickSetupCompleting||logoControl.blocked()||!preview||preview.rendered!==preview.revision||$('wizard-finish').disabled)return;
    const current=session;quickSetupCompleting=true;$('wizard-finish').disabled=true;$('wizard-error').textContent='';
    try{const snapshot=result();const reply=await YPProjectWorkspace.useWizard({makeSnapshot:()=>snapshot,name:template()?.name||(selected==='current'?'ปรับงานปัจจุบัน':'บูธเปล่า'),target:current.target,expectedActive:current.active,expectedDesign:current.expectedDesign});
      if(!reply.ok){$('wizard-error').textContent=reply.message;return;}
@@ -157,8 +163,8 @@
  // Modal keyboard/focus behavior remains shared with the existing Wizard shell.
  setQuickSetupStep=show;
  const oldClose=closeReleaseNotes;
- closeReleaseNotes=function(discard=true){if(quickSetupCompleting)return;stopPreview();session=null;oldClose(discard);opener?.focus();};
- YPQuickSetupBridge.open=function({start='intro'}={}){opener=document.activeElement;quickSetupCompleting=false;modal.classList.add('show');modal.setAttribute('aria-hidden','false');stopPreview();session=null;if(start==='business')begin('new');else show('intro');};
+ closeReleaseNotes=function(discard=true){if(quickSetupCompleting)return;logoControl.reset();stopPreview();session=null;oldClose(discard);opener?.focus();};
+ YPQuickSetupBridge.open=function({start='intro'}={}){opener=document.activeElement;quickSetupCompleting=false;modal.classList.add('show');modal.setAttribute('aria-hidden','false');logoControl.reset();stopPreview();session=null;if(start==='business')begin('new');else show('intro');};
  $('quickBusinessNext').onclick=()=>{quickBusinessAttempted=true;updateQuickBusinessStep();if(!quickBusinessValidation())show('layout');};
  $('quickBusinessBack').onclick=()=>show('intro');$('quickLayoutBack').onclick=()=>show('business');$('quickLayoutNext').onclick=()=>{updateArea();if(!model.validate(quickSetupDraft))show('template');};
  // Editor shortcuts must not operate behind the Wizard, including Enter in fields.
