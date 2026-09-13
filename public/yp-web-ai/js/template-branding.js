@@ -1,6 +1,8 @@
 (function(root){
  'use strict';
  const REV='yp-brand-audit-20260911';
+ const LOGO_GRAPHICS=new Set(['header','counter','six-blue-brand','six-blue-name','six-information','six-handa','six-handa-dark','six-website','six-mobile-label','six-store']);
+ const isLogoSource=source=>!!source&&(source.brandLogo===true||source.waveArtwork==='logo'||LOGO_GRAPHICS.has(source.graphic));
  const escape=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
  // Inline the supplied vector paths: no font substitution, async image race or
  // external SVG dependency. The viewport uses the actual panel's physical ratio.
@@ -18,7 +20,11 @@
   spec.logo=root.YPDefaultLogo.data;spec.brand=root.YPDefaultLogo.brand;spec.nameScale=0;
   for(let i=0;i<t.objects.length;i++){
    const source=t.objects[i],o=spec.objects[i];if(!o)continue;
-   if(source.brandLogo){Object.assign(o.appearance,{mode:'original',textureData:artwork(null,o.size.w,o.size.h),textureName:'Yuppie Production',textureId:REV+'-'+o.id});}
+   if(o.type==='brandCopy')o.logoSlot={version:1,kind:isLogoSource(source)?'logo':'media'};
+   if(isLogoSource(source)){
+    Object.assign(o.appearance,{mode:'original',textureData:artwork(null,o.size.w,o.size.h),textureName:'Yuppie Production',textureId:'yp-logo-slot-1-'+o.id});
+    o.logoFinish={logoType:'diecut',logoShape:'cutout'};
+   }
    else if(source.graphic){
     const key=source.graphic,needsLogo=key.startsWith('botanical-')||key==='aqua-screen'||key.startsWith('six-')||key.startsWith('beauty-')||['header','poster','counter','screen','blue-info','light-rings','blue-rings','blush-beauty'].includes(key);
     if(needsLogo){const poster=key.startsWith('beauty-')||/six-(technology|gold|digital|mobile|inventors|product|devices)$/.test(key)||['poster','screen','blush-beauty','blue-info','blue-rings','light-rings'].includes(key);
@@ -37,5 +43,5 @@
   }
   return spec;
  }
- root.YPTemplateBranding={artwork,apply,revision:REV};
+ root.YPTemplateBranding={artwork,apply,isLogoSource,revision:REV};
 })(globalThis);

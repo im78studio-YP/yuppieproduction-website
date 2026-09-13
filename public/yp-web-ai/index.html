@@ -1765,14 +1765,14 @@ select:focus{border-color:var(--acc)}
 <script src="js/template-lighting.js?v=20260909-8"></script>
 <script src="js/booth-light-beams.js?v=20260913-1"></script>
 <script src="js/booth-lighting.js?v=20260913-beams-1"></script>
-<script src="js/logo-finishes.js?v=20260913-lightbox-gain-3"></script>
+<script src="js/logo-finishes.js?v=20260913-logo-slots-4"></script>
 <script src="js/template-tv-groups.js?v=20260909-9"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
 <script src="js/smart-snap-engine.js?v=20260910-free-design"></script>
 <script src="js/asset-attachment-graph.js?v=20260910-structure-support"></script>
 <script src="js/brand-visible-bounds.js?v=20260902-1"></script>
 <script src="assets/branding/default-logo.js?v=20260908-1"></script>
-<script src="js/template-branding.js?v=20260911-botanical"></script>
+<script src="js/template-branding.js?v=20260913-logo-slots"></script>
 <script>
 /* ================= ข้อมูล ================= */
 const CATGROUPS=[
@@ -2212,7 +2212,8 @@ const persistentAttachmentWarningKeys=new Set();
 const objectSnapshot=()=>JSON.stringify({objects:S.objects,sceneItemState:S.sceneItemState||{},sceneAssetRegistry:S.sceneAssetRegistry||null,sceneSnapData:S.sceneSnapData||null,assetAttachmentGraph:S.assetAttachmentGraph||null,boothColorTheme:S.boothColorTheme||null,
   wallFinishState:{wallCol:S.wallCol,wallMat:S.wallMat,wallPaintOverrides:S.wallPaintOverrides||{},wallStickerFaces:S.wallStickerFaces||[],wallStickers:S.wallStickers||{}},
   brandState:{brand:S.brand,logoScale:S.logoScale,nameScale:S.nameScale,logoAR:S.logoAR,logoVisibleBounds:S.logoVisibleBounds||null,logoMount:S.logoMount,logoWall:S.logoWall,
-    logoWallU:S.logoWallU,logoWallY:S.logoWallY,logoFloorX:S.logoFloorX,logoFloorZ:S.logoFloorZ,logoFloorRotation:S.logoFloorRotation,logoDepth:S.logoDepth,logoShape:S.logoShape,logoType:S.logoType,logoLight:S.logoLight||null,logoColorMode:S.logoColorMode||null,lockup:S.lockup},
+    logoWallU:S.logoWallU,logoWallY:S.logoWallY,logoFloorX:S.logoFloorX,logoFloorZ:S.logoFloorZ,logoFloorRotation:S.logoFloorRotation,logoDepth:S.logoDepth,logoShape:S.logoShape,logoType:S.logoType,logoLight:S.logoLight||null,logoColorMode:S.logoColorMode||null,lockup:S.lockup,
+    logo:S.logo,logoAcc:S.logoAcc,logoHasTransparency:S.logoHasTransparency,logoColor:S.logoColor,logoColorTouched:S.logoColorTouched},
   lighting:S.lighting||null,lights:S.lights,lightFixture:S.lightFixture,lightCol:S.lightCol,lightWall:S.lightWall,lightWatts:S.lightWatts,lightAdj:S.lightAdj});
 const objectById=id=>S.objects.find(o=>o.id===id)||null;
 const objectLocked=obj=>obj?.locked===true;
@@ -3772,6 +3773,7 @@ function selectObject(id,options={}){
     }else{setObjectSelection(unitIds,id);if(previousPrimary!==id){objectEditor.moveMode='smart';objectEditor.transformMode='move';}}
   }
   syncObjectControls();if(threeRenderer)threeRenderer.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
+  if(!additive)globalThis.YPLogoReplacement?.onSelect(id);
   if(S.view==='plan')render();
 }
 function selectLogoPlacement(selected=true){
@@ -3779,6 +3781,7 @@ function selectLogoPlacement(selected=true){
   if(logoEditor.selected)setObjectSelection([SCENE_ASSET_IDS.brand],SCENE_ASSET_IDS.brand);
   else if(objectEditor.selectedId===SCENE_ASSET_IDS.brand)setObjectSelection([]);
   syncObjectControls();
+  if(selected)globalThis.YPLogoReplacement?.onSelect(SCENE_ASSET_IDS.brand);
   if(threeRenderer)threeRenderer.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
   if(S.view==='plan')render();
 }
@@ -3789,6 +3792,7 @@ function selectSceneItem(id,options={}){
   if(additive){current.has(id)?current.delete(id):current.add(id);setObjectSelection([...current],current.has(id)?id:([...current].at(-1)||null));}
   else setObjectSelection([id],id);
   logoEditor.selected=objectEditor.selectedId===SCENE_ASSET_IDS.brand;
+  if(logoEditor.selected&&!additive)globalThis.YPLogoReplacement?.onSelect(SCENE_ASSET_IDS.brand);
   syncObjectControls();if(threeRenderer)threeRenderer.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
   if(S.view==='plan')render();
 }
@@ -4239,6 +4243,8 @@ function duplicateSelectedObject(){
   copy.position.y=source.position.y;copy.rotationX=source.rotationX;copy.rotationY=source.rotationY;copy.rotationZ=source.rotationZ;copy.orientation=source.orientation;
   copy.size={...source.size};copy.unitPrice=source.unitPrice;
   if(source.structure)copy.structure={...source.structure};
+  if(source.logoSlot)copy.logoSlot={...source.logoSlot};
+  if(source.logoFinish)copy.logoFinish=structuredClone(source.logoFinish);
   if(source.transform)copy.transform=JSON.parse(JSON.stringify(source.transform));if(source.transformPolicy)copy.transformPolicy={...source.transformPolicy};if(source.production)copy.production={...source.production};if(source.appearance)copy.appearance={...source.appearance};copy.label=source.label||'';copy.originalSize={...(source.originalSize||source.size)};
   if(source.capabilities)copy.capabilities={...source.capabilities};if(source.collision)copy.collision={...source.collision};
   copy.attachment=null;copy.placement={...(source.placement||{}),mode:'free',surface:'free',targetId:null,anchorAttachment:null,snapCandidate:null,installFreely:true,duplicateSourceId:source.id};normalizeSceneObjectModel(copy,item);
@@ -4264,6 +4270,7 @@ function duplicateBrandSceneAsset(){
       rotationX:(Number(rotation.x)||0)*180/Math.PI,rotationY:(Number(rotation.y)||0)*180/Math.PI,rotationZ:(Number(rotation.z)||0)*180/Math.PI,orientation:'horizontal',
       size:{w:Math.max(MIN_ASSET_DIMENSION,Number(layout.bounds.width)||item.size.w),d:Math.max(.01,Number(layout.bounds.depth)||item.size.d),h:Math.max(MIN_ASSET_DIMENSION,Number(layout.bounds.height)||item.size.h)},unitPrice:0,
       appearance:{mode:'original',color:null,textureData,textureName:label+'.png',textureId:'brand-copy-'+Date.now()},placement:{mode:'free',surface:'free',targetId:null,anchorSnap:true,surfaceSnap:true,allowOutsideBooth:true,installFreely:true,duplicateSourceId:SCENE_ASSET_IDS.brand}};
+  copy.logoSlot={version:1,kind:'logo'};
   copy.originalSize={...copy.size};normalizeObjectAIRule(copy,item);normalizeSceneObjectModel(copy,item);mutateObjects(()=>S.objects.push(copy),copy.id);
   announceCatalog('สร้าง '+label+' แล้ว · ลากจุด Mount สีเขียวไปติดผนังหรือ Asset อื่น','success');return true;
 }
@@ -10183,6 +10190,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/island-yellow-geometry.js?v=20260913-beams-1"></script>
 <script src="js/island-templates.js?v=20260911-yellow"></script>
 <script src="js/island-template-ui.js?v=20260911-yellow"></script>
+<script src="js/logo-replacement.js?v=20260913-1"></script>
 <script src="js/inline-wizard.js?v=20260911-business"></script>
 <script src="js/template-entry.js?v=20260910-entry-flow"></script>
 <link rel="stylesheet" href="css/responsive-tools.css?v=20260910-2">

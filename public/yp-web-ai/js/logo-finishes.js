@@ -96,6 +96,7 @@
   document.getElementById('logoLightLevel').value=Math.round(s.intensity*100);document.getElementById('logoLightValue').textContent=Math.round(s.intensity*100)+'%';
   document.getElementById('logoOriginalColor').hidden=!!o;document.getElementById('logoOriginalColor').setAttribute('aria-pressed',String(colorMode(spec)==='original'));
   document.querySelectorAll('#oLogoShape button').forEach(b=>{b.disabled=spec.logoType==='backlit';b.classList.toggle('on',b.dataset.k===spec.logoShape);});
+  global.YPLogoReplacement?.refresh();
  }
  function installUI(){
   const $=id=>document.getElementById(id);
