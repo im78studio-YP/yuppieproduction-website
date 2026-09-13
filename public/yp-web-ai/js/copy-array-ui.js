@@ -4,14 +4,14 @@
  const dialog=document.createElement('dialog');dialog.id='copyArrayDialog';dialog.setAttribute('aria-labelledby','copyArrayTitle');
  dialog.innerHTML=`<form id="copyArrayForm"><header><strong id="copyArrayTitle">ทำสำเนาตามแกน</strong><button type="button" class="btn" id="copyArrayClose" aria-label="ปิด">×</button></header>
  <p id="copyArraySource"></p><div class="copy-array-grid">
- <label>แกนของบูธ<select id="copyArrayAxis"><option value="x">X · ซ้าย–ขวา</option><option value="y">Y · ขึ้น–ลง</option><option value="z">Z · หลัง–หน้า</option></select></label>
+ <label>แกนของบูธ<select id="copyArrayAxis"><option value="x">X · ซ้าย–ขวา</option><option value="y">Y · หน้า–หลัง</option><option value="z">Z · ขึ้น–ลง</option></select></label>
  <label>ทิศทาง<select id="copyArrayDirection"><option value="1">+ บวก</option><option value="-1">− ลบ</option></select></label>
  <label>จำนวนสำเนา (ไม่รวมต้นฉบับ)<input id="copyArrayCount" type="number" min="1" max="100" step="1" value="1" required></label>
  <label>วิธีวัดระยะ<select id="copyArrayMode"><option value="gap">ช่องว่างขอบถึงขอบ</option><option value="step">ระยะเลื่อนต่อชิ้น</option></select></label>
  <label>ระยะห่าง<input id="copyArrayDistance" type="number" min="0" step="any" value="10" required></label>
  <label>หน่วย<select id="copyArrayUnit"><option value="cm">เซนติเมตร</option><option value="m">เมตร</option></select></label></div>
  <p id="copyArraySummary" role="status" aria-live="polite"></p><p id="copyArrayWarning"></p>
- <small>สีชมพูโปร่งใส = สำเนาที่จะสร้าง · ขอบวัดจากกรอบครอบวัตถุตามแกนบูธ รวมการหมุนและ Scale<br>สำเนาปลดจุดยึดเดิม · วางซ้อน/นอกบูธได้ · Undo ครั้งเดียวทั้งชุด</small>
+ <small>แกนอิงทิศบูธ ไม่ใช่มุมกล้อง · ใช้แกนเดียวกับปรับละเอียด<br>สีชมพูโปร่งใส = สำเนาที่จะสร้าง · ขอบวัดจากกรอบครอบวัตถุตามแกนบูธ รวมการหมุนและ Scale<br>สำเนาปลดจุดยึดเดิม · วางซ้อน/นอกบูธได้ · Undo ครั้งเดียวทั้งชุด</small>
  <footer><button type="button" class="btn" id="copyArrayCancel">ยกเลิก · Esc</button><button type="submit" class="btn pri" id="copyArrayConfirm">สร้างสำเนา · Enter</button></footer></form>`;
  document.body.append(dialog);
  const style=document.createElement('style');style.textContent=`#copyArrayDialog{position:fixed;inset:auto 20px 100px auto;margin:0;width:min(410px,calc(100vw - 24px));box-sizing:border-box;max-height:calc(100dvh - 40px);overflow:auto;padding:18px;background:#17121b;color:#f5eff6;border:1px solid #904466;border-radius:14px;box-shadow:0 12px 48px #0006}#copyArrayDialog::backdrop{background:#0001}#copyArrayDialog header,#copyArrayDialog footer{display:flex;justify-content:space-between;align-items:center;gap:10px}#copyArrayDialog footer{margin-top:16px}#copyArrayDialog p{font-size:12px;line-height:1.5;margin:10px 0}#copyArrayDialog small{font-size:11px;line-height:1.5;color:#bcaebe;display:block}.copy-array-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.copy-array-grid label{display:grid;gap:5px;font-size:11px}.copy-array-grid input,.copy-array-grid select{box-sizing:border-box;width:100%;min-width:0;height:38px;padding:6px 9px;background:#0d0c10;border:1px solid #57405b;border-radius:7px;color:#fff;font:inherit;font-size:13px}#copyArrayDialog :focus-visible{outline:2px solid #ff3297;outline-offset:2px}#copyArrayWarning{color:#ffce85}#copyArraySummary{color:#f798c8}@media(max-width:600px){#copyArrayDialog{inset:auto 12px 12px 12px;width:auto;padding:14px;max-height:66dvh}}`;
@@ -21,7 +21,16 @@
  function clearGhost(){if(!session?.ghost)return;session.ghost.removeFromParent();for(const m of session.materials||[])m.dispose();for(const g of session.geometries||[])g.dispose();session.ghost=null;}
  function close(){clearGhost();session=null;dialog.close();document.getElementById('btnDuplicateObject')?.focus();}
  function error(message){$('Summary').textContent=message;$('Confirm').disabled=true;clearGhost();}
- function options(){return Object.fromEntries(['Axis','Direction','Mode','Unit','Count','Distance'].map(k=>[k.toLowerCase(),$(k).value]));}
+ function options(){
+  const values=Object.fromEntries(['Axis','Direction','Mode','Unit','Count','Distance'].map(k=>[k.toLowerCase(),$(k).value]));
+  // Same Z-up presentation as Fine Position. Planning/storage remain Y-up.
+  values.axis=finePositionWorldAxis(values.axis);return values;
+ }
+ function directionLabels(){
+  const labels={x:['ขวา','ซ้าย'],y:['หน้า','หลัง'],z:['ขึ้น','ลง']}[$('Axis').value];
+  $('Direction').options[0].textContent='+ '+$('Axis').value.toUpperCase()+' · '+labels[0];
+  $('Direction').options[1].textContent='− '+$('Axis').value.toUpperCase()+' · '+labels[1];
+ }
  function preview(plan){
   clearGhost();const s=session,T=s.renderer.THREE;s.ghost=new T.Group();s.ghost.name='copy-array-preview';s.ghost.userData.editorHelper=true;s.materials=[];s.geometries=[];
   const mat=new T.MeshBasicMaterial({color:'#ff3297',transparent:true,opacity:.30,depthWrite:false,side:T.DoubleSide});s.materials.push(mat);
@@ -35,6 +44,7 @@
   s.renderer.scene.add(s.ghost);return lightPreview;
  }
  function update(){
+  directionLabels();
   if(!session)return;
   try{
    if(stamp()!==session.stamp)throw Error('แบบต้นฉบับเปลี่ยนแล้ว กรุณาปิดและเปิดทำสำเนาใหม่');
