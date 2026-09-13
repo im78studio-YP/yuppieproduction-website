@@ -482,6 +482,11 @@ select:focus{border-color:var(--acc)}
 .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
 .finish-page .finish-subhead{margin-bottom:8px}
 .lighting-page #oLightWatts{display:none}
+#legacyLightingControls{display:none!important}
+#simpleBoothLighting .opt{min-height:44px}
+#simpleBoothLighting .opt[aria-pressed="true"]{border-color:var(--acc);background:rgba(var(--acc-rgb),.12);color:var(--acc2)}
+#simpleBoothLighting .opt:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+#simpleBoothLighting .opt:disabled{opacity:.45;cursor:not-allowed}
 .light-model-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .light-model-card{overflow:hidden;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--bg2);text-align:left;transition:.15s}
 .light-model-card:hover{border-color:#3a414c}.light-model-card.on{border-color:var(--acc);background:rgba(var(--acc-rgb),.08)}
@@ -1128,6 +1133,23 @@ select:focus{border-color:var(--acc)}
   </div>
 
   <div class="sec" id="settingsLights">
+    <div id="simpleBoothLighting">
+      <div class="sech"><h3>ไฟในบูธ</h3><span class="hint">ไม่เปลี่ยนอุปกรณ์ในแบบ</span></div>
+      <label class="lbl" id="boothLightPowerLabel">ไฟในบูธ</label>
+      <div class="g2" role="group" aria-labelledby="boothLightPowerLabel">
+        <button class="opt" type="button" id="boothLightOn" aria-pressed="false">เปิด</button>
+        <button class="opt" type="button" id="boothLightOff" aria-pressed="false">ปิด</button>
+      </div>
+      <label class="lbl" id="boothLightToneLabel">โทนแสง</label>
+      <div class="g2" role="group" aria-labelledby="boothLightToneLabel">
+        <button class="opt" type="button" id="boothLightWhite" aria-pressed="false">แสงขาว</button>
+        <button class="opt" type="button" id="boothLightWarm" aria-pressed="false">แสงวอร์ม</button>
+      </div>
+      <p class="note" id="boothLightStatus" role="status" aria-live="polite"></p>
+      <p class="note">แสดงเฉพาะลำแสง · ซ่อนตัวโคม โดยคงคาน ฝ้า และโครงสร้างเดิม<br>จัดลำแสงตามจุดไฟและโครงสร้างของเทมเพลต · ไฟเส้นยังเป็นไฟเส้น<br>สีโลโก้ จอ และไฟตกแต่งสีแบรนด์คงเดิม · แสงฉากหลังยังเปิดอยู่</p>
+    </div>
+    <!-- Kept inert for old project compatibility; not part of the lighting flow. -->
+    <div id="legacyLightingControls" hidden inert>
     <div class="sech"><h3>ระบบแสง</h3><span class="hint">Auto Lighting</span></div>
     <div class="lighting-mode-tabs" id="oLightingMode"></div>
     <div class="auto-lighting-panel" id="autoLightingPanel">
@@ -1181,6 +1203,7 @@ select:focus{border-color:var(--acc)}
       </div>
     </div>
     </details>
+    </div>
   </div>
 
   <div class="sec" id="settingsFloor">
@@ -1311,8 +1334,8 @@ select:focus{border-color:var(--acc)}
   <section class="dock-page tool-page lighting-page" data-dock-page="lighting" aria-hidden="true" id="dockLightingPage">
     <div class="panel-intro">
       <div class="panel-eyebrow">LIGHTING</div>
-      <h2>แสงสว่าง</h2>
-      <p>ตั้งค่าสปอตไลท์ สีแสง ตำแหน่ง และจำนวนจุด</p>
+      <h2>ไฟในบูธ</h2>
+      <p>เปิด–ปิดไฟ และเลือกแสงขาวหรือวอร์ม · เห็นผลในแบบทันที</p>
     </div>
     <div class="tool-page-body" id="dockLightingBody"></div>
   </section>
@@ -1731,6 +1754,8 @@ select:focus{border-color:var(--acc)}
 <script src="js/ai-render-pipeline.js?v=20260830-1"></script>
 <script src="js/auto-lighting.js?v=20260909-8"></script>
 <script src="js/template-lighting.js?v=20260909-8"></script>
+<script src="js/booth-light-beams.js?v=20260913-1"></script>
+<script src="js/booth-lighting.js?v=20260913-beams-1"></script>
 <script src="js/template-tv-groups.js?v=20260909-9"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
 <script src="js/smart-snap-engine.js?v=20260910-free-design"></script>
@@ -4715,9 +4740,7 @@ function renderQualityPromptLine(){
     :'คุณภาพภาพ: Preview · แนวคิดรวดเร็ว รายละเอียดปานกลาง เหมาะสำหรับตรวจทิศทางภาพ';
 }
 function lightingPromptForSpec(spec=S){
-  const state=globalThis.YPAutoLighting.normalizeLightingState(spec.lighting,{legacyProject:!spec.lighting});
-  if(state.mode==='manual')return['LIGHTING INTENT','โหมดไฟ: Manual Lighting · รักษาจำนวน รูปแบบโคม สีแสง และตำแหน่งตามแบบ 3D'];
-  return globalThis.YPAutoLighting.promptLines(state,{includePreview:true});
+  return globalThis.YPBoothLighting.promptLines(spec);
 }
 function buildFullDesignPrompt(){
   const boothType=typ()||{};
@@ -4730,16 +4753,7 @@ function buildFullDesignPrompt(){
   const logoShape=LOGOSHAPES.find(item=>item.k===S.logoShape)?.n||S.logoShape||'ไม่ระบุ';
   const lockup=LOCKUPS.find(item=>item.k===S.lockup)?.n||S.lockup||'ไม่ระบุ';
   const wallFaces=(boothType.walls||[]).map(face=>WALL_FACES.find(item=>item.k===face)?.n||face).join(', ')||'ไม่มี';
-  const lightingState=globalThis.YPAutoLighting.normalizeLightingState(S.lighting,{legacyProject:!S.lighting});
-  const lights=lightingState.mode==='auto'
-    ?(lightingState.enabled?'Auto Lighting · อนุมัติแล้ว '+lightingState.approvedFixtures.length+' จุด · แนะนำ '+lightingState.suggestions.filter(item=>item.fixtureType!=='invisible').length+' จุด · Preview '+lightingState.suggestions.filter(item=>item.fixtureType==='invisible').length+' จุด':'Auto Lighting ปิด')
-    :S.lights?(()=>{
-    const model=lightModelDef()?.n||S.lightFixture||'ไม่ระบุ';
-    const colour=LIGHTCOL.find(item=>item.k===S.lightCol)?.n||S.lightCol||'ไม่ระบุ';
-    const wall=LIGHTWALL.find(item=>item.k===S.lightWall)?.n||S.lightWall||'ไม่ระบุ';
-    const watt=lightWattDef()?.n||S.lightWatts||'ไม่ระบุ';
-    return model+' · '+colour+' · '+wall+' · '+lightTotal()+' จุด · '+watt+' / ดวง';
-  })():'ไม่มี';
+  const lights=YPBoothLighting.summary(S);
   const store=hasStore()?stChosenLabel():'ไม่มี';
   const storeHeight=hasStore()?(()=>{try{return storeGeom(boothWallThickness(S)).h.toFixed(2)+' ม.';}catch(e){return'';}})():'';
   const categorySuggestions=businessCategoryPromptLines(S);
@@ -4899,7 +4913,7 @@ function renderStatePayload(spec,camera){
     width:Number(spec.W),depth:Number(spec.D),height:Number(spec.H),activeWalls,openSides,
     floor:renderFloorSnapshot(spec),room:{enabled:spec.stSize!=='none',size:spec.stSize,width:Number(spec.stW)||0,depth:Number(spec.stD)||0,heightMode:spec.stHmode,height:Number(spec.stHv)||0,position:spec.stPos,door:spec.stDoor,doorType:spec.stDoorType},
     brand:{primary:String(spec.primary||'').toUpperCase(),secondary:String(spec.secondary||'').toUpperCase(),name:spec.brand||'YOUR BRAND',logoVisible:spec.type!=='island'},
-    assets:renderAssetSnapshot(spec),lighting:cloneRenderValue(globalThis.YPAutoLighting.normalizeLightingState(spec.lighting,{legacyProject:!spec.lighting})),camera:stableRenderCameraSnapshot(camera),qualityMode:rendering.quality||'preview',renderStyle:rendering.renderStyle||AI_RENDER_STYLE_DEFAULT,
+    assets:renderAssetSnapshot(spec),lighting:cloneRenderValue({...globalThis.YPAutoLighting.normalizeLightingState(spec.lighting,{legacyProject:!spec.lighting}),boothControl:YPBoothLighting.settings(spec)}),camera:stableRenderCameraSnapshot(camera),qualityMode:rendering.quality||'preview',renderStyle:rendering.renderStyle||AI_RENDER_STYLE_DEFAULT,
     aiEnhancementOptions:{enabled:staging.enabled!==false,density:staging.density||'medium',allowFurniture:staging.allowFurniture!==false,allowProducts:staging.allowProducts!==false,allowPeople:staging.allowPeople!==false,allowDecor:staging.allowDecor!==false,allowPlants:staging.allowPlants!==false,allowNewPermanentStructures:false,stagingFreedom:Number(spec.stagingFreedom)||6}
   };
 }
@@ -4987,6 +5001,7 @@ function buildStructureEnhancementPrompt(snapshot){
     'ห้ามสร้างพื้น ผนัง ห้อง หรือโครงสร้างถาวรใหม่ และห้ามใช้แบรนด์จริงที่ลูกค้าไม่ได้อัปโหลด',
     ...digitalDisplayLines,
     'ใช้วัสดุ PBR, global illumination, ambient occlusion, contact shadows, realistic reflections และแสง Exhibition Hall แบบมืออาชีพ',
+    ...lightingPromptForSpec(snapshot.spec),
     'ภาพสุดท้ายต้องไม่มี Grid เส้นแกน ตัวเลข Bounding Box หรือหน้าตาโปรแกรม'
   ].join('\n');
 }
@@ -5461,6 +5476,10 @@ function build(){
   mk('oStDoorType',ST_DOOR_TYPE,v=>S.stDoorType=v);
   mk('oDoorOff',DOOROFF,v=>S.doorOff=v,()=>'');
   mk('oLightingMode',[{k:'auto',n:'Auto Lighting',s:'แนะนำ'},{k:'manual',n:'Manual Lighting',s:'ขั้นสูง'}],v=>updateAutoLightingOption(state=>state.mode=v,false));
+  document.getElementById('boothLightOn').onclick=()=>setBoothLighting({enabled:true});
+  document.getElementById('boothLightOff').onclick=()=>setBoothLighting({enabled:false});
+  document.getElementById('boothLightWhite').onclick=()=>setBoothLighting({tone:'white'});
+  document.getElementById('boothLightWarm').onclick=()=>setBoothLighting({tone:'warm'});
   mk('oAutoLightingEnabled',[{k:'on',n:'เปิด',s:'ค่าเริ่มต้น'},{k:'off',n:'ปิด',s:''}],v=>updateAutoLightingOption(state=>state.enabled=v==='on',false));
   mk('oLightIntent',[{k:'balanced',n:'สมดุล'},{k:'brand',n:'เน้นแบรนด์'},{k:'product',n:'เน้นสินค้า'},{k:'counter',n:'เน้นเคาน์เตอร์'}],v=>updateAutoLightingOption(state=>state.intent=v));
   mk('oLightTemperature',[{k:3000,n:'3000K',s:'วอร์ม'},{k:4000,n:'4000K',s:'กลาง'},{k:5000,n:'5000K',s:'ขาว'}],v=>updateAutoLightingOption(state=>{state.temperatureK=Number(v);globalThis.YPAutoLighting.applyPhotometricSettings(state);},false));
@@ -6965,7 +6984,7 @@ class ThreeBoothRenderer{
       fixture.aimTarget?.x,fixture.aimTarget?.y,fixture.aimTarget?.z,
       fixture.mountAttachment?.parentAssetId,fixture.mountAttachment?.mountRole,fixture.mountAttachment?.surfaceUV?.u,fixture.mountAttachment?.surfaceUV?.v,
       fixture.temperatureK,fixture.intensity,fixture.beamAngle,fixture.valid!==false];
-    const lightingKey=[lighting.enabled,lighting.mode,lighting.intent,lighting.temperatureK,lighting.brightness,lighting.fixturePreference,
+    const lightingKey=[lighting.boothControl||null,lighting.enabled,lighting.mode,lighting.intent,lighting.temperatureK,lighting.brightness,lighting.fixturePreference,
       lighting.approvedFixtures.map(fixtureKey),lighting.suggestions.map(fixtureKey)];
     const wallStickers=WALL_FACES.map(({k})=>{const sticker=wallStickerFor(k,spec);return[k,sticker.id||0,sticker.w,sticker.h,sticker.rotation||0,
       sticker.mode,sticker.patternSize,sticker.offsetX,sticker.offsetY,!!sticker.data];});
@@ -7759,11 +7778,14 @@ class ThreeBoothRenderer{
       root.add(furniture);root.name='catalog-object-'+obj.type;
       root.traverse(part=>{part.userData.objectId=obj.id;});this.applyCatalogAppearance(root,obj);return root;}
     const base=(item&&item.color)||'#8a919c',dark='#2c3037',light='#e5e3dc';
-    const bx=(size,pos,color=base,options={})=>this.box(root,size,pos,color,options);
+    const bx=(size,pos,color=base,options={})=>{
+      if(options.emissive&&!options.material)options={...options,material:new T.MeshStandardMaterial({color,emissive:options.emissive,emissiveIntensity:options.emissiveIntensity??1,roughness:options.roughness??.72,metalness:options.metalness??.02})};
+      return YPBoothLighting.markEmitter(this.box(root,size,pos,color,options));
+    };
     const mesh=(geometry,color,position,options={})=>{
       const material=options.material||new T.MeshStandardMaterial({color,roughness:options.roughness??.72,
         metalness:options.metalness??.02,emissive:options.emissive||0x000000,emissiveIntensity:options.emissiveIntensity||0});
-      const part=new T.Mesh(geometry,material);part.position.set(...position);part.castShadow=true;part.receiveShadow=true;root.add(part);return part;
+      const part=new T.Mesh(geometry,material);part.position.set(...position);part.castShadow=true;part.receiveShadow=true;root.add(part);return YPBoothLighting.markEmitter(part);
     };
     if(globalThis.YPInlineSoftWave?.build({T,obj,mesh,bx,root})||globalThis.YPTimberRibbonGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularSixGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPIslandYellowGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPCornerBeauty?.build({T,obj,mesh,bx,root})||globalThis.YPCornerAqua?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularBotanical?.build({T,obj,mesh,bx,root})){
       // Reference-specific compound geometry; generic assets retain their original shapes.
@@ -8002,7 +8024,7 @@ class ThreeBoothRenderer{
     return{fixture:{...data,position,aimTarget,mountRotation:{x:worldEuler.x,y:worldEuler.y,z:worldEuler.z}},mountQuaternion};
   }
   addAutoLightingFixtures(group,spec,floorY,state){
-    if(!state.enabled)return;
+    // Keep fixture geometry even with the booth switch off; only emission is disabled later.
     const T=this.THREE,fixtures=state.approvedFixtures.concat(state.suggestions),span=Math.max(spec.W,spec.D,spec.H),temperatureColor=k=>k<=3200?0xffc17a:k>=4800?0xdbe8ff:0xffefd2;
     fixtures.forEach((data,index)=>{
       const runtime=this.resolveAutoLightingFixture(data,spec,fixtures),fixture=runtime.fixture,approved=fixture.status==='approved',root=new T.Group();root.name='auto-light-root-'+fixture.id;root.userData.lightingFixtureId=fixture.id;root.userData.status=fixture.status;
@@ -8201,6 +8223,7 @@ class ThreeBoothRenderer{
     if(spec.type!=='island')this.addBranding(g,spec,t,floorY);
     this.addSpotlights(g,spec,t,floorY);
     window.YPBoothTheme?.apply(this,spec);
+    window.YPBoothLighting?.apply(this,spec);
     this.addBoothDimensions(g,spec,floorY);
   }
   fitStudioLighting(spec){
@@ -8978,7 +9001,23 @@ function syncAutoLightingFixtureEditor(){
   const type=document.getElementById('autoLightingFixtureType');if(type){type.disabled=!fixture;if(fixture)type.value=fixture.fixtureType;}
   editor.querySelectorAll('button').forEach(button=>button.disabled=!fixture);
 }
+function setBoothLighting(patch){
+  const current=YPBoothLighting.settings(S),next={...current,...patch};
+  if(current.enabled===next.enabled&&current.tone===next.tone)return;
+  const before=objectSnapshot();normalizeAutoLighting().boothControl=next;
+  recordObjectHistory(before);sync();
+}
+function syncBoothLightingControls(){
+  const state=YPBoothLighting.settings(S);
+  for(const [id,pressed] of [['boothLightOn',state.enabled],['boothLightOff',!state.enabled],['boothLightWhite',state.tone==='white'],['boothLightWarm',state.tone==='warm']]){
+    const button=document.getElementById(id);if(!button)continue;
+    button.setAttribute('aria-pressed',String(pressed));button.classList.toggle('on',pressed);
+    button.disabled=(id==='boothLightWhite'||id==='boothLightWarm')&&!state.enabled;
+  }
+  const status=document.getElementById('boothLightStatus');if(status)status.textContent=state.enabled?'เปิดไฟ · '+(state.tone==='warm'?'แสงวอร์ม':'แสงขาว'):'ปิดไฟในบูธ · จำโทนแสงเดิมไว้เมื่อเปิดอีกครั้ง';
+}
 function syncAutoLightingControls(){
+  syncBoothLightingControls();
   const state=normalizeAutoLighting(),auto=state.mode==='auto',manual=document.getElementById('manualLightingAdvanced'),panel=document.getElementById('autoLightingPanel');
   document.querySelectorAll('#oLightingMode .opt').forEach(button=>button.classList.toggle('on',button.dataset.k===state.mode));
   if(panel)panel.hidden=!auto;if(manual){manual.hidden=auto;if(!auto)manual.open=true;}
@@ -9283,9 +9322,7 @@ function sync(){
     ['โลโก้',S.type==='island'?'ไม่มี':LOGOTYPES.find(t=>t.k===S.logoType).n+' · '+LOGOSHAPES.find(shape=>shape.k===S.logoShape).n+' · '+LOCKUPS.find(t=>t.k===S.lockup).n+
       ' · '+logoPlacementSummary(S)+
       (S.type==='corner'&&S.sideLogo?' · +ผนังข้าง ('+SIDEPOS.find(x=>x.k===S.sidePos).n+')':'')],
-    ['ไฟแสงสว่าง',S.lighting.mode==='auto'?(S.lighting.enabled?'Auto Lighting · แนะนำ '+S.lighting.suggestions.length+' · อนุมัติ '+S.lighting.approvedFixtures.length+' จุด':'Auto Lighting ปิดอยู่'):
-      (S.lights?('Manual · สปอตไลท์ '+lightTotal()+' จุด · '+lightModelDef().n+' · '+LIGHTCOL.find(c=>c.k===S.lightCol).n+
-      ' · '+lightWattDef().n+' / ดวง · '+LIGHTWALL.find(w=>w.k===S.lightWall).n):'Manual · ไม่มี')],
+    ['ไฟในบูธ',YPBoothLighting.summary(S)],
     ['คลังอุปกรณ์',objectListLabel()]];
   document.getElementById('spec').innerHTML=rows.map(r=>
     `<div class="kv"><b>${r[0]}</b><span>${esc(r[1])}</span></div>`).join('');
@@ -10110,7 +10147,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/inline-templates.js?v=20260911-soft-wave"></script>
 <script src="js/inline-soft-wave.js?v=20260911-1"></script>
 <script src="js/inline-template-ui.js?v=20260911-soft-wave"></script>
-<script src="js/peninsular-six-geometry.js?v=20260911-six"></script>
+<script src="js/peninsular-six-geometry.js?v=20260913-beams-1"></script>
 <script src="js/peninsular-six-templates.js?v=20260911-six"></script>
 <script src="js/botanical-images.js?v=20260911-botanical"></script>
 <script src="js/studio-environment.js?v=20260911-1"></script>
@@ -10122,7 +10159,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/corner-aqua.js?v=20260911-aqua"></script>
 <script src="js/corner-templates.js?v=20260911-aqua"></script>
 <script src="js/corner-template-ui.js?v=20260911-aqua"></script>
-<script src="js/island-yellow-geometry.js?v=20260911-yellow"></script>
+<script src="js/island-yellow-geometry.js?v=20260913-beams-1"></script>
 <script src="js/island-templates.js?v=20260911-yellow"></script>
 <script src="js/island-template-ui.js?v=20260911-yellow"></script>
 <script src="js/inline-wizard.js?v=20260911-business"></script>
@@ -10139,14 +10176,14 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/asset-settings-enter.js?v=20260911-1"></script>
 <script src="js/copy-array.js?v=20260912-1"></script>
 <script src="js/copy-array-ui.js?v=20260912-1"></script>
-<script src="js/booth-theme.js?v=20260911-1"></script>
+<script src="js/booth-theme.js?v=20260913-lighting-1"></script>
 <link rel="stylesheet" href="css/booth-theme.css?v=20260911-1">
 <script src="js/booth-theme-ui.js?v=20260911-1"></script>
 <script src="js/wall-finish-ui.js?v=20260911-1"></script>
 <script src="js/keyboard-shortcuts.js?v=20260911-1"></script>
 <script src="js/business-brief-ui.js?v=20260911-1"></script>
 <link rel="stylesheet" href="css/wizard-v2.css?v=20260913-1">
-<script src="js/wizard-model.js?v=20260913-stale-guard-2"></script>
-<script src="js/wizard-v2.js?v=20260913-stale-guard-2"></script>
+<script src="js/wizard-model.js?v=20260913-floor-defaults-1"></script>
+<script src="js/wizard-v2.js?v=20260913-floor-defaults-1"></script>
 </body>
 </html>

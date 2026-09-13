@@ -32,7 +32,7 @@ const assert=require('node:assert/strict');
  await page.locator('#wizard-template-next').click();await page.waitForFunction(()=>YPWizardV2.getState().previewReady,null,{timeout:90000});
  await page.locator('summary').filter({hasText:'ธีมสีบูธ'}).click();await page.locator('#wizard-theme-2').click();await page.waitForFunction(()=>YPWizardV2.getState().previewReady,null,{timeout:90000});
  assert.equal(await page.evaluate(()=>YPWizardV2.result().spec.boothColorTheme.keepGraphics),true);assert.equal(await page.evaluate(()=>YPWizardV2.result().spec.boothColorTheme.keepWood),true);
- await page.locator('#wizard-floor-details summary').click();await page.locator('#quickTileOptions [data-value=woodD]').click();await page.waitForFunction(()=>YPWizardV2.getState().previewReady,null,{timeout:90000});assert.equal(await page.evaluate(()=>YPWizardV2.result().spec.tile),'woodD');
+ await page.locator('#wizard-floor-details summary').click();await page.locator('#quickFloorOptions [data-value=tile]').click();await page.locator('#quickTileOptions [data-value=woodD]').click();await page.waitForFunction(()=>YPWizardV2.getState().previewReady,null,{timeout:90000});assert.equal(await page.evaluate(()=>YPWizardV2.result().spec.tile),'woodD');
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'qa/project-workspace/wizard-v2-mobile.png'});assert.ok(await page.locator('#mRelease .release-sheet').evaluate(n=>n.scrollWidth<=n.clientWidth+1));
  await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>YPQuickSetupBridge.getState().open),false);assert.equal(await page.evaluate(()=>YPProjectBridge.capture().spec.tile),applied.s.tile);
  await page.setViewportSize({width:1440,height:1000});

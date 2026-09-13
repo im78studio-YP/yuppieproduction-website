@@ -4,6 +4,19 @@ await import('../../public/yp-web-ai/js/wizard-model.js');
 const draft=()=>({businessCategoryId:'food',businessBrief:{product:'Tea'},boothType:'inline',cornerSide:'right',width:6,depth:6,height:3.8,roomMode:'keep',theme:null});
 const base=()=>({assets:[],spec:{W:6,D:3,H:3.8,objects:[{id:'room-wall',locked:true,appearance:{textureData:'logo'}}],stSize:'none',floor:'tile',tile:'woodL',raise:5,primary:'#123456',boothColorTheme:{name:'original'},wallPaintOverrides:{back:'#123456'}}});
 test('five steps with separate templates and final review',()=>assert.deepEqual(YPWizardModel.steps,['business','layout','template','customize','review']));
+test('all booth types start with unraised dark-grey carpet, without mutating templates',()=>{
+ for(const boothType of ['inline','corner','penin','island']){
+  const b=base(),before=structuredClone(b),d={...draft(),boothType,...YPWizardModel.floorDefaults(b.spec)};
+  const s=YPWizardModel.build(b,d,v=>v).spec;
+  assert.equal(s.raise,0);assert.equal(s.floor,'carpet');assert.equal(s.carpet,'grey');assert.deepEqual(b,before);assert.deepEqual(s.objects,b.spec.objects);
+  Object.assign(d,{floor:'tile',tile:'woodD',raise:10});const changed=YPWizardModel.build(b,d,v=>v).spec;
+  assert.equal(changed.floor,'tile');assert.equal(changed.tile,'woodD');assert.equal(changed.raise,10);
+ }
+});
+test('editing current work or explicitly restoring original preserves its floor',()=>{
+ const b=base(),d={...draft(),...YPWizardModel.floorDefaults(b.spec,true)},s=YPWizardModel.build(b,d,v=>v).spec;
+ assert.equal(d.floorChanged,false);assert.equal(s.floor,'tile');assert.equal(s.tile,'woodL');assert.equal(s.raise,5);
+});
 test('area changes do not scale geometry or alter original materials and custom rooms',()=>{const input=base(),before=structuredClone(input),s=YPWizardModel.build(input,draft(),v=>v);assert.deepEqual(input,before);assert.equal(s.spec.D,6);assert.deepEqual(s.spec.objects,input.spec.objects);assert.deepEqual(s.spec.boothColorTheme,input.spec.boothColorTheme);assert.equal(s.spec.tile,'woodL');assert.equal(s.spec.raise,5);assert.equal(s.spec.stSize,'none');});
 test('explicit floor and theme overrides only, independent room handling',()=>{const d={...draft(),floorChanged:true,floor:'carpet',carpet:'grey',tile:'woodD',raise:10,roomMode:'add',theme:{name:'new',primary:'#ff0088'}};const s=YPWizardModel.build(base(),d,v=>v).spec;assert.equal(s.floor,'carpet');assert.equal(s.raise,10);assert.equal(s.stSize,'a');assert.equal(s.stW,1.2);assert.equal(s.objects.length,1);assert.equal(s.primary,'#ff0088');assert.equal(s.objects[0].appearance.textureData,'logo');});
 test('remove-standard never deletes a modeled room or other objects',()=>{const b=base();b.spec.stSize='a';const s=YPWizardModel.build(b,{...draft(),roomMode:'remove-standard'},v=>v).spec;assert.equal(s.stSize,'none');assert.deepEqual(s.objects,b.spec.objects);});

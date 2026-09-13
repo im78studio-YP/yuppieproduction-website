@@ -1,6 +1,11 @@
 (function(root){
   'use strict';
   const steps=['business','layout','template','customize','review'];
+  function floorDefaults(spec,preserve=false){
+    // New Wizard designs share one floor default, independent of template style.
+    // Editing an existing design or explicitly restoring the template keeps its floor.
+    return {floorChanged:!preserve,floor:preserve?spec.floor:'carpet',tile:spec.tile,carpet:preserve?spec.carpet:'grey',raise:preserve?spec.raise:0};
+  }
   function designSignature(spec){
     const design=structuredClone(spec);
     // Renderer-derived data can settle after the Wizard opens (notably SVG
@@ -38,5 +43,5 @@
     if(d.roomMode==='remove-standard')s.stSize='none';
     return out;
   }
-  root.YPWizardModel={steps,validate,build,designSignature};
+  root.YPWizardModel={steps,validate,build,designSignature,floorDefaults};
 })(globalThis);

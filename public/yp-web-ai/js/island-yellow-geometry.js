@@ -1,7 +1,7 @@
 (function(global){
  'use strict';
  let stoneMap;
- function build({T,obj,mesh,bx}){
+ function build({T,obj,mesh,bx,root:group}){
   const design=obj.structure?.design;if(!design?.startsWith('yellow-'))return false;
   const s=obj.size,gold='#f2c52e',black='#242527',chrome='#c3c8cb';
   const rod=(a,b,r=.014,color=chrome)=>{const p=new T.Vector3(...a),q=new T.Vector3(...b),v=q.clone().sub(p);const m=mesh(new T.CylinderGeometry(r,r,v.length(),12),color,p.clone().add(q).multiplyScalar(.5).toArray(),{metalness:.83,roughness:.2});m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),v.normalize());};
@@ -46,8 +46,10 @@
    // Two hangers meet the front header; the third meets the freestanding TV pier.
    for(const [x,z] of [[-s.w*.35,s.d/2-.025],[s.w*.35,s.d/2-.025],[s.w*.21,-s.d/2+.025]])rod([x,trackY+.025,z],[x,s.h,z],.012,black);
    for(const [x,z,angle] of [[-s.w*.28,-s.d/2+.04,.6],[s.w*.28,-s.d/2+.04,-.6],[-s.w*.28,s.d/2-.04,-.6],[s.w*.28,s.d/2-.04,.6]]){
-    rod([x,trackY-.01,z],[x,trackY-.09,z],.012,black);const cylinder=mesh(new T.CylinderGeometry(.045,.045,.19,20),black,[x,trackY-.17,z],{roughness:.48});cylinder.rotation.z=angle;
+    const hanger=mesh(new T.CylinderGeometry(.012,.012,.08,12),black,[x,trackY-.05,z]);global.YPBoothBeams?.fixture(hanger);
+    const cylinder=mesh(new T.CylinderGeometry(.045,.045,.19,20),black,[x,trackY-.17,z],{roughness:.48});cylinder.rotation.z=angle;global.YPBoothBeams?.fixture(cylinder);
     const lens=mesh(new T.CircleGeometry(.039,20),'#fff1d2',[x+Math.sin(angle)*.096,trackY-.17-Math.cos(angle)*.096,z],{material:new T.MeshStandardMaterial({color:'#fff2dd',emissive:'#fff2dd',emissiveIntensity:.8,side:T.DoubleSide})});lens.rotation.x=Math.PI/2;lens.rotation.y=angle;
+    global.YPBoothBeams?.fixture(lens);global.YPBoothBeams?.anchor(T,group,lens.position.toArray(),[Math.sin(angle),-Math.cos(angle),0],.28);
    }
   }else return false;
   return true;

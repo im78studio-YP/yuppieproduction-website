@@ -1,6 +1,6 @@
 (function(global){
  'use strict';
- function build({T,obj,mesh,bx}){
+ function build({T,obj,mesh,bx,root:group}){
   const design=obj.structure?.design;if(!design?.startsWith('six-'))return false;
   const s=obj.size,w=s.w,h=s.h,d=s.d,color=obj.structure.color||'#087eae';
   const extrude=(shape,depth,z,c=color)=>mesh(new T.ExtrudeGeometry(shape,{depth,bevelEnabled:false,curveSegments:48}),c,[0,0,z]);
@@ -31,7 +31,7 @@
    const g=new T.ExtrudeGeometry(border,{depth:.009,bevelEnabled:false,curveSegments:32});mesh(g,'#dbfaff',[0,0,d/2+.003],{emissive:color==='#222327'?'#fffdf2':'#31baff',emissiveIntensity:1.1});
   }else if(design==='six-lit-beam'){
    bx([w,h,d],[0,h/2,0],color,{edges:false});for(let i=0;i<5;i++){
-    const z=(i/4-.5)*d*.85;mesh(new T.CylinderGeometry(.055,.055,.012,24),'#fff4da',[0,-.003,z],{emissive:'#fff4da',emissiveIntensity:1});
+    const z=(i/4-.5)*d*.85;const lens=mesh(new T.CylinderGeometry(.055,.055,.012,24),'#fff4da',[0,-.003,z],{emissive:'#fff4da',emissiveIntensity:1});global.YPBoothBeams?.fixture(lens);global.YPBoothBeams?.anchor(T,group,[0,-.02,z]);
    }
   }else if(design==='six-brochure'){
    bx([w,.035,d],[0,.0175,0],'#33363a',{edges:false});
