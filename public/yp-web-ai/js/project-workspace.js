@@ -186,6 +186,17 @@
       if(choice==='new'||choice==='current')return startNewDraft();
       throw new Error('กรุณาเลือกเปิดร่างเดิมหรือเริ่มใหม่');
     },{detailed:true}),
+    // Wizard commits the exact reviewed snapshot to one slot, after confirmation.
+    // Guard both before and after the asynchronous dialog against stale edits.
+    useWizard:({makeSnapshot,name,target,expectedActive,expectedDesign})=>run(async()=>{
+      const fresh=()=>!pendingDraft&&project.active===expectedActive&&typeof expectedDesign==='string'&&window.YPWizardModel.designSignature(bridge.capture().spec)===expectedDesign;
+      if(!['A','B'].includes(target)||!fresh())throw Error('งานปัจจุบันเปลี่ยนไป กรุณาปิดแล้วเปิด Wizard ใหม่');
+      const replacement=makeSnapshot();store.validateSpec(replacement.spec);
+      if(!await ask('ยืนยันใช้ผล Wizard ในแบบ '+target+'?',name+' · กว้าง '+replacement.spec.W+' × ลึก '+replacement.spec.D+' × สูง '+replacement.spec.H+' ม. แบบ '+target+' จะใช้ผลที่พรีวิวไว้ โดยอีกแบบไม่เปลี่ยน หากต้องการเก็บงานเดิม ให้ยกเลิกและบันทึกไฟล์ก่อน','ยืนยันใช้ในแบบ '+target))return false;
+      if(!fresh())throw Error('งานปัจจุบันเปลี่ยนระหว่างยืนยัน กรุณาเปิด Wizard ใหม่');
+      snapshot();const next=store.clone(project);next.active=target;next.variants[target]=replacement;
+      apply(next);await persist();return true;
+    },{detailed:true}),
     useTemplate:({makeSnapshot,name,detailed=false,exactArea=false})=>run(async()=>{
       if(pendingDraft)throw Object.assign(new Error('กรุณาเลือกเปิดร่างเดิมหรือเริ่มใหม่ในหน้าต่างเริ่มต้น'),{code:'pending-draft'});
       const target=project.active,other=target==='A'?'B':'A';
