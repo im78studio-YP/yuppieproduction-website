@@ -2,7 +2,8 @@
  'use strict';
  const id='tv-samsung-40',image='assets/furniture/tv-samsung-40/screen.jpg';
  const hash='c28d043c301c298af8e967d7fb91982a756c241f864f0e4708d12913b0187fa9';
- const definition={catalogId:id,category:'media',type:'screen',name:'ทีวี Samsung 40 นิ้ว · เปลี่ยนภาพจอได้',icon:'▣',size:{w:.9072,d:.031,h:.5515},unitPrice:0,color:'#111111',modelUrl:'assets/furniture/tv-samsung-40/model.glb',thumbUrl:image,tvDisplay:true,capabilities:['floorPlaceable','free3DPlaceable','surfaceSnappable','resizable','rotatable','styleable']};
+ const definition={catalogId:id,category:'media',type:'screen',name:'ทีวี 40 นิ้ว',icon:'▣',size:{w:.91,d:.10,h:.55},unitPrice:0,color:'#111111',modelUrl:'assets/furniture/tv-samsung-40/model.glb',thumbUrl:image,tvDisplay:true,capabilities:['floorPlaceable','free3DPlaceable','surfaceSnappable','resizable','rotatable','styleable']};
+ const definition65={...definition,catalogId:'tv-65',name:'ทีวี 65 นิ้ว',size:{w:1.46,d:.10,h:.80},capabilities:[...definition.capabilities]};
  const isTV=item=>item?.catalogId===id||item?.tvDisplay===true||item?.catalogPromotion===id;
  async function recognize(record){
   // Exact file identity only: another user's TV or similarly named GLB is untouched.
@@ -69,5 +70,5 @@
   $('assetRemoveSticker').textContent=tv?'ใช้ภาพจอเริ่มต้น':'ลบสติ๊กเกอร์';$('assetResetSurface').textContent=tv?'คืนภาพจอเริ่มต้น':'คืนพื้นผิวเดิม';
   if(tv){$('assetStickerPreview').src=obj.appearance.textureData||image;$('assetStickerPreview').classList.add('show');$('assetSurfaceNote').textContent='เปลี่ยนเฉพาะภาพบนหน้าจอ · กรอบและตัวเครื่องคงสีดำ';}
  }
- root.YPTVAsset={id,image,definition,isTV,recognize,recognizeProject,template,appearance,fallback,settings};
+ root.YPTVAsset={id,image,definition,definition65,isTV,recognize,recognizeProject,template,appearance,fallback,settings};
 })(globalThis);

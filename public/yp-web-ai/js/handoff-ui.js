@@ -13,6 +13,7 @@
     <div id="handoffSummary"></div><p>รวมเฉพาะแบบที่เลือก: ไฟล์แก้ไขต่อ (.ypbooth.json), ข้อมูลงาน (.json), สรุปและรายการวัตถุ (.html) และภาพบูธ (.png) หากเลือกแนบ</p><p>รายการวัตถุไม่ใช่ BOM ครบทุกวัสดุ และไม่ใช่ใบเสนอราคา ทีมงานต้องตรวจแบบและราคาก่อนผลิต</p><label><input id="handoffImage" type="checkbox" checked> แนบภาพบูธ 3D ที่ตรวจในหน้านี้</label><div class="project-dialog-actions"><button id="handoffDownload" class="btn pri" type="button">ดาวน์โหลดชุดส่งงาน (.zip)</button><button id="handoffEdit" class="btn" type="button">แก้ข้อมูล</button></div></section>
     <p id="handoffStatus" role="status" aria-live="polite"></p><button id="handoffClose" class="btn" type="button">กลับไปออกแบบ</button>`;
   document.body.append(modal);
+  const budget=window.YPBudgetEstimate?.createSummary();if(budget)$('handoffForm').before(budget);
   let captured=null,brief=null,busy=false,geometry=null,previewBlob=null,previewURL=null;
   const status=(text,error=false)=>{ $('handoffStatus').textContent=text;$('handoffStatus').dataset.error=String(error); };
   function lock(value){busy=value;modal.setAttribute('aria-busy',String(value));for(const control of modal.querySelectorAll('button,input,textarea,select'))control.disabled=value;}
@@ -50,6 +51,8 @@
     }
   }
   function selection(){
+    window.YPBudgetEstimate?.setVisible(false);
+    updateBudgetEstimate();
     const p=YPProjectWorkspace.capture(),s=p.variants[p.active].spec;
     $('handoffVariant').value=p.active;for(const option of $('handoffVariant').options)option.disabled=!p.variants[option.value];
     $('handoffSelection').textContent=p.name+' · แบบ '+p.active+' · '+s.W+' × '+s.D+' × '+s.H+' ม. · วัตถุ '+s.objects.length+' ชิ้น';

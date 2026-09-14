@@ -15,6 +15,13 @@ const api=globalThis.YPTVAsset,base=new URL('../../public/yp-web-ai/',import.met
 const html=await readFile(new URL('index.html',base),'utf8');
 const catalog=Function('furnitureItem','return '+html.match(/const OBJECT_CATALOG=(\[[\s\S]*?\]);/)[1])(x=>x);
 const initial={wallStickers:{back:{}},objects:[],sceneItemState:{}};
+test('40 and 65 inch TVs are separate catalog items with the requested real dimensions',()=>{
+ const small=catalog.find(o=>o.catalogId===api.id),large=catalog.find(o=>o.catalogId==='tv-65');
+ assert.equal(small.name,'ทีวี 40 นิ้ว');assert.deepEqual(small.size,{w:.91,d:.10,h:.55});
+ assert.equal(large.name,'ทีวี 65 นิ้ว');assert.deepEqual(large.size,{w:1.46,d:.10,h:.80});
+ assert.notEqual(small.size,large.size);assert.ok(api.isTV(small)&&api.isTV(large));
+ assert.equal(small.modelUrl,large.modelUrl);assert.equal(small.thumbUrl,large.thumbUrl);
+});
 for(const library of [YPInlineTemplates,YPPeninsularTemplates,YPCornerTemplates,YPIslandTemplates])for(const t of library.templates)test(t.id+' TV conversion preserves non-TV objects and transforms',()=>{
  const s=library.build(t.id,initial,catalog).spec,before=structuredClone(s),source=JSON.stringify(t);
  api.template(s,t);assert.equal(JSON.stringify(t),source);

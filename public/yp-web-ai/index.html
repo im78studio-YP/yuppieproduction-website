@@ -790,6 +790,7 @@ select:focus{border-color:var(--acc)}
 </style>
 <link rel="stylesheet" href="css/asset-editor.css?v=20260829-3">
 <link rel="stylesheet" href="css/project-workspace.css?v=20260910-template-area">
+<link rel="stylesheet" href="css/budget-estimate.css?v=20260914-1">
 </head>
 <body>
 
@@ -812,7 +813,11 @@ select:focus{border-color:var(--acc)}
         </div>
       </aside>
     </div>
-    <div class="header-total" aria-label="ยอดรวมโดยประมาณ"><span>ยอดประเมิน</span><strong id="price">—</strong></div>
+    <button class="btn sm" id="budgetToggle" type="button" aria-expanded="false" aria-controls="budgetPanel">ดูงบประมาณ</button>
+    <aside class="summary-popover" id="budgetPanel" aria-label="งบประมาณของแบบปัจจุบัน" hidden>
+      <div class="summary-popover-head"><h2>งบประมาณของแบบปัจจุบัน</h2><button class="summary-close" id="budgetClose" type="button" aria-label="ซ่อนงบประมาณ">×</button></div>
+      <div class="summary-popover-body"><strong id="price" class="budget-range" aria-live="polite" aria-atomic="true"></strong><section class="budget-summary" data-budget-summary></section><p class="budget-hint">เปิดค้างไว้ขณะออกแบบได้ ช่วงงบประมาณจะปรับตามแบบ · กด “ซ่อนงบประมาณ” เมื่อต้องการนำเสนอเฉพาะแบบ</p></div>
+    </aside>
     <button class="btn pri sm" type="button" onclick="closeHeaderSummary(false);sendQuote()">เตรียมส่งงาน</button>
   </div>
 </header>
@@ -1772,6 +1777,7 @@ select:focus{border-color:var(--acc)}
 <script src="js/logo-finishes.js?v=20260913-logo-slots-4"></script>
 <script src="js/template-tv-groups.js?v=20260909-9"></script>
 <script src="js/tv-asset.js?v=20260914-1"></script>
+<script src="js/budget-estimate.js?v=20260914-1"></script>
 <script src="js/studio-environment.js?v=20260911-1"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
 <script src="js/smart-snap-engine.js?v=20260910-free-design"></script>
@@ -1835,6 +1841,7 @@ const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:i
   capabilities:null,ports:[],collision:null,...item});
 const OBJECT_CATALOG=[
   furnitureItem(YPTVAsset.definition),
+  furnitureItem(YPTVAsset.definition65),
   furnitureItem({catalogId:'panel-standard',category:'display',type:'panel',name:'แผงตกแต่ง / กรอบ',icon:'▯',size:{w:1,d:.12,h:2.4},unitPrice:0,color:'#c6ad82'}),
   furnitureItem({catalogId:'panel-rounded',category:'display',type:'roundedPanel',name:'แผงมุมโค้ง',icon:'▯',size:{w:.7,d:.12,h:1.4},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'panel-swoop',category:'structure',type:'swoopPanel',name:'แผงโค้งไล่ระดับ',icon:'∿',size:{w:5.8,d:.3,h:2.4},unitPrice:0,color:'#ffffff'}),
@@ -5824,7 +5831,7 @@ function buildFloorSub(){
       const refresh=()=>{if(!controls.w)return;controls.w.range.value=S.floorStickerW;controls.w.number.value=Number(S.floorStickerW).toFixed(2);
         controls.d.range.value=S.floorStickerD;controls.d.number.value=Number(S.floorStickerD).toFixed(2);
         meta.textContent='วางกึ่งกลางพื้น · '+stickerModeName(S.floorStickerMode)+' · ขนาด '+Number(S.floorStickerW).toFixed(2)+' × '+Number(S.floorStickerD).toFixed(2)+' ม. · หมุน '+Number(S.floorStickerRotation||0)+'° · พื้นที่ '+floorStickerArea().toFixed(2)+' ตร.ม.';};
-      const live=(axis,value)=>{setFloorStickerDimension(axis,value);refresh();render();document.getElementById('price').textContent='฿'+fmt(priceTotal());};
+      const live=(axis,value)=>{setFloorStickerDimension(axis,value);refresh();render();updateBudgetEstimate();};
       const makeControl=(axis,label,max)=>{const row=el('div','floor-sticker-control'),lab=el('label',null,label);
         const range=document.createElement('input');range.type='range';range.min='.1';range.max=String(max);range.step=String(FLOOR_STICKER_STEP);range.value=axis==='w'?S.floorStickerW:S.floorStickerD;range.setAttribute('aria-label',label+'ของสติ๊กเกอร์พื้น');
         const number=document.createElement('input');number.type='number';number.min='.1';number.max=String(max);number.step=String(FLOOR_STICKER_STEP);number.inputMode='decimal';number.value=Number(axis==='w'?S.floorStickerW:S.floorStickerD).toFixed(2);number.dataset.resetDefault=String(axis==='w'?(S.floorStickerResetW||2):(S.floorStickerResetD||1));number.setAttribute('aria-label','ค่า'+label+'ของสติ๊กเกอร์พื้น');
@@ -5872,7 +5879,7 @@ function buildWallStickerSettings(){
         controls.w.range.value=current.w;controls.w.number.value=Number(current.w).toFixed(2);
         controls.h.range.value=current.h;controls.h.number.value=Number(current.h).toFixed(2);
         meta.textContent='วางกึ่งกลาง'+faceDef.n+' · '+stickerModeName(current.mode)+' · ขนาด '+Number(current.w).toFixed(2)+' × '+Number(current.h).toFixed(2)+' ม. · หมุน '+Number(current.rotation||0)+'° · พื้นที่ '+wallStickerArea(face).toFixed(2)+' ตร.ม.';};
-      const live=(axis,value)=>{setWallStickerDimension(face,axis,value);wallStickerFor(face).id++;refresh();if(threeRenderer)threeRenderer.currentKey='';render();document.getElementById('price').textContent='฿'+fmt(priceTotal());updatePromptPreview();};
+      const live=(axis,value)=>{setWallStickerDimension(face,axis,value);wallStickerFor(face).id++;refresh();if(threeRenderer)threeRenderer.currentKey='';render();updateBudgetEstimate();updatePromptPreview();};
       const makeControl=(axis,label,max)=>{const row=el('div','floor-sticker-control'),lab=el('label',null,label);
         const range=document.createElement('input');range.type='range';range.min='.1';range.max=String(max);range.step=String(WALL_STICKER_STEP);range.value=axis==='w'?sticker.w:sticker.h;range.setAttribute('aria-label',label+'ของสติ๊กเกอร์'+faceDef.n);
         const number=document.createElement('input');number.type='number';number.min='.1';number.max=String(max);number.step=String(WALL_STICKER_STEP);number.inputMode='decimal';number.value=Number(axis==='w'?sticker.w:sticker.h).toFixed(2);number.dataset.resetDefault=String(axis==='w'?(sticker.resetW||2):(sticker.resetH||1));number.setAttribute('aria-label','ค่า'+label+'ของสติ๊กเกอร์'+faceDef.n);
@@ -5941,6 +5948,7 @@ function priceLines(){
   r.push(['ติดตั้ง ขนส่ง รื้อถอน',sub*.14]);
   return r;}
 const priceTotal=()=>priceLines().reduce((sum,row)=>sum+row[1],0);
+function updateBudgetEstimate(){YPBudgetEstimate.update(priceTotal(),priceLines());}
 
 /* ================= Three.js renderer ================= */
 const THREE_VERSION='0.180.0';
@@ -9383,7 +9391,7 @@ function sync(){
     `<div class="kv"><b>${r[0]}</b><span>${esc(r[1])}</span></div>`).join('');
 
   const estimateLines=priceLines();
-  document.getElementById('price').textContent='฿'+fmt(priceTotal());
+  updateBudgetEstimate();
   document.getElementById('plines').innerHTML=estimateLines.map(r=>
     `<div class="kv"><b style="color:var(--tx2);font-weight:400">${r[0]}</b></div>`).join('');
   document.getElementById('summaryCount').textContent=String(estimateLines.length);
