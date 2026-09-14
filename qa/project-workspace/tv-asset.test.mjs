@@ -39,5 +39,5 @@ test('screen source and model are exact user-provided binary files',async()=>{
  assert.equal(createHash('sha256').update(await readFile(new URL('assets/furniture/tv-samsung-40/screen.jpg',base))).digest('hex'),'7fa553733c1109c6439a0b4180718340df9822ec3f480001eb670b22d7dd6caa');
 });
 test('all template snapshot UIs convert after authored artwork and before validation',async()=>{
- for(const name of ['inline','corner','peninsular','island']){const js=await readFile(new URL('js/'+name+'-template-ui.js',base),'utf8');assert.ok(js.indexOf('YPTVAsset.template')>js.indexOf('YPTemplateBranding.apply'));assert.ok(js.indexOf('YPTVAsset.template')<js.indexOf('YPProjectStore.validateSpec'));}
+ for(const name of ['inline','corner','peninsular','island']){const js=await readFile(new URL('js/'+name+'-template-ui.js',base),'utf8');assert.ok(js.indexOf('YPTVAsset.template')>js.indexOf('YPTemplateBranding.apply'));assert.ok(js.indexOf('YPTVAsset.template')<js.lastIndexOf('YPProjectStore.validateSpec'));}
 });

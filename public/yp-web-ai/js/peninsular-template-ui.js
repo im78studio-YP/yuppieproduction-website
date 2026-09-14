@@ -41,6 +41,8 @@
     return canvas.toDataURL('image/png');
   }
   function snapshot(id,options={}){const t={...library.templates.find(t=>t.id===id)},result=library.build(id,JSON.parse(INITIAL_BOOTH_SPEC_JSON),OBJECT_CATALOG);
+    // Saved layouts already contain editable, correctly proportioned artwork and finishes.
+    if(t.savedSnapshot){YPProjectStore.validateSpec(result.spec);return result;}
     t.objects.forEach((o,i)=>{if(o.graphic)Object.assign(result.spec.objects[i].appearance,{mode:'original',textureData:o.graphic.startsWith('orbit-')?YPPeninsularBlueOrbit.artwork(o.graphic,o.size.w,o.size.h):o.graphic.startsWith('oak-')?YPPeninsularOakGallery.artwork(o.graphic,o.size.w,o.size.h):o.graphic.startsWith('nexus-')?YPPeninsularCyanNexus.artwork(o.graphic,o.size.w,o.size.h):o.graphic.startsWith('botanical-')?YPPeninsularBotanical.artwork(o.graphic):o.graphic.startsWith('six-')?YPPeninsularSixArtwork(o.graphic):panelArtwork(o.graphic),textureName:o.graphic,textureId:id+'-'+o.graphic});});
     if(/^#[\da-f]{6}$/i.test(options.primary||'')){const original=t.primary;t.primary=options.primary;result.spec.primary=t.primary;for(const o of result.spec.objects){if(o.appearance?.color===original)o.appearance.color=t.primary;if(o.structure?.color===original)o.structure.color=t.primary;}}
     result.spec.wallStickerFaces=t.customBack?[]:['back'];Object.assign(result.spec.wallStickers.back,{data:artwork(t),name:t.name+' · กราฟิกตัวอย่าง',id:1,ar:2.5,w:6,h:2.4,mode:'cover'});YPTemplateBranding.apply(result.spec,t);window.YPPeninsularCyanNexus?.finish(result.spec);YPTVAsset.template(result.spec,t);YPProjectStore.validateSpec(result.spec);return result;}

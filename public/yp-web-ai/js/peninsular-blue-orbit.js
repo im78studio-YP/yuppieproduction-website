@@ -86,7 +86,7 @@
    for(const y of [.32,.64]){const offset=(y-.5)*h,length=2*Math.sqrt((r-t)**2-offset**2);cube([length,.018,d*.9],[0,h*y,0]);}
    mesh(new T.TorusGeometry(r-.010,.009,8,72),'#c5cdd5',[0,h/2,d/2],{metalness:.5,roughness:.26});
   }else if(key==='showcase'){
-   const t=Math.min(.07,w*.04);cube([w,h,.025],[0,h/2,-d/2+.0125]);
+   const t=Math.min(.07,w*.04);if(obj.structure.openBack!==true)cube([w,h,.025],[0,h/2,-d/2+.0125]);
    cube([t,h,d],[-w/2+t/2,h/2,0],red);cube([t,h,d],[w/2-t/2,h/2,0],red);cube([w,t,d],[0,t/2,0],red);cube([w,t,d],[0,h-t/2,0],red);
    for(const y of [.26,.50,.74])cube([w-2*t,.018,d*.94],[0,h*y,.005]);
   }else if(key==='plinth'){
@@ -107,5 +107,8 @@
   }
   return true;
  }
+ // A saved template is isolated from live drafts; never migrate other instances by ID.
+ const saved=global.YPBlueOrbitSavedSnapshot;
+ if(saved){const t=global.YPPeninsularBlueOrbitTemplates[0];Object.assign(t,{version:2,previewVersion:'20260914-open-shelf',width:saved.spec.W,depth:saved.spec.D,height:saved.spec.H,floor:saved.spec.floor,tile:saved.spec.tile,savedSnapshot:saved,objects:saved.spec.objects,tagline:'แบบปรับล่าสุด · ธีมเขียวธรรมชาติ · ชั้นด้านข้างโปร่ง',description:'แบบจัดวางล่าสุด 36 ชิ้น · ธีมเขียวธรรมชาติ · ชั้นด้านข้างเปิดโล่ง คงกรอบและแผ่นชั้น · โลโก้และกราฟิก Yuppie'});}
  global.YPPeninsularBlueOrbit={build,artwork};
 })(globalThis);

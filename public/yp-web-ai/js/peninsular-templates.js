@@ -197,6 +197,7 @@
   templates.push(...(root.YPPeninsularBlueOrbitTemplates||[]));
   function build(id,initial,catalog){
     const t=templates.find(t=>t.id===id);if(!t)throw new Error('ไม่พบเทมเพลต Peninsular');
+    if(t.savedSnapshot)return structuredClone(t.savedSnapshot);
     const spec=structuredClone(initial);Object.assign(spec,{W:6,D:3,H:2.4,type:'penin',primary:t.primary,secondary:t.secondary,colTouched:true,secTouched:true,wallCol:'white',wallMat:'paint',floor:t.floor,tile:t.tile,carpet:'cream',raise:0,stSize:'none',logoWallU:t.id==='penin-adventure'?2:t.id==='penin-connect'?1.42:3,logoWallY:1.91,logoScale:t.id==='penin-connect'?24:30,nameScale:0,designPurpose:t.purpose,boothTemplate:{id:t.id,type:'penin',name:t.name,version:t.version||1},objects:[],view:'three'});
     Object.assign(spec,{W:t.width||6,D:t.depth||3,H:t.height||2.4});
     if(t.logoU!==undefined)Object.assign(spec,{logoWallU:t.logoU,logoWallY:t.logoY,logoScale:t.logoScale});
