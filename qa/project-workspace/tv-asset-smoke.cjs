@@ -1,0 +1,29 @@
+const {chromium}=require('C:/Users/Admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:4173/yp-web-ai/index.html');await page.waitForFunction(()=>window.YPTVAsset&&window.YPStudioEnvironment&&window.YPIslandTemplateBridge&&YPProjectWorkspace.state().ready);
+ console.log('templates',await page.evaluate(()=>{
+  const result=[];for(const [library,bridge] of [[YPInlineTemplates,YPInlineTemplateBridge],[YPCornerTemplates,YPCornerTemplateBridge],[YPPeninsularTemplates,YPPeninsularTemplateBridge],[YPIslandTemplates,YPIslandTemplateBridge]])for(const t of library.templates){const out=bridge.snapshot(t.id);result.push([t.id,out.spec.objects.filter(o=>o.catalogId===YPTVAsset.id).length]);}return result;
+ }));
+ const id=await page.evaluate(async()=>{YPQuickSetupBridge.close();S.objects=[];const tv=makeCatalogObject(YPTVAsset.id,3,2);tv.size={w:2.4,d:.08,h:1.46};tv.position.y=1;mutateObjects(()=>S.objects.push(tv),tv.id);await loadThreeRenderer();closeDockPanel(false);return tv.id;});
+ await page.waitForFunction(id=>{let ready=false;threeRenderer?.objectMeshes.get(id)?.traverse(m=>{if(m.name==='3DGeom-4'&&m.material.map?.image)ready=true;});return ready;},id);
+ const model=await page.evaluate(id=>{const r=threeRenderer.objectMeshes.get(id),parts=[];r.traverse(m=>{if(m.isMesh)parts.push({name:m.name,color:m.material.color.getHexString(),image:m.material.map?.image?.src,flip:m.material.map?.flipY});});return parts;},id);console.log('model',model);assert.ok(model.some(m=>m.name==='3DGeom-4'&&m.image.endsWith('screen.jpg')));assert.ok(model.filter(m=>m.name!=='3DGeom-4').every(m=>m.color==='101114'&&!m.image));
+ await page.evaluate(id=>{selectObject(id);openAssetSettings();},id);assert.equal(await page.locator('#assetChooseSticker').textContent(),'เปลี่ยนภาพหน้าจอ');assert.equal(await page.locator('#assetAppearanceOptions').isVisible(),false);
+ await page.screenshot({path:'qa/project-workspace/tv-asset-settings.png'});
+ await page.locator('#assetStickerFile').setInputFiles({name:'test-screen.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7x8AAAAASUVORK5CYII=','base64')});
+ await page.waitForFunction(id=>objectById(id).appearance.textureName==='test-screen.png',id);
+ const stored=await page.evaluate(()=>{const snap=YPProjectBridge.capture();const file=YPProjectStore.create(snap);YPProjectStore.validate(file);return snap.spec.objects[0].appearance.textureName;});assert.equal(stored,'test-screen.png');
+ await page.waitForFunction(id=>{let ready=false;threeRenderer.objectMeshes.get(id)?.traverse(m=>{if(m.name==='3DGeom-4'&&m.material.map?.image?.src.startsWith('data:image'))ready=true;});return ready;},id);
+ const changed=await page.evaluate(id=>{const parts=[];threeRenderer.objectMeshes.get(id).traverse(m=>{if(m.isMesh&&m.name!=='3DGeom-4')parts.push(m.material.color.getHexString());});return parts;},id);assert.deepEqual(changed,['101114','101114','101114']);
+ await page.locator('#assetResetSurface').click();await page.waitForFunction(id=>!objectById(id).appearance.textureData,id);
+ await page.evaluate(()=>closeAssetSettings());
+ const promotion=await page.evaluate(async()=>{const file=await(await fetch(YPTVAsset.definition.modelUrl)).blob(),record={id:'my-asset-tv-test',name:'TV',size:{w:.9072,d:.031,h:.5515},file};await YPTVAsset.recognize(record);const item=normalizeMyAsset(record);CUSTOM_ASSETS.push(item);renderMyAssetList();const o=makeCatalogObject(record.id,1,1);S.objects.push(o);const snap=YPProjectBridge.capture();const saved=await YPProjectStore.toText(YPProjectStore.create(snap)),loaded=YPProjectStore.fromText(saved);YPProjectBridge.restore(loaded.variants[loaded.active]);return {promotion:loaded.variants[loaded.active].assets[0].catalogPromotion,hidden:!document.querySelector('#myAssetList [data-catalog-id="my-asset-tv-test"]'),tv:YPTVAsset.isTV(objectCatalogDef(record.id))};});assert.deepEqual(promotion,{promotion:'tv-samsung-40',hidden:true,tv:true});
+ console.log('bounds',JSON.stringify(await page.evaluate(id=>{const T=threeRenderer.THREE,parts=[];threeRenderer.objectMeshes.get(id).traverse(m=>{if(m.isMesh){const b=new T.Box3().setFromObject(m);parts.push({name:m.name,min:b.min.toArray(),max:b.max.toArray(),uv:m.geometry.attributes.uv?.array.slice(0,8)});}});return {parts,camera:threeRenderer.camera.position.toArray()};},id)));
+ console.log('errors',errors);assert.deepEqual(errors,[]);
+ await page.screenshot({path:'qa/project-workspace/tv-asset-render.png'});
+ await page.setViewportSize({width:390,height:844});await page.evaluate(id=>{selectObject(id);openAssetSettings();},id);assert.equal(await page.locator('#assetChooseSticker').isVisible(),true);await page.screenshot({path:'qa/project-workspace/tv-asset-mobile.png'});await page.evaluate(()=>closeAssetSettings());await page.setViewportSize({width:1440,height:1000});
+ const sideId=await page.evaluate(()=>{const snap=YPCornerTemplateBridge.snapshot('corner-luminous-beauty');YPProjectBridge.restore(snap);closeDockPanel(false);return S.objects.find(o=>o.catalogId===YPTVAsset.id).id;});
+ await page.waitForFunction(id=>{let ready=false;threeRenderer.objectMeshes.get(id)?.traverse(m=>{if(m.name==='3DGeom-4'&&m.material.map?.image)ready=true;});return ready;},sideId);await page.screenshot({path:'qa/project-workspace/tv-template-side.png'});
+ console.log('PASS TV default screen, black casing, upload/reset, portable state, templates');
+ }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

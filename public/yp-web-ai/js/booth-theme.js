@@ -27,7 +27,7 @@
  function apply(renderer,spec){const theme=spec.boothColorTheme;if(!valid(theme))return;
   const objects=new Map(spec.objects.map(o=>[o.id,o]));let changed=0;
   renderer.boothGroup.traverse(node=>{
-   if(!node.isMesh||!node.material||node.userData.systemHelper||node.userData.boothEmitter)return;
+   if(!node.isMesh||!node.material||node.userData.systemHelper||node.userData.boothEmitter||node.userData.tvDisplay)return;
    let ancestor=node,obj=null,brand=false,path='';while(ancestor&&ancestor!==renderer.boothGroup){path+=' '+ancestor.name;brand||=!!ancestor.userData.brandPlacement;obj||=objects.get(ancestor.userData.objectId);ancestor=ancestor.parent;}
    // Only authored objects and booth surfaces, never light fixtures, helpers or scene background.
    if(!obj&&!brand&&!/booth-wall|storage-wall|storage-door|booth-floor/.test(path))return;

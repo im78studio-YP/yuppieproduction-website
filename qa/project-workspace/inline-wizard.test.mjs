@@ -1,4 +1,5 @@
 import test from 'node:test';
+import '../../public/yp-web-ai/js/tv-asset.js';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 await import('../../public/yp-web-ai/assets/branding/default-logo.js');

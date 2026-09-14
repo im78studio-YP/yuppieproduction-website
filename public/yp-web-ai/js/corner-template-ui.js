@@ -28,7 +28,7 @@
     if(/^#[\da-f]{6}$/i.test(options.primary||'')){const original=t.primary;t.primary=options.primary;out.spec.primary=t.primary;for(const o of out.spec.objects)if(o.appearance?.color===original)o.appearance.color=t.primary;}
     out.spec.wallStickerFaces=['back','left'];
     for(const face of ['back','left'])Object.assign(out.spec.wallStickers[face],{data:artwork(t,face==='left'),name:t.name+' · '+face,id:1,ar:(face==='back'?6:3)/out.spec.H,w:face==='back'?6:3,h:out.spec.H,mode:'cover'});
-    YPTemplateBranding.apply(out.spec,t);out.spec=library.mirror(out.spec,options.cornerSide||'right');YPProjectStore.validateSpec(out.spec);return out;
+    YPTemplateBranding.apply(out.spec,t);YPTVAsset.template(out.spec,t);out.spec=library.mirror(out.spec,options.cornerSide||'right');YPProjectStore.validateSpec(out.spec);return out;
   }
   function switchSide(side){
     const state=window.YPProjectWorkspace?.state();if(state&&(!state.ready||state.busy||state.pendingDraft))throw new Error('กรุณารอระบบพร้อม และจัดการร่างเดิมก่อนสลับหัวมุม');

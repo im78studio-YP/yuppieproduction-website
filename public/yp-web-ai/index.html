@@ -562,6 +562,8 @@ select:focus{border-color:var(--acc)}
 .canvas-object-toolbar .move-mode.on{border-color:rgba(var(--acc-rgb),.62);background:rgba(var(--acc-rgb),.16);color:var(--acc2)}
 .canvas-object-toolbar #btnResizeObject.on{border-color:rgba(var(--acc-rgb),.68);background:rgba(var(--acc-rgb),.2);color:var(--acc2)}
 .canvas-object-toolbar #btnScaleObject.on{border-color:rgba(var(--acc-rgb),.76);background:rgba(var(--acc-rgb),.24);color:var(--acc2)}
+/* Legacy action hooks remain for compatibility; the popup uses Resize and one Group toggle. */
+#btnScaleObject,#btnUngroupObjects{display:none!important}
 .canvas-object-toolbar .move-advanced{position:relative}
 .canvas-object-toolbar .move-advanced>summary{list-style:none;display:flex;align-items:center;cursor:pointer;user-select:none}
 .canvas-object-toolbar .move-advanced>summary::-webkit-details-marker{display:none}
@@ -839,7 +841,7 @@ select:focus{border-color:var(--acc)}
       <label class="grid-check"><input type="checkbox" id="magneticSnapEnabled" checked> แม่เหล็กมุม 15 ซม.</label>
     </div>
     <div class="placement-readout" id="placementGridInfo">Snap to Grid 10 ซม. · คลิก Asset เพื่อดูพิกัด</div>
-    <div class="note" style="margin-top:0">Smart Move: วางอิสระได้ทั้งนอกบูธ เหนือผนัง ใต้พื้น หรือซ้อนกับวัตถุอื่น · ใช้ Point จับจุด ขอบ หรือผิวได้ทุกประเภท · Point สีเขียว = Snap พร้อมวาง · การซ้อนเป็นเพียงคำเตือน ไม่ห้ามวาง · เปิด–ปิด Snap ได้ และกำหนดพิกัดทุกแกนใน “ปรับละเอียด”</div>
+    <div class="note" style="margin-top:0">Smart Move: วางอิสระได้ทั้งนอกบูธ เหนือผนัง ใต้พื้น หรือซ้อนกับวัตถุอื่น · ใช้ Point จับจุด ขอบ หรือผิวได้ทุกประเภท · Point สีเขียว = Snap พร้อมวาง · การซ้อนเป็นเพียงคำเตือน ไม่ห้ามวาง · เปิด–ปิด Snap ได้ และกำหนดพิกัดทุกแกนใน “ปรับตำแหน่ง”</div>
   </div>
 
   <div class="asset-pane" id="catalogPane" data-asset-pane="catalog">
@@ -1373,7 +1375,7 @@ select:focus{border-color:var(--acc)}
       <button class="btn move-mode" id="btnResizeObject" type="button" title="แสดง Handle ที่มุมเพื่อย่อหรือขยาย Asset โดยรักษาสัดส่วน" aria-label="เปิดโหมด Resize Asset" aria-pressed="false">↗ Resize</button>
       <button class="btn move-mode" id="btnScaleObject" type="button" title="ขยายหรือย่อ Asset ทั้งชิ้นด้วย Transform Scale โดยไม่เปลี่ยน Dimensions ต้นฉบับ" aria-label="เปิดโหมด Scale Asset" aria-pressed="false">⤢ Scale</button>
       <details class="move-advanced" id="moveAdvanced">
-        <summary class="btn move-advanced-summary" title="ปรับตำแหน่งตามแกน X, Y และ Z ครั้งละ 5 เซนติเมตร">ปรับละเอียด</summary>
+        <summary class="btn move-advanced-summary" title="ปรับตำแหน่งตามแกน X, Y และ Z ครั้งละ 5 เซนติเมตร">ปรับตำแหน่ง</summary>
         <div class="move-advanced-menu fine-position-menu" role="group" aria-label="ปรับตำแหน่ง Asset แบบละเอียด">
           <div class="fine-position-head"><strong>Fine Position · Z-up</strong><small>ครั้งละ 0.05 ม.</small></div>
           <div class="fine-position-help">X ซ้าย–ขวา · Y หน้า–หลัง · Z ขึ้น–ลง<br>อิงทิศบูธ ไม่ใช่มุมกล้อง</div>
@@ -1769,6 +1771,8 @@ select:focus{border-color:var(--acc)}
 <script src="js/booth-lighting.js?v=20260913-beams-1"></script>
 <script src="js/logo-finishes.js?v=20260913-logo-slots-4"></script>
 <script src="js/template-tv-groups.js?v=20260909-9"></script>
+<script src="js/tv-asset.js?v=20260914-1"></script>
+<script src="js/studio-environment.js?v=20260911-1"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
 <script src="js/smart-snap-engine.js?v=20260910-free-design"></script>
 <script src="js/asset-attachment-graph.js?v=20260910-structure-support"></script>
@@ -1830,6 +1834,7 @@ const FURNITURE_CATEGORIES=[
 const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:item.customAsset||item.hiddenFromCatalog?null:'assets/catalog-thumbnails/'+item.catalogId+'.webp?v=1',modelScale:1,modelRotationY:0,initialRotation:0,
   capabilities:null,ports:[],collision:null,...item});
 const OBJECT_CATALOG=[
+  furnitureItem(YPTVAsset.definition),
   furnitureItem({catalogId:'panel-standard',category:'display',type:'panel',name:'แผงตกแต่ง / กรอบ',icon:'▯',size:{w:1,d:.12,h:2.4},unitPrice:0,color:'#c6ad82'}),
   furnitureItem({catalogId:'panel-rounded',category:'display',type:'roundedPanel',name:'แผงมุมโค้ง',icon:'▯',size:{w:.7,d:.12,h:1.4},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'panel-swoop',category:'structure',type:'swoopPanel',name:'แผงโค้งไล่ระดับ',icon:'∿',size:{w:5.8,d:.3,h:2.4},unitPrice:0,color:'#ffffff'}),
@@ -3569,6 +3574,7 @@ async function readMyAssetDimensions(file){
 function normalizeMyAsset(record){
   const size=record?.size||{};
   const w=Number(size.w)>0?Number(size.w):1,d=Number(size.d)>0?Number(size.d):1,h=Number(size.h)>0?Number(size.h):1;
+  if(record.catalogPromotion===YPTVAsset.id)return furnitureItem({...YPTVAsset.definition,catalogId:record.id,size:{w,d,h},customAsset:true,file:record.file,catalogPromotion:record.catalogPromotion,hiddenFromCatalog:true,createdAt:record.createdAt||0});
   return furnitureItem({catalogId:record.id,category:'my',type:'custom',name:record.name||'My Asset',icon:'GLB',size:{w,d,h},unitPrice:0,color:'#8d939b',
     modelUrl:'custom',customAsset:true,file:record.file,createdAt:record.createdAt||0,
     placementPolicy:{preferredTarget:'floor',allowedTargets:['floor','wall','ceiling','storage-room','structure','asset','free'],requiresSurface:false,defaultSpawn:'front-staging',allowOutsideBooth:true},
@@ -3602,8 +3608,9 @@ function bindMyAssetDrop(){
 }
 function renderMyAssetList(){
   const list=document.getElementById('myAssetList');if(!list)return;list.innerHTML='';
-  if(!CUSTOM_ASSETS.length){list.innerHTML='<div class="my-asset-empty">ยังไม่มีไฟล์ใน My Asset<br>เลือกไฟล์ .glb ด้านบนเพื่อเพิ่มอุปกรณ์ของลูกค้า</div>';return;}
-  CUSTOM_ASSETS.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).forEach(item=>{
+  const visible=CUSTOM_ASSETS.filter(item=>!item.catalogPromotion);
+  if(!visible.length){list.innerHTML='<div class="my-asset-empty">ยังไม่มีไฟล์ใน My Asset<br>เลือกไฟล์ .glb ด้านบนเพื่อเพิ่มอุปกรณ์ของลูกค้า</div>';return;}
+  visible.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).forEach(item=>{
     const card=el('div','my-asset-card'),icon=el('div','my-asset-icon','GLB'),info=el('div'),actions=el('div','my-asset-actions');
     card.draggable=true;card.dataset.catalogId=item.catalogId;card.title='คอมพิวเตอร์: ลาก '+item.name+' ไปวางบนพื้นในหรือนอกบูธ · มือถือ: กดเพิ่มเพื่อวางไว้ด้านหน้าบูธ';card.setAttribute('aria-label','ลาก '+item.name+' ไปวางบนพื้นในหรือนอกบูธ หรือกดเพิ่มเพื่อวางไว้ด้านหน้าบูธ');
     info.innerHTML='<b title="'+esc(item.name)+'">'+esc(item.name)+'</b><small>'+formatMyAssetDimension(item.size.w)+' × '+formatMyAssetDimension(item.size.d)+' × '+formatMyAssetDimension(item.size.h)+' ม. · GLB</small>';
@@ -3646,14 +3653,16 @@ async function saveMyAsset(){
   if(![inputDimensions.meters.w,inputDimensions.meters.d,inputDimensions.meters.h].every(value=>Number.isFinite(value)&&value>0)){setMyAssetStatus('กรุณากรอกขนาด กว้าง ลึก สูง เป็นเมตรให้มากกว่า 0','error');return;}
   const record={id:customAssetId(),name,size,file,createdAt:Date.now()};
   try{
-    await myAssetPut(record);CUSTOM_ASSETS.push(normalizeMyAsset(record));renderMyAssetList();
+    await YPTVAsset.recognize(record);await myAssetPut(record);CUSTOM_ASSETS.push(normalizeMyAsset(record));renderMyAssetList();
     pendingMyAssetFile=null;document.getElementById('myAssetFile').value='';document.getElementById('myAssetFileName').textContent='ยังไม่ได้เลือกไฟล์';
     document.getElementById('myAssetName').value='';setMyAssetStatus('บันทึก '+name+' ใน My Asset แล้ว','success');
   }catch(error){setMyAssetStatus(error.message||'บันทึก My Asset ไม่สำเร็จ','error');}
 }
 async function loadMyAssets(){
   try{
-    const records=await myAssetReadAll();CUSTOM_ASSETS.splice(0,CUSTOM_ASSETS.length,...records.map(normalizeMyAsset));renderMyAssetList();sync();
+    const records=await myAssetReadAll();
+    for(const record of records){const previous=record.catalogPromotion;await YPTVAsset.recognize(record);if(record.catalogPromotion!==previous)await myAssetPut(record);}
+    CUSTOM_ASSETS.splice(0,CUSTOM_ASSETS.length,...records.map(normalizeMyAsset));renderMyAssetList();sync();
   }catch(error){setMyAssetStatus(error.message||'เปิด My Asset ไม่สำเร็จ','error');}
 }
 const layoutSnapshot=()=>Object.fromEntries(LAYOUT_KEYS.map(key=>[key,S[key]]));
@@ -4133,7 +4142,7 @@ function changeSelectedAttachmentAnchor(){
 }
 function syncAssetSettingsForm(){
   const obj=objectById(objectEditor.selectedId),modal=document.getElementById('mAssetSettings');if(!obj||!modal){closeAssetSettings();return;}
-  const item=objectCatalogDef(obj.catalogId);normalizeSceneObjectModel(obj,item);document.getElementById('assetSettingsTitle').textContent=(modal.dataset.settingsMode==='advanced'?'ปรับละเอียด · ':'ตั้งค่าอุปกรณ์ · ')+selectedAssetName(obj);
+  const item=objectCatalogDef(obj.catalogId);normalizeSceneObjectModel(obj,item);document.getElementById('assetSettingsTitle').textContent=(modal.dataset.settingsMode==='advanced'?'ปรับตำแหน่ง · ':'ตั้งค่าอุปกรณ์ · ')+selectedAssetName(obj);
   document.getElementById('assetSettingsName').value=obj.label||'';
   ['W','D','H'].forEach(key=>{const prop=key.toLowerCase(),input=document.getElementById('assetSize'+key);input.value=Number(obj.size[prop]||0).toFixed(2);input.disabled=objectLocked(obj)||!obj.transformPolicy.canResize;});
   const locked=objectLocked(obj),mode=obj.appearance.mode,color=obj.appearance.color||'#f5f5f5',colorWrap=document.querySelector('#mAssetSettings .asset-settings-color');
@@ -4148,6 +4157,7 @@ function syncAssetSettingsForm(){
   document.getElementById('assetSurfaceNote').textContent=(notes[mode]||notes.original)+(obj.appearance.textureData?' · มีสติ๊กเกอร์ภาพซ้อนอยู่':'');
   syncAssetAttachmentForm(obj);
   window.YPAssetSettingsEnter?.sync(obj);
+  YPTVAsset.settings(item,obj);
 }
 function openAssetSettings(mode='surface'){
   const obj=objectById(objectEditor.selectedId);if(!obj){
@@ -4228,7 +4238,7 @@ function updateSelectedObjectAppearanceMode(mode){
 function setSelectedObjectSticker(file){
   const obj=objectById(objectEditor.selectedId);if(!obj||objectLocked(obj)||!file)return;
   if(!/^image\/(png|jpeg|webp)$/i.test(file.type)){announceCatalog('รองรับไฟล์ PNG, JPG และ WebP','error');return;}
-  const reader=new FileReader();reader.onload=()=>{const current=objectById(objectEditor.selectedId);if(!current)return;normalizeSceneObjectModel(current);const before=objectSnapshot();
+  const reader=new FileReader();reader.onload=()=>{const current=objectById(obj.id);if(current!==obj||objectLocked(current))return;normalizeSceneObjectModel(current);const before=objectSnapshot();
     current.appearance.textureData=String(reader.result);current.appearance.textureName=file.name;current.appearance.textureId=Date.now().toString(36);recordObjectHistory(before);sync();syncAssetSettingsForm();announceCatalog('ใช้สติ๊กเกอร์กับ '+selectedAssetName(current)+' แล้ว','success');};reader.readAsDataURL(file);
 }
 function resetSelectedObjectSurface(removeAll=true){
@@ -4528,7 +4538,12 @@ function syncObjectControls(){
   const transformMembers=selectedTransformObjects(),groupLocked=transformMembers.some(objectLocked);
   const rotateButton=document.getElementById('btnRotateObject');if(rotateButton){rotateButton.textContent='↻ หมุน 45°';rotateButton.title=transformMembers.length>1?'หมุนทั้ง Group รอบจุดกลางร่วมกัน 45 องศา':brandSelected&&S.logoMount!=='floor'?'โลโก้ติดผนังรักษาแนวขนานผนัง':'หมุน 45 องศา';if(transformMembers.length>1)rotateButton.disabled=groupLocked;rotateButton.setAttribute('aria-label',rotateButton.title);}
   const groupingObjects=selectedObjects(),groupButton=document.getElementById('btnGroupObjects'),ungroupButton=document.getElementById('btnUngroupObjects');
-  if(groupButton)groupButton.disabled=groupingObjects.length<2||groupingObjects.some(objectLocked)||selectionCount!==groupingObjects.length;
+  if(groupButton){
+    const grouped=groupingObjects.some(obj=>obj.groupId);
+    groupButton.textContent=grouped?'Ungroup':'Group';groupButton.dataset.groupAction=grouped?'ungroup':'group';
+    groupButton.title=grouped?'แยก Group โดยคงตำแหน่งและขนาดเดิม':'เลือกอย่างน้อย 2 ชิ้นเพื่อรวม Group';groupButton.setAttribute('aria-label',groupButton.title);
+    groupButton.disabled=grouped?groupLocked:groupingObjects.length<2||groupingObjects.some(objectLocked)||selectionCount!==groupingObjects.length;
+  }
   if(ungroupButton)ungroupButton.disabled=!groupingObjects.some(obj=>obj.groupId)||groupLocked;
   document.getElementById('btnUndoObject').disabled=!objectEditor.past.length;
   document.getElementById('btnRedoObject').disabled=!objectEditor.future.length;
@@ -5606,7 +5621,10 @@ function build(){
   document.getElementById('moveAdvanced').ontoggle=syncFinePositionControls;
   document.getElementById('btnLockObject').onclick=toggleSelectedObjectLock;
   document.getElementById('btnRotateObject').onclick=rotateSelectedObject;
-  document.getElementById('btnGroupObjects').onclick=groupSelectedObjects;
+  document.getElementById('btnGroupObjects').onclick=()=>{
+    if(selectedTransformObjects().some(objectLocked))return announceCatalog('มี Asset ที่ล็อกอยู่ กรุณา Unlock ก่อน','error');
+    if(selectedObjects().some(obj=>obj.groupId))ungroupSelectedObjects();else groupSelectedObjects();
+  };
   document.getElementById('btnUngroupObjects').onclick=ungroupSelectedObjects;
   document.getElementById('btnFlipObjectX').onclick=()=>flipSelectedObject('x');
   document.getElementById('btnFlipObjectY').onclick=()=>flipSelectedObject('y');
@@ -7769,6 +7787,7 @@ class ThreeBoothRenderer{
     assembly.userData.doorType=spec.stDoorType;assembly.userData.doorSide=spec.stDoor;group.add(assembly);
   }
   applyCatalogAppearance(root,obj){
+    if(YPTVAsset.isTV(objectCatalogDef(obj.catalogId))){YPTVAsset.appearance(this,root,obj);return;}
     normalizeSceneObjectModel(obj);const T=this.THREE,appearance=obj.appearance||{},meshes=[];
     root.traverse(part=>{if(!part.isMesh||!part.material)return;const source=Array.isArray(part.material)?part.material:[part.material];
       const cloned=source.map(material=>{
@@ -7799,7 +7818,7 @@ class ThreeBoothRenderer{
   }
   buildCatalogObject(obj){
     const T=this.THREE,item=objectCatalogDef(obj.catalogId),s=obj.size,root=new T.Group(),accent=palette().acc;
-    const furniture=obj.geometryMode==='parametric'||(obj.type==='brandCopy'&&obj.logoFinish)?null:this.furnitureModel(item);
+    const tv=YPTVAsset.isTV(item),furniture=tv?this.furnitureModel(item):(obj.geometryMode==='parametric'||(obj.type==='brandCopy'&&obj.logoFinish)?null:this.furnitureModel(item));
     if(furniture){
       /* GLB templates are normalized once when loaded.  Apply the object's
          current dimensions to the clone so the settings panel changes the
@@ -7811,6 +7830,7 @@ class ThreeBoothRenderer{
       }
       root.add(furniture);root.name='catalog-object-'+obj.type;
       root.traverse(part=>{part.userData.objectId=obj.id;});this.applyCatalogAppearance(root,obj);return root;}
+    if(tv){root.add(YPTVAsset.fallback(T,s));root.traverse(part=>{part.userData.objectId=obj.id;});this.applyCatalogAppearance(root,obj);return root;}
     const base=(item&&item.color)||'#8a919c',dark='#2c3037',light='#e5e3dc';
     const bx=(size,pos,color=base,options={})=>{
       if(options.emissive&&!options.material)options={...options,material:new T.MeshStandardMaterial({color,emissive:options.emissive,emissiveIntensity:options.emissiveIntensity??1,roughness:options.roughness??.72,metalness:options.metalness??.02})};
@@ -9968,7 +9988,7 @@ window.YPProjectBridge={
     // Generated AI requests/results are session artifacts, not editable design data.
     if(spec.aiRendering){spec.aiRendering.preview=null;spec.aiRendering.renderPackage=null;}
     const used=new Set(spec.objects.map(object=>object.catalogId));
-    const assets=CUSTOM_ASSETS.filter(item=>used.has(item.catalogId)).map(item=>({id:item.catalogId,name:item.name,size:{...item.size},file:item.file}));
+    const assets=CUSTOM_ASSETS.filter(item=>used.has(item.catalogId)).map(item=>({id:item.catalogId,name:item.name,size:{...item.size},file:item.file,...(item.catalogPromotion?{catalogPromotion:item.catalogPromotion}:{})}));
     return {spec,assets};
   },
   restore(snapshot){
@@ -10185,7 +10205,6 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/peninsular-six-geometry.js?v=20260913-beams-1"></script>
 <script src="js/peninsular-six-templates.js?v=20260911-six"></script>
 <script src="js/botanical-images.js?v=20260911-botanical"></script>
-<script src="js/studio-environment.js?v=20260911-1"></script>
 <script src="js/peninsular-botanical.js?v=20260911-floor-finish"></script>
 <script src="js/peninsular-templates.js?v=20260911-botanical"></script>
 <script src="js/peninsular-six-artwork.js?v=20260911-brand-audit"></script>

@@ -5,7 +5,7 @@
   const rounded=(x,z,w,d,h,color,y=0)=>part('panel-rounded',x,z,w,d,h,color,y);
   const frame=(x,color)=>[panel(x,.39,1.25,.14,2.2,color,.1),panel(x,.48,1.07,.06,2.02,'#527b35',.19)];
   const logo=(x,z,w,y)=>part('brand-artwork-copy',x,z,w,.012,w*.18,null,y,{label:'โลโก้ YP บนซุ้ม',brandLogo:true});
-  const screen=(x,z,w,y)=>[panel(x,z,w,.07,w*.58,'#202b35',y),panel(x,z+.041,w-.1,.012,w*.58-.1,'#14618a',y+.05)];
+  const screen=(x,z,w,y)=>[{...panel(x,z,w,.07,w*.58,'#202b35',y),tvRole:'frame'},{...panel(x,z+.041,w-.1,.012,w*.58-.1,'#14618a',y+.05),tvRole:'screen'}];
   const meeting=(x,z)=>[part('table-standard',x,z,.78,.62,.72,'#eeeae0'),part('chair-standard',x-.65,z,.45,.46,.78,'#f4f1e9',0,{rotationY:90}),part('chair-standard',x+.65,z,.45,.46,.78,'#f4f1e9',0,{rotationY:-90})];
   const planter=(x,z,w)=>[panel(x,z,w,.28,.19,'#ffffff'),...Array.from({length:5},(_,i)=>part('plant-medium',x-w*.39+i*w*.195,z,.21,.21,.42,null,.19))];
   const pairedScreen=(key,...args)=>screen(...args).map(o=>({...o,tv:key}));

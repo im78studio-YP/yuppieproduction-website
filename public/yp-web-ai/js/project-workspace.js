@@ -118,6 +118,7 @@
     const file=$('projectFile').files[0];$('projectFile').value='';if(!file)return;
     if(file.size>store.MAX_BYTES)throw new Error('ไฟล์เกิน 150 MB');
     const incoming=store.isolateAssets(store.fromText(await file.text()));
+    await globalThis.YPTVAsset?.recognizeProject(incoming);
     if(!await ask('เปิดโปรเจกต์ “'+incoming.name+'”?','แบบ A/B ปัจจุบันจะถูกแทนที่ หากต้องการเก็บไว้ให้ยกเลิกและกด “บันทึกไฟล์” ก่อน','เปิดโปรเจกต์'))return;
     apply(incoming);pendingDraft=null;recovery.hidden=true;await persist();
   });
@@ -227,6 +228,7 @@
   project=store.create(bridge.capture());refresh();
   try{
     const draft=await store.readDraft();
+    await globalThis.YPTVAsset?.recognizeProject(draft);
     if(draft){store.validate(draft);pendingDraft=draft;recovery.hidden=false;$('projectRecoveryText').textContent='พบร่าง “'+draft.name+'” · '+new Date(draft.updatedAt).toLocaleString('th-TH');
       window.YPQuickSetupBridge.close();status('เลือกเปิดร่างเดิมหรือเริ่มใหม่ · ยังไม่เขียนทับร่างเดิม');}
     else status('บันทึกไฟล์ลงเครื่องได้ · ร่างอัตโนมัติเก็บเฉพาะเบราว์เซอร์นี้ ไม่ใช่บนบัญชีออนไลน์');

@@ -330,7 +330,7 @@ test('Scale เปลี่ยน Transform ครบ XYZ แต่ไม่เ�
     'scale:{x:nextScale,y:nextScale,z:nextScale}','obj.transform={...(obj.transform||{}),scale:{x:scale,y:scale,z:scale},uniformScale:scale}',
     "reviewRequired:true,reviewReason:'uniform-transform-scale'",'Dimensions เดิม ','ขนาดปลายทาง ','setSelectedObjectScale(value)'])assert.ok(html.includes(token),token);
   assert.match(html,/bounds:\{width:oriented\.w,height:oriented\.h,depth:oriented\.d\}/);
-  assert.match(html,/\{x:flipX,y:flipY,z:uniformScale\}/);
+  assert.match(html,/\{x:flipX,y:flipY,z:obj\.transform\?\.flipZ\?-uniformScale:uniformScale\}/);
   assert.match(html,/finalSize:sceneObjectWorldSize\(obj\)/);
 });
 

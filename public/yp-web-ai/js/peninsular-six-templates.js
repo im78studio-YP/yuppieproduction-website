@@ -4,7 +4,7 @@
  const panel=(x,z,w,d,h,color,y=0)=>p('panel-standard',x,z,w,d,h,color,y);
  const custom=(id,design,x,z,w,d,h,color,y=0,rotationY=0)=>p(id,x,z,w,d,h,null,y,{structure:{design,color,...(design==='timber-glass-table'?{glassRim:true}:{})},rotationY});
  const art=(graphic,x,z,w,h,y,rotationY=0)=>p('brand-artwork-copy',x,z,w,.012,h,null,y,{graphic,rotationY});
- const screen=(key,x,z,w,h,y)=>[panel(x,z,w,.08,h,'#151b22',y),art('six-'+key,x,z+.047,w-.08,h-.08,y+.04)];
+ const screen=(key,x,z,w,h,y)=>[{...panel(x,z,w,.08,h,'#151b22',y),tvRole:'frame'},{...art('six-'+key,x,z+.047,w-.08,h-.08,y+.04),tvRole:'screen'}];
  const seats=(x,z)=>[custom('table-standard','timber-glass-table',x,z,.88,.88,.74),...[[-.72,0,90],[.72,0,-90],[0,-.68,0],[0,.68,180]].map(([dx,dz,r])=>custom('chair-standard','timber-shell-chair',x+dx,z+dz,.56,.56,.83,null,0,r))];
  const pod=(x,z,w,h,color,y=0)=>custom('panel-rounded','six-display-pod',x,z,w,.38,h,color,y);
  const blue='#087eae',black='#222327';
