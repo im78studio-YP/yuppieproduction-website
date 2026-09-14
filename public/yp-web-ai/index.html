@@ -1776,7 +1776,9 @@ select:focus{border-color:var(--acc)}
 <script src="js/booth-lighting.js?v=20260913-beams-1"></script>
 <script src="js/logo-finishes.js?v=20260913-logo-slots-4"></script>
 <script src="js/template-tv-groups.js?v=20260909-9"></script>
-<script src="js/tv-asset.js?v=20260914-1"></script>
+<script src="js/tv-asset.js?v=20260914-2"></script>
+<script src="js/tv-stands.js?v=20260914-2"></script>
+<script src="js/brochure-rack.js?v=20260914-1"></script>
 <script src="js/budget-estimate.js?v=20260914-1"></script>
 <script src="js/studio-environment.js?v=20260911-1"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
@@ -1842,6 +1844,10 @@ const furnitureItem=item=>({mount:'floor',clearance:.05,modelUrl:null,thumbUrl:i
 const OBJECT_CATALOG=[
   furnitureItem(YPTVAsset.definition),
   furnitureItem(YPTVAsset.definition65),
+  furnitureItem({catalogId:'tv-stand-console',category:'media',type:'tvStand',name:'TV Stand 01 · ตู้จอเอียง',icon:'▣',size:{w:.96,d:.55,h:1.32},unitPrice:0,color:'#b7b8bd',tvDisplay:true,thumbUrl:'assets/catalog-thumbnails/tv-stand-console.png',capabilities:['floorPlaceable','free3DPlaceable','surfaceSnappable','resizable','rotatable','styleable'],transformPolicy:{canResize:true,canScale:true,defaultMode:'resize',productionSensitive:false}}),
+  furnitureItem({catalogId:'tv-stand-pedestal',category:'media',type:'tvStand',name:'TV Stand 02 · ขาตั้งกลาง',icon:'▣',size:{w:1.12,d:.55,h:1.20},unitPrice:0,color:'#28282b',tvDisplay:true,thumbUrl:'assets/catalog-thumbnails/tv-stand-pedestal.png',capabilities:['floorPlaceable','free3DPlaceable','surfaceSnappable','resizable','rotatable','styleable'],transformPolicy:{canResize:true,canScale:true,defaultMode:'resize',productionSensitive:false}}),
+  furnitureItem({catalogId:'tv-stand-information',category:'media',type:'tvStand',name:'TV Stand 03 · ตู้ Information',icon:'▣',size:{w:.92,d:.40,h:1.50},unitPrice:0,color:'#e5e6e7',tvDisplay:true,thumbUrl:'assets/catalog-thumbnails/tv-stand-information.png',capabilities:['floorPlaceable','free3DPlaceable','surfaceSnappable','resizable','rotatable','styleable'],transformPolicy:{canResize:true,canScale:true,defaultMode:'resize',productionSensitive:false}}),
+  furnitureItem({catalogId:'brochure-zigzag',category:'display',type:'brochureRack',name:'ชั้นวางโบรชัวร์ซิกแซก',icon:'▤',size:{w:.28,d:.38,h:1.55},unitPrice:0,color:'#bdc8d0',thumbUrl:'assets/catalog-thumbnails/brochure-zigzag.png',capabilities:['floorPlaceable','free3DPlaceable','surfaceSnappable','resizable','rotatable','styleable'],transformPolicy:{canResize:true,canScale:true,defaultMode:'resize',productionSensitive:false}}),
   furnitureItem({catalogId:'panel-standard',category:'display',type:'panel',name:'แผงตกแต่ง / กรอบ',icon:'▯',size:{w:1,d:.12,h:2.4},unitPrice:0,color:'#c6ad82'}),
   furnitureItem({catalogId:'panel-rounded',category:'display',type:'roundedPanel',name:'แผงมุมโค้ง',icon:'▯',size:{w:.7,d:.12,h:1.4},unitPrice:0,color:'#ffffff'}),
   furnitureItem({catalogId:'panel-swoop',category:'structure',type:'swoopPanel',name:'แผงโค้งไล่ระดับ',icon:'∿',size:{w:5.8,d:.3,h:2.4},unitPrice:0,color:'#ffffff'}),
@@ -7795,6 +7801,7 @@ class ThreeBoothRenderer{
     assembly.userData.doorType=spec.stDoorType;assembly.userData.doorSide=spec.stDoor;group.add(assembly);
   }
   applyCatalogAppearance(root,obj){
+    if(globalThis.YPTVStands?.isStand(obj)){YPTVStands.appearance(this,root,obj);return;}
     if(YPTVAsset.isTV(objectCatalogDef(obj.catalogId))){YPTVAsset.appearance(this,root,obj);return;}
     normalizeSceneObjectModel(obj);const T=this.THREE,appearance=obj.appearance||{},meshes=[];
     root.traverse(part=>{if(!part.isMesh||!part.material)return;const source=Array.isArray(part.material)?part.material:[part.material];
@@ -7826,6 +7833,7 @@ class ThreeBoothRenderer{
   }
   buildCatalogObject(obj){
     const T=this.THREE,item=objectCatalogDef(obj.catalogId),s=obj.size,root=new T.Group(),accent=palette().acc;
+    if(globalThis.YPTVStands?.build({T,obj,root})){root.name='catalog-object-tvStand';root.traverse(part=>{part.userData.objectId=obj.id;});this.applyCatalogAppearance(root,obj);return root;}
     const tv=YPTVAsset.isTV(item),furniture=tv?this.furnitureModel(item):(obj.geometryMode==='parametric'||(obj.type==='brandCopy'&&obj.logoFinish)?null:this.furnitureModel(item));
     if(furniture){
       /* GLB templates are normalized once when loaded.  Apply the object's
@@ -7849,7 +7857,7 @@ class ThreeBoothRenderer{
         metalness:options.metalness??.02,emissive:options.emissive||0x000000,emissiveIntensity:options.emissiveIntensity||0});
       const part=new T.Mesh(geometry,material);part.position.set(...position);part.castShadow=true;part.receiveShadow=true;root.add(part);return YPBoothLighting.markEmitter(part);
     };
-    if(globalThis.YPInlineSoftWave?.build({T,obj,mesh,bx,root})||globalThis.YPTimberRibbonGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularSixGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPIslandYellowGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPCornerBeauty?.build({T,obj,mesh,bx,root})||globalThis.YPCornerAqua?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularBotanical?.build({T,obj,mesh,bx,root})){
+    if(globalThis.YPBrochureRack?.build({T,obj,root})||globalThis.YPInlineSoftWave?.build({T,obj,mesh,bx,root})||globalThis.YPTimberRibbonGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularSixGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPIslandYellowGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPCornerBeauty?.build({T,obj,mesh,bx,root})||globalThis.YPCornerAqua?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularBotanical?.build({T,obj,mesh,bx,root})){
       // Reference-specific compound geometry; generic assets retain their original shapes.
     }else if(isEntranceFrameObject(obj)){
       const cfg=normalizeEntranceFrameObject(obj).structure,finish=new T.MeshStandardMaterial({color:cfg.color,roughness:.72,metalness:.01});
