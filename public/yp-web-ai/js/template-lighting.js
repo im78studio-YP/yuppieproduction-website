@@ -12,7 +12,7 @@
   const scale=o=>n(typeof o.transform?.scale==='number'?o.transform.scale:o.transform?.scale?.x??o.transform?.uniformScale,1);
   const supported=o=>o&&o.visible!==false&&Math.abs(n(o.rotationX)%360)<.001&&Math.abs(n(o.rotationZ)%360)<.001&&(!o.orientation||o.orientation==='horizontal')&&!o.transform?.flipY;
   function object(s,index){return s.objects?.find(o=>o.id===s.boothTemplate.id+'-'+index);}
-  function world(o,u,v,y){const a=n(o.rotationY)*Math.PI/180,k=scale(o),x=(u-.5)*o.size.w*k*(o.transform?.flipX?-1:1),z=(v-.5)*o.size.d*k;return{x:o.position.x+x*Math.cos(a)+z*Math.sin(a),y:o.position.y+y*k,z:o.position.z-x*Math.sin(a)+z*Math.cos(a)};}
+  function world(o,u,v,y){const a=n(o.rotationY)*Math.PI/180,k=scale(o),x=(u-.5)*o.size.w*k*(o.transform?.flipX?-1:1),z=(v-.5)*o.size.d*k*(o.transform?.flipZ?-1:1);return{x:o.position.x+x*Math.cos(a)+z*Math.sin(a),y:o.position.y+y*k,z:o.position.z-x*Math.sin(a)+z*Math.cos(a)};}
   function inverse(o,p){const a=n(o.rotationY)*Math.PI/180,k=scale(o),x=p.x-o.position.x,z=p.z-o.position.z;return{x:(x*Math.cos(a)-z*Math.sin(a))/k,y:(p.y-o.position.y)/k,z:(x*Math.sin(a)+z*Math.cos(a))/k};}
   const thickness=s=>['penin','peninsular','backdrop','photo360'].includes(s.type)?.3:.1;
   function targets(s){

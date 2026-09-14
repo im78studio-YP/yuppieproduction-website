@@ -1396,13 +1396,15 @@ select:focus{border-color:var(--acc)}
             <button class="btn fine-position-step" type="button" data-fine-axis="z" data-fine-delta="0.05" aria-label="เลื่อน Asset ขึ้น 5 เซนติเมตร" title="Z+ ขึ้น 5 ซม.">+</button>
           </div>
           <div class="fine-position-help" id="finePositionHelp" role="status">เลือก Asset ที่ต้องการปรับ</div>
+          <button class="btn" id="btnAssetAdvancedSettings" type="button">ตำแหน่ง มุมหมุน จุดยึด และโครงสร้าง…</button>
         </div>
       </details>
       <button class="btn" id="btnLockObject" type="button" title="ล็อก Asset" aria-label="ล็อก Asset ที่เลือก">Lock</button>
       <button class="btn" id="btnRotateObject" type="button" title="หมุน 45 องศา" aria-label="หมุนวัตถุ 45 องศา">↻ หมุน 45°</button>
       <button class="btn" id="btnFlipObjectX" type="button" title="กลับด้านซ้ายและขวา" aria-label="กลับด้าน Asset ซ้ายและขวา">Flip ซ้าย–ขวา</button>
       <button class="btn" id="btnFlipObjectY" type="button" title="กลับด้านบนและล่าง" aria-label="กลับด้าน Asset บนและล่าง">Flip บน–ล่าง</button>
-      <button class="btn" id="btnOpenAssetSettings" type="button" title="ตั้งค่าขนาดและพื้นผิวของ Asset" aria-label="เปิดหน้าตั้งค่า Asset">ตั้งค่า Asset</button>
+      <button class="btn" id="btnFlipObjectZ" type="button" title="สะท้อนหน้าและหลังตามแกนของวัตถุ" aria-label="กลับด้าน Asset หน้าและหลัง">Flip หน้า–หลัง</button>
+      <button class="btn" id="btnOpenAssetSettings" type="button" title="ตั้งชื่อและเปลี่ยนพื้นผิวของ Asset" aria-label="ตั้งค่าอุปกรณ์">ตั้งค่าอุปกรณ์</button>
       <button class="btn asset-list-trigger" id="btnAssetList" type="button" title="เปิดรายการวัตถุทั้งหมด" aria-label="เปิด Asset List" aria-expanded="false" aria-controls="assetListPanel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg> Asset List</button>
       <button class="btn" id="btnDuplicateObject" type="button" title="ทำสำเนา" aria-label="ทำสำเนาวัตถุ">⧉ สำเนา</button>
       <button class="btn" id="btnReplaceObject" type="button" title="เลือกอุปกรณ์จากคลังมาแทนชิ้นที่เลือก">⇄ เปลี่ยนอุปกรณ์</button>
@@ -1513,7 +1515,7 @@ select:focus{border-color:var(--acc)}
   </button>
 </div>
 
-<div class="modal asset-settings-modal" id="mAssetSettings" role="dialog" aria-modal="true" aria-labelledby="assetSettingsTitle" aria-hidden="true" onclick="if(event.target===this)closeAssetSettings()">
+<div class="modal asset-settings-modal" id="mAssetSettings" data-settings-mode="surface" role="dialog" aria-modal="true" aria-labelledby="assetSettingsTitle" aria-hidden="true" onclick="if(event.target===this)closeAssetSettings()">
   <div class="sheet asset-settings-sheet">
     <div class="asset-settings-head">
       <div><small>ASSET SETTINGS</small><h2 id="assetSettingsTitle">ตั้งค่า Asset</h2></div>
@@ -1521,7 +1523,7 @@ select:focus{border-color:var(--acc)}
     </div>
     <label class="lbl" for="assetSettingsName">ชื่อวัตถุ</label>
     <input class="asset-settings-name" id="assetSettingsName" type="text" maxlength="60" placeholder="ชื่อ Asset">
-    <section class="asset-settings-section">
+    <section class="asset-settings-section" id="assetLegacySizeSection" hidden>
       <h3>ขนาดจริง</h3>
       <div class="asset-settings-grid">
         <div class="asset-settings-field"><label for="assetSizeW">กว้าง (ม.)</label><input id="assetSizeW" type="number" min="0.01" max="5" step="0.01" inputmode="decimal"></div>
@@ -1762,7 +1764,7 @@ select:focus{border-color:var(--acc)}
 <script src="js/ai-render-intent.js?v=20260831-1"></script>
 <script src="js/ai-render-pipeline.js?v=20260830-1"></script>
 <script src="js/auto-lighting.js?v=20260909-8"></script>
-<script src="js/template-lighting.js?v=20260909-8"></script>
+<script src="js/template-lighting.js?v=20260914-flip-z-1"></script>
 <script src="js/booth-light-beams.js?v=20260913-1"></script>
 <script src="js/booth-lighting.js?v=20260913-beams-1"></script>
 <script src="js/logo-finishes.js?v=20260913-logo-slots-4"></script>
@@ -2267,7 +2269,7 @@ function sceneObjectAssetSemantics(obj,item=objectCatalogDef(obj?.catalogId)){
 function sceneAssetRecordForObject(obj){
   const item=objectCatalogDef(obj.catalogId);normalizeSceneObjectModel(obj,item);const semantics=sceneObjectAssetSemantics(obj,item),oriented=sceneObjectOrientedSize(obj),uniformScale=sceneObjectScaleValue(obj),flipX=obj.transform?.flipX===true?-uniformScale:uniformScale,flipY=obj.transform?.flipY===true?-uniformScale:uniformScale;
   return sceneAssetRecord({id:obj.id,name:obj.label||item?.name||obj.type||'Asset',assetType:semantics.assetType,category:semantics.category,object3DId:'scene.asset.'+obj.id,
-    transform:sceneAssetTransform(obj.position,{x:(Number(obj.rotationX)||0)*Math.PI/180,y:(Number(obj.rotationY)||0)*Math.PI/180,z:(Number(obj.rotationZ)||0)*Math.PI/180},{x:flipX,y:flipY,z:uniformScale}),
+    transform:sceneAssetTransform(obj.position,{x:(Number(obj.rotationX)||0)*Math.PI/180,y:(Number(obj.rotationY)||0)*Math.PI/180,z:(Number(obj.rotationZ)||0)*Math.PI/180},{x:flipX,y:flipY,z:obj.transform?.flipZ?-uniformScale:uniformScale}),
     bounds:{width:oriented.w,height:oriented.h,depth:oriented.d},locked:obj.locked===true,selectable:true,movable:obj.capabilities?.movable!==false,snapEnabled:obj.placement?.anchorSnap!==false,
     metadata:{system:false,listGroup:semantics.listGroup,icon:item?.icon||'OBJ',thumbnail:item?.thumbUrl||'',visible:obj.visible!==false,status:semantics.status,catalogId:obj.catalogId||null,groupId:obj.groupId||null,
       transformPolicy:{...obj.transformPolicy},productionReviewRequired:obj.production?.reviewRequired===true,installFreely:obj.placement?.installFreely===true,duplicateSourceId:obj.placement?.duplicateSourceId||null}});
@@ -2696,7 +2698,7 @@ function buildGeometryManifest(spec=S){
       catalogId:obj.catalogId||null,geometry:{kind:isEntranceFrameObject(obj)?'entrance-frame':isDownlightBeamObject(obj)?'downlight-beam':'catalog-object',structure:obj.structure?JSON.parse(JSON.stringify(obj.structure)):null},
       dimensions:manifestSize(size.w,size.d,size.h),orientedBounds:(()=>{const oriented=sceneObjectWorldSize(obj);return manifestSize(oriented.w,oriented.d,oriented.h);})(),
       transform:{position:manifestVector(position.x,floorY+(Number(position.y)||0),position.z),rotationDeg:manifestVector(obj.rotationX,obj.rotationY,obj.rotationZ),orientation:obj.orientation,
-        scale:(()=>{const scale=sceneObjectScaleValue(obj);return manifestVector(obj.transform?.flipX?-scale:scale,obj.transform?.flipY?-scale:scale,scale);})(),uniformScale:manifestNumber(sceneObjectScaleValue(obj)),mirror:{leftRight:obj.transform?.flipX===true,topBottom:obj.transform?.flipY===true}},
+        scale:(()=>{const scale=sceneObjectScaleValue(obj);return manifestVector(obj.transform?.flipX?-scale:scale,obj.transform?.flipY?-scale:scale,obj.transform?.flipZ?-scale:scale);})(),uniformScale:manifestNumber(sceneObjectScaleValue(obj)),mirror:{leftRight:obj.transform?.flipX===true,topBottom:obj.transform?.flipY===true,frontBack:obj.transform?.flipZ===true}},
       capabilities:{...obj.capabilities},transformPolicy:{...obj.transformPolicy},production:{reviewRequired:obj.production?.reviewRequired===true,reviewReason:obj.production?.reviewReason||null},placement:{...obj.placement},attachment:persistent,legacyPortAttachment:manifestSceneAttachment(obj),collision:manifestSceneCollision(obj,item),
       ports:localScenePorts(obj).map(port=>({id:port.id,role:port.role,localPosition:manifestVector(port.position.x,port.position.y,port.position.z)})),
       editorLocked:obj.locked===true,groupId:obj.groupId||null,appearance:{color:obj.appearance?.color||null,textureName:obj.appearance?.textureName||null},
@@ -2890,7 +2892,7 @@ function normalizeSceneObjectModel(obj,item=objectCatalogDef(obj?.catalogId)){
   }else obj.attachment=null;
   const policy=normalizeAssetTransformPolicy(obj,item),transform=obj.transform&&typeof obj.transform==='object'?obj.transform:{},sourceScale=transform.scale,
     scaleCandidate=typeof sourceScale==='number'?sourceScale:Number(sourceScale?.x??transform.uniformScale??1),uniformScale=clampNumber(Number.isFinite(scaleCandidate)&&scaleCandidate>0?scaleCandidate:1,policy.minScale,policy.maxScale);
-  transform.flipX=transform.flipX===true;transform.flipY=transform.flipY===true;transform.scale={x:uniformScale,y:uniformScale,z:uniformScale};transform.uniformScale=uniformScale;obj.transform=transform;
+  transform.flipX=transform.flipX===true;transform.flipY=transform.flipY===true;transform.flipZ=transform.flipZ===true;transform.scale={x:uniformScale,y:uniformScale,z:uniformScale};transform.uniformScale=uniformScale;obj.transform=transform;
   obj.capabilities.resizable=policy.canResize;obj.capabilities.scalable=policy.canScale;
   const production=obj.production&&typeof obj.production==='object'?obj.production:{};production.reviewRequired=production.reviewRequired===true;production.reviewReason=production.reviewRequired?String(production.reviewReason||'transform-scale'):'';obj.production=production;
   const appearance=obj.appearance&&typeof obj.appearance==='object'?obj.appearance:{};
@@ -3143,7 +3145,7 @@ function registryAssetWorldSnapAnchors(asset,transformOverride=null){
 function registrySceneObjectSnapAnchors(obj){
   if(!obj?.id||!obj.position)return[];
   const asset=sceneAssetRegistry.getAssetById(obj.id),rotation={x:0,y:(Number(obj.rotationY)||0)*Math.PI/180,z:0},uniformScale=sceneObjectScaleValue(obj),
-    scale={x:obj.transform?.flipX===true?-uniformScale:uniformScale,y:obj.transform?.flipY===true?-uniformScale:uniformScale,z:uniformScale};
+    scale={x:obj.transform?.flipX===true?-uniformScale:uniformScale,y:obj.transform?.flipY===true?-uniformScale:uniformScale,z:obj.transform?.flipZ===true?-uniformScale:uniformScale};
   if(!asset)return sceneObjectSnapAnchors(obj);
   const liveObject=objectById(obj.id),root=liveObject===obj?threeRenderer?.objectMeshes?.get(obj.id):null,bounds=root&&threeRenderer?.objectLocalBounds?.(root);
   if(bounds){
@@ -3297,7 +3299,7 @@ function worldCollisionVolumes(item,size,x,z,rotationY=0,obj=null){
   if(item?.type==='fasciaCurve'&&(!proxy.orientation||proxy.orientation==='horizontal')){
     const scale=sceneObjectScaleValue(proxy),flipX=proxy.transform?.flipX===true?-1:1;
     return fasciaCurveOutline(proxy.size).strips.map((strip,i)=>({id:'fascia-strip-'+i,
-      shape:polygonCollisionShape(strip.map(p=>{const px=p.x*scale*flipX,pz=p.z*scale;return{x:Number(x)+px*c+pz*s,z:Number(z)-px*s+pz*c};})),
+      shape:polygonCollisionShape(strip.map(p=>{const px=p.x*scale*flipX,pz=p.z*scale*(proxy.transform?.flipZ?-1:1);return{x:Number(x)+px*c+pz*s,z:Number(z)-px*s+pz*c};})),
       minY:baseY,maxY:baseY+proxy.size.h*scale}));
   }
   return sceneCollisionShapeDefinitions(proxy,item).map(def=>{
@@ -3735,7 +3737,7 @@ function makeReplacementObject(source,catalogId){
   if(isDownlightBeamObject(next)){next.structure.wallAttached=false;normalizeDownlightBeamObject(next,S);}
   next.id=source.id;next.position={...source.position};
   ['rotationX','rotationY','rotationZ','orientation','flipX','flipY','flipZ'].forEach(key=>{if(source[key]!==undefined)next[key]=source[key];});
-  next.transform.flipX=source.transform?.flipX===true;next.transform.flipY=source.transform?.flipY===true;
+  next.transform.flipX=source.transform?.flipX===true;next.transform.flipY=source.transform?.flipY===true;next.transform.flipZ=source.transform?.flipZ===true;
   next.visible=source.visible!==false;next.attachment=null;
   next.placement={...next.placement,mode:'free',surface:'free',targetId:null,anchorAttachment:null,snapCandidate:null,installFreely:true,allowOutsideBooth:true};
   return next;
@@ -4081,11 +4083,11 @@ function setSelectedObjectOrientation(mode){
   recordObjectHistory(before);objectEditor.selectedId=obj.id;sync();announceCatalog('เปลี่ยน '+selectedAssetName(obj)+' เป็น'+preset.label+'แล้ว','success');
 }
 function flipSelectedObject(axis){
-  const obj=objectById(objectEditor.selectedId);if(!obj||!['x','y'].includes(axis))return;
+  const obj=objectById(objectEditor.selectedId);if(!obj||!['x','y','z'].includes(axis))return;
   if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กรุณากด Unlock ก่อน','error');return;}
-  normalizeSceneObjectModel(obj);const key=axis==='x'?'flipX':'flipY';
+  normalizeSceneObjectModel(obj);const key={x:'flipX',y:'flipY',z:'flipZ'}[axis];
   mutateObjects(()=>{obj.transform[key]=!obj.transform[key];},obj.id);
-  announceCatalog('กลับด้าน'+(axis==='x'?'ซ้าย–ขวา':'บน–ล่าง')+'แล้ว','success');
+  announceCatalog('กลับด้าน'+({x:'ซ้าย–ขวา',y:'บน–ล่าง',z:'หน้า–หลัง'}[axis])+'แล้ว','success');
 }
 function selectedAssetName(obj=objectById(objectEditor.selectedId)){
   const item=obj&&objectCatalogDef(obj.catalogId);return obj?.label||item?.name||'Asset';
@@ -4131,7 +4133,7 @@ function changeSelectedAttachmentAnchor(){
 }
 function syncAssetSettingsForm(){
   const obj=objectById(objectEditor.selectedId),modal=document.getElementById('mAssetSettings');if(!obj||!modal){closeAssetSettings();return;}
-  const item=objectCatalogDef(obj.catalogId);normalizeSceneObjectModel(obj,item);document.getElementById('assetSettingsTitle').textContent='ตั้งค่า '+selectedAssetName(obj);
+  const item=objectCatalogDef(obj.catalogId);normalizeSceneObjectModel(obj,item);document.getElementById('assetSettingsTitle').textContent=(modal.dataset.settingsMode==='advanced'?'ปรับละเอียด · ':'ตั้งค่าอุปกรณ์ · ')+selectedAssetName(obj);
   document.getElementById('assetSettingsName').value=obj.label||'';
   ['W','D','H'].forEach(key=>{const prop=key.toLowerCase(),input=document.getElementById('assetSize'+key);input.value=Number(obj.size[prop]||0).toFixed(2);input.disabled=objectLocked(obj)||!obj.transformPolicy.canResize;});
   const locked=objectLocked(obj),mode=obj.appearance.mode,color=obj.appearance.color||'#f5f5f5',colorWrap=document.querySelector('#mAssetSettings .asset-settings-color');
@@ -4147,7 +4149,7 @@ function syncAssetSettingsForm(){
   syncAssetAttachmentForm(obj);
   window.YPAssetSettingsEnter?.sync(obj);
 }
-function openAssetSettings(){
+function openAssetSettings(mode='surface'){
   const obj=objectById(objectEditor.selectedId);if(!obj){
     const item=sceneItemById(objectEditor.selectedId);if(!item?.system)return;
     const wallFace=window.YPWallFinishUI?.faceFromId(item.id);if(wallFace){window.YPWallFinishUI.openFace(wallFace);return;}
@@ -4156,9 +4158,11 @@ function openAssetSettings(){
     if(source)showDockPage(page,source);
     announceCatalog('เปิดการตั้งค่า '+item.name+' แล้ว','success');return;
   }
-  syncAssetSettingsForm();
-  const modal=document.getElementById('mAssetSettings');modal.classList.add('show');modal.setAttribute('aria-hidden','false');
-  requestAnimationFrame(()=>document.getElementById('assetSettingsName')?.focus());
+  const modal=document.getElementById('mAssetSettings');modal.dataset.settingsMode=mode==='advanced'?'advanced':'surface';
+  window.YPAssetSettingsEnter?.reset();syncAssetSettingsForm();
+  window.YPResizeSubmenu?.close();window.YPRotateSubmenu?.close();document.getElementById('moveAdvanced').open=false;
+  modal.classList.add('show');modal.setAttribute('aria-hidden','false');
+  requestAnimationFrame(()=>document.getElementById(modal.dataset.settingsMode==='advanced'?'assetPositionX':'assetSettingsName')?.focus());
 }
 function updateSelectedObjectName(value){
   const obj=objectById(objectEditor.selectedId);if(!obj||objectLocked(obj))return;const before=objectSnapshot();obj.label=String(value||'').trim().slice(0,60);recordObjectHistory(before);sync();syncAssetSettingsForm();
@@ -4505,14 +4509,14 @@ function syncObjectControls(){
     if(info)info.innerHTML='<b>'+esc(sceneItem.name)+'</b><small>System/Structure · ล็อกเพื่อป้องกันแบบเสียหาย</small>';
     const wallFace=window.YPWallFinishUI?.faceFromId(sceneItem.id);if(wallFace){
       const edit=document.createElement('button');edit.className='btn sm';edit.type='button';edit.textContent='ทาสี / สติ๊กเกอร์'+WALL_FACES.find(f=>f.k===wallFace).n;edit.onclick=()=>window.YPWallFinishUI.openFace(wallFace);box.appendChild(edit);
-      if(info)info.innerHTML='<b>'+esc(sceneItem.name)+'</b><small>ล็อกเฉพาะโครงสร้าง · เปลี่ยนสีและสติ๊กเกอร์ได้ที่ “ขนาดและพื้นผิว”</small>';
+      if(info)info.innerHTML='<b>'+esc(sceneItem.name)+'</b><small>ล็อกเฉพาะโครงสร้าง · เปลี่ยนสีและสติ๊กเกอร์ได้ที่ “ตั้งค่าอุปกรณ์”</small>';
     }
   }else{
     box.textContent='ยังไม่ได้เลือกองค์ประกอบ';
     if(info)info.textContent='Snap 5 ซม. · คลิก Asset เพื่อดูพิกัด';
     if(document.getElementById('mAssetSettings')?.classList.contains('show'))closeAssetSettings();
   }
-  ['btnRotateObject','btnFlipObjectX','btnFlipObjectY','btnOpenAssetSettings','btnDuplicateObject','btnDeleteObject','btnReplaceObject'].forEach(id=>{
+  ['btnRotateObject','btnFlipObjectX','btnFlipObjectY','btnFlipObjectZ','btnOpenAssetSettings','btnDuplicateObject','btnDeleteObject','btnReplaceObject'].forEach(id=>{
     const systemAction=systemAssetSelected&&(['btnOpenAssetSettings','btnDeleteObject'].includes(id)||brandSelected&&['btnRotateObject','btnDuplicateObject'].includes(id));
     document.getElementById(id).disabled=!obj&&!systemAction||!!obj&&locked&&id!=='btnOpenAssetSettings';
   });
@@ -4547,6 +4551,7 @@ function syncObjectControls(){
   if(positionButton){positionButton.classList.toggle('on',brandSelected);positionButton.textContent=brandSelected?'✓ พร้อมลากโลโก้ใน 3D':'จัดตำแหน่งใน 3D';}
   if(threeRenderer)threeRenderer.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
   syncFinePositionControls();
+  const advancedSettings=document.getElementById('btnAssetAdvancedSettings');if(advancedSettings)advancedSettings.disabled=!obj||selectionCount!==1;
   renderAssetList();
   window.dispatchEvent(new CustomEvent('yp:asset-editor-sync'));
 }
@@ -4679,7 +4684,7 @@ function objectLayoutPrompt(){
       ' ของ '+String(record.placement.targetId||'ชิ้นส่วนบูธ')+' ต้องรักษาการสัมผัสและระดับ Y นี้ไว้':'';
     const anchor=record.placement?.anchorAttachment,anchorDetail=anchor?' · จุดยึดแม่เหล็ก '+String(anchor.sourceAnchorId||'anchor')+
       ' ชน '+String(anchor.targetId||'target')+' / '+String(anchor.targetAnchorId||'anchor')+' ต้องรักษามุมหรือกึ่งกลางที่ชนกันนี้ไว้':'';
-    const flipDetail=record.transform?.flipX||record.transform?.flipY?' · กลับด้าน '+[record.transform.flipX?'ซ้าย–ขวา':'',record.transform.flipY?'บน–ล่าง':''].filter(Boolean).join(' และ ')+' ตามแบบ':'';
+    const flipDetail=record.transform?.flipX||record.transform?.flipY||record.transform?.flipZ?' · กลับด้าน '+[record.transform.flipX?'ซ้าย–ขวา':'',record.transform.flipY?'บน–ล่าง':'',record.transform.flipZ?'หน้า–หลัง':''].filter(Boolean).join(' และ ')+' ตามแบบ':'';
     const appearanceDetail=record.appearance?.textureName?' · พื้นผิวใช้สติ๊กเกอร์ '+record.appearance.textureName:record.appearance?.color?' · สีพื้นผิว '+String(record.appearance.color).toUpperCase():'';
     const groupDetail=record.groupId?' · อยู่ใน Group '+record.groupId+' ต้องรักษาระยะสัมพัทธ์กับสมาชิกกลุ่ม':'';
     const orientationLabel=ASSET_ORIENTATION_PRESETS[record.orientation]?.label||record.orientation,oriented=record.orientedSize;
@@ -5605,6 +5610,7 @@ function build(){
   document.getElementById('btnUngroupObjects').onclick=ungroupSelectedObjects;
   document.getElementById('btnFlipObjectX').onclick=()=>flipSelectedObject('x');
   document.getElementById('btnFlipObjectY').onclick=()=>flipSelectedObject('y');
+  document.getElementById('btnFlipObjectZ').onclick=()=>flipSelectedObject('z');
   document.getElementById('btnOpenAssetSettings').onclick=openAssetSettings;
   document.getElementById('btnAssetList').onclick=()=>assetListUI.open?closeAssetList():openAssetList();
   document.getElementById('assetListClose').onclick=closeAssetList;
@@ -5623,6 +5629,7 @@ function build(){
   document.getElementById('btnReplaceObject').onclick=()=>window.YPAssetReplaceUI?.open();
   document.getElementById('btnDeleteObject').onclick=deleteSelectedObject;
   document.getElementById('assetSettingsClose').onclick=closeAssetSettings;
+  document.getElementById('btnAssetAdvancedSettings').onclick=()=>openAssetSettings('advanced');
   document.getElementById('assetSettingsDone').onclick=closeAssetSettings;
   document.getElementById('assetAttachmentDetach').onclick=detachSelectedPersistentAttachment;
   document.getElementById('assetAttachmentReattach').onclick=reattachSelectedPersistentAttachment;
@@ -6458,7 +6465,7 @@ class ThreeBoothRenderer{
       return{...next,surface:'floor',targetId:hitSurface.owner.id,snapValid:valid,
         preview:{sourceAnchorId:gridAnchor.id,targetId:hitSurface.owner.id,targetAnchorId:'grid-10cm',kind:'grid',valid,previewFrom:{...gridAnchor.position},previewTo:{x:point.x,y:next.y+(gridAnchor.position.y-obj.position.y),z:point.z}}};
     }
-    const uniformScale=sceneObjectScaleValue(obj),currentTransform={position:{...obj.position},rotation:{x:(Number(obj.rotationX)||0)*Math.PI/180,y:(Number(obj.rotationY)||0)*Math.PI/180,z:(Number(obj.rotationZ)||0)*Math.PI/180},scale:{x:obj.transform?.flipX===true?-uniformScale:uniformScale,y:obj.transform?.flipY===true?-uniformScale:uniformScale,z:uniformScale}},
+    const uniformScale=sceneObjectScaleValue(obj),currentTransform={position:{...obj.position},rotation:{x:(Number(obj.rotationX)||0)*Math.PI/180,y:(Number(obj.rotationY)||0)*Math.PI/180,z:(Number(obj.rotationZ)||0)*Math.PI/180},scale:{x:obj.transform?.flipX===true?-uniformScale:uniformScale,y:obj.transform?.flipY===true?-uniformScale:uniformScale,z:obj.transform?.flipZ===true?-uniformScale:uniformScale}},
       solved=smartSnapEngine.solve({sourceAssetId:obj.id,anchorId:drag.sourceAnchorId,surface:hitSurface.surface,targetAssetId:hitSurface.owner.id,surfacePoint:point,currentTransform,gridStep:floorGrid||S.placementSnap===false?0:smartSnapEngine.gridStep});
     if(!solved)return null;
     const collision=solved.valid?smartSnapCandidateCollision(obj,solved,hitSurface.owner.id):{valid:false,reason:solved.reason},valid=solved.valid&&collision.valid,
@@ -7010,7 +7017,7 @@ class ThreeBoothRenderer{
       sticker.mode,sticker.patternSize,sticker.offsetX,sticker.offsetY,!!sticker.data];});
     const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.locked===true,o.visible!==false,o.position.x,o.position.y,o.position.z,o.rotationX,o.rotationY,o.rotationZ,o.orientation,
       o.size.w,o.size.d,o.size.h,o.unitPrice,o.structure?.projection,o.structure?.height,o.structure?.pierWidth,o.structure?.thickness,o.structure?.color,
-      o.attachment?.targetId,o.attachment?.sourcePort,o.attachment?.targetPort,o.attachment?.status,o.transform?.flipX===true,o.transform?.flipY===true,sceneObjectScaleValue(o),o.production?.reviewRequired===true,
+      o.attachment?.targetId,o.attachment?.sourcePort,o.attachment?.targetPort,o.attachment?.status,o.transform?.flipX===true,o.transform?.flipY===true,o.transform?.flipZ===true,sceneObjectScaleValue(o),o.production?.reviewRequired===true,
       o.label||'',o.groupId||'',o.appearance?.color||'',o.appearance?.textureId||'',o.logoFinish||null]);
     return JSON.stringify([spec.wallPaintOverrides||{},spec.boothColorTheme||null,spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),wallStickers,spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
@@ -8037,7 +8044,7 @@ class ThreeBoothRenderer{
       siblings=allFixtures.filter(item=>item.fixtureType==='downlight'&&item.targetType==='entrance'&&String(item.mountAttachment?.parentAssetId||item.targetAssetId||'')===parentId),
       siblingIndex=Math.max(0,siblings.indexOf(data)),legacyV=siblings.length>1?(siblingIndex===0?.28:siblingIndex===siblings.length-1?.72:(siblingIndex+1)/(siblings.length+1)):.5,
       uv=attachment?.mountRole==='entrance-canopy'?attachment.surfaceUV||{}:{u:.5,v:legacyV},u=clampNumber(Number(uv.u),0,1),v=clampNumber(Number(uv.v),0,1),scale=sceneObjectScaleValue(obj),
-      signedScale=new T.Vector3(obj.transform?.flipX===true?-scale:scale,obj.transform?.flipY===true?-scale:scale,scale),
+      signedScale=new T.Vector3(obj.transform?.flipX===true?-scale:scale,obj.transform?.flipY===true?-scale:scale,obj.transform?.flipZ===true?-scale:scale),
       heading=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),T.MathUtils.degToRad(Number(obj.rotationY)||0)),
       localRotation=new T.Quaternion().setFromEuler(new T.Euler(T.MathUtils.degToRad(Number(obj.rotationX)||0),0,T.MathUtils.degToRad(Number(obj.rotationZ)||0),'XYZ')),
       parentQuaternion=heading.multiply(localRotation),parentPosition=new T.Vector3(Number(obj.position?.x)||0,(Number(obj.position?.y)||0)+sceneObjectOrientationLift(obj),Number(obj.position?.z)||0),
@@ -8077,7 +8084,7 @@ class ThreeBoothRenderer{
     const T=this.THREE,heading=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),T.MathUtils.degToRad(Number(obj.rotationY)||0)),
       local=new T.Quaternion().setFromEuler(new T.Euler(T.MathUtils.degToRad(Number(obj.rotationX)||0),0,T.MathUtils.degToRad(Number(obj.rotationZ)||0),'XYZ')),uniformScale=sceneObjectScaleValue(obj);
     root.position.set(Number(obj.position?.x)||0,Number(floorY)+(Number(obj.position?.y)||0)+sceneObjectOrientationLift(obj),Number(obj.position?.z)||0);
-    root.quaternion.copy(heading).multiply(local);root.scale.set(obj.transform?.flipX?-uniformScale:uniformScale,obj.transform?.flipY?-uniformScale:uniformScale,uniformScale);
+    root.quaternion.copy(heading).multiply(local);root.scale.set(obj.transform?.flipX?-uniformScale:uniformScale,obj.transform?.flipY?-uniformScale:uniformScale,obj.transform?.flipZ?-uniformScale:uniformScale);
   }
   addPhoto360Platform(group,spec,floorY){
     const layout=photo360PlatformLayout(spec);if(!layout)return;
@@ -10061,7 +10068,7 @@ window.SceneAssetRegistryAPI={
     if(Number.isFinite(Number(position.x)))obj.position.x=Number(position.x);if(Number.isFinite(Number(position.y)))obj.position.y=Number(position.y);if(Number.isFinite(Number(position.z)))obj.position.z=Number(position.z);
     if(Number.isFinite(Number(rotation.x)))obj.rotationX=Number(rotation.x)*180/Math.PI;if(Number.isFinite(Number(rotation.y)))obj.rotationY=Number(rotation.y)*180/Math.PI;if(Number.isFinite(Number(rotation.z)))obj.rotationZ=Number(rotation.z)*180/Math.PI;
     if(scale&&obj.transformPolicy?.canScale){const uniform=clampNumber(Math.abs(Number(scale.x??scale)||1),obj.transformPolicy.minScale,obj.transformPolicy.maxScale);obj.transform.scale={x:uniform,y:uniform,z:uniform};obj.transform.uniformScale=uniform;
-      if(Number(scale.x)<0)obj.transform.flipX=true;if(Number(scale.y)<0)obj.transform.flipY=true;if(obj.transformPolicy.productionSensitive)obj.production={...(obj.production||{}),reviewRequired:true,reviewReason:'uniform-transform-scale'};}
+      if(Number(scale.x)<0)obj.transform.flipX=true;if(Number(scale.y)<0)obj.transform.flipY=true;if(Number(scale.z)<0)obj.transform.flipZ=true;if(obj.transformPolicy.productionSensitive)obj.production={...(obj.production||{}),reviewRequired:true,reviewReason:'uniform-transform-scale'};}
     normalizeSceneObjectModel(obj);recordObjectHistory(before);sync();return this.getAssetById(assetId);
   },
   listAssets(){return sceneAssetRegistry.listAssets().map(asset=>JSON.parse(JSON.stringify(asset)));},
@@ -10135,7 +10142,7 @@ window.YPAssetEditorBridge={
         rotationX:Number(obj.rotationX)||0,rotationY:Number(obj.rotationY)||0,rotationZ:Number(obj.rotationZ)||0,
         size:{w:Number(obj.size?.w)||0,d:Number(obj.size?.d)||0,h:Number(obj.size?.h)||0},
         position:{x:Number(obj.position?.x)||0,y:Number(obj.position?.y)||0,z:Number(obj.position?.z)||0},
-        flipX:obj.transform?.flipX===true,flipY:obj.transform?.flipY===true,scale:sceneObjectScaleValue(obj),finalSize:sceneObjectWorldSize(obj),
+        flipX:obj.transform?.flipX===true,flipY:obj.transform?.flipY===true,flipZ:obj.transform?.flipZ===true,scale:sceneObjectScaleValue(obj),finalSize:sceneObjectWorldSize(obj),
         transformPolicy:{...obj.transformPolicy},production:{...obj.production},
         appearance:{mode:obj.appearance?.mode||'original',color:obj.appearance?.color||'#f5f5f5',hasSticker:!!obj.appearance?.textureData}
       },
@@ -10157,7 +10164,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script type="module" src="js/asset-editor/asset-editor.js?v=20260829-3"></script>
 <script src="js/project-store.js?v=20260905-1"></script>
 <script src="js/template-area.js?v=20260910-template-area"></script>
-<script src="js/project-workspace.js?v=20260913-stale-guard-2"></script>
+<script src="js/project-workspace.js?v=20260914-settings-split-1"></script>
 <script src="js/starter-layouts.js?v=20260905-1"></script>
 <!-- Template selection replaces the legacy purpose card and post-setup prompt. -->
 <link rel="stylesheet" href="css/handoff.css?v=20260905-1">
@@ -10202,7 +10209,9 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/template-mixer-ui.js?v=20260911-1"></script>
 <link rel="stylesheet" href="css/asset-replace.css?v=20260911-1">
 <script src="js/asset-replace-ui.js?v=20260911-1"></script>
-<script src="js/asset-settings-enter.js?v=20260911-1"></script>
+<script src="js/asset-settings-enter.js?v=20260914-settings-split-1"></script>
+<script src="js/resize-submenu.js?v=20260914-1"></script>
+<script src="js/rotate-submenu.js?v=20260914-flip-z-1"></script>
 <script src="js/copy-array.js?v=20260912-1"></script>
 <script src="js/copy-array-ui.js?v=20260914-z-up-1"></script>
 <script src="js/booth-theme.js?v=20260913-lighting-1"></script>

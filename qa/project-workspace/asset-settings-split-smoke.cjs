@@ -1,0 +1,26 @@
+const {chromium}=require('C:/Users/Admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});try{for(const mobile of [false,true]){
+ const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1440,height:1000},isMobile:mobile,hasTouch:mobile}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:4173/yp-web-ai/index.html');await page.waitForFunction(()=>window.YPAssetSettingsEnter&&YPProjectWorkspace.state().ready);
+ const id=await page.evaluate(async()=>{YPQuickSetupBridge.close();const o=makeCatalogObject('counter-standard',1,1);o.label='Counter';o.size={w:.8,d:.4,h:1};o.rotationY=45;mutateObjects(()=>S.objects.push(o),o.id);await loadThreeRenderer();closeDockPanel(false);return o.id;});
+ await page.locator('#btnOpenAssetSettings').click();assert.equal(await page.locator('#btnOpenAssetSettings').textContent(),'ตั้งค่าอุปกรณ์');
+ for(const selector of ['#assetSettingsName','#assetSurfaceSection'])assert.equal(await page.locator(selector).isVisible(),true);
+ for(const selector of ['#assetLegacySizeSection','#assetAdvancedPositionSection','#assetAdvancedStructureSection','#assetAttachmentSection'])assert.equal(await page.locator(selector).isVisible(),false);
+ await page.locator('#assetSettingsName').fill('เคาน์เตอร์ต้อนรับ');await page.locator('#assetSettingsName').press('Enter');assert.equal(await page.evaluate(id=>objectById(id).label,id),'เคาน์เตอร์ต้อนรับ');
+ await page.locator('[data-asset-appearance="solid"]').click();await page.locator('#assetSurfaceHex').fill('#123456');await page.locator('#assetSurfaceHex').press('Enter');assert.equal(await page.evaluate(id=>objectById(id).appearance.color,id),'#123456');
+ await page.locator('#assetStickerFile').setInputFiles({name:'pixel.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aH1kAAAAASUVORK5CYII=','base64')});
+ await page.waitForFunction(id=>!!objectById(id).appearance.textureData,id);
+ const before=await page.evaluate(id=>structuredClone(objectById(id)),id);
+ await page.locator('#assetResetSurface').click();const after=await page.evaluate(id=>structuredClone(objectById(id)),id);
+ assert.equal(after.appearance.mode,'original');assert.equal(after.appearance.textureData,null);delete before.appearance;delete after.appearance;assert.deepEqual(after,before,'Surface reset must not change any non-appearance property');
+ await page.screenshot({path:`qa/project-workspace/asset-settings-split-${mobile?'mobile':'desktop'}.png`});
+ await page.locator('#assetSettingsDone').click();await page.keyboard.press('Control+z');assert.ok(await page.evaluate(id=>objectById(id).appearance.textureData,id));
+ await page.locator('#editorLevelToggle').click();await page.locator('#moveAdvanced summary').click();await page.locator('#btnAssetAdvancedSettings').click();
+ assert.equal(await page.locator('#mAssetSettings').getAttribute('data-settings-mode'),'advanced');assert.equal(await page.locator('#assetAdvancedPositionSection').isVisible(),true);assert.equal(await page.locator('#assetAttachmentSection').isVisible(),true);
+ for(const selector of ['#assetSettingsName','#assetSurfaceSection','#assetLegacySizeSection'])assert.equal(await page.locator(selector).isVisible(),false);
+ await page.locator('#assetPositionX').fill('1.25');await page.locator('#assetPositionX').press('Enter');assert.equal(await page.evaluate(id=>objectById(id).position.x,id),1.25);
+ await page.locator('#assetSettingsDone').click();await page.locator('#btnOpenAssetSettings').click();assert.equal(await page.locator('#assetSettingsName').isVisible(),true);assert.equal(await page.locator('#assetAttachmentSection').isVisible(),false);
+ await page.locator('#assetSettingsDone').click();await page.locator('#btnResizeObject').click();assert.equal(await page.locator('#resizeValuew').isVisible(),true);
+ assert.deepEqual(errors,[]);console.log(`PASS ${mobile?'mobile touch':'desktop'}: name/surface only, rename, color, upload, surface-only reset, Undo, advanced access and numeric commit, mode reset, separate resize`);await context.close();
+}}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

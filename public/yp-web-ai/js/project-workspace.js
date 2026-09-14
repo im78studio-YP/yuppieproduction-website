@@ -160,7 +160,7 @@
   }
   $('editorLevelToggle').onclick=()=>setLevel(!advanced);
   // Preserve IDs and existing handlers; change only user-facing names.
-  const labels={btnMoveSmart:'✥ ย้าย',btnResizeObject:'↗ เปลี่ยนขนาด',btnOpenAssetSettings:'ขนาดและพื้นผิว',btnUndoObject:'↶ ย้อนกลับ',btnRedoObject:'↷ ทำซ้ำ'};
+  const labels={btnMoveSmart:'✥ ย้าย',btnResizeObject:'↗ เปลี่ยนขนาด',btnOpenAssetSettings:'ตั้งค่าอุปกรณ์',btnUndoObject:'↶ ย้อนกลับ',btnRedoObject:'↷ ทำซ้ำ'};
   for(const [id,label] of Object.entries(labels)){const button=$(id);if(button){button.textContent=label;button.setAttribute('aria-label',label.replace(/^[^ก-๙]+/,''));}}
   const list=$('btnAssetList');if(list){list.lastChild.textContent=' รายการวัตถุ';list.setAttribute('aria-label','เปิดรายการวัตถุทั้งหมด');}
   const catalog=document.querySelector('.dock-tool[data-dock-page="catalog"]');if(catalog){catalog.querySelector('.dock-label').textContent='อุปกรณ์';catalog.setAttribute('aria-label','เลือกและจัดวางอุปกรณ์');catalog.title='เลือกและจัดวางอุปกรณ์';}
