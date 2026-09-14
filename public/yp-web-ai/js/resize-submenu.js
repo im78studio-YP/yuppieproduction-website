@@ -5,20 +5,23 @@
  const panel=document.createElement('section');panel.id='resizeSubmenu';panel.hidden=true;
  panel.setAttribute('role','dialog');panel.setAttribute('aria-labelledby','resizeSubmenuTitle');
  panel.innerHTML=`<header><strong id="resizeSubmenuTitle">เปลี่ยนขนาด</strong><button type="button" class="btn" id="resizeSubmenuClose" aria-label="ปิดเมนูเปลี่ยนขนาด">×</button></header>
- <p id="resizeSubmenuName"></p><div class="resize-numeric-fields">${[['w','กว้าง'],['d','ลึก'],['h','สูง']].map(([axis,label])=>`<label for="resizeValue${axis}">${label} (ม.)<span><input id="resizeValue${axis}" data-resize-axis="${axis}" type="number" min="0.01" max="5" step="0.01" inputmode="decimal" enterkeyhint="done" aria-describedby="resizeSubmenuStatus"><button type="button" class="btn" data-resize-apply="${axis}" aria-label="ใช้ค่า${label}" title="ใช้ค่า${label}">✓</button></span></label>`).join('')}</div>
+ <p id="resizeSubmenuName"></p><label for="resizeSubmenuMode">วิธีเปลี่ยนขนาด</label><select id="resizeSubmenuMode" style="width:100%;margin:8px 0;padding:10px;background:#0d0c10;color:white;border:1px solid #62465d;border-radius:6px"><option value="resize">ปรับกว้าง–ลึก–สูง</option><option value="scale">ย่อ–ขยายทั้งชิ้น (รักษาสัดส่วน)</option></select><div class="resize-numeric-fields">${[['w','กว้าง'],['d','ลึก'],['h','สูง']].map(([axis,label])=>`<label for="resizeValue${axis}">${label} (ม.)<span><input id="resizeValue${axis}" data-resize-axis="${axis}" type="number" min="${MIN_ASSET_DIMENSION}" max="${MAX_ASSET_DIMENSION}" step="0.01" inputmode="decimal" enterkeyhint="done" aria-describedby="resizeSubmenuStatus"><button type="button" class="btn" data-resize-apply="${axis}" aria-label="ใช้ค่า${label}" title="ใช้ค่า${label}">✓</button></span></label>`).join('')}</div>
  <label class="resize-ratio"><input type="checkbox" id="resizeSubmenuLock"> ล็อกสัดส่วน</label>
- <p class="resize-hint">กด Enter หรือ ✓ เพื่อใช้ค่าในช่องนั้น · 0.01–5.00 ม.<br>เป็นขนาดชิ้นงานก่อนหมุน/Scale · ปิดเมนูจะไม่ใช้ค่าที่ยังค้าง</p>
+ <p class="resize-hint" id="resizeSubmenuHint"></p>
  <p id="resizeSubmenuStatus" role="status" aria-live="polite"></p>
  <footer><button type="button" class="btn" id="resizeSubmenuDrag">ลากจุดปรับขนาด ↗</button><button type="button" class="btn" id="resizeSubmenuDone">เสร็จสิ้น</button></footer>`;
  document.body.append(panel);
  const style=document.createElement('style');style.textContent=`#resizeSubmenu{position:fixed;z-index:180;width:350px;max-width:calc(100vw - 24px);box-sizing:border-box;padding:16px;border:1px solid #824362;border-radius:14px;background:#17131b;color:#faf5f9;box-shadow:0 12px 40px #0006;max-height:calc(100dvh - 24px);overflow:auto;text-align:left}#resizeSubmenu[hidden]{display:none}#resizeSubmenu header,#resizeSubmenu footer{display:flex;align-items:center;justify-content:space-between;gap:8px}#resizeSubmenu p{font-size:12px;margin:10px 0;line-height:1.5}#resizeSubmenu .resize-hint{font-size:11px;color:#baaebb}.resize-numeric-fields{display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))}.resize-numeric-fields label{font-size:12px;display:grid;gap:6px}.resize-numeric-fields span{display:flex;gap:3px}.resize-numeric-fields input{width:100%;min-width:0;box-sizing:border-box;padding:8px 4px;background:#0d0c10;border:1px solid #62465d;border-radius:6px;color:white;font-size:16px}.resize-numeric-fields .btn{padding:6px;min-width:28px}.resize-ratio{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px}#resizeSubmenu :focus-visible{outline:2px solid #ff3297;outline-offset:2px}#resizeSubmenuStatus{min-height:18px;color:#f59ac7}#resizeSubmenuStatus[data-error=true]{color:#ffb084}#resizeSubmenu input[aria-invalid=true]{border-color:#ff8a80}#resizeSubmenu input[data-dirty=true]{border-color:#efb655}@media(max-width:600px){#resizeSubmenu{padding:12px}.resize-numeric-fields .btn{min-height:44px}#resizeSubmenu footer .btn{min-height:44px}}`;
  document.head.append(style);
- const input=axis=>document.getElementById('resizeValue'+axis),lock=document.getElementById('resizeSubmenuLock'),status=document.getElementById('resizeSubmenuStatus');
+ const input=axis=>document.getElementById('resizeValue'+axis),lock=document.getElementById('resizeSubmenuLock'),status=document.getElementById('resizeSubmenuStatus'),mode=document.getElementById('resizeSubmenuMode');
  let session=null,applying=false;
- function eligible(){const obj=objectById(objectEditor.selectedId);return obj&&selectedObjectIds().length===1&&!objectLocked(obj)&&obj.transformPolicy?.canResize?obj:null;}
- function stamp(obj){return JSON.stringify({size:obj.size,active:root.YPProjectWorkspace?.state().active});}
+ function eligible(){const obj=objectById(objectEditor.selectedId);return obj&&selectedObjectIds().length===1&&!objectLocked(obj)&&(obj.transformPolicy?.canResize||obj.transformPolicy?.canScale)?obj:null;}
+ function stamp(obj){return JSON.stringify({size:obj.size,transform:obj.transform,policy:obj.transformPolicy,active:root.YPProjectWorkspace?.state().active});}
  function message(text,error=false){status.textContent=text;status.dataset.error=String(error);}
- function fill(obj){for(const a of ['w','d','h']){input(a).value=String(+Number(obj.size[a]).toFixed(3));input(a).dataset.dirty='false';input(a).setAttribute('aria-invalid','false');}session.stamp=stamp(obj);}
+ function fill(obj){const scaled=mode.value==='scale';for(const a of ['w','d','h']){input(a).value=String(+(Number(obj.size[a])*(scaled?sceneObjectScaleValue(obj):1)).toFixed(3));input(a).min=scaled?obj.size[a]*obj.transformPolicy.minScale:MIN_ASSET_DIMENSION;input(a).max=scaled?obj.size[a]*obj.transformPolicy.maxScale:MAX_ASSET_DIMENSION;input(a).dataset.dirty='false';input(a).setAttribute('aria-invalid','false');}session.stamp=stamp(obj);
+  lock.disabled=scaled;lock.checked=scaled||document.getElementById('assetSizeLock').checked;
+  document.getElementById('resizeSubmenuHint').textContent=scaled?'ขนาดหลังย่อ–ขยาย ก่อนหมุน · เปลี่ยนด้านเดียว ทุกด้านเปลี่ยนตามสัดส่วน · ช่วง '+Math.round(obj.transformPolicy.minScale*100)+'–'+Math.round(obj.transformPolicy.maxScale*100)+'% ของขนาดต้นฉบับ':'ขนาดชิ้นงานก่อนหมุน/Scale · '+MIN_ASSET_DIMENSION+'–'+MAX_ASSET_DIMENSION+' ม. · กด Enter หรือ ✓ เพื่อใช้ค่า · ปิดเมนูจะไม่ใช้ค่าที่ยังค้าง';
+ }
  function position(){if(panel.hidden)return;const rect=button.getBoundingClientRect(),height=panel.offsetHeight,width=panel.offsetWidth;
   panel.style.left=Math.max(12,Math.min(rect.left,innerWidth-width-12))+'px';panel.style.top=Math.max(12,Math.min(rect.top-height-10,innerHeight-height-12))+'px';}
  function close(focus=false){panel.hidden=true;session=null;button.setAttribute('aria-expanded','false');if(focus)button.focus();}
@@ -27,8 +30,8 @@
   if(document.querySelector('dialog[open],.modal.show'))return;
   // System surfaces keep their original dedicated settings flow.
   if(!objectById(objectEditor.selectedId)){toggleObjectResizeMode();return;}
-  if(!setObjectTransformMode('resize'))return;const obj=eligible();if(!obj)return;
-  session={id:obj.id};fill(obj);lock.checked=document.getElementById('assetSizeLock').checked;
+  const obj=eligible();if(!obj)return;mode.options[0].disabled=!obj.transformPolicy.canResize;mode.options[1].disabled=!obj.transformPolicy.canScale;mode.value=obj.transformPolicy.canResize?'resize':'scale';
+  if(!setObjectTransformMode(mode.value))return;session={id:obj.id};fill(obj);
   document.getElementById('resizeSubmenuName').textContent=selectedAssetName(obj);message('เลือกช่องขนาดที่ต้องการแก้');
   panel.hidden=false;button.setAttribute('aria-expanded','true');position();input('w').focus();input('w').select();
  }
@@ -36,8 +39,19 @@
   const obj=eligible(),field=input(axis);if(!session||!obj||obj.id!==session.id){close();return;}
   if(stamp(obj)!==session.stamp){fill(obj);message('ขนาดต้นฉบับเปลี่ยนแล้ว โหลดค่าล่าสุดให้ กรุณากรอกใหม่',true);return;}
   try{
-   const raw=field.value.trim(),value=Number(raw);if(!raw||!Number.isFinite(value)||value<MIN_ASSET_DIMENSION||value>MAX_ASSET_DIMENSION)throw Error('กรอกขนาดระหว่าง 0.01–5.00 เมตร');
-   const ratio=value/obj.size[axis];if(lock.checked&&['w','d','h'].some(a=>obj.size[a]*ratio<MIN_ASSET_DIMENSION-1e-8||obj.size[a]*ratio>MAX_ASSET_DIMENSION+1e-8))throw Error('เมื่อล็อกสัดส่วน ทุกด้านต้องอยู่ในช่วง 0.01–5.00 เมตร');
+   const raw=field.value.trim(),value=Number(raw);if(!raw||!Number.isFinite(value)||value<=0)throw Error('กรอกขนาดเป็นตัวเลขมากกว่า 0');
+   if(mode.value==='scale'){
+    if(!obj.transformPolicy.canScale)throw Error('Asset นี้ไม่อนุญาตให้ย่อ–ขยายทั้งชิ้น');
+    const factor=value/obj.size[axis],policy=obj.transformPolicy;
+    if(factor<policy.minScale-1e-8||factor>policy.maxScale+1e-8)throw Error('ขนาดนี้เกินช่วงย่อ–ขยาย '+Math.round(policy.minScale*100)+'–'+Math.round(policy.maxScale*100)+'%');
+    if(Math.abs(factor-sceneObjectScaleValue(obj))<.00005){fill(obj);message('ขนาดเท่าเดิม');return;}
+    applying=true;let success;try{success=setSelectedObjectScale(factor);}finally{applying=false;}
+    if(!success)throw Error('ไม่สามารถใช้ขนาดนี้ได้ ตำแหน่งหรือโครงสร้างไม่รองรับ');
+    fill(obj);message('ย่อ–ขยายทั้งชิ้นแล้ว · Undo ย้อนกลับได้');position();return;
+   }
+   if(!obj.transformPolicy.canResize)throw Error('Asset นี้รองรับเฉพาะย่อ–ขยายทั้งชิ้น');
+   if(value<MIN_ASSET_DIMENSION||value>MAX_ASSET_DIMENSION)throw Error('กรอกขนาดระหว่าง '+MIN_ASSET_DIMENSION+'–'+MAX_ASSET_DIMENSION+' เมตร');
+   const ratio=value/obj.size[axis];if(lock.checked&&['w','d','h'].some(a=>obj.size[a]*ratio<MIN_ASSET_DIMENSION-1e-8||obj.size[a]*ratio>MAX_ASSET_DIMENSION+1e-8))throw Error('เมื่อล็อกสัดส่วน ทุกด้านต้องอยู่ในช่วง '+MIN_ASSET_DIMENSION+'–'+MAX_ASSET_DIMENSION+' เมตร');
    if(isDownlightBeamObject(obj)&&axis==='w'&&(value<.5||value>Math.min(MAX_ASSET_DIMENSION,S.W)))throw Error('ความกว้างคานต้องไม่น้อยกว่า 0.50 ม. และไม่เกินความกว้างบูธ');
    const previous=JSON.stringify(obj.size),target=assetDimensionValue(value);if(Math.abs(target-obj.size[axis])<1e-8){field.value=String(obj.size[axis]);field.dataset.dirty='false';field.setAttribute('aria-invalid','false');message('ขนาดเท่าเดิม');return;}
    const dirtyOthers=['w','d','h'].filter(a=>a!==axis&&input(a).dataset.dirty==='true').map(a=>[a,input(a).value]);
@@ -49,6 +63,7 @@
   }catch(e){field.setAttribute('aria-invalid','true');message(e.message,true);}
  }
  button.onclick=open;button.textContent='↗ เปลี่ยนขนาด ▾';button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls',panel.id);button.setAttribute('aria-expanded','false');
+ mode.onchange=()=>{const obj=eligible();if(!session||!obj)return;applying=true;let success;try{success=setObjectTransformMode(mode.value);}finally{applying=false;}if(!success){close();return;}fill(obj);message('เปลี่ยนวิธีแล้ว · ค่าที่ยังไม่ยืนยันไม่ได้ถูกนำไปใช้');position();};
  for(const a of ['w','d','h']){
   input(a).addEventListener('input',()=>{input(a).dataset.dirty='true';input(a).setAttribute('aria-invalid','false');message('ยังไม่ใช้ค่า · กด Enter หรือ ✓ ในช่องที่แก้');});
   input(a).addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();e.stopPropagation();commit(a);}});
@@ -59,7 +74,7 @@
  document.addEventListener('pointerdown',e=>{if(!panel.hidden&&!panel.contains(e.target)&&!button.contains(e.target))close();},true);
  root.addEventListener('resize',position);root.addEventListener('scroll',position,true);
  root.addEventListener('yp:asset-editor-sync',()=>{
-  if(!session||applying)return;const obj=eligible();if(!obj||obj.id!==session.id||objectEditor.transformMode!=='resize'){close();return;}
+  if(!session||applying)return;const obj=eligible();if(!obj||obj.id!==session.id||objectEditor.transformMode!==mode.value||mode.value==='resize'&&!obj.transformPolicy.canResize||mode.value==='scale'&&!obj.transformPolicy.canScale){close();return;}
   if(stamp(obj)!==session.stamp){fill(obj);message('อัปเดตเป็นขนาดล่าสุดแล้ว');}position();
  });
  root.YPResizeSubmenu={open,close};

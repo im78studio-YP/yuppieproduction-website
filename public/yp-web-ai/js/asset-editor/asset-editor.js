@@ -31,9 +31,9 @@ if(mount){
         <section class="asset-editor-card">
           <h4>ขนาดจริง</h4>
           <div class="asset-editor-grid">
-            <label class="asset-editor-field">กว้าง (ม.)<input data-ae-size="w" type="number" min="0.01" max="5" step="0.01" inputmode="decimal"></label>
-            <label class="asset-editor-field">ลึก (ม.)<input data-ae-size="d" type="number" min="0.01" max="5" step="0.01" inputmode="decimal"></label>
-            <label class="asset-editor-field">สูง (ม.)<input data-ae-size="h" type="number" min="0.01" max="5" step="0.01" inputmode="decimal"></label>
+            <label class="asset-editor-field">กว้าง (ม.)<input data-ae-size="w" type="number" min="${MIN_ASSET_DIMENSION}" max="${MAX_ASSET_DIMENSION}" step="0.01" inputmode="decimal"></label>
+            <label class="asset-editor-field">ลึก (ม.)<input data-ae-size="d" type="number" min="${MIN_ASSET_DIMENSION}" max="${MAX_ASSET_DIMENSION}" step="0.01" inputmode="decimal"></label>
+            <label class="asset-editor-field">สูง (ม.)<input data-ae-size="h" type="number" min="${MIN_ASSET_DIMENSION}" max="${MAX_ASSET_DIMENSION}" step="0.01" inputmode="decimal"></label>
           </div>
           <label class="asset-editor-check"><input data-ae-ratio type="checkbox" checked> ล็อกสัดส่วนขณะปรับขนาด</label>
           <div class="asset-editor-actions" style="margin-top:9px"><button class="btn sm" data-ae-action="reset-size" type="button">คืนขนาดเดิม</button><button class="btn sm" data-ae-action="details" type="button">ตั้งค่าละเอียด</button></div>
@@ -86,8 +86,9 @@ if(mount){
     $('[data-ae-action="group"]').disabled=!state.canGroup;$('[data-ae-action="ungroup"]').disabled=!state.canUngroup;
     const name=$('[data-ae-name]');if(document.activeElement!==name)name.value=selection.name||'';
     $('[data-ae-x]').textContent=format(selection.position.x);$('[data-ae-y]').textContent=format(selection.position.y);$('[data-ae-z]').textContent=format(selection.position.z);
-    $$('[data-ae-size]').forEach(input=>{if(document.activeElement!==input)input.value=format(selection.size[input.dataset.aeSize]);});
     lockedControls().forEach(control=>control.disabled=selection.locked);
+    $$('[data-ae-size]').forEach(input=>{if(document.activeElement!==input)input.value=format(selection.size[input.dataset.aeSize]);input.disabled=selection.locked||!selection.transformPolicy?.canResize||state.selectionCount!==1;input.title=selection.transformPolicy?.canResize?'':'ใช้เมนูเปลี่ยนขนาด → ย่อ–ขยายทั้งชิ้น';});
+    $('[data-ae-action="reset-size"]').disabled=selection.locked||!selection.transformPolicy?.canResize||state.selectionCount!==1;
     $('[data-ae-action="details"]').disabled=false;$('[data-ae-action="lock"]').disabled=false;$('[data-ae-action="lock"]').textContent=selection.locked?'Unlock':'Lock';
     $$('[data-ae-move]').forEach(button=>button.classList.toggle('on',button.dataset.aeMove===state.moveMode));
     $$('[data-ae-orientation]').forEach(button=>{button.classList.toggle('on',button.dataset.aeOrientation===selection.orientation);button.disabled=selection.locked||selection.canOrient===false;});

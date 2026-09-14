@@ -1533,12 +1533,12 @@ select:focus{border-color:var(--acc)}
     <section class="asset-settings-section" id="assetLegacySizeSection" hidden>
       <h3>ขนาดจริง</h3>
       <div class="asset-settings-grid">
-        <div class="asset-settings-field"><label for="assetSizeW">กว้าง (ม.)</label><input id="assetSizeW" type="number" min="0.01" max="5" step="0.01" inputmode="decimal"></div>
-        <div class="asset-settings-field"><label for="assetSizeD">ลึก (ม.)</label><input id="assetSizeD" type="number" min="0.01" max="5" step="0.01" inputmode="decimal"></div>
-        <div class="asset-settings-field"><label for="assetSizeH">สูง (ม.)</label><input id="assetSizeH" type="number" min="0.01" max="5" step="0.01" inputmode="decimal"></div>
+        <div class="asset-settings-field"><label for="assetSizeW">กว้าง (ม.)</label><input id="assetSizeW" type="number" min="0.01" step="0.01" inputmode="decimal"></div>
+        <div class="asset-settings-field"><label for="assetSizeD">ลึก (ม.)</label><input id="assetSizeD" type="number" min="0.01" step="0.01" inputmode="decimal"></div>
+        <div class="asset-settings-field"><label for="assetSizeH">สูง (ม.)</label><input id="assetSizeH" type="number" min="0.01" step="0.01" inputmode="decimal"></div>
       </div>
       <label class="asset-settings-check"><input id="assetSizeLock" type="checkbox" checked> ล็อกสัดส่วนขณะปรับขนาด</label>
-      <div class="note">ปรับขนาด Asset และ My Asset (.glb) ได้จริงทั้ง 3 แกน ตั้งแต่ 0.01–5.00 ม. และกำหนดความสูงเกินผนังบูธได้</div>
+      <div class="note" id="assetSizeRangeNote"></div>
       <div class="asset-settings-actions"><button class="btn sm" id="assetResetSize" type="button">คืนขนาดเดิม</button></div>
     </section>
     <section class="asset-settings-section" id="assetAttachmentSection">
@@ -1776,7 +1776,7 @@ select:focus{border-color:var(--acc)}
 <script src="js/booth-lighting.js?v=20260913-beams-1"></script>
 <script src="js/logo-finishes.js?v=20260913-logo-slots-4"></script>
 <script src="js/template-tv-groups.js?v=20260909-9"></script>
-<script src="js/tv-asset.js?v=20260914-2"></script>
+<script src="js/tv-asset.js?v=20260914-oak"></script>
 <script src="js/tv-stands.js?v=20260914-2"></script>
 <script src="js/brochure-rack.js?v=20260914-1"></script>
 <script src="js/budget-estimate.js?v=20260914-1"></script>
@@ -2765,14 +2765,14 @@ const isDownlightBeamItem=item=>item?.type==='downlightBeam'||item?.catalogId===
 const isDownlightBeamObject=obj=>obj?.type==='downlightBeam'||obj?.catalogId==='downlight-beam';
 const DOWNLIGHT_MODEL_URL='./assets/lights/Downlight_V1.glb';
 const SCENE_OBJECT_SCHEMA_VERSION=4;
-const MIN_ASSET_DIMENSION=.01,MAX_ASSET_DIMENSION=5;
+const MIN_ASSET_DIMENSION=.01,MAX_ASSET_DIMENSION=30;
 const MAX_ASSET_WIDTH=MAX_ASSET_DIMENSION,MAX_ASSET_DEPTH=MAX_ASSET_DIMENSION,MAX_ASSET_HEIGHT=MAX_ASSET_DIMENSION;
 function assetDimensionValue(value,fallback=MIN_ASSET_DIMENSION){
   const numeric=Number(value),resolved=Number.isFinite(numeric)?numeric:Number(fallback);
   return+clampNumber(resolved,MIN_ASSET_DIMENSION,MAX_ASSET_DIMENSION).toFixed(2);
 }
 const SCENE_CAPABILITY_KEYS=Object.freeze(['floorPlaceable','wallMountable','ceilingMountable','free3DPlaceable','surfaceSnappable','attachable','resizable','scalable','rotatable','repeatable','styleable','compound']);
-const ASSET_TRANSFORM_POLICY_VERSION=4,TRANSFORM_MODES=Object.freeze(['move','resize','scale']);
+const ASSET_TRANSFORM_POLICY_VERSION=5,TRANSFORM_MODES=Object.freeze(['move','resize','scale']);
 const SCENE_COLLISION_LAYERS=Object.freeze(['structure','furniture','decoration','surface','optional-prop']);
 const SCENE_PLACEMENT_TARGETS=Object.freeze(['floor','wall','ceiling','storage-room','structure','asset','free']);
 const SCENE_APPEARANCE_MODES=Object.freeze(['original','tint','solid']);
@@ -2831,7 +2831,7 @@ function defaultSceneCapabilities(item={}){
 function defaultAssetTransformPolicy(obj,item=objectCatalogDef(obj?.catalogId)){
   const type=String(obj?.type||item?.type||'').toLowerCase(),category=String(item?.category||''),custom=item?.customAsset===true||/^my-asset-/.test(String(obj?.catalogId||'')),
     structural=isEntranceFrameObject(obj)||isDownlightBeamObject(obj)||category==='structure',
-    parametric=structural||['counter','roundedcornercounter','flutedcounter','shelf','display','screen','sign'].includes(type)||(['table','chair'].includes(type)&&!item?.modelUrl),
+    parametric=structural||['counter','roundedcornercounter','flutedcounter','shelf','display','screen','sign'].includes(type)||(!item?.modelUrl&&!custom&&['table','chair','panel','roundedpanel','slantribbon','glasscase','loungesofa','ringpendant','ringdisplay','trailingplant','grassplanter','organicdisplay','barstool','plant'].includes(type)),
     graphic=['logo','graphic','brand'].includes(type)||category==='media',decorative=category==='decor',readyMade=custom||!!item?.modelUrl&&!parametric,
     explicit=item?.transformPolicy&&typeof item.transformPolicy==='object'?item.transformPolicy:{},declaredResizable=Array.isArray(item?.capabilities)&&item.capabilities.includes('resizable');
   const canResize=typeof explicit.canResize==='boolean'?explicit.canResize:(parametric||custom||declaredResizable),
@@ -2848,16 +2848,23 @@ function defaultAssetTransformPolicy(obj,item=objectCatalogDef(obj?.catalogId)){
 function normalizeAssetTransformPolicy(obj,item=objectCatalogDef(obj?.catalogId)){
   const defaults=defaultAssetTransformPolicy(obj,item),declared=obj?.transformPolicy&&typeof obj.transformPolicy==='object'?obj.transformPolicy:{},
     counterUpgrade=(Number(declared.version)||0)<4&&['roundedCornerCounter','flutedCounter'].includes(obj?.type),
-    stalePolicy=(Number(declared.version)||0)<3||counterUpgrade;
+    proceduralUpgrade=(Number(declared.version)||0)<5&&['generic','decorative'].includes(declared.family)&&defaults.family==='parametric'&&defaults.canResize&&item?.transformPolicy?.canResize!==false,
+    stalePolicy=(Number(declared.version)||0)<3||counterUpgrade||proceduralUpgrade;
   const policy={...defaults,...declared,version:ASSET_TRANSFORM_POLICY_VERSION};
-  if(counterUpgrade)policy.family=defaults.family;
+  if(counterUpgrade||proceduralUpgrade)policy.family=defaults.family;
   /* Older policies persisted the derived canResize value on every object.  That
      stale value can incorrectly keep Resize disabled after an Asset is
      reclassified or a GLB declares the resizable capability.  Recompute only
      Resize during migration; current explicit policies still win. */
   policy.canMove=declared.canMove!==false&&defaults.canMove;policy.canResize=!stalePolicy&&typeof declared.canResize==='boolean'?declared.canResize:defaults.canResize;policy.canScale=typeof declared.canScale==='boolean'?declared.canScale:defaults.canScale;
+  // Upgrade only formerly misclassified procedural families. Current per-object
+  // overrides and explicit catalogue prohibitions remain authoritative.
+  if(proceduralUpgrade){policy.canScale=defaults.canScale;policy.defaultMode=defaults.defaultMode;policy.productionSensitive=defaults.productionSensitive;}
+  if(item?.transformPolicy?.canResize===false)policy.canResize=false;
+  if(item?.transformPolicy?.canScale===false)policy.canScale=false;
   policy.defaultMode=TRANSFORM_MODES.includes(declared.defaultMode)?declared.defaultMode:defaults.defaultMode;policy.minScale=clampNumber(Number(declared.minScale)||defaults.minScale,.01,1);policy.maxScale=clampNumber(Number(declared.maxScale)||defaults.maxScale,1,20);
-  policy.productionSensitive=typeof declared.productionSensitive==='boolean'?declared.productionSensitive:defaults.productionSensitive;obj.transformPolicy=policy;return policy;
+  policy.productionSensitive=proceduralUpgrade?defaults.productionSensitive:typeof declared.productionSensitive==='boolean'?declared.productionSensitive:defaults.productionSensitive;
+  if(proceduralUpgrade)policy.defaultMode=defaults.defaultMode;obj.transformPolicy=policy;return policy;
 }
 function normalizeSceneObjectModel(obj,item=objectCatalogDef(obj?.catalogId)){
   if(!obj||typeof obj!=='object')return null;
@@ -4157,7 +4164,8 @@ function syncAssetSettingsForm(){
   const obj=objectById(objectEditor.selectedId),modal=document.getElementById('mAssetSettings');if(!obj||!modal){closeAssetSettings();return;}
   const item=objectCatalogDef(obj.catalogId);normalizeSceneObjectModel(obj,item);document.getElementById('assetSettingsTitle').textContent=(modal.dataset.settingsMode==='advanced'?'ปรับตำแหน่ง · ':'ตั้งค่าอุปกรณ์ · ')+selectedAssetName(obj);
   document.getElementById('assetSettingsName').value=obj.label||'';
-  ['W','D','H'].forEach(key=>{const prop=key.toLowerCase(),input=document.getElementById('assetSize'+key);input.value=Number(obj.size[prop]||0).toFixed(2);input.disabled=objectLocked(obj)||!obj.transformPolicy.canResize;});
+  ['W','D','H'].forEach(key=>{const prop=key.toLowerCase(),input=document.getElementById('assetSize'+key);input.min=MIN_ASSET_DIMENSION;input.max=MAX_ASSET_DIMENSION;input.value=Number(obj.size[prop]||0).toFixed(2);input.disabled=objectLocked(obj)||!obj.transformPolicy.canResize;});
+  document.getElementById('assetSizeRangeNote').textContent=obj.transformPolicy.canResize?'ปรับกว้าง–ลึก–สูงได้ตั้งแต่ '+MIN_ASSET_DIMENSION+'–'+MAX_ASSET_DIMENSION+' ม. · กำหนดความสูงเกินผนังบูธได้':'ใช้เมนูเปลี่ยนขนาด → ย่อ–ขยายทั้งชิ้น เพื่อรักษารูปทรงเดิม';
   const locked=objectLocked(obj),mode=obj.appearance.mode,color=obj.appearance.color||'#f5f5f5',colorWrap=document.querySelector('#mAssetSettings .asset-settings-color');
   document.getElementById('assetSurfaceColor').value=color;document.getElementById('assetSurfaceHex').value=color.toUpperCase();
   document.querySelectorAll('[data-asset-appearance]').forEach(button=>{button.classList.toggle('on',button.dataset.assetAppearance===mode);button.disabled=locked;button.setAttribute('aria-pressed',String(button.dataset.assetAppearance===mode));});
@@ -4193,11 +4201,13 @@ function updateSelectedObjectName(value){
 function updateSelectedObjectSize(axis,value){
   const obj=objectById(objectEditor.selectedId);if(!obj||objectLocked(obj)||!['w','d','h'].includes(axis))return;normalizeSceneObjectModel(obj);
   if(!obj.transformPolicy?.canResize)return announceCatalog('Asset นี้ไม่รองรับ Parametric Resize · ใช้ Scale แทน','error');
-  const maxSize={w:MAX_ASSET_WIDTH,d:MAX_ASSET_DEPTH,h:MAX_ASSET_HEIGHT},numeric=assetDimensionValue(value),
+  const raw=Number(value);if(String(value).trim()===''||!Number.isFinite(raw)||raw<MIN_ASSET_DIMENSION||raw>MAX_ASSET_DIMENSION)return announceCatalog('กรอกขนาดระหว่าง '+MIN_ASSET_DIMENSION+'–'+MAX_ASSET_DIMENSION+' เมตร','error');
+  const numeric=assetDimensionValue(value),
     before=objectSnapshot(),previous={...obj.size},previousStructure=isEntranceFrameObject(obj)||isDownlightBeamObject(obj)?{...(obj.structure||{})}:null,
     locked=document.getElementById('assetSizeLock')?.checked!==false;
-  if(locked){const ratio=numeric/Math.max(MIN_ASSET_DIMENSION,Number(obj.size[axis])||MIN_ASSET_DIMENSION);['w','d','h'].forEach(key=>obj.size[key]=assetDimensionValue((Number(obj.size[key])||MIN_ASSET_DIMENSION)*ratio));}
-  else obj.size[axis]=numeric;
+  const ratio=numeric/Math.max(MIN_ASSET_DIMENSION,Number(obj.size[axis])||MIN_ASSET_DIMENSION),next=locked?Object.fromEntries(['w','d','h'].map(key=>[key,Number(obj.size[key])*ratio])):{...obj.size,[axis]:numeric};
+  if(Object.values(next).some(n=>!Number.isFinite(n)||n<MIN_ASSET_DIMENSION-1e-8||n>MAX_ASSET_DIMENSION+1e-8))return announceCatalog('ทุกด้านต้องอยู่ในช่วง '+MIN_ASSET_DIMENSION+'–'+MAX_ASSET_DIMENSION+' เมตร · ไม่ได้เปลี่ยนขนาด','error');
+  obj.size=next;
   obj.size={w:+obj.size.w.toFixed(3),d:+obj.size.d.toFixed(3),h:+obj.size.h.toFixed(3)};
   /* Structural Assets rebuild obj.size from obj.structure during every sync.
      Keep both models aligned so the Asset Settings value is not overwritten. */
@@ -4571,7 +4581,7 @@ function syncObjectControls(){
   Object.entries(moveButtons).forEach(([mode,id])=>{const button=document.getElementById(id);if(!button)return;
     button.disabled=brandSelected?false:!obj||locked;button.classList.toggle('on',objectEditor.transformMode==='move'&&objectEditor.moveMode===mode);button.setAttribute('aria-pressed',String(objectEditor.transformMode==='move'&&objectEditor.moveMode===mode));});
   const policy=obj?.transformPolicy,resizeButton=document.getElementById('btnResizeObject'),scaleButton=document.getElementById('btnScaleObject'),single=!!obj&&!locked&&selectedObjectIds().length===1;
-  if(resizeButton){const available=systemAssetSelected||single&&policy?.canResize===true;resizeButton.disabled=!available;resizeButton.title=systemAssetSelected?'เปิดค่าขนาดของ '+sceneItem.name:'แสดง Handle ที่มุมเพื่อย่อหรือขยาย Asset โดยรักษาสัดส่วน';resizeButton.classList.toggle('on',!!obj&&available&&objectEditor.transformMode==='resize');resizeButton.setAttribute('aria-pressed',String(!!obj&&available&&objectEditor.transformMode==='resize'));}
+  if(resizeButton){const available=systemAssetSelected||single&&(policy?.canResize===true||policy?.canScale===true);resizeButton.disabled=!available;resizeButton.title=systemAssetSelected?'เปิดค่าขนาดของ '+sceneItem.name:!single?'เลือก Asset 1 ชิ้นและปลดล็อกก่อน':!available?'Asset นี้ไม่อนุญาตให้เปลี่ยนขนาด':'ปรับขนาดหรือย่อ–ขยายทั้งชิ้น';resizeButton.classList.toggle('on',!!obj&&available&&['resize','scale'].includes(objectEditor.transformMode));resizeButton.setAttribute('aria-pressed',String(!!obj&&available&&['resize','scale'].includes(objectEditor.transformMode)));}
   if(scaleButton){const available=systemAssetSelected||single&&policy?.canScale===true;scaleButton.disabled=!available;scaleButton.title=systemAssetSelected?'เปิดการตั้งค่าขนาดของ '+sceneItem.name:'ขยายหรือย่อ Asset ทั้งชิ้นด้วย Transform Scale โดยไม่เปลี่ยน Dimensions ต้นฉบับ';scaleButton.classList.toggle('on',!!obj&&available&&objectEditor.transformMode==='scale');scaleButton.setAttribute('aria-pressed',String(!!obj&&available&&objectEditor.transformMode==='scale'));}
   const advanced=document.getElementById('moveAdvanced'),advancedSummary=advanced?.querySelector('summary');if(advancedSummary)advancedSummary.classList.toggle('on',!!advanced?.open);
   if(workspaceNode){workspaceNode.classList.toggle('logo-placement-active',brandSelected);workspaceNode.classList.toggle('has-object-selection',!!obj);}
@@ -6205,7 +6215,7 @@ class ThreeBoothRenderer{
   async waitForSceneAssets(timeoutMs=10000,spec=BoothSpec,validateState=null){
     // Island has no wall branding to initiate logo loading. Artwork copies must
     // also be decoded before the final rebuild used for clean screenshots.
-    const artworkSources=new Set([spec.logo,...(spec.objects||[]).filter(o=>o.type==='brandCopy').map(o=>o.appearance?.textureData)].filter(Boolean));
+    const artworkSources=new Set([spec.logo,...(spec.objects||[]).filter(o=>o.type==='brandCopy').map(o=>o.appearance?.textureData),...(spec.objects||[]).filter(o=>['tv-samsung-40','tv-65'].includes(o.catalogId)).map(o=>o.appearance?.textureData||YPTVAsset.image)].filter(Boolean));
     for(const source of this.brandImages.keys())if(this.brandImages.size>4&&!artworkSources.has(source))this.brandImages.delete(source);
     artworkSources.forEach(source=>this.loadBrandImage(source));
     const deadline=Date.now()+Math.max(0,Number(timeoutMs)||0);
@@ -7857,7 +7867,7 @@ class ThreeBoothRenderer{
         metalness:options.metalness??.02,emissive:options.emissive||0x000000,emissiveIntensity:options.emissiveIntensity||0});
       const part=new T.Mesh(geometry,material);part.position.set(...position);part.castShadow=true;part.receiveShadow=true;root.add(part);return YPBoothLighting.markEmitter(part);
     };
-    if(globalThis.YPBrochureRack?.build({T,obj,root})||globalThis.YPInlineSoftWave?.build({T,obj,mesh,bx,root})||globalThis.YPTimberRibbonGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularSixGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPIslandYellowGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPCornerBeauty?.build({T,obj,mesh,bx,root})||globalThis.YPCornerAqua?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularBotanical?.build({T,obj,mesh,bx,root})){
+    if(globalThis.YPBrochureRack?.build({T,obj,root})||globalThis.YPInlineSoftWave?.build({T,obj,mesh,bx,root})||globalThis.YPTimberRibbonGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularSixGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPIslandYellowGeometry?.build({T,obj,mesh,bx,root})||globalThis.YPCornerBeauty?.build({T,obj,mesh,bx,root})||globalThis.YPCornerAqua?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularBotanical?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularCyanNexus?.build({T,obj,mesh,bx,root})||globalThis.YPPeninsularOakGallery?.build({T,obj,mesh,bx,root})){
       // Reference-specific compound geometry; generic assets retain their original shapes.
     }else if(isEntranceFrameObject(obj)){
       const cfg=normalizeEntranceFrameObject(obj).structure,finish=new T.MeshStandardMaterial({color:cfg.color,roughness:.72,metalness:.01});
@@ -10197,7 +10207,7 @@ window.YPAssetEditorBridge={
 buildGeometryManifest(S);
 window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispose();},{once:true});
 </script>
-<script type="module" src="js/asset-editor/asset-editor.js?v=20260829-3"></script>
+<script type="module" src="js/asset-editor/asset-editor.js?v=20260914-sizing"></script>
 <script src="js/project-store.js?v=20260905-1"></script>
 <script src="js/template-area.js?v=20260910-template-area"></script>
 <script src="js/project-workspace.js?v=20260914-settings-split-1"></script>
@@ -10222,9 +10232,11 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/peninsular-six-templates.js?v=20260911-six"></script>
 <script src="js/botanical-images.js?v=20260911-botanical"></script>
 <script src="js/peninsular-botanical.js?v=20260911-floor-finish"></script>
-<script src="js/peninsular-templates.js?v=20260911-botanical"></script>
+<script src="js/peninsular-cyan-nexus.js?v=20260914-1"></script>
+<script src="js/peninsular-oak-gallery.js?v=20260914-1"></script>
+<script src="js/peninsular-templates.js?v=20260914-oak"></script>
 <script src="js/peninsular-six-artwork.js?v=20260911-brand-audit"></script>
-<script src="js/peninsular-template-ui.js?v=20260911-botanical"></script>
+<script src="js/peninsular-template-ui.js?v=20260914-oak"></script>
 <script src="js/corner-beauty.js?v=20260911-beauty"></script>
 <script src="js/corner-aqua.js?v=20260911-aqua"></script>
 <script src="js/corner-templates.js?v=20260911-aqua"></script>
@@ -10245,7 +10257,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/asset-replace.css?v=20260911-1">
 <script src="js/asset-replace-ui.js?v=20260911-1"></script>
 <script src="js/asset-settings-enter.js?v=20260914-settings-split-1"></script>
-<script src="js/resize-submenu.js?v=20260914-1"></script>
+<script src="js/resize-submenu.js?v=20260914-sizing"></script>
 <script src="js/rotate-submenu.js?v=20260914-flip-z-1"></script>
 <script src="js/copy-array.js?v=20260912-1"></script>
 <script src="js/copy-array-ui.js?v=20260914-z-up-1"></script>

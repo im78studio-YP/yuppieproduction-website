@@ -313,7 +313,7 @@ test('Resize และ Scale เป็น Transform Mode คนละโหม�
 });
 
 test('Transform Policy รวมศูนย์ แยก Parametric Resize จาก Uniform Transform Scale และรองรับ Migration',()=>{
-  for(const token of ['ASSET_TRANSFORM_POLICY_VERSION=4','defaultAssetTransformPolicy(obj,item','normalizeAssetTransformPolicy(obj,item','stalePolicy=(Number(declared.version)||0)<3||counterUpgrade',
+  for(const token of ['ASSET_TRANSFORM_POLICY_VERSION=5','defaultAssetTransformPolicy(obj,item','normalizeAssetTransformPolicy(obj,item','stalePolicy=(Number(declared.version)||0)<3||counterUpgrade',
     "counterUpgrade=(Number(declared.version)||0)<4&&['roundedCornerCounter','flutedCounter'].includes(obj?.type)",
     "family:parametric?'parametric'",'canMove:explicit.canMove!==false','canResize','canScale','productionSensitive',
     'transform.scale={x:uniformScale,y:uniformScale,z:uniformScale}','transform.uniformScale=uniformScale','SCENE_OBJECT_SCHEMA_VERSION=4'])assert.ok(html.includes(token),token);

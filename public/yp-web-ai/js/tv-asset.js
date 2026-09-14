@@ -49,15 +49,20 @@
     part.material.name='TV';part.material.polygonOffset=true;part.material.polygonOffsetFactor=-1;part.material.polygonOffsetUnits=-2;part.castShadow=false;screens.push(part);
    }
   });
-  const buildId=renderer.buildId;
-  new T.TextureLoader().load(obj.appearance?.textureData||image,texture=>{
-   if(renderer.buildId!==buildId||!group.parent){texture.dispose();return;}
+  const buildId=renderer.buildId,source=obj.appearance?.textureData||image;
+  // Share decoded artwork with the renderer: final screenshot rebuilds must
+  // apply cached pixels synchronously, not start another asynchronous TV load.
+  function apply(decoded){
+   if(!decoded||renderer.buildId!==buildId)return;
+   const texture=new T.CanvasTexture(decoded._ypRasterSource||decoded);
    texture.colorSpace=T.SRGBColorSpace;
    // GLTF UVs use a top-left origin; the fallback plane uses Three's bottom-left origin.
    texture.flipY=screens[0]?.name==='tv-screen';
    screens.forEach(mesh=>{mesh.material.map=texture;mesh.material.needsUpdate=true;});
-   renderer.renderer.render(renderer.scene,renderer.camera);
-  });
+   if(group.parent)renderer.renderer.render(renderer.scene,renderer.camera);
+  }
+  const cached=renderer.brandImages.get(source);
+  if(cached)apply(cached);else renderer.loadBrandImage(source).then(apply);
  }
  function fallback(T,s){
   const g=new T.Group(),body=new T.Mesh(new T.BoxGeometry(s.w,s.h,s.d),new T.MeshStandardMaterial());body.position.y=s.h/2;g.add(body);
