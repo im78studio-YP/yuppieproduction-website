@@ -355,11 +355,11 @@ test('Scale Handle คงขนาดบนหน้าจอ และ Lock/Esc
     'restoreObjectSnapshot(objectEditor.future.pop())'])assert.ok(html.includes(token),token);
 });
 
-test('Scale และ Resize ของ Asset บนพื้นรักษา Floor Contact ไม่จมใต้พื้น',()=>{
+test('Resize pivot is authoritative; legacy floor-correction helper remains available',()=>{
   for(const token of ['sceneObjectPreservesFloorContact(obj)','preserveResizeFloorContact(root,floorY)',
     'new this.THREE.Box3().setFromObject(root)','Number(floorY)-bounds.min.y',
     'if(drag.preserveFloorContact)this.preserveResizeFloorContact(root,BoothSpec.raise/100)',
-    'this.pointerDrag.preserveFloorContact=sceneObjectPreservesFloorContact(obj)'])assert.ok(html.includes(token),token);
+    'this.pointerDrag.preserveFloorContact=false','YPResizeAnchor.local(T,obj)'])assert.ok(html.includes(token),token);
   assert.match(html,/\(Number\(obj\.position\?\.y\)\|\|0\)>\.001/);
   assert.match(html,/\['wall','ceiling','vertical-face','horizontal-bottom'\]\.includes\(surface\)/);
 });

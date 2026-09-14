@@ -22,7 +22,7 @@ const assert=require('node:assert/strict');
  await page.locator('#btnResizeObject').click();assert.equal(await page.locator('#resizeSubmenuMode').inputValue(),'scale');assert.equal(await page.locator('#resizeSubmenuLock').isDisabled(),true);assert.equal(await page.locator('#resizeSubmenuMode option[value="resize"]').isDisabled(),true);
  const original=await page.evaluate(id=>({size:{...objectById(id).size},position:{...objectById(id).position},history:objectEditor.past.length}),scaleId);
  await page.locator('#resizeValuew').fill(String(original.size.w*1.5));await page.locator('#resizeValuew').press('Enter');
- const scaled=await page.evaluate(id=>({size:{...objectById(id).size},position:{...objectById(id).position},scale:sceneObjectScaleValue(objectById(id)),history:objectEditor.past.length,handles:threeRenderer.resizeHandleGroup?.children.length}),scaleId);
+ const scaled=await page.evaluate(id=>({size:{...objectById(id).size},position:{...objectById(id).position},scale:sceneObjectScaleValue(objectById(id)),history:objectEditor.past.length,handles:threeRenderer.resizeHandleGroup?.children.filter(m=>m.userData.resizeHandle).length}),scaleId);
  assert.deepEqual(scaled.size,original.size);assert.deepEqual(scaled.position,original.position);assert.equal(scaled.scale,1.5);assert.equal(scaled.history,original.history+1);assert.equal(scaled.handles,8);
  assert.equal(+(await page.locator('#resizeValueh').inputValue()),+(original.size.h*1.5).toFixed(3));
  await page.evaluate(()=>undoObjectChange());assert.equal(await page.evaluate(id=>sceneObjectScaleValue(objectById(id)),scaleId),1);await page.evaluate(()=>redoObjectChange());assert.equal(await page.evaluate(id=>sceneObjectScaleValue(objectById(id)),scaleId),1.5);

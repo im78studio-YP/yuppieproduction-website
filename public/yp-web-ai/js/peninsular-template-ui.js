@@ -41,7 +41,7 @@
     return canvas.toDataURL('image/png');
   }
   function snapshot(id,options={}){const t={...library.templates.find(t=>t.id===id)},result=library.build(id,JSON.parse(INITIAL_BOOTH_SPEC_JSON),OBJECT_CATALOG);
-    t.objects.forEach((o,i)=>{if(o.graphic)Object.assign(result.spec.objects[i].appearance,{mode:'original',textureData:o.graphic.startsWith('oak-')?YPPeninsularOakGallery.artwork(o.graphic,o.size.w,o.size.h):o.graphic.startsWith('nexus-')?YPPeninsularCyanNexus.artwork(o.graphic,o.size.w,o.size.h):o.graphic.startsWith('botanical-')?YPPeninsularBotanical.artwork(o.graphic):o.graphic.startsWith('six-')?YPPeninsularSixArtwork(o.graphic):panelArtwork(o.graphic),textureName:o.graphic,textureId:id+'-'+o.graphic});});
+    t.objects.forEach((o,i)=>{if(o.graphic)Object.assign(result.spec.objects[i].appearance,{mode:'original',textureData:o.graphic.startsWith('orbit-')?YPPeninsularBlueOrbit.artwork(o.graphic,o.size.w,o.size.h):o.graphic.startsWith('oak-')?YPPeninsularOakGallery.artwork(o.graphic,o.size.w,o.size.h):o.graphic.startsWith('nexus-')?YPPeninsularCyanNexus.artwork(o.graphic,o.size.w,o.size.h):o.graphic.startsWith('botanical-')?YPPeninsularBotanical.artwork(o.graphic):o.graphic.startsWith('six-')?YPPeninsularSixArtwork(o.graphic):panelArtwork(o.graphic),textureName:o.graphic,textureId:id+'-'+o.graphic});});
     if(/^#[\da-f]{6}$/i.test(options.primary||'')){const original=t.primary;t.primary=options.primary;result.spec.primary=t.primary;for(const o of result.spec.objects){if(o.appearance?.color===original)o.appearance.color=t.primary;if(o.structure?.color===original)o.structure.color=t.primary;}}
     result.spec.wallStickerFaces=t.customBack?[]:['back'];Object.assign(result.spec.wallStickers.back,{data:artwork(t),name:t.name+' · กราฟิกตัวอย่าง',id:1,ar:2.5,w:6,h:2.4,mode:'cover'});YPTemplateBranding.apply(result.spec,t);window.YPPeninsularCyanNexus?.finish(result.spec);YPTVAsset.template(result.spec,t);YPProjectStore.validateSpec(result.spec);return result;}
   window.YPPeninsularTemplateBridge={snapshot};if(new URLSearchParams(location.search).get('comparePreview')==='1')return;
@@ -81,7 +81,7 @@
   }
   for(const t of library.templates){
     const card=document.createElement('article');card.className='inline-template-card';
-    const img=document.createElement('img');img.src='assets/peninsular-templates/'+t.id+'.png?v=20260911-brand-audit';img.alt=t.name;img.width=960;img.height=720;
+    const img=document.createElement('img');img.src='assets/peninsular-templates/'+t.id+'.png?v='+(t.previewVersion||'20260911-brand-audit');img.alt=t.name;img.width=960;img.height=720;
     const h=document.createElement('h3');h.textContent=t.name+' · '+(t.width||6)+'×'+(t.depth||3)+' ม.';const desc=document.createElement('p');desc.textContent=t.description;
     const actions=document.createElement('div');actions.className='inline-template-actions';
     const button=document.createElement('button');button.type='button';button.className='btn pri';button.textContent='ใช้แบบนี้';button.dataset.peninTemplate=t.id;button.onclick=()=>applyTemplate(t);

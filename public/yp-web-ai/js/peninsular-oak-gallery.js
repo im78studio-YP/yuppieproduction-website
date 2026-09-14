@@ -47,6 +47,29 @@
    p('chair-standard',4.58,4.79,.56,.56,.82,0,{rotationY:180}),
   ]
  }];
+ // Revision 2: saved from the user's 67-piece layout on 2026-09-14.
+ // Keep the original IDs so logo slots and future edits remain identifiable.
+ const saved=global.YPPeninsularOakGalleryTemplates[0];
+ saved.version=2;saved.previewVersion='20260914-user-layout';
+ saved.description='บูธไม้–ดำ 6×6×3 ม. · แบบปรับล่าสุด 67 ชิ้น: คานไม้ร่นเข้า แผงระแนงดำรองรับจอ ทีวี 3 จุด มุมเจรจา และเคาน์เตอร์สวน · โลโก้ Yuppie เปลี่ยนได้';
+ saved.objects.forEach((o,i)=>o.id=saved.id+'-'+i);
+ const updates={
+  1:{position:{x:3.138,y:2.6,z:4.058},size:{w:5.472,d:.4,h:.4}},
+  2:{position:{x:5.714,y:2.6,z:2.287},size:{w:.32,d:4,h:.4}},
+  3:{position:{x:.139,y:2.648,z:2.311},size:{w:.277,d:4.023,h:.347}},
+  21:{position:{x:3.714,y:2.645,z:4.324}},
+  22:{position:{x:5.954,y:2.645,z:2}},
+  39:{position:{x:4.751,y:0,z:1.24},size:{w:2,d:2,h:2.55}},
+  43:{position:{x:5.841,y:0,z:2.17}},
+  45:{position:{x:4.724,y:1.5,z:4.318}},
+  51:{position:{x:5.824000000000001,y:.006,z:4.168},size:{w:.1,d:.2,h:2.6}},
+  64:{catalogId:'bar-stool',size:{w:.37,d:.37,h:.9},transform:{flipZ:true}}
+ };
+ for(const [index,patch]of Object.entries(updates))Object.assign(saved.objects[index],patch);
+ const removed=new Set([20,40,42,44,50,52,53,54,55]);
+ saved.objects=saved.objects.filter((o,i)=>!removed.has(i));
+ const slatIds=['311854bf-54d3-4798-9ba9-549f9c452848','77e0823d-60e8-45c4-b1ea-7b2ebfd1559d','1efb505d-9380-4bbf-87d2-65a33048aa0c','9f4194ea-bb61-44c2-b421-ef0dd2089bab','31e03cb9-f355-4189-bb5c-356f8d7025cf','ff96c8fa-a379-4acd-b81d-4fae60599537','3186c167-872c-4baf-996b-418cc904906c','44a2ddd1-cc9c-4e38-b41d-b9d8bb17ac93','a1d5a4ed-b7d8-4cda-8823-adb13da96e8f','3d0cc845-ccac-4f83-aa0c-19ad1ae0d9e7','9c9a9676-0a4d-4966-987a-65c9b4c7c0f2'];
+ slatIds.forEach((id,i)=>saved.objects.push({...box(Number((5.624-i*.2).toFixed(3)),4.168,.1,.2,2.6,black,.006),id:'obj-array-'+id}));
  function artwork(key,w,h){
   const c=document.createElement('canvas');c.width=1400;c.height=Math.round(1400*h/w);const ctx=c.getContext('2d'),W=c.width,H=c.height;
   const g=ctx.createRadialGradient(W*.55,H*.6,5,W*.5,H*.5,W*.70);g.addColorStop(0,'#0a4f87');g.addColorStop(.45,'#071e43');g.addColorStop(1,'#030812');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);

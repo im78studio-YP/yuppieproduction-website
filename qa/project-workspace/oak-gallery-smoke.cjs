@@ -1,16 +1,25 @@
 const {chromium}=require('C:/Users/Admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const fs=require('node:fs/promises'),assert=require('node:assert/strict');
+const hash=data=>require('node:crypto').createHash('md5').update(data).digest('hex');
+async function writeVerified(path,data){const tmp=path+'.tmp';await fs.writeFile(tmp,data);assert.equal(hash(await fs.readFile(tmp)),hash(data));await fs.rename(tmp,path);}
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});try{
  const page=await browser.newPage({viewport:{width:1440,height:1050}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.abort());
  await page.goto('http://127.0.0.1:4173/yp-web-ai/index.html',{waitUntil:'domcontentloaded',timeout:60000});await page.waitForFunction(()=>window.YPPeninsularTemplateBridge&&YPProjectWorkspace.state().ready,undefined,{timeout:60000});
  const result=await page.evaluate(async()=>{YPQuickSetupBridge.close();const snapshot=YPPeninsularTemplateBridge.snapshot('penin-oak-gallery-6');YPProjectBridge.restore(snapshot);const r=await loadThreeRenderer();if(!await r.waitForSceneAssets(20000))throw new Error('Assets not ready');return{spec:snapshot.spec,portable:await YPProjectStore.toText(YPProjectStore.create(snapshot,'Oak Gallery'))};});
  assert.deepEqual([result.spec.W,result.spec.D,result.spec.H,result.spec.type],[6,6,3,'penin']);assert.equal(result.spec.objects.filter(o=>o.logoSlot?.kind==='logo').length,5);assert.equal(result.spec.objects.filter(o=>['tv-samsung-40','tv-65'].includes(o.catalogId)).length,3);
- console.log('PASS 6x6x3 snapshot, 5 independent logo slots and 3 catalog TVs');
+ assert.equal(result.spec.objects.length,67);assert.equal(result.spec.boothTemplate.version,2);
+ assert.deepEqual(result.spec.objects.find(o=>o.id==='penin-oak-gallery-6-1').size,{w:5.472,d:.4,h:.4});
+ assert.equal(result.spec.objects.find(o=>o.id==='penin-oak-gallery-6-64').transform.flipZ,true);
+ if(process.env.OAK_SAVED_REFERENCE){const project=JSON.parse(await fs.readFile(process.env.OAK_SAVED_REFERENCE,'utf8')),saved=project.variants[project.active].spec;
+  const shape=o=>({id:o.id,catalogId:o.catalogId,position:o.position,size:o.size,rotation:[o.rotationX||0,o.rotationY||0,o.rotationZ||0],structure:o.structure||null,color:o.appearance?.color||null,flips:[!!o.transform?.flipX,!!o.transform?.flipY,!!o.transform?.flipZ],scale:o.transform?.uniformScale||1});
+  assert.deepEqual(result.spec.objects.map(shape),saved.objects.map(shape));console.log('PASS exact 67-piece saved layout: IDs, catalog, position, dimensions, rotation, structure, color, Flip and Scale');
+ }
+ console.log('PASS revision 2, 6x6x3 snapshot, 5 independent logo slots and 3 catalog TVs');
  for(const [view,pos]of [['overview',{x:10,y:8.5,z:13}],['left',{x:-6,y:4.8,z:13}],['right',{x:12,y:4.7,z:12}]]){
   const image=await page.evaluate(async({pos})=>{const camera={projection:'orthographic',cameraViewType:'comparison',position:pos,target:{x:3,y:1.5,z:3},up:{x:0,y:1,z:0},zoom:1,near:.01,far:1000,frustum:{left:-5.1,right:5.1,top:3.825,bottom:-3.825}};const shot=await exportCleanScreenshot({camera,aspectRatio:4/3,minLongEdge:1440,maxLongEdge:1440,download:false,assetTimeoutMs:20000});return await new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(',')[1]);r.readAsDataURL(shot.blob);});},{pos});
-  await fs.writeFile('qa/project-workspace/oak-gallery-'+view+'.png',Buffer.from(image,'base64'));if(view==='overview')await fs.writeFile('public/yp-web-ai/assets/peninsular-templates/penin-oak-gallery-6.png',Buffer.from(image,'base64'));
+  await writeVerified('qa/project-workspace/oak-gallery-'+view+'.png',Buffer.from(image,'base64'));if(view==='overview')await writeVerified('public/yp-web-ai/assets/peninsular-templates/penin-oak-gallery-6.png',Buffer.from(image,'base64'));
  }
- await fs.writeFile('public/yp-web-ai/assets/peninsular-templates/penin-oak-gallery-6.ypbooth.json',result.portable);
+ await writeVerified('public/yp-web-ai/assets/peninsular-templates/penin-oak-gallery-6.ypbooth.json',result.portable);
  const geometry=await page.evaluate(()=>{const T=threeRenderer.THREE,counter=S.objects.find(o=>o.structure?.design==='oak-counter'),root=threeRenderer.objectMeshes.get(counter.id);root.updateMatrixWorld(true);const ray=new T.Raycaster();ray.set(root.localToWorld(new T.Vector3(-counter.size.w*.14,.52,1)),new T.Vector3(0,0,-1));return{windowOpen:ray.intersectObject(root,true).length===0,tvs:S.objects.filter(o=>['tv-samsung-40','tv-65'].includes(o.catalogId)).map(o=>{let screen;threeRenderer.objectMeshes.get(o.id).traverse(n=>{if(n.name==='3DGeom-4')screen=n;});return !!screen?.material.map;})};});assert.ok(geometry.windowOpen);assert.deepEqual(geometry.tvs,[true,true,true]);
  const unchanged=await page.evaluate(()=>JSON.stringify(S.objects));await page.evaluate(()=>{YPQuickSetupBridge.open({start:'business'});YPWizardV2.show('template');});await page.locator('#wizard-template-cards [data-template="penin-oak-gallery-6"]').click();
  const wizard=await page.evaluate(()=>YPWizardV2.result().spec);assert.deepEqual([wizard.W,wizard.D,wizard.H],[6,6,3]);assert.equal(wizard.floor,'carpet');assert.equal(wizard.carpet,'grey');assert.equal(wizard.raise,0);assert.equal(await page.evaluate(()=>JSON.stringify(S.objects)),unchanged);await page.evaluate(()=>YPQuickSetupBridge.close());

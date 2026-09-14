@@ -73,7 +73,7 @@
   $('assetAppearanceOptions').style.display=tv?'none':'';document.querySelector('#mAssetSettings .asset-settings-color').style.display=tv?'none':'';
   $('assetChooseSticker').textContent=tv?'เปลี่ยนภาพหน้าจอ':'อัปโหลดสติ๊กเกอร์';
   $('assetRemoveSticker').textContent=tv?'ใช้ภาพจอเริ่มต้น':'ลบสติ๊กเกอร์';$('assetResetSurface').textContent=tv?'คืนภาพจอเริ่มต้น':'คืนพื้นผิวเดิม';
-  if(tv){const stand=root.YPTVStands?.isStand(item);$('assetStickerPreview').src=obj.appearance.textureData||(stand?root.YPTVStands.screenImage(item.catalogId):image);$('assetStickerPreview').classList.add('show');$('assetSurfaceNote').textContent=stand?'เปลี่ยนเฉพาะภาพบนหน้าจอ · สีกรอบ ตัวตู้ และฐานคงตามแบบ':'เปลี่ยนเฉพาะภาพบนหน้าจอ · กรอบและตัวเครื่องคงสีดำ';}
+  if(tv){const stand=root.YPTVStands?.isStand(item),touch=root.YPTouchScreen?.isTouch(item);$('assetStickerPreview').src=obj.appearance.textureData||(touch?root.YPTouchScreen.image:stand?root.YPTVStands.screenImage(item.catalogId):image);$('assetStickerPreview').classList.add('show');$('assetSurfaceNote').textContent=touch?'เปลี่ยนเฉพาะภาพหน้าจอ · รักษาสัดส่วน ไม่ตัดโลโก้ · กรอบดำและขอบโลหะคงเดิม · ขนาดเริ่มต้นประมาณจากภาพอ้างอิง':stand?'เปลี่ยนเฉพาะภาพบนหน้าจอ · สีกรอบ ตัวตู้ และฐานคงตามแบบ':'เปลี่ยนเฉพาะภาพบนหน้าจอ · กรอบและตัวเครื่องคงสีดำ';}
  }
  root.YPTVAsset={id,image,definition,definition65,isTV,recognize,recognizeProject,template,appearance,fallback,settings};
 })(globalThis);

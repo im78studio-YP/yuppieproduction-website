@@ -11,7 +11,7 @@ const assert=require('node:assert/strict');
   if(mobile)await page.evaluate(()=>closeDockPanel(false));
   await page.locator('#btnResizeObject').click();await panel.waitFor({state:'visible'});assert.match(await page.locator('#btnResizeObject').textContent(),/▾/);
   assert.equal(await page.locator('#resizeValuew').inputValue(),'0.5');assert.equal(await page.evaluate(()=>objectEditor.transformMode),'resize');
-  assert.equal(await page.evaluate(()=>threeRenderer.resizeHandleGroup.children.length),8);
+  assert.equal(await page.evaluate(()=>threeRenderer.resizeHandleGroup.children.filter(m=>m.userData.resizeHandle).length),8);
   const before=await page.evaluate(()=>({objects:JSON.stringify(S.objects),past:objectEditor.past.length}));
   await page.locator('#resizeSubmenuLock').uncheck();await page.locator('#resizeValuew').fill('0.8');assert.deepEqual(await size(),{w:.5,d:.1,h:1});await page.locator('#resizeValuew').press('Enter');assert.deepEqual(await size(),{w:.8,d:.1,h:1});
   assert.equal(await page.evaluate(()=>objectEditor.past.length),before.past+1);

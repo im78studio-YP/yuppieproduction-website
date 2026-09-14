@@ -13,7 +13,9 @@ test('Oak Gallery has a 6x6x3 envelope and independent editable parts',()=>{
 });
 test('Oak reference lettering is replaced; all TVs use the existing catalog',()=>{
  const t=YPPeninsularOakGalleryTemplates[0];assert.equal(t.objects.filter(o=>o.brandLogo).length,5);assert.equal(t.objects.filter(o=>o.catalogId==='tv-samsung-40').length,2);assert.equal(t.objects.filter(o=>o.catalogId==='tv-65').length,1);
- assert.equal(t.objects.filter(o=>o.catalogId==='chair-standard').length,5);assert.equal(t.objects.filter(o=>o.structure?.design==='oak-cube-frame').length,2);
+ assert.equal(t.objects.filter(o=>o.catalogId==='chair-standard').length,4);assert.equal(t.objects.filter(o=>o.catalogId==='bar-stool').length,1);assert.equal(t.objects.filter(o=>o.structure?.design==='oak-cube-frame').length,2);
+ assert.equal(t.objects.length,67);assert.equal(t.version,2);assert.equal(new Set(t.objects.map(o=>o.id)).size,67);
+ assert.deepEqual(t.objects.find(o=>o.id==='penin-oak-gallery-6-45').position,{x:4.724,y:1.5,z:4.318});
  assert.ok(!JSON.stringify(t).includes('BRABD'));assert.ok(!JSON.stringify(t).includes('Lorem'));
  assert.ok(html.indexOf('js/peninsular-oak-gallery.js')<html.indexOf('js/peninsular-templates.js'));
 });
