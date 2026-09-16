@@ -6168,7 +6168,7 @@ class ThreeBoothRenderer{
   start(){
     if(this.raf||!this.active)return;
     const tick=()=>{if(!this.active){this.raf=0;return;}
-      this.controls.update();this.viewportGizmo.update(this.camera,this.currentView);this.updateResizeHandleScreenSize();this.renderer.render(this.scene,this.camera);this.raf=requestAnimationFrame(tick);};
+      this.controls.update();this.viewportGizmo.update(this.camera,this.currentView);this.updateResizeHandleScreenSize();this.updateAnchorMarkerScreenSize();this.renderer.render(this.scene,this.camera);this.raf=requestAnimationFrame(tick);};
     tick();
   }
   resize(){
@@ -6644,9 +6644,24 @@ class ThreeBoothRenderer{
     if(!marker?.material)return;
     const baseColor=Number(marker.userData.anchorBaseColor)||0xffffff,active=state!=='idle';
     marker.material.color.setHex(state==='snapped'?0x24d26f:active?0xff3b30:baseColor);
-    marker.material.opacity=state==='snapped'?1:(active ? .98 : (marker.userData.anchorBaseOpacity??.82));
-    marker.scale.setScalar(state==='snapped'?1.9:active?1.65:1);
+    marker.material.opacity=state==='snapped'?.7:(active ? .98 : (marker.userData.anchorBaseOpacity??.82));
     marker.userData.anchorVisualState=state;
+    this.updateAnchorMarkerScreenSize();
+  }
+  updateAnchorMarkerScreenSize(){
+    if(!this.camera||!this.renderer)return;
+    const T=this.THREE,height=Math.max(1,this.renderer.domElement.clientHeight||1),diameterPixels=10,
+      preview=this.snapPreviewGroup?.getObjectByName('snap-target-marker'),markers=[...(this.anchorGuideGroup?.children||[])];
+    if(preview){preview.visible=this.activeAnchorMarker?.userData.anchorVisualState!=='snapped';markers.push(preview);}
+    this.camera.updateMatrixWorld();
+    for(const marker of markers){
+      const radius=marker.geometry?.parameters?.radius;if(!radius)continue;
+      const cameraPoint=marker.getWorldPosition(new T.Vector3()).applyMatrix4(this.camera.matrixWorldInverse),
+        depth=this.camera.isOrthographicCamera?1:Math.max(.001,-cameraPoint.z),
+        worldPerPixel=2*depth/(Math.abs(this.camera.projectionMatrix.elements[5])*height),
+        scale=worldPerPixel*diameterPixels/(2*radius),parentScale=marker.parent.getWorldScale(new T.Vector3());
+      marker.scale.set(scale/Math.max(.001,Math.abs(parentScale.x)),scale/Math.max(.001,Math.abs(parentScale.y)),scale/Math.max(.001,Math.abs(parentScale.z)));
+    }
   }
   setHoveredAnchorMarker(marker){
     if(this.pointerDrag)return;
@@ -6785,13 +6800,13 @@ class ThreeBoothRenderer{
     anchors.filter(anchor=>objectEditor.moveMode==='smart'?true:objectEditor.moveMode==='plane'?anchor.level==='base':
       objectEditor.moveMode==='height'?(anchor.kind==='corner'||anchor.kind==='center'):false).forEach(anchor=>{
       const color=anchor.anchorType==='mount'?0x46d79a:anchor.kind==='corner'?0xf0b53a:anchor.kind==='edge'?0x62b9ff:0xffffff,
-        material=new T.MeshBasicMaterial({color,transparent:true,opacity:anchor.level==='base'?.96:.7,depthTest:false});
+        material=new T.MeshBasicMaterial({color,transparent:true,opacity:anchor.level==='base'?.96:.7,depthTest:false,depthWrite:false});
       const marker=new T.Mesh(new T.SphereGeometry(radius,12,8),material);marker.name='object-anchor-'+anchor.id;
       marker.position.set(anchor.position.x,floorY+anchor.position.y,anchor.position.z);marker.renderOrder=28;
       marker.userData.anchorGuide=true;marker.userData.objectId=id;marker.userData.snapAnchorId=anchor.id;marker.userData.snapAnchorType=anchor.anchorType;
       marker.userData.anchorBaseColor=color;marker.userData.anchorBaseOpacity=anchor.level==='base'?.96:.7;group.add(marker);
     });
-    this.anchorGuideGroup=group;this.boothGroup.add(group);
+    this.anchorGuideGroup=group;this.boothGroup.add(group);this.updateAnchorMarkerScreenSize();
   }
   updateObjectAnchorGuides(id){
     if(!this.anchorGuideGroup)return;const obj=objectById(id),asset=sceneAssetRegistry.getAssetById(id),floorY=obj?BoothSpec.raise/100:0;if(!obj&&!asset)return;
@@ -6807,8 +6822,8 @@ class ThreeBoothRenderer{
     const T=this.THREE,group=new T.Group(),floorY=BoothSpec.raise/100,from=new T.Vector3(match.previewFrom.x,floorY+match.previewFrom.y,match.previewFrom.z),
       to=new T.Vector3(match.previewTo.x,floorY+match.previewTo.y,match.previewTo.z),valid=match.valid!==false,color=valid?0x46d79a:0xff3b30;
     group.name='magnetic-snap-preview';group.userData.anchorGuide=true;group.userData.systemHelper=true;
-    const marker=new T.Mesh(new T.SphereGeometry(.075,16,10),new T.MeshBasicMaterial({color,transparent:true,opacity:.9,depthTest:false}));
-    marker.position.copy(to);marker.renderOrder=30;marker.userData.anchorGuide=true;marker.userData.systemHelper=true;group.add(marker);
+    const marker=new T.Mesh(new T.SphereGeometry(.075,16,10),new T.MeshBasicMaterial({color,transparent:true,opacity:valid ? .7 : .9,depthTest:false,depthWrite:false}));
+    marker.name='snap-target-marker';marker.position.copy(to);marker.renderOrder=30;marker.userData.anchorGuide=true;marker.userData.systemHelper=true;group.add(marker);
     const line=new T.Line(new T.BufferGeometry().setFromPoints([from,to]),new T.LineBasicMaterial({color,transparent:true,opacity:.95,depthTest:false}));
     line.renderOrder=30;line.userData.anchorGuide=true;line.userData.systemHelper=true;group.add(line);
     if(match.surface?.worldOrigin&&match.surface.width>0&&match.surface.height>0){
@@ -6827,7 +6842,7 @@ class ThreeBoothRenderer{
       ghost.rotation.y=(Number(match.rotationY)||0)*Math.PI/180;ghost.renderOrder=29;ghost.userData.anchorGuide=true;ghost.userData.systemHelper=true;group.add(ghost);
     }
     const status=document.getElementById('objectLayoutStatus');if(status)status.textContent=valid?'Snap '+String(match.kind||'Surface')+' · ระยะ '+placementMeters(match.requiredOffset||.001)+' ม. · ปล่อยเมาส์ได้':'วางไม่ได้ · '+(match.reason==='asset-collision'?'ชน Asset':match.reason==='out-of-surface-bounds'?'ล้นขอบ Surface':'ชนหรือล้นขอบ');
-    this.snapPreviewGroup=group;this.boothGroup.add(group);
+    this.snapPreviewGroup=group;this.boothGroup.add(group);this.updateAnchorMarkerScreenSize();
   }
   logoPoint(event,face=BoothSpec.logoWall){
     if(BoothSpec.logoMount==='floor')return this.floorPoint(event);
