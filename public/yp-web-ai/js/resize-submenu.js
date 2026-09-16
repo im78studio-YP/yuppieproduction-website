@@ -5,7 +5,7 @@
  const panel=document.createElement('section');panel.id='resizeSubmenu';panel.hidden=true;
  panel.setAttribute('role','dialog');panel.setAttribute('aria-labelledby','resizeSubmenuTitle');
  panel.innerHTML=`<header><strong id="resizeSubmenuTitle">เปลี่ยนขนาด</strong><button type="button" class="btn" id="resizeSubmenuClose" aria-label="ปิดเมนูเปลี่ยนขนาด">×</button></header>
- <p id="resizeSubmenuName"></p><label for="resizeSubmenuMode">วิธีเปลี่ยนขนาด</label><select id="resizeSubmenuMode" style="width:100%;margin:8px 0;padding:10px;background:#0d0c10;color:white;border:1px solid #62465d;border-radius:6px"><option value="resize">ปรับกว้าง–ลึก–สูง</option><option value="scale">ย่อ–ขยายทั้งชิ้น (รักษาสัดส่วน)</option></select><div class="resize-numeric-fields">${[['w','กว้าง'],['d','ลึก'],['h','สูง']].map(([axis,label])=>`<label for="resizeValue${axis}">${label} (ม.)<span><input id="resizeValue${axis}" data-resize-axis="${axis}" type="number" min="${MIN_ASSET_DIMENSION}" max="${MAX_ASSET_DIMENSION}" step="0.01" inputmode="decimal" enterkeyhint="done" aria-describedby="resizeSubmenuStatus"><button type="button" class="btn" data-resize-apply="${axis}" aria-label="ใช้ค่า${label}" title="ใช้ค่า${label}">✓</button></span></label>`).join('')}</div>
+ <p id="resizeSubmenuName"></p><label for="resizeSubmenuMode">วิธีเปลี่ยนขนาด</label><select id="resizeSubmenuMode" style="width:100%;margin:8px 0;padding:10px;background:#0d0c10;color:white;border:1px solid #62465d;border-radius:6px"><option value="resize">ปรับกว้าง–ลึก–สูง</option><option value="scale">ย่อ–ขยายทั้งชิ้น (รักษาสัดส่วน)</option></select><div class="resize-numeric-fields">${[['w','กว้าง'],['d','ลึก'],['h','สูง']].map(([axis,label])=>`<label for="resizeValue${axis}">${label} (ม.)<span><input id="resizeValue${axis}" data-resize-axis="${axis}" type="number" min="${MIN_ASSET_DIMENSION}" max="${MAX_ASSET_DIMENSION}" step="0.01" inputmode="decimal" enterkeyhint="done" aria-describedby="resizeSubmenuStatus"><button type="button" class="btn" data-resize-reset="${axis}" aria-label="รีเซ็ต${label}เป็นขนาดเริ่มต้น" title="รีเซ็ต${label}เป็นขนาดเริ่มต้น">↶</button></span></label>`).join('')}</div>
  <label class="resize-ratio"><input type="checkbox" id="resizeSubmenuLock"> ล็อกสัดส่วน</label>
  <fieldset class="resize-anchor"><legend>จุดยึดขณะเปลี่ยนขนาด</legend><div class="resize-anchor-layout"><div id="resizeAnchorGrid" role="group" aria-label="จุดยึดซ้าย กลาง ขวา และบน กลาง ล่าง">${[1,.5,0].map((y,row)=>[0,.5,1].map((x,col)=>`<button type="button" class="btn" data-anchor-x="${x}" data-anchor-y="${y}" aria-label="ยึด${['บน','กลาง','ล่าง'][row]}${['ซ้าย','กลาง','ขวา'][col]}" aria-pressed="false" title="${['บน','กลาง','ล่าง'][row]}${['ซ้าย','กลาง','ขวา'][col]}">●</button>`).join('')).join('')}</div><div><label for="resizeAnchorDepth">แนวความลึก</label><select id="resizeAnchorDepth"><option value="1">หน้า</option><option value="0.5" selected>กลาง</option><option value="0">หลัง</option></select><p id="resizeAnchorLabel" aria-live="polite"></p><small>◆ จุดสีฟ้าอยู่กับที่<br>ตามกรอบขนาดของชิ้นงาน</small></div></div></fieldset>
  <p class="resize-hint" id="resizeSubmenuHint"></p>
@@ -27,7 +27,8 @@
  function message(text,error=false){status.textContent=text;status.dataset.error=String(error);}
  function fill(obj){const scaled=mode.value==='scale';for(const a of ['w','d','h']){input(a).value=String(+(Number(obj.size[a])*(scaled?sceneObjectScaleValue(obj):1)).toFixed(3));input(a).min=scaled?obj.size[a]*obj.transformPolicy.minScale:MIN_ASSET_DIMENSION;input(a).max=scaled?obj.size[a]*obj.transformPolicy.maxScale:MAX_ASSET_DIMENSION;input(a).dataset.dirty='false';input(a).setAttribute('aria-invalid','false');}session.stamp=stamp(obj);
   lock.disabled=scaled;lock.checked=scaled||document.getElementById('assetSizeLock').checked;fillAnchor(obj);
-  document.getElementById('resizeSubmenuHint').textContent=scaled?'ขนาดหลังย่อ–ขยาย ก่อนหมุน · เปลี่ยนด้านเดียว ทุกด้านเปลี่ยนตามสัดส่วน · ช่วง '+Math.round(obj.transformPolicy.minScale*100)+'–'+Math.round(obj.transformPolicy.maxScale*100)+'% ของขนาดต้นฉบับ':'ขนาดชิ้นงานก่อนหมุน/Scale · '+MIN_ASSET_DIMENSION+'–'+MAX_ASSET_DIMENSION+' ม. · กด Enter หรือ ✓ เพื่อใช้ค่า · ปิดเมนูจะไม่ใช้ค่าที่ยังค้าง';
+  document.getElementById('resizeSubmenuHint').textContent=scaled?'ขนาดหลังย่อ–ขยาย ก่อนหมุน · กด Enter เพื่อใช้ค่า · ↶ คืน Scale 100% · เปลี่ยนทุกด้านตามสัดส่วน · ช่วง '+Math.round(obj.transformPolicy.minScale*100)+'–'+Math.round(obj.transformPolicy.maxScale*100)+'%':'ขนาดชิ้นงานก่อนหมุน/Scale · '+MIN_ASSET_DIMENSION+'–'+MAX_ASSET_DIMENSION+' ม. · Enter ใช้ค่า · ↶ คืนขนาดเริ่มต้น (เมื่อล็อกสัดส่วน ทุกด้านเปลี่ยนตาม) · ปิดเมนูไม่ใช้ค่าค้าง';
+  panel.querySelectorAll('[data-resize-reset]').forEach(b=>{const a=b.dataset.resizeReset,label={w:'กว้าง',d:'ลึก',h:'สูง'}[a],text=scaled?'คืน Scale ทั้งชิ้นเป็น 100%':'รีเซ็ต'+label+'เป็นขนาดเริ่มต้น '+(obj.originalSize?.[a]??objectCatalogDef(obj.catalogId)?.size?.[a]??obj.size[a])+' ม.';b.title=text;b.setAttribute('aria-label',text);});
  }
  function position(){if(panel.hidden)return;const rect=button.getBoundingClientRect(),height=panel.offsetHeight,width=panel.offsetWidth;
   panel.style.left=Math.max(12,Math.min(rect.left,innerWidth-width-12))+'px';panel.style.top=Math.max(12,Math.min(rect.top-height-10,innerHeight-height-12))+'px';}
@@ -69,12 +70,18 @@
    message('ใช้ขนาดแล้ว · Undo ย้อนกลับได้'+(lock.checked?' · ปรับทุกด้านตามสัดส่วน':''));position();
   }catch(e){field.setAttribute('aria-invalid','true');message(e.message,true);}
  }
+ function reset(axis){
+  const obj=eligible();if(!session||!obj||obj.id!==session.id){close();return;}
+  // Use the same validation, fixed anchor, ratio lock and Undo path as Enter.
+  input(axis).value=String(mode.value==='scale'?obj.size[axis]:(obj.originalSize?.[axis]??objectCatalogDef(obj.catalogId)?.size?.[axis]??obj.size[axis]));
+  commit(axis);
+ }
  button.onclick=open;button.textContent='↗ เปลี่ยนขนาด ▾';button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls',panel.id);button.setAttribute('aria-expanded','false');
  mode.onchange=()=>{const obj=eligible();if(!session||!obj)return;applying=true;let success;try{success=setObjectTransformMode(mode.value);}finally{applying=false;}if(!success){close();return;}fill(obj);message('เปลี่ยนวิธีแล้ว · ค่าที่ยังไม่ยืนยันไม่ได้ถูกนำไปใช้');position();};
  for(const a of ['w','d','h']){
-  input(a).addEventListener('input',()=>{input(a).dataset.dirty='true';input(a).setAttribute('aria-invalid','false');message('ยังไม่ใช้ค่า · กด Enter หรือ ✓ ในช่องที่แก้');});
+  input(a).addEventListener('input',()=>{input(a).dataset.dirty='true';input(a).setAttribute('aria-invalid','false');message('ยังไม่ใช้ค่า · กด Enter เพื่อใช้ค่า · ↶ คืนขนาดเริ่มต้น');});
   input(a).addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();e.stopPropagation();commit(a);}});
-  panel.querySelector(`[data-resize-apply="${a}"]`).onclick=()=>commit(a);
+  panel.querySelector(`[data-resize-reset="${a}"]`).onclick=()=>reset(a);
  }
  for(const id of ['resizeSubmenuClose','resizeSubmenuDone','resizeSubmenuDrag'])document.getElementById(id).onclick=()=>close(true);
  panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close(true);}});
