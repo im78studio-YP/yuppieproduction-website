@@ -1774,6 +1774,10 @@ select:focus{border-color:var(--acc)}
     <button class="btn pri lg" onclick="closeM('mQuote');sendQuote()">กรอกข้อมูลและตรวจแบบ</button>
   </div>
 </div>
+<link rel="stylesheet" href="css/view-controls-guide.css?v=20260916-2">
+<script src="js/view-controls-guide.js?v=20260916-2"></script>
+<link rel="stylesheet" href="css/viewport-gizmo.css?v=20260916-2">
+<script src="js/viewport-gizmo.js?v=20260916-1"></script>
 <script src="js/quick-setup.js?v=20260911-business"></script>
 <script src="js/business-brief.js?v=20260911-1"></script>
 <script src="js/ai-staging.js?v=20260830-1"></script>
@@ -6047,8 +6051,8 @@ class ThreeBoothRenderer{
     this.shell=el('div','three-shell');
     this.host=el('div','three-host');
     this.tools=el('div','three-tools');
-    this.hint=el('div','three-hint','ลากเพื่อหมุน · เลื่อนเพื่อซูม');
-    this.shell.append(this.host,this.tools,this.hint);
+    this.controlsGuide=YPViewControlsGuide.create(this.host,()=>!this.camera?.isOrthographicCamera);
+    this.shell.append(this.host,this.tools,this.controlsGuide.element);
     this.viewButtons=new Map();
     [['perspective','Perspective'],['perspective_front_left','เฉียงซ้าย'],['perspective_front_right','เฉียงขวา'],['orthographic_front','หน้า'],['orthographic_rear','หลัง'],['orthographic_left','ซ้าย'],['orthographic_right','ขวา'],['orthographic_top','บน']].forEach(([key,label])=>{
       const b=el('button','',label);b.type='button';b.onclick=()=>this.setCameraView(key);
@@ -6129,6 +6133,8 @@ class ThreeBoothRenderer{
 
     this.boothGroup=new THREE.Group();this.scene.add(this.boothGroup);
     this.currentKey='';this.currentView='perspective';this.renderCameraProfile=null;this.topViewHidden=[];this.cameraTransitionRaf=0;this.lastSize=[0,0];this.active=false;this.raf=0;
+    this.viewportGizmo=YPViewportGizmo.create(THREE,view=>{if(!this.pointerDrag)this.setCameraView(view);});
+    this.shell.append(this.viewportGizmo.element);
     this.resizeObserver=new ResizeObserver(()=>this.resize());
     this.resizeObserver.observe(this.shell);
   }
@@ -6142,6 +6148,8 @@ class ThreeBoothRenderer{
     if(this.raf)cancelAnimationFrame(this.raf);this.raf=0;
   }
   dispose(){
+    this.controlsGuide?.dispose();
+    this.viewportGizmo?.dispose();
     this.active=false;if(this.raf)cancelAnimationFrame(this.raf);this.raf=0;
     if(this.cameraTransitionRaf)cancelAnimationFrame(this.cameraTransitionRaf);this.cameraTransitionRaf=0;this.restoreTopViewHidden();
     const canvas=this.renderer.domElement;
@@ -6160,7 +6168,7 @@ class ThreeBoothRenderer{
   start(){
     if(this.raf||!this.active)return;
     const tick=()=>{if(!this.active){this.raf=0;return;}
-      this.controls.update();this.updateResizeHandleScreenSize();this.renderer.render(this.scene,this.camera);this.raf=requestAnimationFrame(tick);};
+      this.controls.update();this.viewportGizmo.update(this.camera,this.currentView);this.updateResizeHandleScreenSize();this.renderer.render(this.scene,this.camera);this.raf=requestAnimationFrame(tick);};
     tick();
   }
   resize(){
@@ -6172,6 +6180,7 @@ class ThreeBoothRenderer{
   useCamera(camera){
     if(!camera||this.camera===camera)return;
     this.camera=camera;if(this.controls)this.controls.object=camera;
+    this.controlsGuide?.update();
   }
   updateCameraAspect(aspect){
     aspect=Math.max(.01,Number(aspect)||1);
