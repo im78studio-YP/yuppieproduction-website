@@ -19,7 +19,7 @@
  }
  // Reuse the business brief and floor controls; the other steps are explicitly
  // owned by this module so the old template dimension resets cannot run here.
- modal.classList.add('wizard-v2');$('quickSetupDialogLabel').textContent='วิซาร์ดออกแบบบูธ';
+ modal.classList.add('wizard-v2');$('quickSetupDialogLabel').textContent='YUPPIE BOOTH WIZARD — ตั้งต้นออกแบบบูธ';
  $('quickSetupProgress').replaceChildren(...model.steps.map((key,i)=>{const n=node('div',null,'quick-progress-item');n.dataset.progressStep=key;n.append(node('span',String(i+1),'quick-progress-dot'),node('span',labels[i]));return n;}));
  $('quickBusinessTitle').textContent='ข้อมูลธุรกิจและโจทย์งาน';
  $('quickStepBusiness').querySelector('.quick-step-description').textContent='เลือกหมวดธุรกิจสำหรับคำแนะนำและ Prompt · รายละเอียดเสริมข้ามได้ ไม่ย้ายหรือเพิ่มอุปกรณ์ในแบบ 3D อัตโนมัติ';
@@ -72,6 +72,9 @@
  // Intro distinguishes editing the existing snapshot from replacing it.
  $('releaseIntro').textContent='เลือกแบบตั้งต้น ปรับเฉพาะที่ต้องการ และตรวจพรีวิวก่อนใช้กับแบบ A/B';
  modal.querySelector('.release-list').replaceChildren(...['ข้อมูลธุรกิจและโจทย์งาน','พื้นที่และรูปแบบบูธ','เลือกเทมเพลตหรือบูธเปล่า','ปรับแต่งสี พื้น และห้อง (ข้ามได้)','ตรวจสอบก่อนเริ่มออกแบบ'].map((text,i)=>{const n=node('li',null,'release-note');n.append(node('span',String(i+1).padStart(2,'0'),'release-note-index'),node('span',text));return n;}));
+ const phaseNotice=node('li',null,'release-note release-phase-notice');
+ phaseNotice.append(node('span','06','release-note-index'),node('span','YUPPIE BOOTH WIZARD อยู่ระหว่างพัฒนาเฟส 1 ยังไม่เชื่อมต่อ API สำหรับเรนเดอร์ภาพในเว็บ แต่สามารถนำชุด Prompt จากแบบของคุณไปเรนเดอร์กับ AI ภายนอกได้','release-note-content'));
+ modal.querySelector('.release-list').append(phaseNotice);
  const modeHost=node('div',null,'wizard-entry-modes');modeHost.append(action('ปรับงานปัจจุบัน',()=>begin('current'),'wizard-edit-current'),action('เริ่มบูธใหม่',()=>begin('new'),'wizard-start-new'));$('releaseStart').hidden=true;$('releaseStart').before(modeHost);$('releaseSkip').textContent='กลับหน้าออกแบบ';
  function begin(mode,start='business'){
    const ws=YPProjectWorkspace.state();if(!ws.ready||ws.busy||ws.pendingDraft)return;

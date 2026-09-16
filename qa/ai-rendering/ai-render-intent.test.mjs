@@ -34,9 +34,11 @@ test('Pipeline บังคับ structure_enhancement และส่ง Refer
 
 test('Customer Flow ไม่มี Concept/Precision และมีปุ่ม Atomic Render Package เดียว', () => {
   assert.doesNotMatch(html, /id=["']promptRenderConcept["']|id=["']promptRender3d["']|id=["']promptConceptQuality["']/);
-  assert.match(html, /id="promptCopy">เตรียมชุดสร้างภาพ/);
+  assert.match(html, /id="promptCopy"[^>]*>คัดลอก PROMPT สร้างภาพ/);
+  assert.equal((html.match(/id="promptCopy"/g)||[]).length,1);
+  assert.doesNotMatch(html, /id="promptImageTextCopy"/);
   assert.match(html, /STRUCTURE_ENHANCEMENT_INTENT='structure_enhancement'/);
-  assert.match(html, /promptCopyButton\.onclick=prepareRenderPackage/);
+  assert.match(html, /promptCopyButton\.onclick=async\(\)=>[\s\S]*?if\(await prepareRenderPackage\(\)\)/);
 });
 
 test('Atomic Snapshot ครบ State หลักและใช้ Hash Revision Package ID เดียวกัน', () => {

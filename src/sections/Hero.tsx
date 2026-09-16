@@ -20,6 +20,7 @@ export default function Hero() {
           <a href="#projects" data-umami-event="nav-projects">{site.menuProjects}</a>
           <a href="#contact" data-umami-event="nav-contact">{site.menuContact}</a>
         </div>
+        <a className="nav-design" href="/yp-web-ai/" data-umami-event="nav-design">ออกแบบบูธออนไลน์ <span aria-hidden="true">↗</span></a>
       </FadeIn>
 
       {/* Marquee เป็นพระเอก อยู่ใต้เมนู เหนือหัวข้อ */}
@@ -36,6 +37,7 @@ export default function Hero() {
               lineHeight: 1.35, fontSize: "clamp(.75rem,1.4vw,1.5rem)", color: "#D7E2EA" }}>
               {site.heroTagline}
             </p>
+            <a className="hero-compare-link" href="#booth-online">ดูตัวอย่างแบบ 3D / ภาพเรนเดอร์ <span aria-hidden="true">↓</span></a>
           </FadeIn>
         </div>
       </div>

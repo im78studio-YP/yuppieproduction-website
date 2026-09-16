@@ -21,6 +21,7 @@
       document.getElementById('prompt'+name+'Panel').hidden=!on;
     }
     updatePromptPreview();
+    updateDockPromptAction();
   }
   for(const [name,board] of [['Image',false],['Board',true]]){
     const tab=document.getElementById('prompt'+name+'Tab');
@@ -36,12 +37,6 @@
     refreshPreview();
     try{await copyRenderPackagePrompt(field.value,field);status.textContent=prepared?'คัดลอก Prompt บอร์ดแล้ว · ใช้พร้อมภาพใน ZIP ชุดล่าสุด':'คัดลอก Prompt บอร์ดฉบับร่างแล้ว · ยังต้องเตรียมชุดเพื่อรับภาพอ้างอิง';}
     catch{status.textContent='คัดลอกไม่สำเร็จ กรุณาเลือกข้อความในช่องแล้วคัดลอกเอง';}
-  };
-  document.getElementById('promptImageTextCopy').onclick=async()=>{
-    if(prepareRenderPackage.busy)return;
-    updatePromptPreview();const imageField=document.getElementById('designPrompt'),imageStatus=document.getElementById('promptStatus');
-    try{await copyRenderPackagePrompt(imageField.value,imageField);imageStatus.textContent='คัดลอก Prompt สร้างภาพแล้ว · ใช้คู่กับภาพอ้างอิงจากชุดสร้างภาพ';}
-    catch{imageStatus.textContent='คัดลอกไม่สำเร็จ กรุณาเลือกข้อความในช่องแล้วคัดลอกเอง';}
   };
   async function prepare(){
     if(prepareRenderPackage.busy)return false;

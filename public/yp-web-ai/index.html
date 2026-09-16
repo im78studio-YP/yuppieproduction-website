@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>YP_WEB_ONLINE Beta 1.1 — ออกแบบบูธ 3D ออนไลน์</title>
+<title>YUPPIE BOOTH WIZARD — ออกแบบบูธออนไลน์ · Beta 1.1</title>
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,9 +25,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;min-height:var(--header-h);padding:9px 16px;
   background:rgba(7,6,9,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .logo{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.3px}
-.logo .m{width:30px;height:30px;border-radius:8px;background:linear-gradient(140deg,var(--acc),#9b175d);
-  color:var(--acc-ink);display:grid;place-items:center;font:800 12px Inter,sans-serif}
+.brand-home{display:inline-flex;align-items:center;flex-shrink:0;min-height:44px;border-radius:4px}
+.brand-home img{display:block;width:120px;height:auto;object-fit:contain}
+.brand-home:focus-visible{outline:2px solid var(--acc2);outline-offset:4px}
+.release-brand-home{margin-bottom:18px}.release-brand-home img{width:180px;max-width:100%}
+@media(max-width:1100px){.logo>div:last-child{display:none}}
+@media(max-width:480px){.logo .brand-home img{width:88px}}
 .logo small{display:block;font:400 11px 'Noto Sans Thai';color:var(--tx3);letter-spacing:0}
+.app-version{display:inline-block;margin-left:8px;padding:2px 6px;border:1px solid var(--line);border-radius:5px;color:var(--tx2);font:500 10px Inter,sans-serif;vertical-align:middle;white-space:nowrap}
 .sp{flex:1}
 .badge{font-size:11px;padding:5px 11px;border-radius:999px;background:rgba(var(--acc-rgb),.12);
   border:1px solid rgba(var(--acc-rgb),.35);color:var(--acc2)}
@@ -336,6 +341,8 @@ select:focus{border-color:var(--acc)}
 .dock-update-button:hover{background:var(--acc2);border-color:var(--acc2);transform:translateY(-1px)}
 .dock-update-button:active{transform:translateY(0)}
 .dock-update-button:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+.dock-update-button[hidden]{display:none!important}
+.dock-update-button:disabled{opacity:.55;cursor:wait;transform:none}
 .panel-intro{position:sticky;z-index:5;top:0;padding:15px 56px 12px 18px;border-bottom:1px solid var(--line);
   background:rgba(13,16,21,.96);backdrop-filter:blur(12px)}
 .panel-eyebrow,.rail-eyebrow{font:600 10px Inter,sans-serif;letter-spacing:1.25px;text-transform:uppercase;color:var(--acc)}
@@ -769,6 +776,8 @@ select:focus{border-color:var(--acc)}
 .release-note{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:start;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg3)}
 .release-note-index{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;background:rgba(var(--acc-rgb),.12);color:var(--acc2);font:700 12px Inter,sans-serif}
 .release-note-content{min-width:0}.release-note b{display:block;color:var(--tx);font-size:14px;font-weight:600;line-height:1.4}
+.release-phase-notice{color:#ff8896;border-color:#ff667750;background:#ff44550a;line-height:1.65}
+.release-phase-notice .release-note-index{color:#ff8896;background:#ff44551a}
 .release-note-detail{display:block;margin-top:3px;color:var(--tx3);font-size:12.5px;font-weight:400;line-height:1.45;overflow-wrap:anywhere}
 .release-status-note{margin:16px 30px 0;padding:11px 13px;border:1px solid rgba(255,255,255,.055);border-radius:10px;background:rgba(255,255,255,.025);color:var(--tx3);font-size:12px;font-weight:400;line-height:1.5}
 .release-actions{display:grid;gap:4px;padding:16px 30px 26px;border-top:1px solid transparent}.release-actions .release-primary{width:100%;min-height:48px;font-size:15.5px;font-weight:700}
@@ -795,7 +804,7 @@ select:focus{border-color:var(--acc)}
 <body>
 
 <header>
-  <div class="logo"><div class="m">YP</div><div>YP_WEB_ONLINE Beta 1.1<small>ออกแบบบูธและเตรียมข้อมูลประเมินราคา</small></div></div>
+  <div class="logo"><a class="brand-home" href="/" aria-label="Yuppie Production — กลับหน้าหลัก" title="กลับหน้าหลัก"><img src="/logo-nav.png" alt="Yuppie Production" width="750" height="300"></a><div><span class="app-name">YUPPIE BOOTH WIZARD</span><span class="app-version">Beta 1.1</span><small>ออกแบบบูธและเตรียมข้อมูลประเมินราคา</small></div></div>
   <span class="badge header-status">● พร้อมออกแบบ · คำนวณแบบและประเมินราคา</span>
   <div class="sp"></div>
   <div class="header-actions row">
@@ -933,7 +942,6 @@ select:focus{border-color:var(--acc)}
           <div class="prompt-staging-note">องค์ประกอบที่ AI เติมเป็นเพียง Render Staging ไม่ใช่อุปกรณ์ที่ลูกค้ายืนยัน สโคปผลิต หรือ Geometry ของแบบ</div>
         </div>
         <textarea id="designPrompt" class="prompt-textarea" readonly spellcheck="false" aria-label="PROMPT จากแบบปัจจุบัน"></textarea>
-        <button class="btn sm" type="button" id="promptImageTextCopy">คัดลอก Prompt สร้างภาพ</button>
         <div class="prompt-fidelity" id="promptFidelityControl">
           <div class="prompt-fidelity-head">
             <label for="promptFidelityRange">ระดับอิสระของการจัดฉาก</label>
@@ -969,8 +977,7 @@ select:focus{border-color:var(--acc)}
           </div>
         </div>
         <div class="prompt-actions">
-          <button class="btn pri sm prompt-copy" type="button" id="promptCopy">เตรียมชุดสร้างภาพ</button>
-          <p class="prompt-package-note" id="promptPackageNote">คัดลอกคำสั่งและดาวน์โหลดภาพอ้างอิง 3D</p>
+          <p class="prompt-package-note" id="promptPackageNote">กดปุ่มด้านล่างเพื่อคัดลอก PROMPT พร้อมดาวน์โหลดภาพอ้างอิง 3D แล้วปิดหน้าต่าง</p>
           <div class="prompt-package-results" id="promptPackageResults" hidden aria-live="polite">
             <div data-package-result="prompt">✓ คัดลอกคำสั่งสำหรับ AI แล้ว</div>
             <div data-package-result="screenshot">✓ ดาวน์โหลดภาพอ้างอิงแล้ว</div>
@@ -1358,6 +1365,7 @@ select:focus{border-color:var(--acc)}
 
   <div class="dock-update-bar" id="dockUpdateBar">
     <button class="dock-update-button" id="dockUpdate" type="button">เสร็จสิ้น</button>
+    <button class="dock-update-button" id="promptCopy" type="button" hidden>คัดลอก PROMPT สร้างภาพ</button>
   </div>
 
 </div>
@@ -1604,7 +1612,7 @@ select:focus{border-color:var(--acc)}
 <div class="modal show" id="mRelease" role="dialog" aria-modal="true" aria-labelledby="quickSetupDialogLabel" aria-hidden="false" onclick="if(event.target===this)closeReleaseNotes()">
   <div class="sheet release-sheet">
     <button class="close" id="releaseClose" type="button" aria-label="ปิด Quick Setup" onclick="closeReleaseNotes()">×</button>
-    <span class="sr-only" id="quickSetupDialogLabel">YUPPIE BOOTH AI Quick Setup</span>
+    <span class="sr-only" id="quickSetupDialogLabel">YUPPIE BOOTH WIZARD — ตั้งต้นออกแบบบูธ</span>
     <div class="quick-setup-progress" id="quickSetupProgress" aria-label="ความคืบหน้า Quick Setup">
       <div class="quick-progress-item" data-progress-step="business"><span class="quick-progress-dot">1</span><span>ธุรกิจ</span></div>
       <div class="quick-progress-item" data-progress-step="layout"><span class="quick-progress-dot">2</span><span>รูปแบบ</span></div>
@@ -1616,8 +1624,9 @@ select:focus{border-color:var(--acc)}
       <section class="quick-setup-step" data-quick-step="intro" id="quickStepIntro">
         <div class="quick-step-scroll" style="padding:0">
           <div class="release-top">
+            <a class="brand-home release-brand-home" href="/" aria-label="Yuppie Production — กลับหน้าหลัก" title="กลับหน้าหลัก"><img src="/logo-nav.png" alt="Yuppie Production" width="750" height="300"></a>
             <div class="release-eyebrow">BETA 1.1 • EARLY ACCESS</div>
-            <h2 id="releaseTitle" tabindex="-1">YUPPIE BOOTH AI</h2>
+            <h2 id="releaseTitle" tabindex="-1">YUPPIE BOOTH WIZARD</h2>
             <p class="release-tagline">จากไอเดียแรก สู่ภาพบูธที่ชัดเจน</p>
             <p class="release-description" id="releaseIntro">ออกแบบบูธบนพื้นที่มาตรฐานได้ด้วยตัวเอง กำหนดรายละเอียดสำคัญ และเปลี่ยนความต้องการของคุณให้เป็น Prompt พร้อมใช้สำหรับสร้างภาพด้วย AI</p>
           </div>
@@ -1640,7 +1649,7 @@ select:focus{border-color:var(--acc)}
           <header class="quick-step-head">
             <div class="quick-step-kicker">QUICK SETUP • ขั้นตอนที่ 1</div>
             <h2 id="quickBusinessTitle" tabindex="-1">ธุรกิจของคุณ</h2>
-            <p class="quick-step-description">เลือกหมวดธุรกิจเพื่อให้ YUPPIE BOOTH AI เข้าใจสินค้า กลุ่มลูกค้า และบรรยากาศที่เหมาะกับบูธของคุณ</p>
+            <p class="quick-step-description">เลือกหมวดธุรกิจเพื่อให้ YUPPIE BOOTH WIZARD เข้าใจสินค้า กลุ่มลูกค้า และบรรยากาศที่เหมาะกับบูธของคุณ</p>
           </header>
           <div class="quick-section">
             <div class="quick-business-groups" id="quickBusinessGroups" role="radiogroup" aria-labelledby="quickBusinessTitle"></div>
@@ -9454,6 +9463,11 @@ document.querySelectorAll('.dock-tool[data-dock-page]').forEach(b=>{
   const page=document.querySelector('.dock-page[data-dock-page="'+b.dataset.dockPage+'"]');
   if(page)b.setAttribute('aria-controls',page.id||'dockPanel');
 });
+function updateDockPromptAction(){
+  const imagePrompt=document.querySelector('.dock-page.on')?.dataset.dockPage==='prompt'&&!document.getElementById('promptImagePanel').hidden;
+  document.getElementById('dockUpdate').hidden=imagePrompt;
+  document.getElementById('promptCopy').hidden=!imagePrompt;
+}
 function showDockPage(page,source){
   workspace.classList.remove('dock-collapsed');
   workspace.classList.toggle('asset-panel-open',page==='catalog');
@@ -9468,6 +9482,7 @@ function showDockPage(page,source){
   const activePage=document.querySelector('.dock-page.on');
   if(activePage)activePage.scrollTop=0;
   if(page==='prompt')updatePromptPreview();
+  updateDockPromptAction();
 }
 document.querySelectorAll('.dock-tool[data-dock-page]').forEach(b=>b.onclick=()=>showDockPage(b.dataset.dockPage,b));
 const gridMenuButton=document.getElementById('dockGridMenu'),gridSubmenu=document.getElementById('gridSubmenu');
@@ -9522,7 +9537,13 @@ document.getElementById('dockWallGridToggle').onclick=()=>{
   if(threeRenderer)threeRenderer.refreshEditingGrids();
   syncGridMenuState();closeGridSubmenu(true);
 };
-if(promptCopyButton)promptCopyButton.onclick=prepareRenderPackage;
+if(promptCopyButton)promptCopyButton.onclick=async()=>{
+  if(await prepareRenderPackage()){
+    if(document.querySelector('.dock-page.on')?.dataset.dockPage==='prompt'&&!document.getElementById('promptImagePanel').hidden)closeDockPanel(true);
+  }else if(!prepareRenderPackage.busy){
+    document.getElementById('promptStatus')?.scrollIntoView({block:'nearest'});
+  }
+};
 document.querySelectorAll('[data-render-quality]').forEach(button=>button.onclick=()=>setRenderQuality(button.dataset.renderQuality));
 const conceptAddAll=document.getElementById('conceptAddAll');if(conceptAddAll)conceptAddAll.onclick=()=>confirmAIConceptSuggestions('all');
 const conceptAddSelected=document.getElementById('conceptAddSelected');if(conceptAddSelected)conceptAddSelected.onclick=()=>confirmAIConceptSuggestions('selected');
@@ -10227,7 +10248,7 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/handoff-ui.js?v=20260905-1"></script>
 <script src="js/presentation-board-package.js?v=20260910-1"></script>
 <link rel="stylesheet" href="css/prompt-output.css?v=20260910-2">
-<script src="js/presentation-board-ui.js?v=20260910-2"></script>
+<script src="js/presentation-board-ui.js?v=20260916-unified-prompt"></script>
 <link rel="stylesheet" href="css/compare.css?v=20260907-1">
 <script src="js/compare.js?v=20260910-framing"></script>
 <script src="js/compare-preview.js?v=20260910-framing"></script>
@@ -10282,6 +10303,6 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/wizard-v2.css?v=20260913-logo-1">
 <script src="js/wizard-model.js?v=20260913-floor-defaults-1"></script>
 <script src="js/wizard-logo.js?v=20260913-1"></script>
-<script src="js/wizard-v2.js?v=20260913-logo-1"></script>
+<script src="js/wizard-v2.js?v=20260916-phase1-notice"></script>
 </body>
 </html>
