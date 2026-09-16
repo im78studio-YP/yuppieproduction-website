@@ -1510,6 +1510,9 @@ select:focus{border-color:var(--acc)}
   <button class="dock-tool dock-grid-menu" id="dockGridMenu" type="button" aria-expanded="false" aria-controls="gridSubmenu" aria-label="กริด" title="เลือกเปิด/ปิดกริดพื้นหรือกริดผนัง">
     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg><span class="dock-label">กริด</span>
   </button>
+  <button class="dock-tool" id="btnMeasureTape" type="button" aria-pressed="false" aria-label="วัดระยะ 2 จุด" title="เทปวัดระยะ 2 จุด">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 16 13-13 5 5-13 13Z M7 12l2 2 M10 9l2 2 M13 6l2 2"/></svg><span class="dock-label">วัดระยะ</span>
+  </button>
   <button class="dock-tool" type="button" data-dock-page="prompt" aria-pressed="false" aria-label="สร้าง PROMPT" title="สร้าง PROMPT">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h5M8 16h8"/><path d="m18 2 .7 1.8L20.5 4.5l-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L18 2Z"/></svg><span class="dock-label">PROMPT</span>
   </button>
@@ -1779,6 +1782,8 @@ select:focus{border-color:var(--acc)}
 <script src="js/view-controls-guide.js?v=20260916-2"></script>
 <link rel="stylesheet" href="css/viewport-gizmo.css?v=20260916-2">
 <script src="js/viewport-gizmo.js?v=20260916-1"></script>
+<link rel="stylesheet" href="css/measure-tape.css?v=20260916-axis-colors-4">
+<script src="js/measure-tape.js?v=20260916-axis-colors-4"></script>
 <script src="js/quick-setup.js?v=20260911-business"></script>
 <script src="js/business-brief.js?v=20260911-1"></script>
 <script src="js/ai-staging.js?v=20260830-1"></script>
@@ -6138,6 +6143,12 @@ class ThreeBoothRenderer{
     this.currentKey='';this.currentView='perspective';this.renderCameraProfile=null;this.topViewHidden=[];this.cameraTransitionRaf=0;this.lastSize=[0,0];this.active=false;this.raf=0;
     this.viewportGizmo=YPViewportGizmo.create(THREE,view=>{if(!this.pointerDrag)this.setCameraView(view);});
     this.shell.append(this.viewportGizmo.element);
+    this.measureTape=YPMeasureTape.create(this,{
+      floorY:()=>BoothSpec.raise/100,
+      floorGrid:()=>({enabled:viewGridVisible,step:VIEW_GRID_STEP,width:BoothSpec.W,depth:BoothSpec.D,y:BoothSpec.raise/100}),
+      anchors:()=>boothSnapAnchors(S).filter(a=>{const asset=sceneAssetRegistry.getAssetById(a.targetId);return asset?.metadata?.visible!==false&&objectById(a.targetId)?.visible!==false;}).map(a=>({...a,position:{...a.position,y:a.position.y+BoothSpec.raise/100}})),
+      start:()=>{globalThis.YPResizeSubmenu?.close();selectObject(null);closeDockPanel(false);}
+    });
     this.resizeObserver=new ResizeObserver(()=>this.resize());
     this.resizeObserver.observe(this.shell);
   }
@@ -6147,10 +6158,12 @@ class ThreeBoothRenderer{
     this.active=true;this.resize();this.start();
   }
   unmount(container){
+    this.measureTape?.close();
     container.classList.remove('three-active');this.active=false;
     if(this.raf)cancelAnimationFrame(this.raf);this.raf=0;
   }
   dispose(){
+    this.measureTape?.dispose();
     this.controlsGuide?.dispose();
     this.viewportGizmo?.dispose();
     this.active=false;if(this.raf)cancelAnimationFrame(this.raf);this.raf=0;
@@ -6171,7 +6184,7 @@ class ThreeBoothRenderer{
   start(){
     if(this.raf||!this.active)return;
     const tick=()=>{if(!this.active){this.raf=0;return;}
-      this.controls.update();this.viewportGizmo.update(this.camera,this.currentView);this.updateResizeHandleScreenSize();this.updateAnchorMarkerScreenSize();this.renderer.render(this.scene,this.camera);this.raf=requestAnimationFrame(tick);};
+      this.controls.update();this.viewportGizmo.update(this.camera,this.currentView);this.updateResizeHandleScreenSize();this.updateAnchorMarkerScreenSize();this.measureTape?.update();this.renderer.render(this.scene,this.camera);this.raf=requestAnimationFrame(tick);};
     tick();
   }
   resize(){
@@ -10040,6 +10053,12 @@ document.querySelectorAll('.qi').forEach(i=>{i.style.cssText=
 document.getElementById('stW').value=1.2;document.getElementById('stD').value=1.2;
 document.getElementById('stHv').value=2.4;
 build();syncDims();sync();initGlobalNumericResets();const projectAssetsReady=loadMyAssets();
+document.getElementById('btnMeasureTape').onclick=async()=>{
+  if(document.querySelector('dialog[open],.modal.show')||threeRenderer?.pointerDrag)return;
+  try{if(S.view!=='three')selectView('three');const renderer=await loadThreeRenderer();renderer.measureTape.open();}
+  catch{announceCatalog('เปิดเทปวัดไม่ได้ กรุณารอให้ภาพ 3D โหลดเสร็จแล้วลองอีกครั้ง','error');}
+};
+document.querySelectorAll('[data-dock-page]').forEach(button=>button.addEventListener('click',()=>threeRenderer?.measureTape?.close()));
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>render());
 window.addEventListener('resize',positionObjectToolbar,{passive:true});
 window.getBoothSpec=()=>JSON.parse(serializeBoothSpec());

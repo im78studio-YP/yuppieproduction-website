@@ -1,0 +1,21 @@
+.measure-overlay{position:absolute;inset:0;pointer-events:none;z-index:32;overflow:hidden}
+.measure-overlay[hidden],.measure-panel[hidden]{display:none}
+#view .measure-overlay svg{display:block;width:100%;height:100%;max-height:none;overflow:hidden}
+.measure-overlay{--measure-color:#42eddb}
+.measure-overlay[data-axis=x]{--measure-color:#ff5263}
+.measure-overlay[data-axis=y]{--measure-color:#6cdb70}
+.measure-overlay[data-axis=z]{--measure-color:#60adff}
+.measure-shadow{stroke:#18232d;stroke-width:4}.measure-line{stroke:var(--measure-color);stroke-width:2}
+.measure-overlay circle{fill:var(--measure-color);stroke:#17252e;stroke-width:1}
+.measure-label{position:absolute;transform:translate(-50%,-50%);padding:3px 7px;border-radius:5px;background:#10252eeb;color:#a8fff4;font:600 12px/1.5 sans-serif;white-space:nowrap}
+.measure-panel{position:absolute;left:12px;bottom:20px;width:290px;max-width:calc(100% - 24px);box-sizing:border-box;z-index:38;padding:12px;border:1px solid #427876;border-radius:12px;background:#15131bf2;color:#f8f5f8;text-align:left}
+.measure-panel header,.measure-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}.measure-panel header>.btn{padding:3px 10px}
+.measure-panel header{position:static;padding:0;margin:0;background:transparent;border:0;min-height:0;height:auto;box-shadow:none}
+.measure-modes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:8px}
+.measure-modes .btn{padding:6px 2px;font-size:10px;min-width:0}.measure-modes [aria-pressed=true]{border-color:#42eddb;background:#194741;color:#a8fff4}
+.measure-floor{width:100%;padding:6px;margin-top:6px;font-size:11px}.measure-floor[hidden]{display:none}
+.measure-panel p{font-size:12px;line-height:1.5;margin:8px 0}.measure-panel small{display:block;color:#b4b5bd;font-size:10px;line-height:1.6;margin-top:8px}
+.measure-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin:8px 0}.measure-copy{font-size:11px!important;padding:8px 4px!important;white-space:normal;user-select:text}
+.measure-actions .btn{font-size:11px;padding:7px}.measure-panel :focus-visible{outline:2px solid #42eddb;outline-offset:2px}
+#btnMeasureTape[aria-pressed=true]{background:#194741;color:#9bfff1;border-color:#42eddb}
+@media(max-width:600px){.measure-panel{padding:9px;bottom:12px;width:270px}.measure-panel .btn{min-height:36px}.measure-panel small{font-size:9px}}
