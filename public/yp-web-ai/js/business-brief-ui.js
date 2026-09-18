@@ -3,8 +3,8 @@
  if(new URLSearchParams(location.search).get('comparePreview')==='1')return;
  const api=global.YPBusinessBrief,controls={editor:new Map(),wizard:new Map()};
  function form(mode){
-  const section=document.createElement('section');section.className='business-brief-form sec';section.id=mode==='editor'?'businessBriefFields':'quickBusinessBriefFields';
-  const title=document.createElement('h3');title.textContent='เล่าโจทย์ธุรกิจเพิ่มเติม';section.append(title);
+  const section=document.createElement(mode==='wizard'?'details':'section');section.className='business-brief-form sec';section.id=mode==='editor'?'businessBriefFields':'quickBusinessBriefFields';
+  const title=document.createElement(mode==='wizard'?'summary':'h3');title.textContent=mode==='wizard'?'รายละเอียดเพิ่มเติม (ไม่บังคับ)':'เล่าโจทย์ธุรกิจเพิ่มเติม';section.append(title);
   const note=document.createElement('p');note.className='note';note.textContent='ไม่บังคับ · ช่วยให้ภาพ AI ตรงงานขึ้น ไม่ย้ายหรือเพิ่มอุปกรณ์ในแบบ 3D';section.append(note);
   for(const field of api.fields){
    const label=document.createElement('label'),input=document.createElement('input');input.id=(mode==='editor'?'businessBrief-':'quickBusinessBrief-')+field.key;

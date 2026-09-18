@@ -9,3 +9,27 @@
 .wizard-v2 .wizard-note{font-size:12px;color:var(--tx2);line-height:1.7}.wizard-v2 details{margin-top:15px;padding:14px;border:1px solid var(--line);border-radius:12px}.wizard-v2 summary{cursor:pointer;font-size:14px;font-weight:700}.wizard-themes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.wizard-themes .btn{white-space:normal;font-size:12px;padding:10px}.wizard-swatches{display:flex;gap:3px;margin-bottom:6px}.wizard-swatches i{height:13px;flex:1;border-radius:3px}.wizard-v2 dl{display:grid;grid-template-columns:90px 1fr;gap:12px;font-size:13px;line-height:1.6}.wizard-v2 dt{color:var(--tx2)}.wizard-v2 dd{margin:0;overflow-wrap:anywhere}.wizard-v2 .quick-step-actions{gap:10px}.wizard-v2 .quick-step-actions button{white-space:normal}
 @media(max-width:720px){#mRelease.wizard-v2 .release-sheet{width:calc(100vw - 16px);height:95dvh;max-height:95dvh}#mRelease.wizard-v2 .release-sheet[data-wizard-step=customize],#mRelease.wizard-v2 .release-sheet[data-wizard-step=review]{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) minmax(180px,28dvh)}.wizard-v2 .wizard-preview{grid-column:1;grid-row:3;padding:10px;border-left:0;border-top:1px solid var(--line)}.wizard-preview iframe{min-height:100px}.wizard-preview h3,.wizard-preview .wizard-note{display:none}.wizard-v2 .quick-step-scroll{padding:18px 14px}.wizard-v2 .wizard-template-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wizard-v2 .wizard-dimensions{gap:6px}.wizard-v2 .quick-step-head h2{font-size:22px}.wizard-v2 .quick-progress-item{font-size:10px}.wizard-v2 .quick-step-actions{padding:12px}.wizard-v2 .quick-step-description{font-size:13px}}
 .wizard-v2 .wizard-logo{margin:4px 0 18px;padding:16px;border:1px solid #a6376b;border-radius:12px;background:#21121d}.wizard-logo h3{font-size:17px;margin:0 0 6px}.wizard-v2 .wizard-logo-upload{display:block;text-align:center;padding:12px;cursor:pointer}.wizard-logo-upload input{display:block;font-size:12px!important}.wizard-logo-sample{padding:10px;margin-top:12px;border-radius:8px;background:repeating-conic-gradient(#39343e 0% 25%,#56505b 0% 50%) 50%/20px 20px;text-align:center}.wizard-logo-sample img{display:block;margin:auto;max-width:100%;max-height:100px;object-fit:contain}.wizard-v2 #wizard-logo-warning{color:#ffd18c;line-height:1.6}.wizard-v2 #wizard-logo-opaque{width:auto;margin-right:6px}.wizard-logo [hidden]{display:none!important}
+/* Compact business step; template/customize previews keep their existing space. */
+#wizard-template-edit-later{margin-bottom:12px;font-size:12px}
+#mRelease.wizard-v2 .release-sheet[data-wizard-step=business]{width:min(1000px,calc(100vw - 32px));height:min(720px,92dvh)}
+.wizard-v2 .release-sheet[data-wizard-step=business] .quick-setup-progress{padding:10px 48px 10px 20px}
+.wizard-v2 #quickStepBusiness .quick-step-scroll{padding:18px 22px 16px}
+.wizard-v2 #quickStepBusiness .quick-step-kicker{font-size:10px;margin-bottom:5px}
+.wizard-v2 #quickStepBusiness .quick-step-head h2{font-size:23px}
+.wizard-v2 #quickStepBusiness .quick-step-description{max-width:none;font-size:12px;line-height:1.5;margin-top:7px}
+.wizard-v2 #quickStepBusiness .quick-section{margin-top:16px}
+.wizard-v2 #quickBusinessGroups{gap:12px}
+.wizard-v2 #quickBusinessGroups h3{margin-bottom:6px;font-size:11px;color:var(--tx2)}
+.wizard-v2 #quickBusinessGroups .quick-choice-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.wizard-v2 #quickBusinessGroups .quick-choice{min-height:44px;padding:9px 29px 9px 11px;border-radius:8px;font-size:12px;line-height:1.4}
+.wizard-v2 #quickBusinessGroups .quick-choice-check{top:50%;right:9px;transform:translateY(-50%);width:15px;height:15px}
+.wizard-v2 #quickBusinessBriefFields{margin:14px 0 0;padding:12px;border-radius:9px;background:rgba(255,255,255,.02)}
+.wizard-v2 #quickBusinessBriefFields summary{font-size:12px;min-height:20px;color:var(--tx2)}
+.wizard-v2 #quickBusinessBriefFields[open] summary{color:var(--tx)}
+.wizard-v2 #quickBusinessBriefFields input{margin-top:0;padding:9px 11px}
+.wizard-v2 #quickStepBusiness .quick-step-actions{justify-content:space-between;padding:10px 22px calc(10px + env(safe-area-inset-bottom));box-shadow:none}
+.wizard-v2 #quickStepBusiness .quick-step-actions .btn{min-height:44px;font-size:13px}
+.wizard-v2 #quickStepBusiness .quick-back{flex:0 0 104px}
+.wizard-v2 #quickStepBusiness .quick-next{flex:0 1 190px}
+@media(max-width:800px){.wizard-v2 #quickBusinessGroups .quick-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){#mRelease.wizard-v2 .release-sheet[data-wizard-step=business]{width:calc(100vw - 16px);height:95dvh}.wizard-v2 #quickStepBusiness .quick-step-scroll{padding:14px 12px}.wizard-v2 #quickStepBusiness .quick-step-head{padding-right:0}.wizard-v2 #quickStepBusiness .quick-step-head h2{font-size:21px}.wizard-v2 #quickStepBusiness .quick-step-actions{padding:10px 12px calc(10px + env(safe-area-inset-bottom))}.wizard-v2 #quickStepBusiness .quick-next{flex:1}.wizard-v2 #quickBusinessGroups .quick-choice{padding-left:9px;font-size:12px}}

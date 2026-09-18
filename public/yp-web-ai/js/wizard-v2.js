@@ -33,6 +33,7 @@
  }
  $('quickStepLayout').querySelector('.quick-section').prepend(area);
  const choicesPanel=panel('template','เลือกแบบตั้งต้น','เลือกเทมเพลต หรือบูธเปล่า · ภาพบนการ์ดเป็นขนาดต้นฉบับ พรีวิวขั้นถัดไปใช้พื้นที่ที่คุณกำหนดจริง');
+ const editLaterNote=node('p','เลือกแบบที่ใกล้เคียงก่อน คุณสามารถเพิ่ม ลบ หรือเปลี่ยนอุปกรณ์ภายในบูธได้ภายหลังในหน้าออกแบบ','quick-default-callout');editLaterNote.id='wizard-template-edit-later';choicesPanel.querySelector('.quick-step-head').append(editLaterNote);
  const choiceHost=choicesPanel.querySelector('.wizard-content');
  const filters=node('div',null,'wizard-filter');
  filters.append(action('ทุกขนาดในรูปแบบนี้',()=>{filter='all';buildTemplates();},'wizard-filter-all'),action('ตรงขนาดพื้นที่',()=>{filter='exact';buildTemplates();},'wizard-filter-exact'));
