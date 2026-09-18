@@ -95,7 +95,7 @@
   const baseline=JSON.stringify(object.appearance),draft=sanitize(object.appearance.parts);
   document.body.append(dialog);dialog.showModal();
   let gl,controls,observer,highlight,environment,pathEditor,surfaceEditor,selected=0,frameId=0,closed=false,down=null;
-  const owned=new Set(),scene=new T.Scene();scene.background=new T.Color('#e5e8ec');
+  const owned=new Set(),scene=new T.Scene();scene.background=new T.Color('#65717e');
   const model=source.clone(true);model.position.set(0,0,0);model.rotation.set(0,0,0);model.scale.set(1,1,1);model.visible=true;
   // Cloned live effects share GPU resources: detach them without disposal, then build preview-owned copies.
   const clonedEffects=[];model.traverse(node=>{if(node.userData.partEdgeGlow||node.userData.assetSurfaceOverlay||node.userData.assetFaceSticker)clonedEffects.push(node);});clonedEffects.forEach(node=>node.removeFromParent());
@@ -104,24 +104,30 @@
   function nodeAt(key){let n=model;for(const i of key.split(':')[0].split('.').slice(1))n=n.children[Number(i)];return n;}
   const parts=sourceParts.map(e=>{const original=e.original.clone(),inherited=e.inherited.clone();owned.add(original);owned.add(inherited);return{...e,node:nodeAt(e.key),original,inherited};});
   parts.forEach(e=>global.YPAssetEdgeGlow?.update(T,e,draft[e.key]?.edgeGlow));
-  scene.add(model);scene.add(new T.HemisphereLight(0xffffff,0x596776,2));
-  const keyLight=new T.DirectionalLight(0xffffff,3);keyLight.position.set(4,6,5);scene.add(keyLight);
-  const fill=new T.DirectionalLight(0xffffff,1.5);fill.position.set(-3,3,-4);scene.add(fill);
+  // Preview-only studio: directional contrast and self-shadow reveal white panels and recesses.
+  // Do not change the saved materials or borrow the booth's potentially bright environment.
+  scene.add(model);scene.add(new T.HemisphereLight(0xffffff,0x444b55,.7));
+  model.updateMatrixWorld(true);
+  const studioBounds=new T.Box3().setFromObject(model),studioCenter=studioBounds.getCenter(new T.Vector3()),studioRadius=Math.max(studioBounds.getSize(new T.Vector3()).length()/2,.1);
+  const keyLight=new T.DirectionalLight(0xffffff,2.4);keyLight.position.copy(studioCenter).add(new T.Vector3(-3,5,4).multiplyScalar(studioRadius));keyLight.target.position.copy(studioCenter);keyLight.castShadow=true;
+  keyLight.shadow.mapSize.set(2048,2048);Object.assign(keyLight.shadow.camera,{left:-studioRadius*1.3,right:studioRadius*1.3,top:studioRadius*1.3,bottom:-studioRadius*1.3,near:studioRadius*.1,far:studioRadius*12});keyLight.shadow.camera.updateProjectionMatrix();keyLight.shadow.normalBias=studioRadius*.001;keyLight.shadow.bias=-.00005;scene.add(keyLight,keyLight.target);
+  const fill=new T.DirectionalLight(0xffffff,.45);fill.position.copy(studioCenter).add(new T.Vector3(3,2,-4).multiplyScalar(studioRadius));fill.target.position.copy(studioCenter);scene.add(fill,fill.target);
+  parts.forEach(e=>{e.node.castShadow=true;e.node.receiveShadow=true;});
   const camera=new T.PerspectiveCamera(40,1,.01,1000),ray=new T.Raycaster();
   const meshCount=new Set(parts.map(e=>e.node)).size;
   $('[data-part-info]').textContent=meshCount+' ชิ้น / '+parts.length+' กลุ่มวัสดุ · ใช้โหมดเลือกพื้นผิวเพื่อแก้เฉพาะแผง';
   parts.forEach((e,i)=>{const option=document.createElement('option');option.value=String(i);option.textContent=(i+1)+'. '+e.label+(Array.isArray(e.node.material)?' · วัสดุ '+(e.slot+1):'');list.append(option);});
   function dispose(){
    if(closed)return;closed=true;window.removeEventListener('keydown',guardKeys,true);cancelAnimationFrame(frameId);observer?.disconnect();controls?.dispose();
-   surfaceEditor?.dispose();pathEditor?.dispose();if(highlight){highlight.geometry.dispose();highlight.material.dispose();}
+   surfaceEditor?.dispose();pathEditor?.dispose();keyLight.shadow.map?.dispose();if(highlight){highlight.geometry.dispose();highlight.material.dispose();}
    parts.forEach(e=>global.YPAssetEdgeGlow?.clear(e));owned.forEach(m=>m.dispose());environment?.dispose();gl?.dispose();gl?.forceContextLoss();dialog.close();dialog.remove();active=null;trigger?.isConnected&&trigger.focus();
   }
   active={close:dispose};
   function guardKeys(event){if(!dialog.open)return;if(event.key==='Escape'){event.preventDefault();dispose();}if(event.key!=='Tab')event.stopImmediatePropagation();}
   window.addEventListener('keydown',guardKeys,true);
   try{gl=new T.WebGLRenderer({antialias:true,alpha:false});gl.setPixelRatio(Math.min(devicePixelRatio,2));gl.outputColorSpace=T.SRGBColorSpace;gl.toneMapping=T.ACESFilmicToneMapping;viewport.append(gl.domElement);controls=new r.controls.constructor(camera,gl.domElement);controls.enableDamping=true;
-   if(r.scene.environment)scene.environment=r.scene.environment;
-   else{const studio=new T.Scene();studio.background=new T.Color('#e1e5ec');const generator=new T.PMREMGenerator(gl);environment=generator.fromScene(studio);scene.environment=environment.texture;generator.dispose();}
+   gl.shadowMap.enabled=true;gl.shadowMap.type=T.PCFSoftShadowMap;
+   const studio=new T.Scene();studio.background=new T.Color('#8b929a');const generator=new T.PMREMGenerator(gl);environment=generator.fromScene(studio);scene.environment=environment.texture;generator.dispose();
    function resize(){const width=viewport.clientWidth,height=viewport.clientHeight;gl.setSize(width,height);camera.aspect=width/Math.max(height,1);camera.updateProjectionMatrix();}
    function frame(){model.updateMatrixWorld(true);const bounds=new T.Box3().setFromObject(model),center=bounds.getCenter(new T.Vector3()),size=bounds.getSize(new T.Vector3()),radius=Math.max(size.length()/2,.1),distance=radius/Math.sin(Math.atan(Math.tan(camera.fov*Math.PI/360)*Math.min(1,camera.aspect)))*1.15;controls.target.copy(center);camera.position.copy(center).add(new T.Vector3(1,.65,1.25).normalize().multiplyScalar(distance));camera.near=Math.max(.001,distance/1000);camera.far=Math.max(100,distance*20);camera.updateProjectionMatrix();controls.update();}
    observer=new ResizeObserver(resize);observer.observe(viewport);resize();frame();$('[data-part-frame]').onclick=frame;
