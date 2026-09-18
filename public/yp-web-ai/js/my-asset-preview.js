@@ -7,6 +7,7 @@
   let root,renderer;
   try{
    const gltf=await new GLTFLoader().parseAsync(await item.file.arrayBuffer(),'');root=gltf.scene;
+   global.YPAssetSurfaceRepair.apply(T,gltf,item);
    if(!root)throw Error('ไม่พบโมเดล');
    root.updateMatrixWorld(true);const bounds=new T.Box3().setFromObject(root),size=bounds.getSize(new T.Vector3());
    if(bounds.isEmpty()||!size.toArray().every(Number.isFinite)||size.length()===0)throw Error('ไม่พบขนาดโมเดล');

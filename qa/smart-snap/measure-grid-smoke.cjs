@@ -25,7 +25,7 @@ const assert=require('node:assert/strict');
    await click([1.97,.15,.27]);
    const result=await page.evaluate(()=>threeRenderer.measureTape.result);
    assert.ok(result,JSON.stringify(result));
-   assert.ok(Math.abs(result.width-(enabled?1.2:1.14))<.006,JSON.stringify({enabled,result}));
+   assert.ok(Math.abs(result.width-(enabled?1.1:1.14))<.006,JSON.stringify({enabled,result}));
    assert.ok(result.height<.001);assert.ok(result.depth<.001);
    assert.equal(await page.locator('.measure-line').evaluate(el=>getComputedStyle(el).stroke),'rgb(255, 82, 99)');
    assert.match(await page.locator('.measure-label').textContent(),/^X ·/);
@@ -40,7 +40,7 @@ const assert=require('node:assert/strict');
    assert.equal(await page.locator('.measure-line').evaluate(el=>getComputedStyle(el).stroke),'rgb(66, 237, 219)');
   }
   assert.equal(await page.evaluate(()=>objectSnapshot()),before);assert.deepEqual(errors,[]);
-  console.log('PASS',mobile?'touch':'desktop','visible grid snaps to 10 cm; disabled grid remains free, independent of placement snap');
+  console.log('PASS',mobile?'touch':'desktop','visible grid snaps to 5 cm; disabled grid remains free, independent of placement snap');
   await context.close();
  }}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -17,8 +17,8 @@ test('Fine Position แทนเมนูโหมดลากเดิมด้
 test('Fine Position ใช้ระยะ 5 ซม. สะสมและ Selection กลาง',()=>{
   assert.match(html,/const FINE_POSITION_STEP=\.05/);
   assert.match(html,/delta=direction\*FINE_POSITION_STEP/);
-  assert.match(html,/function fineMoveSelectedObjects\(axis,delta\)[\s\S]*const objects=selectedTransformObjects\(\)/);
-  assert.match(html,/function finePositionSelectionKey\(objects=selectedObjects\(\)\)/);
+  assert.match(html,/function fineMoveSelectedObjects\(axis,delta\)[\s\S]*const objects=finePositionTargets\(\)/);
+  assert.match(html,/function finePositionSelectionKey\(objects=finePositionTargets\(\)\)/);
   assert.doesNotMatch(html,/finePositionSelectionState|assetListSelectionState/);
 });
 
@@ -44,7 +44,7 @@ test('Fine Position ใช้ Draft และยืนยัน Absolute เฉ�
 test('Fine Position แสดงสองตำแหน่ง แยกหน่วย และปิด Absolute เมื่อเลือกหลายชิ้น',()=>{
   assert.ok(html.includes('Number(primary.position?.[finePositionWorldAxis(axis)]||0).toFixed(2)'));
   assert.ok(html.includes('<span class="fine-position-unit">ม.</span>'));
-  assert.match(html,/input\.disabled=!primary\|\|locked\|\|multi/);
+  assert.match(html,/input\.disabled=!!reason\|\|multi/);
   assert.match(html,/input\.placeholder=multi\?'—'/);
   assert.ok(html.includes('ค่า Absolute ปิดอยู่ ใช้ −/+ เพื่อเลื่อนทั้งกลุ่ม'));
 });

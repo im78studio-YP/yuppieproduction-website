@@ -32,5 +32,5 @@ const assert=require('node:assert/strict'),path=require('node:path');
  for(let i=0;i<5;i++){await wall.click();await wall.click();}
  assert.equal(await page.evaluate(()=>threeRenderer.renderer.info.memory.geometries),baseline);
  for(const [width,height] of [[390,844],[768,1024]]){await page.setViewportSize({width,height});await wall.click();assert.equal(await wall.getAttribute('aria-pressed'),'true');assert.equal(await floor.getAttribute('aria-pressed'),'false');await wall.click();}
- assert.deepEqual(errors,[]);console.log('PASS: independent wall/floor controls, default off, straight/left/right/curved walls, 1m/10cm geometry, clean export, disposal and stable GPU geometry count, mobile/tablet');
+ assert.deepEqual(errors,[]);console.log('PASS: independent wall/floor controls, default off, straight/left/right/curved walls, 1m/5cm geometry, clean export, disposal and stable GPU geometry count, mobile/tablet');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

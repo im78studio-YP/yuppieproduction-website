@@ -1,4 +1,15 @@
 const mount=document.getElementById('assetEditorMount');
+const alignRows=[
+  ['ซ้าย–ขวา', [['left','เสมอซ้าย'],['horizontal','กึ่งกลางแนวนอน'],['right','เสมอขวา']]],
+  ['บน–ล่าง', [['top','เสมอบน'],['vertical','กึ่งกลางแนวตั้ง'],['bottom','เสมอล่าง']]],
+  ['หน้า–หลัง', [['front','เสมอหน้า'],['depth','กึ่งกลางความลึก'],['back','เสมอหลัง']]]
+];
+function alignIcon(mode){
+  const horizontal=['left','horizontal','right'].includes(mode),depth=['front','depth','back'].includes(mode);
+  const center=['horizontal','vertical','depth'].includes(mode),end=['right','bottom','back'].includes(mode);
+  const line=center?12:end?21:3,a=center?8:end?12:5,b=center?6:end?8:5;
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><g ${horizontal?'':`transform="${depth?'translate(3 1) skewY(-12) ':''}translate(24 0) rotate(90)"`}><path d="M${line} 2v20" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="${a}" y="5" width="7" height="5" rx=".6" fill="currentColor"/><rect x="${b}" y="14" width="11" height="5" rx=".6" fill="currentColor"/></g></svg>`;
+}
 
 if(mount){
   mount.innerHTML=`
@@ -13,12 +24,9 @@ if(mount){
           <div class="asset-editor-selection-head"><h4>การเลือกและจัดกลุ่ม</h4><b data-ae-selection-count>เลือก 1 ชิ้น</b></div>
           <button class="btn sm asset-editor-multi" data-ae-action="multi-select" type="button">เลือกหลายชิ้น</button>
           <div class="asset-editor-note">คอมพิวเตอร์ใช้ Shift/Ctrl + คลิกได้ · มือถือเปิดโหมดนี้แล้วแตะ Asset ทีละชิ้น · สีชมพูคือชิ้นอ้างอิงหลัก</div>
-          <div class="asset-editor-subtitle">Align โดยยึดชิ้นอ้างอิงหลัก</div>
-          <div class="asset-editor-actions asset-editor-align">
-            <button class="btn sm" data-ae-align="horizontal" type="button">กึ่งกลางแนวนอน</button><button class="btn sm" data-ae-align="vertical" type="button">กึ่งกลางแนวตั้ง</button>
-            <button class="btn sm" data-ae-align="top" type="button">เสมอบน</button><button class="btn sm" data-ae-align="bottom" type="button">เสมอล่าง</button>
-            <button class="btn sm" data-ae-align="front" type="button">เสมอหน้า</button><button class="btn sm" data-ae-align="back" type="button">เสมอหลัง</button>
-          </div>
+          <div class="asset-editor-subtitle">Align · ตามแนวแกนบูธ ไม่ใช่มุมกล้อง</div>
+          <div class="asset-editor-reference" data-ae-reference></div>
+          ${alignRows.map(([axis,commands])=>`<div class="asset-editor-align-row"><span>${axis}</span><div class="asset-editor-actions asset-editor-align">${commands.map(([mode,label])=>`<button class="btn sm" data-ae-align="${mode}" type="button" title="${label} · ตามชิ้นอ้างอิงหลัก" aria-label="${label}">${alignIcon(mode)}<span>${label.replace('กึ่งกลางแนวนอน','กึ่งกลาง').replace('กึ่งกลางแนวตั้ง','กึ่งกลาง').replace('กึ่งกลางความลึก','กึ่งกลาง')}</span></button>`).join('')}</div></div>`).join('')}
           <div class="asset-editor-actions" style="margin-top:7px"><button class="btn sm" data-ae-action="group" type="button">Group</button><button class="btn sm" data-ae-action="ungroup" type="button">Ungroup</button></div>
         </section>
         <section class="asset-editor-card">
@@ -81,6 +89,7 @@ if(mount){
     const badge=$('[data-ae-lock-state]');badge.textContent=selection?(state.selectionCount>1?'เลือก '+state.selectionCount+' ชิ้น':(selection.locked?'Locked':'พร้อมแก้ไข')):'ยังไม่เลือก';badge.classList.toggle('is-locked',!!selection?.locked);
     if(!selection)return;
     $('[data-ae-selection-count]').textContent='เลือก '+state.selectionCount+' ชิ้น';
+    $('[data-ae-reference]').textContent='● ชิ้นอ้างอิง: '+selection.name;
     const multi=$('[data-ae-action="multi-select"]');multi.classList.toggle('on',!!state.multiSelect);multi.textContent=state.multiSelect?'✓ กำลังเลือกหลายชิ้น':'เลือกหลายชิ้น';
     $$('[data-ae-align]').forEach(button=>button.disabled=state.selectionCount<2);
     $('[data-ae-action="group"]').disabled=!state.canGroup;$('[data-ae-action="ungroup"]').disabled=!state.canUngroup;

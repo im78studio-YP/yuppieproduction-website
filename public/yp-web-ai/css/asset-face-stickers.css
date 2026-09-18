@@ -1,0 +1,7 @@
+#assetFaceStickerControls{margin:12px 0;padding:12px 0;border-top:1px solid var(--line)}
+#assetFaceStickerControls[hidden],#assetStickerTransform[hidden]{display:none}
+#assetFaceStickerControls [hidden]{display:none!important}
+#assetFaceStickerControls .asset-field{font-size:11px;text-align:left;margin:6px 0}
+#assetFaceStickerControls input,#assetFaceStickerControls select{width:100%;min-width:0;padding:8px;color:var(--tx);background:var(--bg2);border:1px solid var(--line);border-radius:7px}
+.asset-sticker-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#assetFaceStickerControls input:focus-visible,#assetFaceStickerControls select:focus-visible{outline:2px solid var(--acc);outline-offset:1px}

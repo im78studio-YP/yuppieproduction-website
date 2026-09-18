@@ -1,0 +1,501 @@
+[
+  {
+    "id": "imported-facade-u-3x3",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 3,
+    "corners": 0
+  },
+  {
+    "id": "imported-top-panel",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "imported-triangle-tray-wall",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "imported-tray-wall",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "imported-wall-shelf-01",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 4,
+    "corners": 0
+  },
+  {
+    "id": "imported-wall-100x240",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "imported-s-beam-01",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "standee-01",
+    "beforeBad": 84,
+    "bad": 0,
+    "normalMeshes": 1,
+    "defaultMaterials": 1,
+    "corners": 84
+  },
+  {
+    "id": "standee-02",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "standee-03",
+    "beforeBad": 132,
+    "bad": 0,
+    "normalMeshes": 1,
+    "defaultMaterials": 1,
+    "corners": 132
+  },
+  {
+    "id": "standee-04",
+    "beforeBad": 276,
+    "bad": 0,
+    "normalMeshes": 2,
+    "defaultMaterials": 1,
+    "corners": 276
+  },
+  {
+    "id": "standee-05",
+    "beforeBad": 564,
+    "bad": 0,
+    "normalMeshes": 1,
+    "defaultMaterials": 1,
+    "corners": 564
+  },
+  {
+    "id": "standee-06",
+    "beforeBad": 1272,
+    "bad": 0,
+    "normalMeshes": 2,
+    "defaultMaterials": 1,
+    "corners": 1272
+  },
+  {
+    "id": "standee-07",
+    "beforeBad": 1236,
+    "bad": 0,
+    "normalMeshes": 1,
+    "defaultMaterials": 1,
+    "corners": 1236
+  },
+  {
+    "id": "standee-08",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "standee-09",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "standee-10",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "counter-set-01-01",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "counter-set-01-02",
+    "beforeBad": 189,
+    "bad": 0,
+    "normalMeshes": 2,
+    "defaultMaterials": 1,
+    "corners": 189
+  },
+  {
+    "id": "counter-set-01-03",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "counter-set-01-04",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "counter-set-01-05",
+    "beforeBad": 204,
+    "bad": 0,
+    "normalMeshes": 1,
+    "defaultMaterials": 1,
+    "corners": 204
+  },
+  {
+    "id": "counter-set-01-06",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "counter-set-01-07",
+    "beforeBad": 102,
+    "bad": 0,
+    "normalMeshes": 2,
+    "defaultMaterials": 1,
+    "corners": 102
+  },
+  {
+    "id": "counter-set-01-08",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "counter-set-02-01",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 2,
+    "corners": 0
+  },
+  {
+    "id": "counter-set-02-02",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 2,
+    "corners": 0
+  },
+  {
+    "id": "counter-set-02-03",
+    "beforeBad": 1092,
+    "bad": 0,
+    "normalMeshes": 2,
+    "defaultMaterials": 2,
+    "corners": 1092
+  },
+  {
+    "id": "counter-set-02-04",
+    "beforeBad": 444,
+    "bad": 0,
+    "normalMeshes": 2,
+    "defaultMaterials": 1,
+    "corners": 444
+  },
+  {
+    "id": "counter-set-02-05",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "counter-set-02-06",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 1,
+    "corners": 0
+  },
+  {
+    "id": "touch-screen-portrait",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "tv-samsung-40",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 0,
+    "corners": 0
+  },
+  {
+    "id": "tv-65",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 0,
+    "corners": 0
+  },
+  {
+    "id": "tv-stand-console",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "tv-stand-pedestal",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "tv-stand-information",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "brochure-zigzag",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "panel-standard",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "panel-rounded",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "panel-swoop",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "fascia-step",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "panel-ribbon-slant",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "fascia-curved",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "fascia-wave",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "glass-panel",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "display-glass-case",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "lounge-sofa",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "pier-cross",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "pendant-ring",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "canopy-organic",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "portal-ribbon",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "canopy-ribbon",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "counter-corner-round",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "display-ring",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "panel-oculus",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "plant-trailing",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "planter-grass",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "pier-tree",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "display-organic",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "counter-fluted",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "entrance-frame",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "downlight-beam",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "counter-standard",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 0,
+    "corners": 0
+  },
+  {
+    "id": "shelf-standard",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "display-standard",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "screen-43",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "sign-floor",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "brand-artwork-copy",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "table-standard",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "chair-standard",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "bar-stool",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "high-table-stool-set",
+    "beforeBad": 6,
+    "bad": 0,
+    "normalMeshes": 2,
+    "defaultMaterials": 0,
+    "corners": 6
+  },
+  {
+    "id": "plant-medium",
+    "procedural": true,
+    "bad": 0
+  },
+  {
+    "id": "fixture-clear100",
+    "beforeBad": 1007,
+    "bad": 0,
+    "normalMeshes": 5,
+    "defaultMaterials": 1,
+    "corners": 1007
+  },
+  {
+    "id": "fixture-arm",
+    "beforeBad": 12426,
+    "bad": 0,
+    "normalMeshes": 9,
+    "defaultMaterials": 0,
+    "corners": 12426
+  },
+  {
+    "id": "fixture-downlight",
+    "beforeBad": 0,
+    "bad": 0,
+    "normalMeshes": 0,
+    "defaultMaterials": 0,
+    "corners": 0
+  }
+]
