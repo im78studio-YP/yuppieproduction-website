@@ -1577,7 +1577,7 @@ select:focus{border-color:var(--acc)}
         <button class="btn sm danger" id="assetAttachmentDelete" type="button">ลบ Asset</button>
       </div>
     </section>
-    <section class="asset-settings-section">
+    <section class="asset-settings-section" id="assetSurfaceSection">
       <h3>พื้นผิว</h3>
       <div class="asset-appearance-options" id="assetAppearanceOptions" role="group" aria-label="รูปแบบพื้นผิว Asset">
         <button class="btn sm" type="button" data-asset-appearance="original">วัสดุเดิม</button>
@@ -1791,12 +1791,13 @@ select:focus{border-color:var(--acc)}
 <script src="js/viewport-gizmo.js?v=20260916-1"></script>
 <link rel="stylesheet" href="css/measure-tape.css?v=20260916-axis-colors-4">
 <script src="js/measure-tape.js?v=20260916-axis-colors-4"></script>
-<link rel="stylesheet" href="css/asset-parts.css?v=20260918-path-3">
+<link rel="stylesheet" href="css/asset-parts.css?v=20260918-unified-1">
 <script src="js/asset-edge-glow.js?v=20260918-path-3"></script>
-<script src="js/asset-glow-path.js?v=20260918-red-cursor-1"></script>
-<script src="js/asset-parts.js?v=20260918-path-3"></script>
+<script src="js/asset-glow-path.js?v=20260918-red-cursor-2"></script>
+<script src="js/asset-surfaces.js?v=20260918-unified-1"></script>
+<script src="js/asset-parts.js?v=20260918-unified-1"></script>
 <script src="js/asset-surface-repair.js?v=20260918-1"></script>
-<script src="js/asset-face-stickers.js?v=20260918-1"></script>
+<script src="js/asset-face-stickers.js?v=20260918-surfaces-1"></script>
 <script src="js/my-asset-preview.js?v=20260918-surface1"></script>
 <script src="js/quick-setup.js?v=20260911-business"></script>
 <script src="js/business-brief.js?v=20260911-1"></script>
@@ -2968,11 +2969,13 @@ function normalizeSceneObjectModel(obj,item=objectCatalogDef(obj?.catalogId)){
   appearance.color=/^#[0-9a-fA-F]{6}$/.test(String(appearance.color||''))?String(appearance.color).toLowerCase():null;
   const customGLB=item?.customAsset===true||/^my-asset-/.test(String(obj.catalogId||''));
   appearance.mode=SCENE_APPEARANCE_MODES.includes(appearance.mode)?appearance.mode:(appearance.color?'tint':customGLB?'solid':'original');
+  if(appearance.finish&&!['original','matte','gloss','metal'].includes(appearance.finish))delete appearance.finish;
   if((appearance.mode==='tint'||appearance.mode==='solid')&&!appearance.color)appearance.color='#f5f5f5';
   appearance.textureData=typeof appearance.textureData==='string'&&appearance.textureData.startsWith('data:image/')?appearance.textureData:null;
   appearance.textureName=appearance.textureData?String(appearance.textureName||'สติ๊กเกอร์ Asset'):'';
   appearance.textureId=appearance.textureData?String(appearance.textureId||Date.now()):'';
   if(appearance.parts)appearance.parts=YPAssetParts.sanitize(appearance.parts);
+  if(appearance.surfaces)appearance.surfaces=YPAssetSurfaces.sanitize(appearance.surfaces);
   obj.appearance=appearance;
   YPAssetFaceStickers.normalize(obj);
   obj.label=String(obj.label||'').slice(0,60);
@@ -4253,6 +4256,7 @@ function changeSelectedAttachmentAnchor(){
 function syncAssetSettingsForm(){
   const obj=objectById(objectEditor.selectedId),modal=document.getElementById('mAssetSettings');if(!obj||!modal){closeAssetSettings();return;}
   const item=objectCatalogDef(obj.catalogId);normalizeSceneObjectModel(obj,item);document.getElementById('assetSettingsTitle').textContent=(modal.dataset.settingsMode==='advanced'?'ปรับตำแหน่ง · ':'ตั้งค่าอุปกรณ์ · ')+selectedAssetName(obj);
+  modal.dataset.unifiedAsset=String(!!YPAssetFaceStickers.supported(obj));
   document.getElementById('assetSettingsName').value=obj.label||'';
   ['W','D','H'].forEach(key=>{const prop=key.toLowerCase(),input=document.getElementById('assetSize'+key);input.min=MIN_ASSET_DIMENSION;input.max=MAX_ASSET_DIMENSION;input.value=Number(obj.size[prop]||0).toFixed(2);input.disabled=objectLocked(obj)||!obj.transformPolicy.canResize;});
   document.getElementById('assetSizeRangeNote').textContent=obj.transformPolicy.canResize?'ปรับกว้าง–ลึก–สูงได้ตั้งแต่ '+MIN_ASSET_DIMENSION+'–'+MAX_ASSET_DIMENSION+' ม. · กำหนดความสูงเกินผนังบูธได้':'ใช้เมนูเปลี่ยนขนาด → ย่อ–ขยายทั้งชิ้น เพื่อรักษารูปทรงเดิม';
@@ -4282,6 +4286,7 @@ function openAssetSettings(mode='surface'){
     if(source)showDockPage(page,source);
     announceCatalog('เปิดการตั้งค่า '+item.name+' แล้ว','success');return;
   }
+  if(mode!=='advanced'&&YPAssetFaceStickers.supported(obj)){if(objectLocked(obj)){announceCatalog('ปลดล็อกอุปกรณ์ก่อนแก้ไข','error');return;}return YPAssetParts.open();}
   const modal=document.getElementById('mAssetSettings');modal.dataset.settingsMode=mode==='advanced'?'advanced':'surface';
   window.YPAssetSettingsEnter?.reset();syncAssetSettingsForm();
   window.YPResizeSubmenu?.close();window.YPRotateSubmenu?.close();document.getElementById('moveAdvanced').open=false;
@@ -4365,7 +4370,7 @@ function setSelectedObjectSticker(file){
 }
 function resetSelectedObjectSurface(removeAll=true){
   const obj=objectById(objectEditor.selectedId);if(!obj||objectLocked(obj))return;normalizeSceneObjectModel(obj);const before=objectSnapshot();
-  if(YPAssetFaceStickers.supported(obj))YPAssetFaceStickers.remove(obj,removeAll);else{obj.appearance.textureData=null;obj.appearance.textureName='';obj.appearance.textureId='';}if(removeAll){obj.appearance.mode='original';obj.appearance.color=null;delete obj.appearance.parts;}recordObjectHistory(before);sync();syncAssetSettingsForm();
+  if(YPAssetFaceStickers.supported(obj))YPAssetFaceStickers.remove(obj,removeAll);else{obj.appearance.textureData=null;obj.appearance.textureName='';obj.appearance.textureId='';}if(removeAll){obj.appearance.mode='original';obj.appearance.color=null;delete obj.appearance.parts;delete obj.appearance.surfaces;}recordObjectHistory(before);sync();syncAssetSettingsForm();
 }
 function duplicateSelectedObject(){
   if(objectEditor.selectedId===SCENE_ASSET_IDS.brand)return duplicateBrandSceneAsset();
@@ -7242,7 +7247,7 @@ class ThreeBoothRenderer{
     const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.locked===true,o.visible!==false,o.position.x,o.position.y,o.position.z,o.rotationX,o.rotationY,o.rotationZ,o.orientation,
       o.size.w,o.size.d,o.size.h,o.unitPrice,o.structure?.projection,o.structure?.height,o.structure?.pierWidth,o.structure?.thickness,o.structure?.color,
       o.attachment?.targetId,o.attachment?.sourcePort,o.attachment?.targetPort,o.attachment?.status,o.transform?.flipX===true,o.transform?.flipY===true,o.transform?.flipZ===true,sceneObjectScaleValue(o),o.production?.reviewRequired===true,
-      o.label||'',o.groupId||'',o.appearance?.mode||'',o.appearance?.color||'',o.appearance?.textureId||'',o.appearance?.parts||null,o.logoFinish||null,YPAssetFaceStickers.key(o)]);
+      o.label||'',o.groupId||'',o.appearance?.mode||'',o.appearance?.color||'',o.appearance?.finish||'',o.appearance?.textureId||'',o.appearance?.parts||null,o.logoFinish||null,YPAssetFaceStickers.key(o),YPAssetSurfaces.key(o)]);
     return JSON.stringify([spec.wallPaintOverrides||{},spec.boothColorTheme||null,spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),wallStickers,spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
@@ -7999,17 +8004,10 @@ class ThreeBoothRenderer{
     if(globalThis.YPTVStands?.isStand(obj)){YPTVStands.appearance(this,root,obj);return;}
     if(YPTVAsset.isTV(objectCatalogDef(obj.catalogId))){YPTVAsset.appearance(this,root,obj);return;}
     YPAssetParts.capture(root);
-    const finishParts=()=>{YPAssetParts.seal(root);YPAssetParts.apply(root,obj.appearance?.parts,this.THREE);};
+    const finishParts=()=>{YPAssetParts.seal(root);YPAssetParts.apply(root,obj.appearance?.parts,this.THREE);YPAssetSurfaces.apply(this,root,YPAssetParts.entries(root),obj.appearance?.surfaces);};
     normalizeSceneObjectModel(obj);const T=this.THREE,appearance=obj.appearance||{},meshes=[];
     root.traverse(part=>{if(!part.isMesh||!part.material)return;const source=Array.isArray(part.material)?part.material:[part.material];
-      const cloned=source.map(material=>{
-        if(appearance.mode==='solid'&&!(obj.type==='ribbonPortal'&&part.name==='ribbon-white-stripe')&&part.name!=='step-fascia-accent'){
-          const next=new T.MeshStandardMaterial({color:appearance.color||'#f5f5f5',roughness:.72,metalness:.02,
-            side:material.side,flatShading:material.flatShading===true,transparent:false,opacity:1});
-          next.name=(material.name||'material')+'-solid-override';next.needsUpdate=true;return next;
-        }
-        const next=material.clone();if(appearance.mode==='tint'&&appearance.color&&next.color)next.color.set(appearance.color);next.needsUpdate=true;return next;
-      });
+      const cloned=source.map(material=>YPAssetParts.wholeMaterial(T,material,appearance,part));
       part.material=Array.isArray(part.material)?cloned:cloned[0];meshes.push(part);});
     if(YPAssetFaceStickers.supported(obj)){finishParts();YPAssetFaceStickers.apply(this,root,obj);return;}
     if(!appearance.textureData){finishParts();return;}
@@ -10414,7 +10412,7 @@ window.YPAssetEditorBridge={
 buildGeometryManifest(S);
 window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispose();},{once:true});
 </script>
-<script type="module" src="js/asset-editor/asset-editor.js?v=20260918-align-tags"></script>
+<script type="module" src="js/asset-editor/asset-editor.js?v=20260918-unified-1"></script>
 <script src="js/project-store.js?v=20260905-1"></script>
 <script src="js/template-area.js?v=20260910-template-area"></script>
 <script src="js/project-workspace.js?v=20260914-settings-split-1"></script>

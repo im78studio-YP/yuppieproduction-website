@@ -79,5 +79,5 @@
    dispose(){if(disposed)return;disposed=true;canvas.removeEventListener('pointermove',move);clearGuides();canvas.style.cursor=originalCursor;box.remove();}
   };
  }
- global.YPAssetGlowPath={create};
+ global.YPAssetGlowPath={create,selectionCursor};
 })(globalThis);

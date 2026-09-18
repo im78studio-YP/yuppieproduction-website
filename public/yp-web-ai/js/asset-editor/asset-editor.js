@@ -63,11 +63,8 @@ if(mount){
         </section>
         <section class="asset-editor-card">
           <h4>พื้นผิว</h4>
-          <div class="asset-editor-actions compact">
-            <button class="btn sm" data-ae-surface="original" type="button">วัสดุเดิม</button><button class="btn sm" data-ae-surface="tint" type="button">ย้อมสี</button><button class="btn sm" data-ae-surface="solid" type="button">สีล้วน</button>
-          </div>
-          <div class="asset-editor-color"><input data-ae-color type="color" value="#f5f5f5" aria-label="สี Asset"><output data-ae-color-code>#F5F5F5</output></div>
-          <div class="asset-editor-note" data-ae-surface-note style="margin-top:8px">อัปโหลดหรือลบสติ๊กเกอร์ได้ใน “ตั้งค่าละเอียด”</div>
+          <button class="btn pri" data-ae-action="details" type="button">แก้ไขพื้นผิวและสติ๊กเกอร์ · 3D</button>
+          <div class="asset-editor-note" data-ae-surface-note style="margin-top:8px">สี วัสดุ สติ๊กเกอร์ และไฟขอบ · แก้ในหน้าต่างเดียว</div>
         </section>
         <section class="asset-editor-card">
           <div class="asset-editor-actions compact">
@@ -98,13 +95,12 @@ if(mount){
     lockedControls().forEach(control=>control.disabled=selection.locked);
     $$('[data-ae-size]').forEach(input=>{if(document.activeElement!==input)input.value=format(selection.size[input.dataset.aeSize]);input.disabled=selection.locked||!selection.transformPolicy?.canResize||state.selectionCount!==1;input.title=selection.transformPolicy?.canResize?'':'ใช้เมนูเปลี่ยนขนาด → ย่อ–ขยายทั้งชิ้น';});
     $('[data-ae-action="reset-size"]').disabled=selection.locked||!selection.transformPolicy?.canResize||state.selectionCount!==1;
-    $('[data-ae-action="details"]').disabled=false;$('[data-ae-action="lock"]').disabled=false;$('[data-ae-action="lock"]').textContent=selection.locked?'Unlock':'Lock';
+    $$('[data-ae-action="details"]').forEach(button=>button.disabled=selection.locked);$('[data-ae-action="lock"]').disabled=false;$('[data-ae-action="lock"]').textContent=selection.locked?'Unlock':'Lock';
     $$('[data-ae-move]').forEach(button=>button.classList.toggle('on',button.dataset.aeMove===state.moveMode));
     $$('[data-ae-orientation]').forEach(button=>{button.classList.toggle('on',button.dataset.aeOrientation===selection.orientation);button.disabled=selection.locked||selection.canOrient===false;});
     $('[data-ae-orientation-note]').textContent=selection.canOrient===false?'Asset โครงสร้างชนิดนี้ล็อกแนววางไว้':'รักษาจุดกึ่งกลางฐาน · หมุนแกน X/Z อัตโนมัติ · Snap ใช้ขนาดหลังหมุน';
     $$('[data-ae-surface]').forEach(button=>button.classList.toggle('on',button.dataset.aeSurface===selection.appearance.mode));
-    const color=$('[data-ae-color]'),colorCode=$('[data-ae-color-code]'),hex=selection.appearance.color||'#f5f5f5';color.value=hex;color.disabled=selection.locked||selection.appearance.mode==='original';colorCode.textContent=hex.toUpperCase();
-    $('[data-ae-surface-note]').textContent=(selection.appearance.hasSticker?'มีสติ๊กเกอร์อยู่บน Asset · ':'')+'อัปโหลดหรือลบสติ๊กเกอร์ได้ใน “ตั้งค่าละเอียด”';
+    $('[data-ae-surface-note]').textContent=(selection.appearance.hasSticker?'มีสติ๊กเกอร์อยู่บน Asset · ':'')+'สี วัสดุ สติ๊กเกอร์ และไฟขอบ · บันทึกในหน้าต่างเดียว';
     $('[data-ae-action="undo"]').disabled=!state.canUndo;$('[data-ae-action="redo"]').disabled=!state.canRedo;
   }
 
@@ -120,7 +116,6 @@ if(mount){
   $$('[data-ae-align]').forEach(button=>button.addEventListener('click',()=>bridge()?.align?.(button.dataset.aeAlign)));
   $$('[data-ae-orientation]').forEach(button=>button.addEventListener('click',()=>bridge()?.setOrientation?.(button.dataset.aeOrientation)));
   $$('[data-ae-surface]').forEach(button=>button.addEventListener('click',()=>bridge()?.setAppearanceMode?.(button.dataset.aeSurface)));
-  $('[data-ae-color]').addEventListener('change',event=>bridge()?.setColor?.(event.target.value));
   mount.addEventListener('click',event=>{
     const action=event.target.closest('[data-ae-action]')?.dataset.aeAction;if(!action)return;const api=bridge();
     const commands={

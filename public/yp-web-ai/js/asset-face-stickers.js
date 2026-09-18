@@ -18,7 +18,7 @@
   // Keep the front-image alias for older integrations; never use it to wrap the model.
   a.textureData=out.front?.data||null;a.textureName=out.front?.name||'';a.textureId=out.front?.id||'';
  }
- const has=obj=>supported(obj)?Object.values(obj.appearance?.stickers||{}).some(s=>!!s.data):!!obj?.appearance?.textureData;
+ const has=obj=>(supported(obj)?Object.values(obj.appearance?.stickers||{}).some(s=>!!s.data):!!obj?.appearance?.textureData)||!!obj?.appearance?.surfaces?.some(s=>s.sticker?.data);
  const key=obj=>Object.entries(obj.appearance?.stickers||{}).map(([face,s])=>[face,s.id,!!s.data,s.w,s.h,s.mode,s.rotation,s.offsetX,s.offsetY,s.patternSize]);
  function geometry(T,root,face,settings){
   const f=faces[face],u=new T.Vector3(...f.u),v=new T.Vector3(...f.v),normal=new T.Vector3(...f.n);

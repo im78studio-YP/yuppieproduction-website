@@ -1,0 +1,46 @@
+const {chromium}=require('C:/Users/Admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});
+ try{const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&/Shader Error|VALIDATE_STATUS/.test(m.text()))errors.push(m.text());});
+ await page.goto('http://127.0.0.1:4173/yp-web-ai/index.html',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.YPProjectWorkspace?.state().ready);
+ await page.evaluate(async()=>{
+  YPQuickSetupBridge.close();document.getElementById('projectEntryDialog')?.close();const r=await loadThreeRenderer(),T=r.THREE,A=YPAssetSurfaces;
+  const cube=new T.Mesh(new T.BoxGeometry(1,1,1),new T.MeshStandardMaterial()),entry={node:cube,slot:0,key:'p.0:m0'};
+  for(let t=0;t<12;t++){if(A.region(T,entry,t).length!==2)throw Error('Box face leaked across hard edge '+t);if(A.region(T,entry,t,'triangle').length!==1)throw Error('Triangle mode');}
+  const cylinder=new T.Mesh(new T.CylinderGeometry(1,1,1,16),new T.MeshStandardMaterial()),ce={node:cylinder,slot:0,key:'p.1:m0'};
+  if(A.region(T,ce,0,'smooth').length!==32)throw Error('Smooth side should stop at caps');
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([0,0,0,1,0,0,0,1,0, 2,0,0,3,0,0,2,1,0],3));const dis={node:new T.Mesh(g,new T.MeshStandardMaterial()),slot:0};if(A.region(T,dis,0).length!==1)throw Error('Disconnected face included');
+  const bad=A.sanitize([{key:'__proto__',triangles:[0]},{key:'p.0:m0',triangles:[0,0,-1,NaN,1],sticker:{data:'https://bad/image'}}]);if(bad.length!==1||bad[0].triangles.length!==2||bad[0].sticker)throw Error('Sanitization');
+  Object.assign(S,{type:'island',W:6,D:6,stSize:'none',objects:[makeCatalogObject('standee-07',2,3),makeCatalogObject('standee-07',4,3)]});sync();await r.waitForSceneAssets(15000,BoothSpec);selectObject(S.objects[0].id);openAssetSettings();window.originalSurfacesState=JSON.stringify(S.objects.map(o=>o.appearance));
+ });
+ const open=async()=>{await page.evaluate(()=>openAssetSettings());await page.locator('.asset-parts-dialog canvas').waitFor();await page.locator('#assetPickMode').selectOption('part');await page.locator('#assetPickMode').selectOption('surface');};
+ const pick=async(wait=true)=>{const b=await page.locator('.asset-parts-dialog canvas').boundingBox();await page.mouse.click(b.x+b.width*.5,b.y+b.height*.5);if(wait)await page.waitForFunction(()=>document.querySelector('[data-surface-info]').textContent.startsWith('เลือก '));};
+ await open();assert.equal(await page.locator('#assetPartMode').isVisible(),false);await pick();
+ const surfaceCursor=await page.locator('.asset-parts-dialog canvas').evaluate(el=>getComputedStyle(el).cursor);
+ assert.match(decodeURIComponent(surfaceCursor),/fill="#ff303b"/,'surface mode uses red arrow');
+ assert.match(surfaceCursor,/2 2, pointer$/,'hotspot at arrow tip');
+ await page.locator('#assetPickMode').selectOption('part');assert.equal(await page.locator('.asset-parts-dialog canvas').evaluate(el=>el.style.cursor),'');
+ await page.locator('#assetPickMode').selectOption('surface');assert.equal(await page.locator('.asset-parts-dialog canvas').evaluate(el=>getComputedStyle(el).cursor),surfaceCursor);
+ await page.locator('.surface-selection-options summary').click();await page.locator('#assetSurfaceAdd').check();await pick(false);
+ assert.equal(await page.locator('#assetSurfaceMode').isDisabled(),true,'click selected region removes it');
+ await page.locator('#assetSurfaceAdd').uncheck();await page.locator('.surface-selection-options summary').click();await pick();
+ await page.locator('#assetPatchColor').fill('#11aa66');await page.locator('#assetSurfaceFinish').selectOption('metal');
+ assert.equal(await page.evaluate(()=>JSON.stringify(S.objects.map(o=>o.appearance))===originalSurfacesState),true,'draft isolation');
+ await page.locator('.asset-parts-dialog footer [data-part-close]').click();assert.equal(await page.evaluate(()=>JSON.stringify(S.objects.map(o=>o.appearance))===originalSurfacesState),true,'cancel isolation');
+ await open();await pick();await page.locator('#assetPatchColor').fill('#11aa66');await page.locator('#assetSurfaceFinish').selectOption('matte');
+ const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=400;c.height=200;const x=c.getContext('2d');x.fillStyle='white';x.fillRect(0,0,400,200);x.fillStyle='#e90077';x.fillRect(0,0,80,200);x.fillStyle='black';x.font='bold 42px sans-serif';x.fillText('SURFACE',95,110);return c.toDataURL();});
+ await page.locator('[data-surface-tab="sticker"]').click();await page.locator('#assetSurfaceImage').setInputFiles({name:'surface.png',mimeType:'image/png',buffer:Buffer.from(png.split(',')[1],'base64')});await page.waitForFunction(()=>!document.querySelector('#assetSurfaceMode').disabled);
+ await page.locator('#assetSurfaceFit').selectOption('cover');await page.locator('[data-surface-rotate]').click();await page.locator('[data-surface-highlight]').uncheck();
+ await page.screenshot({path:'qa/smart-snap/asset-surfaces-desktop.png'});
+ await page.locator('[data-part-save]').click();
+ await page.evaluate(async()=>{await threeRenderer.waitForSceneAssets(15000,BoothSpec);const p=S.objects[0].appearance.surfaces;if(p.length!==1||p[0].color!=='#11aa66'||p[0].sticker.rotation!==90)throw Error('Surface save');if(S.objects[1].appearance.surfaces?.length)throw Error('Changed other instance');const root=threeRenderer.objectMeshes.get(S.objects[0].id),overlays=[];root.traverse(n=>{if(n.userData.assetSurfaceOverlay)overlays.push(n);});if(overlays.length!==2)throw Error('Expected colour and image overlays, got '+overlays.length);if(YPAssetParts.entries(root).some(e=>e.node.userData.assetSurfaceOverlay))throw Error('Overlay selectable as real part');window.savedSurface=JSON.stringify(p);});
+ await page.evaluate(()=>undoObjectChange());assert.equal(await page.evaluate(()=>S.objects[0].appearance.surfaces?.length||0),0);await page.evaluate(()=>redoObjectChange());assert.equal(await page.evaluate(()=>JSON.stringify(S.objects[0].appearance.surfaces)===savedSurface),true);
+ await page.evaluate(async()=>{const project=YPProjectStore.fromText(await YPProjectStore.toText(YPProjectStore.create(YPProjectBridge.capture())));YPProjectBridge.restore(project.variants.A);await threeRenderer.waitForSceneAssets(15000,BoothSpec);if(JSON.stringify(S.objects[0].appearance.surfaces)!==savedSurface)throw Error('Project roundtrip');selectObject(S.objects[0].id);openAssetSettings();});
+ await open();await pick();assert.equal(await page.locator('#assetPatchColor').inputValue(),'#11aa66');
+ await page.locator('#assetPickMode').selectOption('part');assert.equal(await page.locator('#assetPartMode').isVisible(),true);await page.locator('#assetPickMode').selectOption('surface');
+ await page.setViewportSize({width:390,height:844});await page.locator('#assetPickMode').scrollIntoViewIfNeeded();await page.screenshot({path:'qa/smart-snap/asset-surfaces-mobile.png'});
+ assert.equal(await page.locator('.asset-parts-dialog').evaluate(el=>el.getBoundingClientRect().right<=innerWidth+1),true);
+ await page.locator('[data-surface-reset]').click();await page.locator('[data-part-save]').click();assert.equal(await page.evaluate(()=>S.objects[0].appearance.surfaces.length),0);
+ assert.deepEqual(errors,[]);console.log('PASS: planar/curved/triangle topology, disconnected faces, UI picking/highlight, isolated colour/finish/image, cancel/save, undo/redo, project roundtrip, reset, desktop/mobile');
+ }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});
