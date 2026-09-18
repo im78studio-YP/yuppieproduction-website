@@ -799,7 +799,7 @@ select:focus{border-color:var(--acc)}
 @media(prefers-reduced-motion:reduce){.quick-setup-step.is-entering{animation:none}}
 </style>
 <link rel="stylesheet" href="css/asset-editor.css?v=20260829-3">
-<link rel="stylesheet" href="css/project-workspace.css?v=20260910-template-area">
+<link rel="stylesheet" href="css/project-workspace.css?v=20260918-asset-selection">
 <link rel="stylesheet" href="css/budget-estimate.css?v=20260914-1">
 </head>
 <body>
@@ -3819,6 +3819,11 @@ function positionObjectToolbar(){
     x=clampNumber(viewCenter,pad+estimatedWidth/2,window.innerWidth-pad-estimatedWidth/2);
   toolbar.style.setProperty('--context-x',x+'px');toolbar.style.removeProperty('--context-y');toolbar.classList.remove('context-below');
 }
+function openSelectedAssetEditor(){
+  if(!selectedObjectIds().length)return;
+  setAssetTab('editor');
+  showDockPage('catalog',document.querySelector('.dock-tool[data-dock-page="catalog"]'));
+}
 function selectObject(id,options={}){
   logoEditor.selected=false;
   const previousPrimary=objectEditor.selectedId,obj=objectById(id),additive=options.additive===true||options.toggle===true||objectEditor.multiSelect===true;
@@ -3832,6 +3837,7 @@ function selectObject(id,options={}){
     }else{setObjectSelection(unitIds,id);if(previousPrimary!==id){objectEditor.moveMode='smart';objectEditor.transformMode='move';}}
   }
   syncObjectControls();if(threeRenderer)threeRenderer.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
+  if(options.openEditor&&obj)openSelectedAssetEditor();
   if(!additive)globalThis.YPLogoReplacement?.onSelect(id);
   if(S.view==='plan')render();
 }
@@ -6121,9 +6127,18 @@ class ThreeBoothRenderer{
     this.verticalDragPlane=new THREE.Plane();this.verticalDragPoint=new THREE.Vector3();
     this.logoDragPlane=new THREE.Plane();this.logoDragPoint=new THREE.Vector3();
     this.resizeDragPlane=new THREE.Plane();this.resizeDragPoint=new THREE.Vector3();
-    this.onObjectPointerDown=e=>this.beginObjectDrag(e);
-    this.onObjectPointerMove=e=>this.moveObjectDrag(e);
-    this.onObjectPointerUp=e=>this.finishObjectDrag(e);
+    this.onObjectPointerDown=e=>{this.assetEditorClick=null;this.beginObjectDrag(e);};
+    this.onObjectPointerMove=e=>{
+      const click=this.assetEditorClick;
+      if(click&&Math.hypot(e.clientX-click.x,e.clientY-click.y)>5)this.assetEditorClick=null;
+      this.moveObjectDrag(e);
+    };
+    this.onObjectPointerUp=e=>{
+      const click=this.assetEditorClick,moved=this.pointerDrag?.moved;this.assetEditorClick=null;
+      this.finishObjectDrag(e);
+      // Open after release so resizing the viewport cannot move the object under the pointer.
+      if(e.type==='pointerup'&&click?.pointerId===e.pointerId&&!moved&&objectEditor.selectedId===click.id)openSelectedAssetEditor();
+    };
     this.onObjectLostPointerCapture=e=>this.finishObjectDrag(e);
     this.onObjectPointerLeave=()=>{if(!this.pointerDrag){this.setHoveredAnchorMarker(null);this.setHoveredResizeHandle(null);}};
     this.renderer.domElement.addEventListener('pointerdown',this.onObjectPointerDown,true);
@@ -6954,6 +6969,7 @@ class ThreeBoothRenderer{
     event.preventDefault();event.stopImmediatePropagation();positionObjectToolbar(event.clientX,event.clientY);
     const additive=objectEditor.multiSelect||event.shiftKey||event.ctrlKey||event.metaKey;
     selectObject(id,{additive});
+    if(selectedObjectIds().includes(id))this.assetEditorClick={id,pointerId:event.pointerId,x:event.clientX,y:event.clientY};
     if(additive)return;
     if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กด Unlock เพื่อแก้ไขตำแหน่ง','error');return;}
     const memberIds=selectedObjectIds(),members=memberIds.map(objectById).filter(Boolean);
@@ -8739,7 +8755,7 @@ function bindPlanObjectInteractions(container){
   container.onpointerup=finish;container.onpointercancel=finish;
   container.querySelectorAll('.plan-object').forEach(node=>{
     const activate=restoreFocus=>{
-      const id=node.dataset.objectId;selectObject(id);
+      const id=node.dataset.objectId;selectObject(id,{openEditor:true});
       if(restoreFocus)requestAnimationFrame(()=>[...container.querySelectorAll('.plan-object')].find(item=>item.dataset.objectId===id)?.focus());
     };
     node.addEventListener('click',()=>{if(Date.now()<(container._planIgnoreClickUntil||0))return;activate(false);});
@@ -10139,7 +10155,7 @@ window.YPProjectBridge={
       apply(next);renderMyAssetList();window.YPQuickSetupBridge.close();
     }catch(error){CUSTOM_ASSETS.splice(0,CUSTOM_ASSETS.length,...previousCatalog);apply(previous.spec);Object.assign(objectEditor,previousEditor);lastValidLayout=previousLayout;syncObjectControls();renderMyAssetList();throw error;}
   },
-  basicMode(){if(objectEditor.transformMode==='scale')setObjectTransformMode('move');const detail=document.getElementById('moveAdvanced');if(detail)detail.open=false;if(document.querySelector('[data-asset-tab="editor"]')?.getAttribute('aria-selected')==='true')setAssetTab('catalog');},
+  basicMode(){if(objectEditor.transformMode==='scale')setObjectTransformMode('move');const detail=document.getElementById('moveAdvanced');if(detail)detail.open=false;},
 };
 window.YPStarterBridge={
   context(){
@@ -10291,7 +10307,7 @@ window.YPAssetEditorBridge={
 buildGeometryManifest(S);
 window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispose();},{once:true});
 </script>
-<script type="module" src="js/asset-editor/asset-editor.js?v=20260914-sizing"></script>
+<script type="module" src="js/asset-editor/asset-editor.js?v=20260918-flip-front-back"></script>
 <script src="js/project-store.js?v=20260905-1"></script>
 <script src="js/template-area.js?v=20260910-template-area"></script>
 <script src="js/project-workspace.js?v=20260914-settings-split-1"></script>

@@ -50,7 +50,7 @@ if(mount){
           <div class="asset-editor-actions compact">
             <button class="btn sm" data-ae-move="smart" type="button">Smart Move</button><button class="btn sm" data-ae-move="plane" type="button">พื้น X/Z</button><button class="btn sm" data-ae-move="height" type="button">ระดับ Y</button>
             <button class="btn sm" data-ae-move="surface" type="button">Snap ผิว</button><button class="btn sm" data-ae-action="rotate" type="button">หมุน 45°</button><button class="btn sm" data-ae-action="lock" type="button">Lock</button>
-            <button class="btn sm" data-ae-action="flip-x" type="button">Flip ซ้าย–ขวา</button><button class="btn sm" data-ae-action="flip-y" type="button">Flip บน–ล่าง</button>
+            <button class="btn sm" data-ae-action="flip-x" type="button">Flip ซ้าย–ขวา</button><button class="btn sm" data-ae-action="flip-y" type="button">Flip บน–ล่าง</button><button class="btn sm" data-ae-action="flip-z" type="button">Flip หน้า–หลัง</button>
           </div>
         </section>
         <section class="asset-editor-card">
@@ -73,7 +73,7 @@ if(mount){
   const $$=selector=>[...mount.querySelectorAll(selector)];
   const bridge=()=>window.YPAssetEditorBridge;
   const format=value=>(Number(value)||0).toFixed(2);
-  const lockedControls=()=>$$('[data-ae-size],[data-ae-name],[data-ae-move],[data-ae-orientation],[data-ae-surface],[data-ae-color],[data-ae-action="reset-size"],[data-ae-action="rotate"],[data-ae-action="flip-x"],[data-ae-action="flip-y"],[data-ae-action="duplicate"],[data-ae-action="delete"]');
+  const lockedControls=()=>$$('[data-ae-size],[data-ae-name],[data-ae-move],[data-ae-orientation],[data-ae-surface],[data-ae-color],[data-ae-action="reset-size"],[data-ae-action="rotate"],[data-ae-action="flip-x"],[data-ae-action="flip-y"],[data-ae-action="flip-z"],[data-ae-action="duplicate"],[data-ae-action="delete"]');
 
   function syncEditor(){
     const api=bridge(),state=api?.getState?.()||{selection:null},selection=state.selection;
@@ -116,7 +116,7 @@ if(mount){
     const action=event.target.closest('[data-ae-action]')?.dataset.aeAction;if(!action)return;const api=bridge();
     const commands={
       'reset-size':()=>api?.resetSize?.(),'details':()=>api?.openSettings?.(),'rotate':()=>api?.rotate?.(),'lock':()=>api?.toggleLock?.(),
-      'flip-x':()=>api?.flip?.('x'),'flip-y':()=>api?.flip?.('y'),'duplicate':()=>api?.duplicate?.(),'delete':()=>api?.remove?.(),
+      'flip-x':()=>api?.flip?.('x'),'flip-y':()=>api?.flip?.('y'),'flip-z':()=>api?.flip?.('z'),'duplicate':()=>api?.duplicate?.(),'delete':()=>api?.remove?.(),
       'multi-select':()=>api?.toggleMultiSelect?.(),'group':()=>api?.group?.(),'ungroup':()=>api?.ungroup?.(),
       'undo':()=>api?.undo?.(),'redo':()=>api?.redo?.()
     };commands[action]?.();
