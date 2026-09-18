@@ -52,12 +52,14 @@
    const overlay=new T.Mesh(built.geometry,material);overlay.name='asset-face-sticker-'+face;overlay.userData={objectId:obj.id,systemHelper:true,assetFaceSticker:true,stickerFace:face};overlay.castShadow=false;overlay.receiveShadow=true;overlay.renderOrder=2;root.add(overlay);
   }
  }
+ // Saved offsets retain canvas coordinates (+Y down); convert only at UI boundaries.
+ function uiOffset(key,value){return key==='offsetY'?-(Number(value)||0):value;}
  let activeFace='front',activeObjectId=null;
  function init(){
   const host=document.getElementById('assetFaceStickerControls');if(!host)return;
-  host.innerHTML='<label class="asset-field">ด้านที่ติดสติ๊กเกอร์<select id="assetStickerFace">'+Object.entries(faces).map(([key,f])=>'<option value="'+key+'">'+f.label+'</option>').join('')+'</select></label><div class="note">ด้านอ้างอิงตามตัวอุปกรณ์ · ภาพและการตั้งค่าแยกกันแต่ละด้าน</div><div id="assetStickerTransform"><label class="asset-field">การจัดภาพ<select data-face-setting="mode"><option value="single">เต็มภาพ · ไม่ตัดภาพ</option><option value="cover">เต็มพื้นที่ · ครอปส่วนเกิน</option><option value="repeat">ลายซ้ำ</option></select></label><div class="asset-sticker-grid">'+[['w','กว้างภาพ (ม.)'],['h','สูงภาพ (ม.)'],['offsetX','เลื่อนซ้าย–ขวา (ม.)'],['offsetY','เลื่อนขึ้น–ลง (ม.)'],['patternSize','ขนาดลายซ้ำ (ม.)']].map(([key,label])=>'<label class="asset-field">'+label+'<input type="number" step="0.01" min="'+(key.startsWith('offset')?'-30':'0.01')+'" max="30" data-face-setting="'+key+'"></label>').join('')+'</div><div class="asset-settings-actions"><button type="button" class="btn sm" id="assetStickerRotate">หมุน 90°</button><button type="button" class="btn sm" id="assetStickerResetPlacement">คืนตำแหน่งภาพ</button></div></div>';
+  host.innerHTML='<label class="asset-field">ด้านที่ติดสติ๊กเกอร์<select id="assetStickerFace">'+Object.entries(faces).map(([key,f])=>'<option value="'+key+'">'+f.label+'</option>').join('')+'</select></label><div class="note">ด้านอ้างอิงตามตัวอุปกรณ์ · ภาพและการตั้งค่าแยกกันแต่ละด้าน</div><div id="assetStickerTransform"><label class="asset-field">การจัดภาพ<select data-face-setting="mode"><option value="single">เต็มภาพ · ไม่ตัดภาพ</option><option value="cover">เต็มพื้นที่ · ครอปส่วนเกิน</option><option value="repeat">ลายซ้ำ</option></select></label><div class="asset-sticker-grid">'+[['w','กว้างภาพ (ม.)'],['h','สูงภาพ (ม.)'],['offsetX','แนวนอน − ซ้าย / + ขวา (ม.)'],['offsetY','แนวตั้ง − ลง / + ขึ้น (ม.)'],['patternSize','ขนาดลายซ้ำ (ม.)']].map(([key,label])=>'<label class="asset-field">'+label+'<input type="number" step="0.01" min="'+(key.startsWith('offset')?'-30':'0.01')+'" max="30" data-face-setting="'+key+'"></label>').join('')+'</div><div class="asset-settings-actions"><button type="button" class="btn sm" id="assetStickerRotate">หมุน 90°</button><button type="button" class="btn sm" id="assetStickerResetPlacement">คืนตำแหน่งภาพ</button></div></div>';
   document.getElementById('assetStickerFace').onchange=e=>{activeFace=e.target.value;syncAssetSettingsForm();};
-  host.querySelectorAll('[data-face-setting]').forEach(input=>input.onchange=()=>change({[input.dataset.faceSetting]:input.value}));
+  host.querySelectorAll('[data-face-setting]').forEach(input=>input.onchange=()=>change({[input.dataset.faceSetting]:uiOffset(input.dataset.faceSetting,input.value)}));
   document.getElementById('assetStickerRotate').onclick=()=>{const obj=objectById(objectEditor.selectedId);change({rotation:((obj?.appearance?.stickers?.[activeFace]?.rotation||0)+90)%360});};
   document.getElementById('assetStickerResetPlacement').onclick=()=>change({w:null,h:null,offsetX:0,offsetY:0,rotation:0,mode:'single',patternSize:1});
  }
@@ -67,7 +69,7 @@
   host.hidden=!supported(obj);if(!supported(obj))return;normalize(obj);if(activeObjectId!==obj.id){activeObjectId=obj.id;activeFace='front';}
   const settings=clean(obj.appearance.stickers[activeFace]),f=faces[activeFace],locked=objectLocked(obj);
   document.getElementById('assetStickerFace').value=activeFace;
-  host.querySelectorAll('[data-face-setting]').forEach(input=>{const key=input.dataset.faceSetting;input.value=settings[key]??obj.size[key==='w'?f.w:f.h];input.disabled=locked||!settings.data;if(key==='patternSize')input.parentElement.hidden=settings.mode!=='repeat';});
+  host.querySelectorAll('[data-face-setting]').forEach(input=>{const key=input.dataset.faceSetting;input.value=uiOffset(key,settings[key])??obj.size[key==='w'?f.w:f.h];input.disabled=locked||!settings.data;if(key==='patternSize')input.parentElement.hidden=settings.mode!=='repeat';});
   document.getElementById('assetStickerTransform').hidden=!settings.data;
   ['assetStickerRotate','assetStickerResetPlacement'].forEach(id=>document.getElementById(id).disabled=locked);
   const preview=document.getElementById('assetStickerPreview');preview.src=settings.data||'';preview.classList.toggle('show',!!settings.data);
@@ -76,5 +78,5 @@
  }
  function setImage(obj,face,data,name,id){normalize(obj);obj.appearance.stickers[face]=clean({...obj.appearance.stickers[face],data,name,id});normalize(obj);}
  function remove(obj,all){normalize(obj);if(all)obj.appearance.stickers={};else delete obj.appearance.stickers[activeFace];normalize(obj);}
- global.YPAssetFaceStickers={faces,supported,clean,normalize,has,key,geometry,apply,init,syncForm,change,setImage,remove,currentFace:()=>activeFace};
+ global.YPAssetFaceStickers={uiOffset,faces,supported,clean,normalize,has,key,geometry,apply,init,syncForm,change,setImage,remove,currentFace:()=>activeFace};
 })(globalThis);

@@ -1794,10 +1794,10 @@ select:focus{border-color:var(--acc)}
 <link rel="stylesheet" href="css/asset-parts.css?v=20260918-studio-2">
 <script src="js/asset-edge-glow.js?v=20260918-path-3"></script>
 <script src="js/asset-glow-path.js?v=20260918-red-cursor-2"></script>
-<script src="js/asset-surfaces.js?v=20260918-unified-1"></script>
+<script src="js/asset-surfaces.js?v=20260918-offset-up-1"></script>
 <script src="js/asset-parts.js?v=20260918-studio-2"></script>
 <script src="js/asset-surface-repair.js?v=20260918-1"></script>
-<script src="js/asset-face-stickers.js?v=20260918-surfaces-1"></script>
+<script src="js/asset-face-stickers.js?v=20260918-offset-up-1"></script>
 <script src="js/my-asset-preview.js?v=20260918-surface1"></script>
 <script src="js/quick-setup.js?v=20260911-business"></script>
 <script src="js/business-brief.js?v=20260911-1"></script>
@@ -4795,7 +4795,7 @@ function boothGeometryPrompt(){
     const widthM=Math.min(wallFaceLength(S,face),Math.max(.1,promptSafeNumber(sticker.w))),heightM=Math.min(height,Math.max(.1,promptSafeNumber(sticker.h)));
     const horizontal=face==='back'?'กึ่งกลางแนวผนัง/แกน X':'กึ่งกลางแนวลึก/แกน Z';
     const display=sticker.mode==='repeat'?'ต่อลายโดยรักษาสัดส่วนเดิม · ขนาดลาย '+promptNumber(sticker.patternSize)+' ม.':sticker.mode==='cover'?'เต็มพื้นที่แบบรักษาสัดส่วนและตัดส่วนเกิน':'ภาพเดียวแบบรักษาสัดส่วน';
-    return'- สติ๊กเกอร์'+name+' ชื่อ '+(sticker.name||'ไฟล์กราฟิก')+': ขนาด '+promptNumber(widthM)+' × '+promptNumber(heightM)+' ม. · '+display+' · เลื่อนแนวนอน '+promptNumber(sticker.offsetX)+' ม. / แนวตั้ง '+promptNumber(sticker.offsetY)+' ม. · หมุนภาพ '+Number(sticker.rotation||0)+'° · วาง'+horizontal+'และกึ่งกลางแนวสูง Y · '+(face==='back'&&curve?'แนบโค้งตามผนัง R โดยรักษาความยาวภาพตามแนวโค้ง':'แนบระนาบเดียวกับผิวผนัง')+' · ห้ามบิดหรือยืดสัดส่วนภาพ และห้ามย้ายกรอบพื้นที่ติด';
+    return'- สติ๊กเกอร์'+name+' ชื่อ '+(sticker.name||'ไฟล์กราฟิก')+': ขนาด '+promptNumber(widthM)+' × '+promptNumber(heightM)+' ม. · '+display+' · เลื่อนแนวนอน '+promptNumber(sticker.offsetX)+' ม. / แนวตั้ง '+promptNumber(-Number(sticker.offsetY||0))+' ม. · หมุนภาพ '+Number(sticker.rotation||0)+'° · วาง'+horizontal+'และกึ่งกลางแนวสูง Y · '+(face==='back'&&curve?'แนบโค้งตามผนัง R โดยรักษาความยาวภาพตามแนวโค้ง':'แนบระนาบเดียวกับผิวผนัง')+' · ห้ามบิดหรือยืดสัดส่วนภาพ และห้ามย้ายกรอบพื้นที่ติด';
   });
   const floorLabel=(()=>{try{return floorName();}catch(e){return S.floor||'พื้นตามแบบ';}})();
   const activeCarpetUpload=activeCarpetTexture(S);
@@ -5880,11 +5880,12 @@ function appendStickerDisplayControls(card,values,commit,limits={}){
   const modes=el('div','sticker-mode-grid');STICKER_MODES.forEach(mode=>{const button=el('button','btn sm'+(values.mode===mode.k?' on':''),mode.n);button.type='button';
     button.onclick=()=>{commit('mode',mode.k,true);sync();};modes.appendChild(button);});card.appendChild(modes);
   const controls=el('div','floor-sticker-size'),maxX=Math.max(.1,Number(limits.x)||1),maxY=Math.max(.1,Number(limits.y)||1);
-  const live=(key,value)=>{commit(key,Number(value),true);if(threeRenderer)threeRenderer.currentKey='';render();updatePromptPreview();};
+  const storedValue=(key,value)=>key==='offsetY'&&limits.yUp?-(Number(value)||0):Number(value);
+  const live=(key,value)=>{commit(key,storedValue(key,value),true);if(threeRenderer)threeRenderer.currentKey='';render();updatePromptPreview();};
   const row=(key,label,min,max,step)=>{const wrap=el('div','floor-sticker-control'),lab=el('label',null,label),range=document.createElement('input'),number=document.createElement('input'),resetDefault=key==='patternSize'?1.2:0;
-    range.type='range';range.min=String(min);range.max=String(max);range.step=String(step);range.value=values[key];range.setAttribute('aria-label',label);
-    number.type='number';number.min=String(min);number.max=String(max);number.step=String(step);number.inputMode='decimal';number.value=Number(values[key]).toFixed(2);number.dataset.resetDefault=String(resetDefault);number.setAttribute('aria-label','ค่า'+label);
-    range.oninput=()=>{number.value=Number(range.value).toFixed(2);live(key,range.value);};range.onchange=()=>sync();number.onchange=()=>{commit(key,Number(number.value),true);sync();};
+    range.type='range';range.min=String(min);range.max=String(max);range.step=String(step);range.value=storedValue(key,values[key]);range.setAttribute('aria-label',label);
+    number.type='number';number.min=String(min);number.max=String(max);number.step=String(step);number.inputMode='decimal';number.value=storedValue(key,values[key]).toFixed(2);number.dataset.resetDefault=String(resetDefault);number.setAttribute('aria-label','ค่า'+label);
+    range.oninput=()=>{number.value=Number(range.value).toFixed(2);live(key,range.value);};range.onchange=()=>sync();number.onchange=()=>{commit(key,storedValue(key,number.value),true);sync();};
     wrap.append(lab,range,number,el('em',null,'ม.'));return wrap;};
   if(values.mode==='repeat')controls.appendChild(row('patternSize','ขนาดลาย',.1,Math.max(maxX,maxY)*2,.05));
   controls.append(row('offsetX',limits.xLabel||'เลื่อนแนวนอน',-maxX/2,maxX/2,.05),row('offsetY',limits.yLabel||'เลื่อนแนวตั้ง',-maxY/2,maxY/2,.05));
@@ -6051,7 +6052,7 @@ function buildWallStickerSettings(){
       sizeBox.append(makeControl('w','ความยาว',wallFaceLength(S,face)),makeControl('h','ความสูง',S.H));card.appendChild(sizeBox);
       appendStickerDisplayControls(card,{mode:sticker.mode,patternSize:sticker.patternSize,offsetX:sticker.offsetX,offsetY:sticker.offsetY},
         (key,value,touch)=>{const target=wallStickerFor(face);target[key]=value;if(touch)target.id=(target.id||0)+1;},
-        {x:sticker.w,y:sticker.h,xLabel:'เลื่อนแนวนอน',yLabel:'เลื่อนแนวตั้ง'});
+        {x:sticker.w,y:sticker.h,yUp:true,xLabel:'แนวนอน − ซ้าย / + ขวา',yLabel:'แนวตั้ง − ลง / + ขึ้น'});
       card.appendChild(el('div','lbl','หมุนภาพ'));
       const rotate=el('div','floor-sticker-rotate');[0,90,180,270].forEach(degree=>{const button=el('button','btn sm'+(Number(sticker.rotation||0)===degree?' on':''),degree+'°');button.type='button';
         button.onclick=()=>{setWallStickerRotation(face,degree);wallStickerFor(face).id++;sync();};rotate.appendChild(button);});card.appendChild(rotate);
