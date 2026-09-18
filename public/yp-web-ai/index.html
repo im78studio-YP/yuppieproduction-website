@@ -278,7 +278,8 @@ select:focus{border-color:var(--acc)}
 .my-asset-card{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);cursor:grab;transition:border-color .15s,background .15s,opacity .15s,box-shadow .15s}
 .my-asset-card:hover{border-color:var(--acc);background:rgba(var(--acc-rgb),.06)}
 .my-asset-card:active,.my-asset-card.dragging{cursor:grabbing;opacity:.58;border-color:var(--acc);box-shadow:0 0 0 2px rgba(var(--acc-rgb),.15)}
-.my-asset-icon{width:54px;height:54px;display:grid;place-items:center;border:1px solid rgba(var(--acc-rgb),.42);border-radius:8px;background:linear-gradient(145deg,#242a34,#14181f);color:var(--acc2);font:700 12px Inter,sans-serif;letter-spacing:.5px;user-select:none}
+.my-asset-icon{width:54px;height:54px;display:grid;place-items:center;border:1px solid rgba(var(--acc-rgb),.42);border-radius:8px;background:linear-gradient(145deg,#242a34,#14181f);color:var(--acc2);font:700 12px Inter,sans-serif;letter-spacing:.5px;user-select:none;overflow:hidden}
+.my-asset-icon img{display:block;width:100%;height:100%;object-fit:contain;background:#e8ebef}
 .my-asset-card b{display:block;color:var(--tx);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .my-asset-card small{display:block;margin-top:3px;color:var(--tx3);font-size:9.5px;line-height:1.35}
 .my-asset-actions{display:flex;gap:5px;align-items:center}
@@ -1788,6 +1789,7 @@ select:focus{border-color:var(--acc)}
 <script src="js/asset-edge-glow.js?v=20260918-path-3"></script>
 <script src="js/asset-glow-path.js?v=20260918-red-cursor-1"></script>
 <script src="js/asset-parts.js?v=20260918-path-3"></script>
+<script src="js/my-asset-preview.js?v=20260918-1"></script>
 <script src="js/quick-setup.js?v=20260911-business"></script>
 <script src="js/business-brief.js?v=20260911-1"></script>
 <script src="js/ai-staging.js?v=20260830-1"></script>
@@ -3583,6 +3585,11 @@ function myAssetPut(record){return openMyAssetDb().then(db=>new Promise((resolve
   const request=db.transaction(MY_ASSET_STORE,'readwrite').objectStore(MY_ASSET_STORE).put(record);
   request.onsuccess=()=>resolve(record);request.onerror=()=>reject(request.error||new Error('บันทึก My Asset ไม่สำเร็จ'));
 }));}
+function myAssetSavePreview(id,thumbnail){return openMyAssetDb().then(db=>new Promise((resolve,reject)=>{
+  const tx=db.transaction(MY_ASSET_STORE,'readwrite'),store=tx.objectStore(MY_ASSET_STORE),request=store.get(id);
+  request.onsuccess=()=>{if(request.result)store.put({...request.result,thumbnail});};
+  tx.oncomplete=()=>resolve();tx.onerror=tx.onabort=()=>reject(tx.error||new Error('บันทึกพรีวิวไม่สำเร็จ'));
+}));}
 function myAssetRemove(id){return openMyAssetDb().then(db=>new Promise((resolve,reject)=>{
   const request=db.transaction(MY_ASSET_STORE,'readwrite').objectStore(MY_ASSET_STORE).delete(id);
   request.onsuccess=()=>resolve();request.onerror=()=>reject(request.error||new Error('ลบ My Asset ไม่สำเร็จ'));
@@ -3624,7 +3631,7 @@ function normalizeMyAsset(record){
   const w=Number(size.w)>0?Number(size.w):1,d=Number(size.d)>0?Number(size.d):1,h=Number(size.h)>0?Number(size.h):1;
   if(record.catalogPromotion===YPTVAsset.id)return furnitureItem({...YPTVAsset.definition,catalogId:record.id,size:{w,d,h},customAsset:true,file:record.file,catalogPromotion:record.catalogPromotion,hiddenFromCatalog:true,createdAt:record.createdAt||0});
   return furnitureItem({catalogId:record.id,category:'my',type:'custom',name:record.name||'My Asset',icon:'GLB',size:{w,d,h},unitPrice:0,color:'#8d939b',
-    modelUrl:'custom',customAsset:true,file:record.file,createdAt:record.createdAt||0,
+    modelUrl:'custom',customAsset:true,file:record.file,createdAt:record.createdAt||0,thumbUrl:YPMyAssetPreview.valid(record.thumbnail)?record.thumbnail:null,
     placementPolicy:{preferredTarget:'floor',allowedTargets:['floor','wall','ceiling','storage-room','structure','asset','free'],requiresSurface:false,defaultSpawn:'front-staging',allowOutsideBooth:true},
     capabilities:['floorPlaceable','free3DPlaceable','surfaceSnappable','resizable','rotatable','styleable']});
 }
@@ -3670,6 +3677,7 @@ function renderMyAssetList(){
     });
     card.addEventListener('dragend',()=>{card.classList.remove('dragging');setAssetDropState(false);});
     actions.append(add,del);card.append(icon,info,actions);list.appendChild(card);
+    YPMyAssetPreview.attach(item,icon,myAssetSavePreview);
   });
 }
 function setAssetTab(tab){
