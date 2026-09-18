@@ -1795,6 +1795,7 @@ select:focus{border-color:var(--acc)}
 <script src="js/asset-edge-glow.js?v=20260918-path-3"></script>
 <script src="js/asset-glow-path.js?v=20260918-red-cursor-2"></script>
 <script src="js/asset-surfaces.js?v=20260918-offset-up-1"></script>
+<script src="js/plan-selection.js?v=20260918-1"></script>
 <script src="js/asset-parts.js?v=20260918-studio-2"></script>
 <script src="js/asset-surface-repair.js?v=20260918-1"></script>
 <script src="js/asset-face-stickers.js?v=20260918-offset-up-1"></script>
@@ -8765,13 +8766,13 @@ function planSVG(){
       shape.z+shape.axes[0].z*shape.half[0]*a+shape.axes[1].z*shape.half[1]*b));
     const points=ordered.map(point=>point.map(value=>value.toFixed(1)).join(',')).join(' '),center=P(shape.x,shape.z);
     const front=P(shape.x+shape.axes[1].x*shape.half[1]*.78,shape.z+shape.axes[1].z*shape.half[1]*.78);
-    const bounds=footprintSize(obj.size,obj.rotationY||0),selected=obj.id===objectEditor.selectedId,locked=objectLocked(obj),fill=item?.color||'#626b78';
+    const bounds=footprintSize(obj.size,obj.rotationY||0),selected=objectEditor.selectedIds.includes(obj.id)||obj.id===objectEditor.selectedId,locked=objectLocked(obj),fill=item?.color||'#626b78';
     const label=bounds.w*sc>=48&&bounds.d*sc>=25?name:(item?.icon||'▪');
     const aria=name+' · X '+obj.position.x.toFixed(2)+' เมตร · Z '+obj.position.z.toFixed(2)+' เมตร · หมุน '+(obj.rotationY||0)+' องศา'+(locked?' · ล็อกอยู่':'');
     let node=`<g class="plan-object${selected?' selected':''}${locked?' locked':''}" data-object-id="${esc(obj.id)}" role="button" tabindex="0"
       aria-label="${esc(aria)}" aria-pressed="${selected}"><title>${esc(aria)}</title>
       <polygon class="plan-footprint" points="${points}" fill="${fill}" fill-opacity=".88"
-        stroke="${locked?'#8a919c':selected?'#ff7ab8':'#d8dde5'}" stroke-width="${selected?'2.5':'1.15'}"/>`;
+        stroke="${selected?'#ff7ab8':locked?'#8a919c':'#d8dde5'}" stroke-width="${selected?'2.5':'1.15'}"/>`;
     node+=`<line x1="${center[0].toFixed(1)}" y1="${center[1].toFixed(1)}" x2="${front[0].toFixed(1)}" y2="${front[1].toFixed(1)}"
       stroke="#ff7ab8" stroke-width="1.4" marker-end="url(#plan-arrow)"/>`;
     node+=`<text x="${center[0].toFixed(1)}" y="${(center[1]+3.5).toFixed(1)}" fill="${inkOn(fill)}" font-size="9"
@@ -8821,16 +8822,18 @@ function planSVG(){
        font-family="Inter,sans-serif">กว้าง ${W} m</text>`;
   g+=`<text x="${(rr[0]+32).toFixed(1)}" y="${(rr[1]+4).toFixed(1)}" font-size="11" fill="#8a919c"
        text-anchor="middle" font-family="Inter,sans-serif">ลึก ${D} m</text>`;
-  return `<svg viewBox="0 0 ${VW} ${VH}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">${g}</svg>`;
+  g+='<text x="210" y="293" fill="#cbd1da" font-size="8" text-anchor="middle">ลากพื้นที่ว่างครอบเพื่อเลือก · Shift เพิ่มการเลือก · Esc ยกเลิก</text>';
+  return `<svg style="touch-action:none;user-select:none" viewBox="0 0 ${VW} ${VH}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">${g}</svg>`;
 }
 
 function bindPlanObjectInteractions(container){
-  let drag=null;
+  let drag=null;const marquee=globalThis.YPPlanSelection.bind(container);
   const point=event=>{const svg=container.querySelector('svg'),matrix=svg?.getScreenCTM();return matrix?new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse()):null;};
   container.onpointerdown=event=>{
+    if(marquee.down(event))return;
     const node=event.target.closest?.('.plan-object');if(!node||event.button!==0||event.isPrimary===false||event.shiftKey||event.ctrlKey||event.metaKey||objectEditor.multiSelect)return;
     const obj=objectById(node.dataset.objectId);if(!obj)return;
-    const ids=obj.groupId?groupObjectIds(obj.groupId):[obj.id],members=ids.map(objectById).filter(Boolean),start=point(event);
+    const selection=selectedObjectIds(),ids=selection.includes(obj.id)&&selection.length>1?selection:obj.groupId?groupObjectIds(obj.groupId):[obj.id],members=ids.map(objectById).filter(Boolean),start=point(event);
     if(!start||members.some(objectLocked))return;
     setObjectSelection(ids,obj.id);syncObjectControls();
     drag={pointerId:event.pointerId,id:obj.id,ids,start,before:objectSnapshot(),positions:Object.fromEntries(members.map(o=>[o.id,{...o.position}])),moved:false,
@@ -8838,6 +8841,7 @@ function bindPlanObjectInteractions(container){
     container.setPointerCapture(event.pointerId);event.preventDefault();
   };
   container.onpointermove=event=>{
+    if(marquee.move(event))return;
     if(!drag||event.pointerId!==drag.pointerId)return;const p=point(event);if(!p)return;
     const start=drag.positions[drag.id],dx=(p.x-drag.start.x)/drag.sc,dz=(p.y-drag.start.y)/drag.sc;
     if(!drag.moved&&Math.hypot(p.x-drag.start.x,p.y-drag.start.y)<1)return;
@@ -8848,6 +8852,7 @@ function bindPlanObjectInteractions(container){
     });event.preventDefault();
   };
   const finish=event=>{
+    if(marquee.up(event))return;
     if(!drag||event.pointerId!==drag.pointerId)return;const state=drag;drag=null;
     if(container.hasPointerCapture(event.pointerId))container.releasePointerCapture(event.pointerId);
     if(!state.moved)return;
@@ -8859,12 +8864,13 @@ function bindPlanObjectInteractions(container){
     });recordObjectHistory(state.before);if(threeRenderer)threeRenderer.currentKey='';sync();announceCatalog('ย้ายอุปกรณ์ในผังพื้นแล้ว'+(S.placementSnap===false?'':' · Snap to Grid '+placementStepLabel()),'success');
   };
   container.onpointerup=finish;container.onpointercancel=finish;
+  container.onlostpointercapture=event=>marquee.up(event);
   container.querySelectorAll('.plan-object').forEach(node=>{
-    const activate=restoreFocus=>{
-      const id=node.dataset.objectId;selectObject(id,{openEditor:true});
+    const activate=(restoreFocus,event)=>{
+      const id=node.dataset.objectId;selectObject(id,{openEditor:true,additive:!!(event?.shiftKey||event?.ctrlKey||event?.metaKey)});
       if(restoreFocus)requestAnimationFrame(()=>[...container.querySelectorAll('.plan-object')].find(item=>item.dataset.objectId===id)?.focus());
     };
-    node.addEventListener('click',()=>{if(Date.now()<(container._planIgnoreClickUntil||0))return;activate(false);});
+    node.addEventListener('click',event=>{if(Date.now()<(container._planIgnoreClickUntil||0))return;activate(false,event);});
     node.addEventListener('keydown',event=>{
       if(event.key==='Enter'||event.key===' '){event.preventDefault();activate(true);}
     });
@@ -9168,6 +9174,7 @@ function dimDiagram(){
 function render(){
   window.YPProjectWorkspace?.changed();
   const v=document.getElementById('view');
+  v._planSelectionDispose?.();v._planSelectionDispose=null;
   if(S.view==='three'){renderThreeView(v);return;}
   if(threeRenderer)threeRenderer.unmount(v);else v.classList.remove('three-active');
   if(S.view==='plan'){v.innerHTML=planSVG();bindPlanObjectInteractions(v);}
