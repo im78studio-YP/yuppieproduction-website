@@ -1,0 +1,42 @@
+const {chromium}=require('C:/Users/Admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});
+try{for(const mobile of [false,true]){
+ const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1440,height:1000},isMobile:mobile,hasTouch:mobile}),page=await context.newPage(),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&/Shader|WebGL|GL_INVALID/.test(m.text()))errors.push(m.text());});
+ await page.route('https://fonts.googleapis.com/**',route=>route.abort());await page.goto('http://127.0.0.1:4173/yp-web-ai/index.html',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.YPProjectWorkspace?.state().ready);
+ await page.evaluate(async()=>{YPQuickSetupBridge.close();S.type='island';S.W=6;S.D=6;S.objects=[];S.stSize='none';S.lights=false;const a=makeCatalogObject('counter-standard',2,3),b=makeCatalogObject('counter-standard',4,3);mutateObjects(()=>S.objects.push(a,b),a.id);await loadThreeRenderer();await threeRenderer.waitForSceneAssets(15000,BoothSpec);closeDockPanel(false);openAssetSettings();});
+ const snapshot=await page.evaluate(()=>objectSnapshot());
+ const open=async()=>{await page.locator('#assetEditParts').click();await page.locator('.asset-parts-dialog canvas').waitFor();await page.locator('#assetPartList').selectOption('1');};
+ const point=fractions=>page.evaluate(fractions=>{
+  const T=threeRenderer.THREE,root=threeRenderer.objectMeshes.get(S.objects[0].id),key=YPAssetParts.entries(root)[1].key,model=root.clone(true),helpers=[];model.traverse(n=>{if(n.userData.partEdgeGlow)helpers.push(n);});helpers.forEach(n=>n.removeFromParent());model.position.set(0,0,0);model.rotation.set(0,0,0);model.scale.set(1,1,1);model.updateMatrixWorld(true);
+  let node=model;for(const i of key.split(':')[0].split('.').slice(1))node=node.children[+i];node.geometry.computeBoundingBox();const box=node.geometry.boundingBox,size=box.getSize(new T.Vector3()),local=box.min.clone().add(new T.Vector3(...fractions).multiply(size));
+  const rect=document.querySelector('.asset-parts-view canvas').getBoundingClientRect(),camera=new T.PerspectiveCamera(40,rect.width/rect.height,.01,1000),bounds=new T.Box3().setFromObject(model),center=bounds.getCenter(new T.Vector3()),radius=Math.max(bounds.getSize(new T.Vector3()).length()/2,.1),distance=radius/Math.sin(Math.atan(Math.tan(camera.fov*Math.PI/360)*Math.min(1,camera.aspect)))*1.15;
+  camera.position.copy(center).add(new T.Vector3(1,.65,1.25).normalize().multiplyScalar(distance));camera.lookAt(center);camera.updateMatrixWorld();const p=node.localToWorld(local).project(camera);return {x:rect.left+(p.x+1)*rect.width/2,y:rect.top+(1-p.y)*rect.height/2};
+ },fractions);
+ const click=async fractions=>{const p=await point(fractions);if(mobile)await page.touchscreen.tap(p.x,p.y);else await page.mouse.click(p.x,p.y);};
+ const saved=()=>page.evaluate(()=>{const part=Object.values(S.objects[0].appearance.parts||{}).find(v=>v.edgeGlow),root=threeRenderer.objectMeshes.get(S.objects[0].id),effects=[];root.traverse(n=>{if(n.userData.partEdgeGlow)effects.push(n.geometry.attributes.position.count);});return {glow:part?.edgeGlow,effects,other:S.objects[1].appearance.parts};});
+ await open();const cursor=()=>page.locator('.asset-parts-dialog canvas').evaluate(c=>getComputedStyle(c).cursor),originalCursor=await cursor();
+ await page.locator('#assetPartGlow').check();await page.locator('#assetGlowPathMode').selectOption('selected');
+ assert.match(decodeURIComponent(await cursor()),/fill="#ff303b"/,'edge selection uses red arrow');
+ await page.locator('#assetGlowPathEdit').click();assert.equal(await cursor(),originalCursor,'stop restores cursor');
+ await page.locator('#assetGlowPathEdit').click();assert.match(decodeURIComponent(await cursor()),/fill="#ff303b"/);
+ await click([.5,1,1]);assert.match(await page.locator('#assetGlowPathHint').textContent(),/1 เส้น/);
+ await click([.5,1,1]);assert.match(await page.locator('#assetGlowPathHint').textContent(),/0 เส้น/);
+ await click([.5,1,1]);assert.equal(await page.evaluate(()=>objectSnapshot()),snapshot,'selection is preview only');await page.locator('[data-part-save]').click();
+ let result=await saved();assert.equal(result.glow.pathMode,'selected');assert.equal(result.glow.segments.length,1);assert.deepEqual(result.effects,[6]);assert.equal(result.other,undefined);
+ await open();await page.locator('#assetGlowPathMode').selectOption('custom');
+ assert.match(decodeURIComponent(await cursor()),/fill="#ff303b"/,'surface route uses red arrow');
+ await click([.2,.2,1]);await page.locator('[data-part-save]').click();assert.equal(await page.locator('.asset-parts-dialog').count(),1,'one point cannot save a line');
+ await click([.65,.7,1]);await click([.85,.7,1]);assert.match(await page.locator('#assetGlowPathHint').textContent(),/2 เส้น/);
+ await page.locator('#assetGlowPathBreak').click();await page.locator('#assetGlowPathUndo').click();assert.match(await page.locator('#assetGlowPathHint').textContent(),/1 เส้น/);
+ // Undo removed the horizontal segment. Recreate it as a new connected stroke.
+ await click([.65,.7,1]);await click([.85,.7,1]);assert.match(await page.locator('#assetGlowPathHint').textContent(),/2 เส้น/);
+ await page.locator('#assetGlowPathMode').scrollIntoViewIfNeeded();await page.screenshot({path:`qa/smart-snap/asset-glow-path-${mobile?'mobile':'desktop'}.png`});
+ await page.locator('[data-part-save]').click();result=await saved();assert.equal(result.glow.pathMode,'custom');assert.equal(result.glow.segments.length,2);assert.deepEqual(result.effects,[12]);assert.equal(result.other,undefined);
+ await page.evaluate(async()=>{const snapshot=YPProjectBridge.capture(),project=YPProjectStore.create(snapshot);YPProjectStore.validate(project);YPProjectBridge.restore(JSON.parse(JSON.stringify(project.variants.A)));await threeRenderer.waitForSceneAssets(15000,BoothSpec);selectObject(S.objects[0].id);openAssetSettings();});assert.deepEqual((await saved()).glow,result.glow);
+ await open();await page.locator('#assetGlowPathClear').click();await page.locator('.asset-parts-dialog footer [data-part-close]').click();assert.deepEqual((await saved()).glow,result.glow,'cancel clears only draft');
+ await open();await page.locator('#assetGlowPathClear').click();await page.locator('[data-part-save]').click();assert.deepEqual((await saved()).effects,[]);
+ await page.evaluate(()=>{closeAssetSettings();undoObjectChange();});assert.equal((await saved()).glow.segments.length,2,'Undo restores exact route');
+ assert.deepEqual(errors,[]);console.log('PASS',mobile?'mobile':'desktop','select/toggle one edge, two-segment surface route, undo/clear/cancel, project round-trip');await context.close();
+}}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

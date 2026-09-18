@@ -1784,6 +1784,10 @@ select:focus{border-color:var(--acc)}
 <script src="js/viewport-gizmo.js?v=20260916-1"></script>
 <link rel="stylesheet" href="css/measure-tape.css?v=20260916-axis-colors-4">
 <script src="js/measure-tape.js?v=20260916-axis-colors-4"></script>
+<link rel="stylesheet" href="css/asset-parts.css?v=20260918-path-3">
+<script src="js/asset-edge-glow.js?v=20260918-path-3"></script>
+<script src="js/asset-glow-path.js?v=20260918-red-cursor-1"></script>
+<script src="js/asset-parts.js?v=20260918-path-3"></script>
 <script src="js/quick-setup.js?v=20260911-business"></script>
 <script src="js/business-brief.js?v=20260911-1"></script>
 <script src="js/ai-staging.js?v=20260830-1"></script>
@@ -2951,6 +2955,7 @@ function normalizeSceneObjectModel(obj,item=objectCatalogDef(obj?.catalogId)){
   appearance.textureData=typeof appearance.textureData==='string'&&appearance.textureData.startsWith('data:image/')?appearance.textureData:null;
   appearance.textureName=appearance.textureData?String(appearance.textureName||'สติ๊กเกอร์ Asset'):'';
   appearance.textureId=appearance.textureData?String(appearance.textureId||Date.now()):'';
+  if(appearance.parts)appearance.parts=YPAssetParts.sanitize(appearance.parts);
   obj.appearance=appearance;
   obj.label=String(obj.label||'').slice(0,60);
   if(!obj.originalSize||typeof obj.originalSize!=='object')obj.originalSize={w:Number(obj.size?.w)||1,d:Number(obj.size?.d)||1,h:Number(obj.size?.h)||1};
@@ -4201,6 +4206,7 @@ function syncAssetSettingsForm(){
   document.getElementById('assetSurfaceNote').textContent=(notes[mode]||notes.original)+(obj.appearance.textureData?' · มีสติ๊กเกอร์ภาพซ้อนอยู่':'');
   syncAssetAttachmentForm(obj);
   window.YPAssetSettingsEnter?.sync(obj);
+  document.getElementById('assetEditParts').disabled=locked;
   YPTVAsset.settings(item,obj);
 }
 function openAssetSettings(mode='surface'){
@@ -4292,7 +4298,7 @@ function setSelectedObjectSticker(file){
 }
 function resetSelectedObjectSurface(removeAll=true){
   const obj=objectById(objectEditor.selectedId);if(!obj||objectLocked(obj))return;normalizeSceneObjectModel(obj);const before=objectSnapshot();
-  obj.appearance.textureData=null;obj.appearance.textureName='';obj.appearance.textureId='';if(removeAll){obj.appearance.mode='original';obj.appearance.color=null;}recordObjectHistory(before);sync();syncAssetSettingsForm();
+  obj.appearance.textureData=null;obj.appearance.textureName='';obj.appearance.textureId='';if(removeAll){obj.appearance.mode='original';obj.appearance.color=null;delete obj.appearance.parts;}recordObjectHistory(before);sync();syncAssetSettingsForm();
 }
 function duplicateSelectedObject(){
   if(objectEditor.selectedId===SCENE_ASSET_IDS.brand)return duplicateBrandSceneAsset();
@@ -7116,7 +7122,7 @@ class ThreeBoothRenderer{
     const objects=spec.objects.map(o=>[o.id,o.type,o.catalogId,o.locked===true,o.visible!==false,o.position.x,o.position.y,o.position.z,o.rotationX,o.rotationY,o.rotationZ,o.orientation,
       o.size.w,o.size.d,o.size.h,o.unitPrice,o.structure?.projection,o.structure?.height,o.structure?.pierWidth,o.structure?.thickness,o.structure?.color,
       o.attachment?.targetId,o.attachment?.sourcePort,o.attachment?.targetPort,o.attachment?.status,o.transform?.flipX===true,o.transform?.flipY===true,o.transform?.flipZ===true,sceneObjectScaleValue(o),o.production?.reviewRequired===true,
-      o.label||'',o.groupId||'',o.appearance?.color||'',o.appearance?.textureId||'',o.logoFinish||null]);
+      o.label||'',o.groupId||'',o.appearance?.mode||'',o.appearance?.color||'',o.appearance?.textureId||'',o.appearance?.parts||null,o.logoFinish||null]);
     return JSON.stringify([spec.wallPaintOverrides||{},spec.boothColorTheme||null,spec.W,spec.D,spec.H,spec.type,spec.cornerSide,spec.raise,spec.floor,spec.carpet,spec.tile,
       spec.wallCol,spec.wallMat,[...(spec.wallStickerFaces||[])].sort(),wallStickers,spec.primary,spec.secondary,spec.stSize,spec.stW,spec.stD,spec.stHmode,spec.stHv,
       spec.stPos,spec.stDoor,spec.stDoorType,spec.doorOff,spec.stSurf,spec.stPaint,spec.stFace,spec.lights,spec.lightFixture,spec.lightCol,
@@ -7870,6 +7876,8 @@ class ThreeBoothRenderer{
     if(globalThis.YPTouchScreen?.isTouch(obj)){YPTouchScreen.appearance(this,root,obj);return;}
     if(globalThis.YPTVStands?.isStand(obj)){YPTVStands.appearance(this,root,obj);return;}
     if(YPTVAsset.isTV(objectCatalogDef(obj.catalogId))){YPTVAsset.appearance(this,root,obj);return;}
+    YPAssetParts.capture(root);
+    const finishParts=()=>{YPAssetParts.seal(root);YPAssetParts.apply(root,obj.appearance?.parts,this.THREE);};
     normalizeSceneObjectModel(obj);const T=this.THREE,appearance=obj.appearance||{},meshes=[];
     root.traverse(part=>{if(!part.isMesh||!part.material)return;const source=Array.isArray(part.material)?part.material:[part.material];
       const cloned=source.map(material=>{
@@ -7881,7 +7889,7 @@ class ThreeBoothRenderer{
         const next=material.clone();if(appearance.mode==='tint'&&appearance.color&&next.color)next.color.set(appearance.color);next.needsUpdate=true;return next;
       });
       part.material=Array.isArray(part.material)?cloned:cloned[0];meshes.push(part);});
-    if(!appearance.textureData)return;
+    if(!appearance.textureData){finishParts();return;}
     // Logo copies can share the already-decoded brand image. Apply synchronously
     // so clean screenshots retain fascia branding after the final scene rebuild.
     const brandImage=obj.type==='brandCopy'?this.brandImages.get(appearance.textureData):null;
@@ -7889,14 +7897,14 @@ class ThreeBoothRenderer{
       const texture=new T.CanvasTexture(brandImage._ypRasterSource||brandImage);texture.colorSpace=T.SRGBColorSpace;
       meshes.forEach(part=>{const materials=Array.isArray(part.material)?part.material:[part.material];materials.forEach(material=>{
         material.map=texture;material.color?.set('#ffffff');material.transparent=true;material.alphaTest=.01;material.needsUpdate=true;
-      });});YPLogoFinishes.applyCopy(this,root,obj,texture);return;
+      });});YPLogoFinishes.applyCopy(this,root,obj,texture);finishParts();return;
     }
     const buildId=this.buildId,loader=new T.TextureLoader();loader.load(appearance.textureData,texture=>{
       if(buildId!==this.buildId||!root.parent){texture.dispose();return;}texture.colorSpace=T.SRGBColorSpace;texture.wrapS=T.ClampToEdgeWrapping;texture.wrapT=T.ClampToEdgeWrapping;
       meshes.forEach(part=>{const materials=Array.isArray(part.material)?part.material:[part.material];materials.forEach(material=>{
         material.map=texture;material.color?.set('#ffffff');material.transparent=true;material.alphaTest=.01;material.needsUpdate=true;});});
-      YPLogoFinishes.applyCopy(this,root,obj,texture);this.renderer.render(this.scene,this.camera);
-    },undefined,()=>announceCatalog('โหลดสติ๊กเกอร์ของ '+selectedAssetName(obj)+' ไม่สำเร็จ','error'));
+      YPLogoFinishes.applyCopy(this,root,obj,texture);finishParts();this.renderer.render(this.scene,this.camera);
+    },undefined,()=>{if(buildId===this.buildId){finishParts();announceCatalog('โหลดสติ๊กเกอร์ของ '+selectedAssetName(obj)+' ไม่สำเร็จ','error');}});
   }
   buildCatalogObject(obj){
     const T=this.THREE,item=objectCatalogDef(obj.catalogId),s=obj.size,root=new T.Group(),accent=palette().acc;
