@@ -1,0 +1,14 @@
+const {chromium}=require('C:/Users/Admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});try{
+ const page=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:4173/yp-web-ai/index.html',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.YPProjectWorkspace?.state().ready);
+ await page.evaluate(()=>{YPQuickSetupBridge.close();S.objects=[];showDockPage('catalog',document.querySelector('.dock-tool[data-dock-page="catalog"]'));});
+ const card=page.locator('#objectCatalog [data-catalog-id="imported-counter-circle-03"]');await card.scrollIntoViewIfNeeded();assert.match(await card.innerText(),/Counter_Circle_03/);await card.locator('img').evaluate(async img=>{img.loading='eager';await img.decode();if(img.naturalWidth!==320)throw Error('Thumbnail missing');});await card.click();
+ const result=await page.evaluate(async()=>{const obj=S.objects.find(o=>o.catalogId==='imported-counter-circle-03');if(!obj)throw Error('Not added');const r=await loadThreeRenderer();await r.waitForSceneAssets(15000,BoothSpec);const parts=YPAssetParts.entries(r.objectMeshes.get(obj.id));if(parts.length!==2)throw Error('Missing parts');const colors=parts.map(e=>({metalness:e.original.metalness,color:e.original.color?.getHexString()}));const project=YPProjectStore.fromText(await YPProjectStore.toText(YPProjectStore.create(YPProjectBridge.capture())));YPProjectBridge.restore(project.variants.A);await r.waitForSceneAssets(15000,BoothSpec);const saved=S.objects.find(o=>o.catalogId==='imported-counter-circle-03');if(!saved)throw Error('Project lost counter');selectObject(saved.id);openAssetSettings();return{size:saved.size,colors};});
+ assert.equal(result.size.w,1.2);assert.equal(result.size.d,.694);assert.equal(result.size.h,.816);assert.equal(result.colors.filter(c=>c.metalness===0&&c.color==='ffffff').length,1,'neutral fallback base');assert.equal(result.colors.filter(c=>c.metalness===.5&&c.color==='0000e7').length,1,'authored blue material');
+ await page.locator('.asset-parts-dialog canvas').waitFor();await page.screenshot({path:'qa/project-workspace/counter-circle-03-editor.png'});await page.keyboard.press('Escape');await page.evaluate(()=>showDockPage('catalog',document.querySelector('.dock-tool[data-dock-page="catalog"]')));await card.scrollIntoViewIfNeeded();await page.screenshot({path:'qa/project-workspace/counter-circle-03-catalog.png'});assert.deepEqual(errors,[]);console.log('PASS Counter_Circle_03 catalogue/preview, add, 2 source meshes, dimensions, authored blue and neutral base materials, project round-trip',JSON.stringify(result));
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
+
+
+
+
