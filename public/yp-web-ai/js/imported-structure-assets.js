@@ -7,13 +7,17 @@
     ['triangle-tray-wall','Triangle_Tray_wall_200x240x10cm','display',2,.1,2.4],
     ['tray-wall','Tray_wall_200x240x30cm','display',2,.3,2.4],
     ['wall-shelf-01','Wall_Shelf_01','display',1,.3,2.4],
+    ['shelf-01','Shelf_01','display',1.2,.45,2],
+    ['counter-circle-01','Counter_Circle_01','reception',3.078,3.3,.9],
+    ['counter-circle-02','Counter_Circle_02','reception',2.798,3,.9],
+    ['standee-acrylic-box','Standee_ArcylicBox','display',.4,.4,.95],
     ['wall-100x240','Wall_100x240x30CM','structure',1,.3,2.4],
     ['s-beam-01','S_Beam 01','structure',5.4,1.64,.2]
   ];
   root.YPImportedStructureAssets=entries.map(([id,name,category,w,d,h])=>({
     catalogId:'imported-'+id,name,category,type:'custom',icon:'▯',size:{w,d,h},unitPrice:0,color:'#f5f5f5',
     modelUrl:'assets/structure-imports/'+id+'.glb',thumbUrl:'assets/catalog-thumbnails/imported-'+id+'.webp',
-    sceneAssetType:id==='wall-shelf-01'?'Shelf':id==='s-beam-01'?'Beam':id==='facade-u-3x3'?'Fascia':category==='structure'?'Structure':'Product Display',sceneAssetCategory:category,
+    sceneAssetType:['wall-shelf-01','shelf-01'].includes(id)?'Shelf':['counter-circle-01','counter-circle-02'].includes(id)?'Counter':id==='s-beam-01'?'Beam':id==='facade-u-3x3'?'Fascia':category==='structure'?'Structure':'Product Display',sceneAssetCategory:category,
     placementPolicy:{preferredTarget:'floor',allowedTargets:['floor','wall','ceiling','storage-room','structure','asset','free'],requiresSurface:false,defaultSpawn:'front-staging',allowOutsideBooth:true},
     capabilities:['floorPlaceable','free3DPlaceable','surfaceSnappable','resizable','scalable','rotatable','styleable'],
     transformPolicy:{canResize:true,canScale:true,defaultMode:'resize',productionSensitive:false}
