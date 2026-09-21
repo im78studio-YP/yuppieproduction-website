@@ -1826,7 +1826,7 @@ select:focus{border-color:var(--acc)}
 <script src="js/budget-estimate.js?v=20260914-1"></script>
 <script src="js/studio-environment.js?v=20260911-1"></script>
 <script src="js/scene-asset-registry.js?v=20260901-1"></script>
-<script src="js/imported-structure-assets.js?v=20260919-counter-circle-03"></script>
+<script src="js/imported-structure-assets.js?v=20260921-counter-type-yp03"></script>
 <script src="js/standee-assets.js?v=20260918-1"></script>
 <script src="js/counter-set-assets.js?v=20260918-2"></script>
 <script src="js/asset-tags.js?v=20260918-1"></script>
@@ -9494,6 +9494,7 @@ function sync(){
   window.YPCornerTemplateUI?.syncType(S.type);
   window.YPIslandTemplateUI?.syncType(S.type);
   window.YPPhotoBackdropTemplateUI?.syncType(S.type);
+  window.YPPhoto360TemplateUI?.syncType(S.type);
   const cornerActive=S.type==='corner',cornerWrap=document.getElementById('cornerSideWrap');
   cornerWrap.hidden=!cornerActive;
   if(cornerActive)document.querySelectorAll('#oCornerSide .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.cornerSide));
@@ -10563,9 +10564,12 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/island-template-ui.js?v=20260911-yellow"></script>
 <script src="js/photo-backdrop-templates.js?v=20260921-1"></script>
 <script src="js/photo-backdrop-template-ui.js?v=20260921-1"></script>
+<script src="assets/branding/photo360-artwork.js?v=20260921-bd01"></script>
+<script src="js/photo360-templates.js?v=20260921-1"></script>
+<script src="js/photo360-template-ui.js?v=20260921-1"></script>
 <script src="js/logo-replacement.js?v=20260913-1"></script>
 <script src="js/inline-wizard.js?v=20260911-business"></script>
-<script src="js/template-entry.js?v=20260921-backdrop"></script>
+<script src="js/template-entry.js?v=20260921-photo360"></script>
 <link rel="stylesheet" href="css/responsive-tools.css?v=20260910-2">
 <script src="js/responsive-tools.js?v=20260910-2"></script>
 <link rel="stylesheet" href="css/template-mixer.css?v=20260911-1">
@@ -10590,6 +10594,6 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/wizard-v2.css?v=20260918-compact-1">
 <script src="js/wizard-model.js?v=20260921-photo-types"></script>
 <script src="js/wizard-logo.js?v=20260913-1"></script>
-<script src="js/wizard-v2.js?v=20260921-photo-backdrop-templates"></script>
+<script src="js/wizard-v2.js?v=20260921-photo360-templates"></script>
 </body>
 </html>

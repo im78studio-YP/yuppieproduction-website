@@ -1,0 +1,27 @@
+<!doctype html><html lang="th"><meta charset="utf-8"><title>Photo360 template — isolated verification</title>
+<style>body{margin:0;background:#16121b;color:white;font:16px system-ui}header{padding:12px;display:flex;gap:12px;align-items:center}button{padding:8px}iframe{border:0;width:960px;height:600px;display:block}p{margin:10px}</style>
+<header><button id="capture" disabled>สร้างภาพการ์ด Photo360</button><a id="image" hidden>ภาพ PNG</a><span id="status">กำลังโหลดพรีวิวแยกจากโปรเจกต์จริง</span></header>
+<iframe title="พรีวิว Photo Backdrop 360" id="preview"></iframe><p>QA only: no project drafts are read or saved. A/B are unchanged.</p>
+<script>
+const frame=document.getElementById('preview'),status=document.getElementById('status'),token=crypto.randomUUID();
+addEventListener('message',async e=>{
+ if(e.source!==frame.contentWindow||e.origin!==location.origin||e.data?.token!==token)return;
+ if(e.data.type==='ready'){
+  const style=frame.contentDocument.createElement('style');style.textContent='.viewport-gizmo,.three-hint{display:none!important}';frame.contentDocument.head.append(style);
+  const snap=frame.contentWindow.YPPhoto360TemplateBridge.snapshot('photo360-circle-stage');
+  frame.contentWindow.postMessage({channel:'yp-mixer',token,type:'render',revision:1,snapshot:snap},location.origin);
+ }
+ if(e.data.type==='rendered'){
+  const w=frame.contentWindow,r=await w.loadThreeRenderer(),s=w.YPProjectBridge.capture().spec;
+  const meshes=[];r.scene.traverse(o=>{if(o.isMesh)meshes.push(o.name);});
+  if(s.type!=='photo360'||s.wallRadius!==3.5||s.wallStickers.back.data!==w.YPPhoto360Artwork.data||!meshes.includes('photo360-platform')){status.textContent='FAIL: template data/platform mismatch';return;}
+  // Front-centred angle matches the supplied reference and shows the full curved graphic.
+  r.cancelCameraTransition();const T=r.THREE,b=r.presentationBounds(s),center=b.getCenter(new T.Vector3());r.camera.position.copy(center).add(new T.Vector3(0,3.4,10));r.controls.target.copy(center);r.camera.lookAt(center);r.controls.update();r.camera.updateMatrixWorld(true);
+  let extent=0;for(const x of [b.min.x,b.max.x])for(const y of [b.min.y,b.max.y])for(const z of [b.min.z,b.max.z]){const p=new T.Vector3(x,y,z).project(r.camera);extent=Math.max(extent,Math.abs(p.x),Math.abs(p.y));}if(extent>0){r.camera.zoom*=.86/extent;r.camera.updateProjectionMatrix();}r.renderer.render(r.scene,r.camera);
+  status.textContent='PASS · Photo360 · 6 × 3 × 2.4 ม. · R 3.50 · BD_01.png · แท่นวงกลม';document.getElementById('capture').disabled=false;
+ }
+ if(e.data.type==='error')status.textContent='FAIL: '+e.data.message;
+});
+document.getElementById('capture').onclick=async()=>{const r=await frame.contentWindow.loadThreeRenderer();r.renderer.render(r.scene,r.camera);const link=document.getElementById('image');link.href=r.renderer.domElement.toDataURL('image/png');link.download='photo360-circle-stage.png';link.hidden=false;};
+frame.src='/yp-web-ai/index.html?comparePreview=1&mixToken='+token;
+</script></html>
