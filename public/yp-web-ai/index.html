@@ -9493,6 +9493,7 @@ function sync(){
   window.YPPeninsularTemplateUI?.syncType(S.type);
   window.YPCornerTemplateUI?.syncType(S.type);
   window.YPIslandTemplateUI?.syncType(S.type);
+  window.YPPhotoBackdropTemplateUI?.syncType(S.type);
   const cornerActive=S.type==='corner',cornerWrap=document.getElementById('cornerSideWrap');
   cornerWrap.hidden=!cornerActive;
   if(cornerActive)document.querySelectorAll('#oCornerSide .opt').forEach(b=>b.classList.toggle('on',b.dataset.k===S.cornerSide));
@@ -10560,9 +10561,11 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/island-yellow-geometry.js?v=20260913-beams-1"></script>
 <script src="js/island-templates.js?v=20260911-yellow"></script>
 <script src="js/island-template-ui.js?v=20260911-yellow"></script>
+<script src="js/photo-backdrop-templates.js?v=20260921-1"></script>
+<script src="js/photo-backdrop-template-ui.js?v=20260921-1"></script>
 <script src="js/logo-replacement.js?v=20260913-1"></script>
 <script src="js/inline-wizard.js?v=20260911-business"></script>
-<script src="js/template-entry.js?v=20260910-entry-flow"></script>
+<script src="js/template-entry.js?v=20260921-backdrop"></script>
 <link rel="stylesheet" href="css/responsive-tools.css?v=20260910-2">
 <script src="js/responsive-tools.js?v=20260910-2"></script>
 <link rel="stylesheet" href="css/template-mixer.css?v=20260911-1">
@@ -10587,6 +10590,6 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <link rel="stylesheet" href="css/wizard-v2.css?v=20260918-compact-1">
 <script src="js/wizard-model.js?v=20260921-photo-types"></script>
 <script src="js/wizard-logo.js?v=20260913-1"></script>
-<script src="js/wizard-v2.js?v=20260921-photo-backdrop-default"></script>
+<script src="js/wizard-v2.js?v=20260921-photo-backdrop-templates"></script>
 </body>
 </html>

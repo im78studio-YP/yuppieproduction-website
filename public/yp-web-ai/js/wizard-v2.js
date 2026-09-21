@@ -3,10 +3,10 @@
  const $=id=>document.getElementById(id),modal=$('mRelease'),stage=modal.querySelector('.quick-setup-stage'),model=YPWizardModel;
  let session=null,preview=null,opener=null,filter='all',selected='blank';
  const labels=['ธุรกิจ','พื้นที่','แบบตั้งต้น','ปรับแต่ง','ตรวจสอบ'];
- const library=type=>({inline:YPInlineTemplates,corner:YPCornerTemplates,penin:YPPeninsularTemplates,island:YPIslandTemplates}[type]);
- const bridge=type=>({inline:YPInlineTemplateBridge,corner:YPCornerTemplateBridge,penin:YPPeninsularTemplateBridge,island:YPIslandTemplateBridge}[type]);
+ const library=type=>({inline:YPInlineTemplates,corner:YPCornerTemplates,penin:YPPeninsularTemplates,island:YPIslandTemplates,backdrop:YPPhotoBackdropTemplates}[type]);
+ const bridge=type=>({inline:YPInlineTemplateBridge,corner:YPCornerTemplateBridge,penin:YPPeninsularTemplateBridge,island:YPIslandTemplateBridge,backdrop:YPPhotoBackdropTemplateBridge}[type]);
  const template=()=>library(quickSetupDraft.boothType)?.templates.find(t=>t.id===selected);
- const imageFor=t=>'assets/'+({inline:'inline',corner:'corner',penin:'peninsular',island:'island'}[quickSetupDraft.boothType])+'-templates/'+t.id+(quickSetupDraft.boothType==='corner'?'-'+quickSetupDraft.cornerSide:'')+'.png';
+ const imageFor=t=>'assets/'+({inline:'inline',corner:'corner',penin:'peninsular',island:'island',backdrop:'photo-backdrop'}[quickSetupDraft.boothType])+'-templates/'+t.id+(quickSetupDraft.boothType==='corner'?'-'+quickSetupDraft.cornerSide:'')+'.png';
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
  const action=(text,fn,id)=>{const b=node('button',text,'btn');b.type='button';b.onclick=fn;if(id)b.id=id;return b;};
  function panel(key,title,description){

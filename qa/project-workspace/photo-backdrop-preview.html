@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="th"><meta charset="utf-8"><title>Photo Backdrop template verification — isolated preview</title>
+<style>body{margin:0;background:#16121b;color:white;font:16px system-ui}header{padding:12px;display:flex;gap:12px;align-items:center}button{padding:8px}iframe{border:0;width:960px;height:600px;display:block}p{margin:10px}</style>
+<header><button id="without" disabled>แบบ 1 ไม่มีโลโก้ตั้งพื้น</button><button id="with" disabled>แบบ 2 มีโลโก้ตั้งพื้น</button><button id="capture" disabled>สร้างภาพการ์ด</button><a id="image" hidden>ภาพ PNG</a><span id="status">กำลังโหลดพรีวิวแยกจากโปรเจกต์จริง</span></header>
+<iframe title="พรีวิวเทมเพลต Photo Backdrop" id="preview"></iframe>
+<p>QA only: comparePreview frame does not read or save project drafts. Neither A nor B is changed.</p>
+<script>
+ const frame=document.getElementById('preview'),status=document.getElementById('status'),token=crypto.randomUUID();let revision=0;
+ function render(id){status.textContent='กำลังแสดง '+id;frame.contentWindow.postMessage({channel:'yp-mixer',token,type:'render',revision:++revision,snapshot:frame.contentWindow.YPPhotoBackdropTemplateBridge.snapshot(id)},location.origin);}
+ addEventListener('message',e=>{if(e.source!==frame.contentWindow||e.origin!==location.origin||e.data?.token!==token)return;
+  if(e.data.type==='ready'){const style=frame.contentDocument.createElement('style');style.textContent='.viewport-gizmo,.three-hint{display:none!important}';frame.contentDocument.head.append(style);document.querySelectorAll('button').forEach(b=>b.disabled=false);render('backdrop-wall-only');}
+  if(e.data.type==='rendered')status.textContent='พร้อม · '+(revision===1?'ไม่มีโลโก้ตั้งพื้น':'ตรวจภาพก่อนบันทึก')+' · 6 × 3 × 2.4 ม.';
+  if(e.data.type==='error')status.textContent='ผิดพลาด: '+e.data.message;
+ });
+ document.getElementById('without').onclick=()=>render('backdrop-wall-only');document.getElementById('with').onclick=()=>render('backdrop-floor-logo');
+ document.getElementById('capture').onclick=async()=>{const r=await frame.contentWindow.loadThreeRenderer();r.renderer.render(r.scene,r.camera);const link=document.getElementById('image');link.href=r.renderer.domElement.toDataURL('image/png');link.download='backdrop.png';link.hidden=false;};
+ frame.src='/yp-web-ai/index.html?comparePreview=1&mixToken='+token;
+</script></html>
