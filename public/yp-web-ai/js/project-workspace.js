@@ -22,6 +22,8 @@
   document.getElementById('tagSize').after(restart);
   const $=id=>document.getElementById(id),status=(message,error=false)=>{ $('projectStatus').textContent=message;$('projectStatus').dataset.error=String(error); };
   let project=null,timer=0,ready=false,loading=false,busy=false,pendingDraft=null,revision=0,savedRevision=0,writeQueue=Promise.resolve(),advanced=false;
+  const history=window.YPDesignHistory.mount({bridge,available:()=>ready&&!loading&&!busy&&!pendingDraft,onRestored:changed});
+  window.YPDesignHistoryController=history;
   const dialog=document.createElement('dialog');dialog.className='project-dialog';dialog.setAttribute('aria-labelledby','projectDialogTitle');
   dialog.innerHTML='<h2 id="projectDialogTitle"></h2><p id="projectDialogText"></p><div class="project-dialog-actions"><button class="btn pri" id="projectConfirm" type="button">ยืนยัน</button><button class="btn" id="projectCancel" type="button">ยกเลิก</button></div>';
   document.body.append(dialog);
@@ -66,6 +68,7 @@
     if(dialog.open||entry.open)event.stopPropagation();
   },true);
   function refresh(){
+    history.update();
     if(!project)return;
     $('projectName').value=project.name;
     for(const slot of ['A','B']){const button=$('project'+slot);button.disabled=busy||!ready||!!pendingDraft;button.classList.toggle('on',project.active===slot);button.setAttribute('aria-pressed',String(project.active===slot));}
@@ -86,6 +89,7 @@
   }
   function changed(){
     if(!ready||loading)return;
+    history.observe();
     revision++;if(pendingDraft)return;
     status('มีการแก้ไข · กำลังรอบันทึกร่าง…');clearTimeout(timer);timer=setTimeout(persist,1200);
   }
@@ -96,9 +100,10 @@
     catch(error){const message='ทำรายการไม่สำเร็จ: '+error.message+' · แบบปัจจุบันยังอยู่';status(message,true);return detailed?{ok:false,code:error.code||'error',message}:false;}
     finally{busy=false;refresh();if(!pendingDraft&&!entry.open)releaseEntry();}
   }
-  function apply(value){
-    store.validate(value);loading=true;
-    try{bridge.restore(value.variants[value.active]);project=value;revision++;refresh();}
+  function apply(value,historyKind='reset'){
+    store.validate(value);history.flush();
+    const before=project?.active===value.active?bridge.capture():project?.variants[value.active]||bridge.initialSnapshot();loading=true;
+    try{bridge.restore(value.variants[value.active]);project=value;revision++;history.applied(historyKind,value.active,before,bridge.capture());refresh();}
     finally{loading=false;}
   }
   function download(text,name){
@@ -127,7 +132,7 @@
     snapshot();const next=store.clone(project);next.active=slot;
     // Selecting an unused slot starts an independent default design, not a copy.
     if(!next.variants[slot])next.variants[slot]=bridge.initialSnapshot();
-    apply(next);await persist();
+    apply(next,'switch');await persist();
   });
   $('projectName').oninput=event=>{if(project){project.name=event.target.value.trim().slice(0,80)||'บูธของฉัน';changed();}};
   async function recoverDraft(){
@@ -139,7 +144,7 @@
     if(!pendingDraft)return true;
     if(!await ask('เริ่มงานใหม่จากค่าเริ่มต้น?','ร่างอัตโนมัติเดิมทั้งแบบ A/B จะถูกแทนที่ หากต้องการเก็บไว้ ให้ยกเลิกแล้วเปิดร่างเดิมเพื่อบันทึกไฟล์ก่อน ไฟล์ที่ดาวน์โหลดและคลังอุปกรณ์ส่วนตัวจะไม่ถูกลบ','เริ่มใหม่'))return false;
     loading=true;
-    try{bridge.reset();project=store.create(bridge.capture());}finally{loading=false;}
+    try{bridge.reset();project=store.create(bridge.capture());history.reset(project.active,bridge.capture());}finally{loading=false;}
     pendingDraft=null;revision++;await persist();finishEntry();return true;
   }
   $('projectRecover').onclick=()=>run(recoverDraft);
@@ -149,8 +154,10 @@
       :'ขนาด รูปแบบบูธ วัสดุ สี โลโก้ แสง อุปกรณ์ และมุมกล้องในแบบ '+project.active+' จะกลับเป็นค่าเริ่มต้นทั้งหมด โดยไม่เปลี่ยนอีกแบบ A/B';
     if(!await ask('เริ่มแบบใหม่เป็นค่าเริ่มต้น?',message+' ไฟล์ที่ดาวน์โหลดและคลังอุปกรณ์ส่วนตัวจะไม่ถูกลบ','เริ่มใหม่'))return false;
     clearTimeout(timer);
+    history.flush();const beforeReset=bridge.capture(),resetKind=pendingDraft?'reset':'edit';
     loading=true;
     try{bridge.reset();}finally{loading=false;}
+    history.applied(resetKind,project.active,beforeReset,bridge.capture());
     pendingDraft=null;revision++;snapshot();await persist();return true;
   });
   function setLevel(value){
@@ -178,7 +185,7 @@
     },
     activate:slot=>run(async()=>{
       if(pendingDraft||!['A','B'].includes(slot)||!project.variants[slot])throw new Error('ยังเลือกแบบนี้ไม่ได้');
-      if(project.active!==slot){snapshot();const next=store.clone(project);next.active=slot;apply(next);await persist();}
+      if(project.active!==slot){snapshot();const next=store.clone(project);next.active=slot;apply(next,'switch');await persist();}
       return true;
     }),
     state:()=>({ready,busy,pendingDraft:!!pendingDraft,active:project?.active||'A',hasOther:!!project?.variants[project.active==='A'?'B':'A']}),
@@ -196,7 +203,7 @@
       if(!await ask('ยืนยันใช้ผล Wizard ในแบบ '+target+'?',name+' · กว้าง '+replacement.spec.W+' × ลึก '+replacement.spec.D+' × สูง '+replacement.spec.H+' ม. แบบ '+target+' จะใช้ผลที่พรีวิวไว้ โดยอีกแบบไม่เปลี่ยน หากต้องการเก็บงานเดิม ให้ยกเลิกและบันทึกไฟล์ก่อน','ยืนยันใช้ในแบบ '+target))return false;
       if(!fresh())throw Error('งานปัจจุบันเปลี่ยนระหว่างยืนยัน กรุณาเปิด Wizard ใหม่');
       snapshot();const next=store.clone(project);next.active=target;next.variants[target]=replacement;
-      apply(next);await persist();return true;
+      apply(next,'edit');await persist();return true;
     },{detailed:true}),
     useTemplate:({makeSnapshot,name,detailed=false,exactArea=false})=>run(async()=>{
       if(pendingDraft)throw Object.assign(new Error('กรุณาเลือกเปิดร่างเดิมหรือเริ่มใหม่ในหน้าต่างเริ่มต้น'),{code:'pending-draft'});
@@ -207,7 +214,7 @@
       if(area)replacement=window.YPTemplateArea.apply(replacement,area[area.selected]);
       store.validateSpec(replacement.spec);
       snapshot();const next=store.clone(project);
-      next.active=target;next.variants[target]=replacement;apply(next);await persist();return true;
+      next.active=target;next.variants[target]=replacement;apply(next,'edit');await persist();return true;
     },{detailed}),
     useStarter:({makeSnapshot,newVariant=true,purposeName='',removedCount=0})=>run(async()=>{
       if(pendingDraft)throw new Error('กรุณาเลือกเปิดร่างเดิมหรือเริ่มใหม่ก่อนเลือกผังตั้งต้น');
@@ -218,7 +225,7 @@
         if(!await ask('จัดผังใหม่ในแบบ '+active+'?', 'อุปกรณ์ที่ย้ายได้ '+removedCount+' ชิ้นจะถูกแทนที่ด้วยผัง '+purposeName+' โครงสร้าง วัตถุที่ล็อก และวัตถุที่มีจุดยึดยังคงเดิม','ใช้ผังในแบบ '+active))return false;
       }
       const replacement=makeSnapshot();snapshot();const next=store.clone(project);
-      next.active=target;next.variants[target]=replacement;apply(next);await persist();return true;
+      next.active=target;next.variants[target]=replacement;apply(next,'edit');await persist();return true;
     })
   };
   window.addEventListener('beforeunload',event=>{if(ready&&revision>savedRevision){event.preventDefault();event.returnValue='';}});
@@ -238,5 +245,5 @@
     $('projectEntryTitle').textContent='พบงานที่บันทึกไว้';
     $('projectEntryText').textContent=$('projectRecoveryText').textContent+' — ต้องการทำงานต่อ หรือเริ่มงานใหม่? ยังไม่เขียนทับร่างเดิม';
     $('projectEntryActions').hidden=false;$('projectEntryRecover').focus();
-  }else finishEntry();
+  }else {history.reset(project.active,bridge.capture());finishEntry();}
 })();

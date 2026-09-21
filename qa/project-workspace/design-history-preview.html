@@ -1,0 +1,28 @@
+<!doctype html><html lang="th"><meta charset="utf-8"><title>Global history isolated QA</title>
+<style>body{margin:0;background:#17121a;color:white;font:14px system-ui}header{padding:10px}button{padding:8px}iframe{width:1100px;height:720px;border:0}pre{white-space:pre-wrap}</style>
+<header><button id="run" disabled>ทดสอบย้อนกลับทั้งบูธ</button><pre id="status">Loading isolated editor…</pre></header>
+<iframe id="app" src="/yp-web-ai/index.html?comparePreview=1"></iframe>
+<script>
+const frame=document.querySelector('#app'),status=document.querySelector('#status');let h,w;
+frame.onload=async()=>{try{w=frame.contentWindow;await w.YPProjectBridge.ready;w.YPQuickSetupBridge.close();
+ const reset=w.document.createElement('button');reset.id='projectReset';reset.textContent='เริ่มใหม่';reset.className='btn sm';w.document.getElementById('tagSize').after(reset);
+ h=w.YPDesignHistory.mount({bridge:w.YPProjectBridge,available:()=>true,onRestored:()=>{}});w.YPDesignHistoryController=h;w.YPProjectWorkspace={changed:()=>h.observe()};h.reset('A',w.YPProjectBridge.capture());
+ document.querySelector('#run').disabled=false;status.textContent='Ready · isolated editor, no saved drafts';
+}catch(e){status.textContent='FAIL '+e.stack;}};
+document.querySelector('#run').onclick=async()=>{try{
+ const bridge=w.YPProjectBridge,before=bridge.capture(),next=structuredClone(before);
+ Object.assign(next.spec,{W:7,H:2.6,raise:5,carpet:'red',lights:false,logoScale:40,wallMat:'sticker',wallStickerFaces:['back']});
+ next.spec.wallStickers.back={...next.spec.wallStickers.back,data:w.YPPhoto360Artwork.data,name:'BD_01.png',ar:w.YPPhoto360Artwork.aspect,w:7,h:2.6};
+ bridge.restore(next);h.observe();h.flush();
+ const edited=bridge.capture();if(h.state().undo!==1)throw Error('Expected one edit, got '+JSON.stringify(h.state()));
+ w.document.getElementById('projectUndo').click();let undo=bridge.capture();
+ for(const key of ['W','H','raise','carpet','lights','logoScale'])if(undo.spec[key]!==before.spec[key])throw Error('Undo mismatch: '+key);
+ if(undo.spec.wallStickers.back.data!==before.spec.wallStickers.back.data)throw Error('Undo sticker mismatch');
+ w.document.getElementById('projectRedo').click();let redo=bridge.capture();
+ for(const key of ['W','H','raise','carpet','lights','logoScale'])if(redo.spec[key]!==edited.spec[key])throw Error('Redo mismatch: '+key);
+ if(redo.spec.wallStickers.back.data!==w.YPPhoto360Artwork.data)throw Error('Redo lost original image');
+ if(!w.document.getElementById('projectRedo').disabled)throw Error('Redo should be disabled at newest state');
+ w.undoObjectChange();if(bridge.capture().spec.W!==before.spec.W)throw Error('Old toolbar route not shared');w.redoObjectChange();
+ status.textContent='PASS · top Undo/Redo + existing toolbar share full-design history · dimensions, floor, sticker, logo, lights restored · no A/B drafts touched';
+}catch(e){status.textContent='FAIL '+e.stack;}};
+</script></html>

@@ -805,7 +805,7 @@ select:focus{border-color:var(--acc)}
 <link rel="stylesheet" href="css/asset-editor.css?v=20260918-align">
 <link rel="stylesheet" href="css/asset-face-stickers.css?v=20260918-1">
 <link rel="stylesheet" href="css/asset-tags.css?v=20260918-1">
-<link rel="stylesheet" href="css/project-workspace.css?v=20260918-asset-selection">
+<link rel="stylesheet" href="css/project-workspace.css?v=20260921-history">
 <link rel="stylesheet" href="css/budget-estimate.css?v=20260914-1">
 </head>
 <body>
@@ -4699,11 +4699,13 @@ function toggleObjectResizeMode(){
 }
 function toggleObjectScaleMode(){if(!objectById(objectEditor.selectedId)&&sceneItemById(objectEditor.selectedId)?.system){openAssetSettings();return;}setObjectTransformMode('scale');}
 function undoObjectChange(){
+  if(window.YPDesignHistoryController)return window.YPDesignHistoryController.undo();
   if(!objectEditor.past.length)return;
   const selectedId=objectEditor.selectedId;objectEditor.future.push(objectSnapshot());restoreObjectSnapshot(objectEditor.past.pop());
   const valid=selectedSceneItemIds().filter(sceneItemExists);setObjectSelection(valid,sceneItemExists(selectedId)?selectedId:(valid.at(-1)||null));sync();
 }
 function redoObjectChange(){
+  if(window.YPDesignHistoryController)return window.YPDesignHistoryController.redo();
   if(!objectEditor.future.length)return;
   const selectedId=objectEditor.selectedId;objectEditor.past.push(objectSnapshot());restoreObjectSnapshot(objectEditor.future.pop());
   const valid=selectedSceneItemIds().filter(sceneItemExists);setObjectSelection(valid,sceneItemExists(selectedId)?selectedId:(valid.at(-1)||null));sync();
@@ -4775,6 +4777,7 @@ function syncObjectControls(){
   if(ungroupButton)ungroupButton.disabled=!groupingObjects.some(obj=>obj.groupId)||groupLocked;
   document.getElementById('btnUndoObject').disabled=!objectEditor.past.length;
   document.getElementById('btnRedoObject').disabled=!objectEditor.future.length;
+  window.YPDesignHistoryController?.update();
   const snapToggle=document.getElementById('placementSnapEnabled');if(snapToggle)snapToggle.checked=S.placementSnap!==false;
   syncPlacementSnapSummary();
   const magneticToggle=document.getElementById('magneticSnapEnabled');if(magneticToggle)magneticToggle.checked=S.magneticSnap!==false;
@@ -10526,7 +10529,8 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script type="module" src="js/asset-editor/asset-editor.js?v=20260918-unified-1"></script>
 <script src="js/project-store.js?v=20260905-1"></script>
 <script src="js/template-area.js?v=20260910-template-area"></script>
-<script src="js/project-workspace.js?v=20260914-settings-split-1"></script>
+<script src="js/design-history.js?v=20260921-1"></script>
+<script src="js/project-workspace.js?v=20260921-history"></script>
 <script src="js/starter-layouts.js?v=20260905-1"></script>
 <!-- Template selection replaces the legacy purpose card and post-setup prompt. -->
 <link rel="stylesheet" href="css/handoff.css?v=20260905-1">
