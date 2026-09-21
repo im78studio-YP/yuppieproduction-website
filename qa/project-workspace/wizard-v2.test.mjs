@@ -3,6 +3,18 @@ import assert from 'node:assert/strict';
 await import('../../public/yp-web-ai/js/wizard-model.js');
 const draft=()=>({businessCategoryId:'food',businessBrief:{product:'Tea'},boothType:'inline',cornerSide:'right',width:6,depth:6,height:3.8,roomMode:'keep',theme:null});
 const base=()=>({assets:[],spec:{W:6,D:3,H:3.8,objects:[{id:'room-wall',locked:true,appearance:{textureData:'logo'}}],stSize:'none',floor:'tile',tile:'woodL',raise:5,primary:'#123456',boothColorTheme:{name:'original'},wallPaintOverrides:{back:'#123456'}}});
+test('photo booth types support preserved assets, fixed 360 area and curved radius',()=>{
+ for(const boothType of ['backdrop','photo360']){
+  const input=base(),before=structuredClone(input),d={...draft(),boothType,width:6,depth:3,height:2.4};
+  const s=YPWizardModel.build(input,d,v=>v).spec;
+  assert.equal(s.type,boothType);assert.deepEqual([s.W,s.D,s.H],[6,3,2.4]);assert.deepEqual(s.objects,input.spec.objects);assert.deepEqual(input,before);
+  if(boothType==='photo360'){
+   assert.equal(s.wallRadius,3.5);
+   assert.throws(()=>YPWizardModel.build(input,{...d,width:8},v=>v));
+   input.spec.wallRadius=5;assert.equal(YPWizardModel.build(input,d,v=>v).spec.wallRadius,5);
+  }else assert.equal(YPWizardModel.build(input,{...d,width:8,height:3},v=>v).spec.W,8);
+ }
+});
 test('five steps with separate templates and final review',()=>assert.deepEqual(YPWizardModel.steps,['business','layout','template','customize','review']));
 test('all booth types start with unraised dark-grey carpet, without mutating templates',()=>{
  for(const boothType of ['inline','corner','penin','island']){

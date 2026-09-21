@@ -79,8 +79,8 @@ test('Registry ครอบ Booth Types และไม่แตะ Smart Snap b
   assert.ok(html.includes('screenAnchorSnap(event,obj,drag)'));
 });
 
-test('พรมเป็นพื้นสำหรับ Snap แต่ไม่เข้าสู่ Selection จาก Canvas หรือ Asset List',()=>{
-  assert.match(html,/id:SCENE_ASSET_IDS\.floor[\s\S]{0,600}selectable:spec\.floor!=='carpet'[\s\S]{0,120}snapEnabled:true/);
+test('พรมเลือกเพื่อเปิดพื้นบูธได้ แต่โครงสร้างล็อกและยัง Snap ได้',()=>{
+  assert.match(html,/id:SCENE_ASSET_IDS\.floor[\s\S]{0,600}locked:true,selectable:true,movable:false,snapEnabled:true/);
   assert.ok(html.includes('selectable:asset.selectable!==false'));
   assert.ok(html.includes('sceneItemExists(id)&&sceneItemSelectable(id)'));
   assert.ok(html.includes("if(!item||item.selectable===false){setObjectSelection([])"));

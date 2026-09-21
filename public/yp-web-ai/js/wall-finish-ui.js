@@ -23,7 +23,7 @@
   entry.hex.dataset.pending='false';entry.hex.setAttribute('aria-invalid','false');recordObjectHistory(before);sync();note.textContent='ใช้สี'+WALL_FACES.find(f=>f.k===face).n+'แล้ว · เก็บภาพสติ๊กเกอร์เดิมไว้ สามารถเลือกกลับได้';return true;
  }
  function syncUI(){controls.forEach(({row,color,hex,follow},face)=>{const value=wallFaceColor(S,face),custom=/^#[\da-f]{6}$/i.test(S.wallPaintOverrides?.[face]||'');color.value=value;if(hex.dataset.pending!=='true')hex.value=value.toUpperCase();follow.disabled=!custom;row.dataset.editing=String(editingFace===face);});}
- function openFace(face){if(!controls.has(face)||!typ().walls.includes(face))return false;editingFace=face;showDockPage('finish',document.querySelector('.dock-tool[data-dock-page="finish"]'));syncUI();
+ function openFace(face){if(!controls.has(face)||!typ().walls.includes(face))return false;editingFace=face;showDockPage('finish',document.querySelector('.dock-tool[data-dock-page="finish"]'));selectFinishTab('wall');syncUI();
   const title=WALL_FACES.find(f=>f.k===face).n;note.textContent='กำลังตั้งค่า'+title+' · เลือกทาสีหรือสติ๊กเกอร์ได้ โครงสร้างยังล็อกอยู่'+(!sceneItemVisible(registryWallId(face))?' · ผนังระบบด้านนี้ถูกซ่อน ต้องแสดงผนังก่อนจึงจะเห็นสี':'' );
   requestAnimationFrame(()=>{const row=controls.get(face).row;row.scrollIntoView({block:'center',behavior:'smooth'});row.querySelector('.wall-face-options button')?.focus({preventScroll:true});});return true;
  }

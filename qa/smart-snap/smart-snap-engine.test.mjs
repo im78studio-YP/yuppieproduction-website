@@ -376,5 +376,6 @@ test('Logo Selection, Registry และ Geometry ใช้ Visible Bounds ช�
 test('Selection ให้ Asset ด้านหน้าก่อน Structure และรองรับ Alt Cycle Selection',()=>{
   assert.match(html,/const front=unique\.filter\(entry=>entry\.asset\.metadata\?\.system!==true\),system=unique\.filter/);
   assert.match(html,/if\(!event\.altKey\)return ordered/);
-  assert.match(html,/selectSceneItem\(hitAsset\.id\)/);
+  assert.match(html,/assetEditorClick=\{scene:true,id:hitAsset\.id,/);
+  assert.match(html,/click\.scene\)selectSceneItem\(click\.id,\{additive:click\.additive\}\)/);
 });

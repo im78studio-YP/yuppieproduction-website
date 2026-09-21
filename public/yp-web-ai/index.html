@@ -252,7 +252,7 @@ select:focus{border-color:var(--acc)}
 .asset-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 18px 0;background:rgba(13,16,21,.96)}
 .asset-tab{min-height:36px;border:1px solid var(--line);border-radius:8px 8px 0 0;background:var(--bg2);color:var(--tx2);font-size:11.5px;font-weight:600;cursor:pointer}
 .asset-tab:hover{border-color:var(--acc);color:var(--tx)}
-.asset-tab.on{border-color:var(--acc);background:rgba(var(--acc-rgb),.12);color:var(--acc2);box-shadow:inset 0 -2px 0 var(--acc)}
+.asset-tab.on,.asset-tab[aria-selected="true"]{border-color:var(--acc);background:rgba(var(--acc-rgb),.12);color:var(--acc2);box-shadow:inset 0 -2px 0 var(--acc)}
 .asset-pane[hidden]{display:none!important}
 .asset-grid-card{display:grid;gap:8px;margin:10px 18px 0;padding:10px 11px;border:1px solid rgba(var(--acc-rgb),.34);
   border-radius:9px;background:rgba(var(--acc-rgb),.055)}
@@ -490,6 +490,9 @@ select:focus{border-color:var(--acc)}
 .island-brand-note[hidden]{display:none!important}
 .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
 .finish-page .finish-subhead{margin-bottom:8px}
+.finish-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:12px -38px -12px 0}
+.finish-tabs button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#dockFinishBody>[hidden]{display:none!important}
 .lighting-page #oLightWatts{display:none}
 #legacyLightingControls{display:none!important}
 #simpleBoothLighting .opt{min-height:44px}
@@ -755,7 +758,7 @@ select:focus{border-color:var(--acc)}
 .quick-custom-field input,.quick-number-field input{width:100%;min-height:42px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg3);color:var(--tx);outline:none;font-size:16px}
 .quick-custom-field input:focus,.quick-number-field input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.1)}
 .quick-error{min-height:18px;margin-top:6px;color:#ff8cbf;font-size:11.5px;line-height:1.4}.quick-error:empty{display:none}
-.quick-layout-types{grid-template-columns:repeat(4,minmax(0,1fr))}.quick-layout-types .quick-choice{min-height:82px;padding-right:11px;text-align:center}.quick-layout-types .quick-choice-check{top:7px;right:7px}
+.quick-layout-types{grid-template-columns:repeat(3,minmax(0,1fr))}.quick-layout-types .quick-choice{min-height:82px;padding-right:11px;text-align:center}.quick-layout-types .quick-choice-check{top:7px;right:7px}
 .quick-corner-options{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px}.quick-corner-options[hidden]{display:none}
 .quick-compact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-compact-grid .quick-choice{min-height:62px}
 .quick-color-card{display:grid;grid-template-columns:84px minmax(0,1fr);gap:14px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--bg3)}
@@ -1348,6 +1351,10 @@ select:focus{border-color:var(--acc)}
       <div class="panel-eyebrow">FINISHES</div>
       <h2>พื้นและผนัง</h2>
       <p>เลือกระดับพื้น วัสดุปูพื้น สี และผิวผนัง</p>
+      <div class="finish-tabs" role="tablist" aria-label="ตั้งค่าพื้นและผนังบูธ">
+        <button class="asset-tab" type="button" id="finishFloorTab" role="tab" aria-controls="settingsFloor" aria-selected="true" data-finish-tab="floor">พื้นบูธ</button>
+        <button class="asset-tab" type="button" id="finishWallTab" role="tab" aria-controls="settingsWall" aria-selected="false" tabindex="-1" data-finish-tab="wall">ผนังบูธ</button>
+      </div>
     </div>
     <div class="tool-page-body" id="dockFinishBody"></div>
   </section>
@@ -1795,12 +1802,13 @@ select:focus{border-color:var(--acc)}
 <script src="js/asset-edge-glow.js?v=20260918-path-3"></script>
 <script src="js/asset-glow-path.js?v=20260918-red-cursor-2"></script>
 <script src="js/asset-surfaces.js?v=20260918-offset-up-1"></script>
-<script src="js/plan-selection.js?v=20260918-1"></script>
-<script src="js/asset-parts.js?v=20260918-studio-2"></script>
+<script src="js/selection-editor.js?v=20260921-1"></script>
+<script src="js/plan-selection.js?v=20260921-selection-1"></script>
+<script src="js/asset-parts.js?v=20260921-draft-1"></script>
 <script src="js/asset-surface-repair.js?v=20260918-1"></script>
 <script src="js/asset-face-stickers.js?v=20260918-offset-up-1"></script>
 <script src="js/my-asset-preview.js?v=20260918-surface1"></script>
-<script src="js/quick-setup.js?v=20260911-business"></script>
+<script src="js/quick-setup.js?v=20260921-photo-types"></script>
 <script src="js/business-brief.js?v=20260911-1"></script>
 <script src="js/ai-staging.js?v=20260830-1"></script>
 <script src="js/ai-render-intent.js?v=20260831-1"></script>
@@ -1826,6 +1834,8 @@ select:focus{border-color:var(--acc)}
 <script src="js/asset-attachment-graph.js?v=20260910-structure-support"></script>
 <script src="js/brand-visible-bounds.js?v=20260902-1"></script>
 <script src="assets/branding/default-logo.js?v=20260908-1"></script>
+<script src="assets/branding/photo-backdrop-artwork.js?v=20260921-1"></script>
+<script src="js/photo-backdrop-default.js?v=20260921-1"></script>
 <script src="js/template-branding.js?v=20260913-logo-slots"></script>
 <script>
 /* ================= ข้อมูล ================= */
@@ -1960,7 +1970,7 @@ const TYPES=[
   note:'ผนังด้านหลังด้านเดียว เปิดหน้า ซ้าย ขวา · ความหนาผนัง 30 ซม. — พบบ่อยในบูธ 6×6 ขึ้นไป'},
  {k:'backdrop',n:'Photo Backdrop',s:'ผนังหลัง 1 ด้าน',on:true,walls:['back'],wallThickness:.3,
   note:'ขนาดเริ่มต้น 6 × 3 × 2.4 ม. · ปรับขนาดได้ · ผนังด้านหลัง 1 ผนัง · ความหนาผนัง 30 ซม.'},
- {k:'photo360',n:'มุมถ่ายภาพ 360',s:'ผนังหลังโค้ง',on:true,walls:['back'],fixed:true,wallThickness:.3,curved:true,
+ {k:'photo360',n:'Photo Backdrop 360',s:'ผนังหลังโค้ง',on:true,walls:['back'],fixed:true,wallThickness:.3,curved:true,
   note:'พื้นที่ 6 × 3 × 2.4 ม. · ผนังด้านหลังโค้ง · ความหนาผนัง 30 ซม. · กำหนดรัศมี R ได้'},
  {k:'island',n:'Island',s:'เปิด 4 ด้าน',on:true,walls:[],
   note:'พื้นที่เริ่มต้น 6 × 6 × 2.4 ม. · พื้นปูพรม · เปิดโล่งทั้ง 4 ด้าน ไม่มีผนังบูธหลัก · เพิ่มโครงสร้าง ห้อง หรือ Asset ได้อย่างอิสระ'},
@@ -2348,7 +2358,7 @@ function sceneAssetStoreGeom(spec,t){
 }
 function buildSceneAssetRecords(spec=S){
   const records=[],make=input=>sceneAssetRecord({...input,stateSpec:spec}),floorY=(Number(spec.raise)||0)/100,t=boothWallThickness(spec),walls=manifestBoothType(spec).walls||[],slabHeight=floorY>0?floorY:.003;
-  records.push(make({id:SCENE_ASSET_IDS.floor,name:'พื้นบูธ',assetType:'Floor',category:'surface',system:true,listGroup:'surface',icon:'▱',transform:sceneAssetTransform({x:spec.W/2,y:floorY>0?floorY/2:-slabHeight/2,z:spec.D/2}),bounds:{width:spec.W,height:slabHeight,depth:spec.D},locked:true,selectable:spec.floor!=='carpet',movable:false,snapEnabled:true}));
+  records.push(make({id:SCENE_ASSET_IDS.floor,name:'พื้นบูธ',assetType:'Floor',category:'surface',system:true,listGroup:'surface',icon:'▱',transform:sceneAssetTransform({x:spec.W/2,y:floorY>0?floorY/2:-slabHeight/2,z:spec.D/2}),bounds:{width:spec.W,height:slabHeight,depth:spec.D},locked:true,selectable:true,movable:false,snapEnabled:true}));
   walls.forEach(face=>records.push(make({id:registryWallId(face),name:{back:'ผนังหลัง',left:'ผนังซ้าย',right:'ผนังขวา'}[face]||'ผนัง',assetType:{back:'Back Wall',left:'Left Wall',right:'Right Wall'}[face]||'Wall',category:'surface',system:true,listGroup:'surface',icon:'▥',
     transform:sceneAssetTransform(face==='back'?{x:spec.W/2,y:floorY+spec.H/2,z:t/2}:face==='left'?{x:t/2,y:floorY+spec.H/2,z:spec.D/2}:{x:spec.W-t/2,y:floorY+spec.H/2,z:spec.D/2}),
     bounds:{width:face==='back'?spec.W:t,height:spec.H,depth:face==='back'?t:spec.D},locked:true,selectable:true,movable:false,snapEnabled:true})));
@@ -3880,11 +3890,57 @@ function positionObjectToolbar(){
   toolbar.style.setProperty('--context-x',x+'px');toolbar.style.removeProperty('--context-y');toolbar.classList.remove('context-below');
 }
 function openSelectedAssetEditor(){
-  if(!selectedObjectIds().length)return;
-  setAssetTab('editor');
-  showDockPage('catalog',document.querySelector('.dock-tool[data-dock-page="catalog"]'));
+  return openSelectionEditor();
+}
+function selectionInteractionBlocked(){
+  return !!threeRenderer?.measureTape?.enabled||!!document.querySelector('dialog[open],.modal.show');
+}
+function openSelectionEditor(){
+  if(selectionInteractionBlocked())return false;
+  const items=selectedSceneItemIds().map(sceneItemById).filter(Boolean),route=YPSelectionEditor.resolve(items,{isLogo:obj=>globalThis.YPLogoReplacement?.isLogo(obj)});
+  if(!route)return false;
+  if(route.kind==='logo')globalThis.YPLogoReplacement?.onSelect(items[0].id);
+  else if(route.face)globalThis.YPWallFinishUI?.openFace(route.face);
+  else{
+    if(route.page==='catalog')setAssetTab('editor');
+    showDockPage(route.page,document.querySelector('.dock-tool[data-dock-page="'+route.page+'"]'));
+    if(route.kind==='floor')selectFinishTab('floor');
+    if(route.fixtureId){selectedAutoLightingFixtureId=route.fixtureId;syncAutoLightingFixtureEditor();}
+  }
+  syncSelectionEditorContext();return true;
+}
+function syncSelectionEditorContext(){
+  let label=document.getElementById('selectionEditorContext');
+  if(!label){label=document.createElement('p');label.id='selectionEditorContext';label.className='note';label.setAttribute('role','status');label.style.cssText='margin:8px 0 0;color:var(--tx)';}
+  const intro=document.querySelector('.dock-page.on .panel-intro');if(intro&&label.parentElement!==intro)intro.append(label);
+  const items=selectedSceneItemIds().map(sceneItemById).filter(Boolean),route=YPSelectionEditor.resolve(items,{isLogo:obj=>globalThis.YPLogoReplacement?.isLogo(obj)}),page=document.querySelector('.dock-page.on')?.dataset.dockPage;
+  const currentTab=page==='catalog'?document.querySelector('[data-asset-tab][aria-selected="true"]')?.dataset.assetTab:page==='finish'?document.querySelector('[data-finish-tab][aria-selected="true"]')?.dataset.finishTab:null;
+  const matching=route?.page===page&&(!route.tab||route.tab===currentTab);
+  label.hidden=!items.length;
+  label.textContent=items.length>1?'เลือก '+items.length+' ชิ้น · ใช้คำสั่งร่วมกันได้ใน Asset Editor':items.length?'เลือก: '+items[0].name+(matching?' · เครื่องมือสำหรับรายการนี้':' · เมนูนี้ไม่ได้แก้รายการที่เลือก'):'';
+  syncMultiSelectionEditor(items);
+}
+function syncMultiSelectionEditor(items){
+  const pane=document.getElementById('assetEditorPane'),single=document.getElementById('assetEditorMount');if(!pane||!single)return;
+  let multi=document.getElementById('selectionMultiEditor');
+  if(!multi){
+    multi=document.createElement('section');multi.id='selectionMultiEditor';multi.className='asset-editor';
+    multi.innerHTML='<h3></h3><p class="note" data-multi-names></p><p class="note">เลือกหลายชิ้น · แสดงเฉพาะคำสั่งที่ใช้ร่วมกัน ไม่แก้สีหรือขนาดของชิ้นสุดท้ายโดยไม่ตั้งใจ</p><div class="asset-editor-actions" data-multi-actions></div><p class="note" data-multi-help></p>';
+    const actions=[['move','ย้ายร่วมกัน',()=>setObjectMoveMode('smart')],['group','Group',groupSelectedObjects],['ungroup','Ungroup',ungroupSelectedObjects],['lock','ล็อก / ปลดล็อก',()=>{const chosen=selectedSceneItemIds().map(sceneItemById);setSceneItemsLocked(chosen.map(i=>i.id),!chosen.every(i=>i.locked));}],['hide','ซ่อนที่เลือก',()=>setSceneItemsVisibility(selectedSceneItemIds(),false)],['clear','ยกเลิกการเลือก',()=>selectObject(null)]];
+    for(const [key,title,action] of actions){const button=document.createElement('button');button.type='button';button.className='btn sm';button.dataset.multiAction=key;button.textContent=title;button.onclick=action;multi.querySelector('[data-multi-actions]').append(button);}
+    const align=document.createElement('div');align.className='asset-editor-actions asset-editor-align';align.style.marginTop='8px';
+    for(const [key,title]of [['left','เสมอซ้าย'],['horizontal','กึ่งกลาง X'],['right','เสมอขวา'],['top','เสมอบน'],['vertical','กึ่งกลางสูง'],['bottom','เสมอล่าง'],['front','เสมอหน้า'],['depth','กึ่งกลางลึก'],['back','เสมอหลัง']]){const button=document.createElement('button');button.type='button';button.className='btn sm';button.dataset.multiAlign=key;button.textContent=title;button.onclick=()=>alignSelectedObjects(key);align.append(button);}
+    multi.append(align);pane.prepend(multi);
+  }
+  multi.hidden=items.length<2;multi.style.display=items.length>1?'grid':'none';single.hidden=items.length>1;if(items.length<2)return;
+  const allObjects=items.every(i=>i.object),editable=allObjects&&items.every(i=>!i.locked),grouped=items.some(i=>i.object?.groupId);
+  multi.querySelector('h3').textContent='เลือก '+items.length+' ชิ้น';multi.querySelector('[data-multi-names]').textContent=items.map(i=>i.name).join(' · ');
+  multi.querySelector('[data-multi-help]').textContent=editable?'Align อ้างอิง: '+(sceneItemById(objectEditor.selectedId)?.name||''):'มีโครงสร้างหรือชิ้นที่ล็อกอยู่ · ย้ายและ Align ได้เมื่อเลือกเฉพาะอุปกรณ์ที่ปลดล็อก';
+  multi.querySelectorAll('[data-multi-action]').forEach(button=>{const k=button.dataset.multiAction;button.disabled=k==='clear'?false:k==='hide'?items.some(i=>i.aiSuggested):k==='lock'?!allObjects:k==='ungroup'?!editable||!grouped:!editable;});
+  multi.querySelectorAll('[data-multi-align]').forEach(button=>{button.disabled=!editable;const source=single.querySelector('[data-ae-align="'+button.dataset.multiAlign+'"]');if(source){button.innerHTML=source.innerHTML;button.title=source.title;button.setAttribute('aria-label',source.getAttribute('aria-label'));}});
 }
 function selectObject(id,options={}){
+  if(id&&selectionInteractionBlocked())return;
   logoEditor.selected=false;
   const previousPrimary=objectEditor.selectedId,obj=objectById(id),additive=options.additive===true||options.toggle===true||objectEditor.multiSelect===true;
   if(!obj)setObjectSelection([]);
@@ -3897,28 +3953,31 @@ function selectObject(id,options={}){
     }else{setObjectSelection(unitIds,id);if(previousPrimary!==id){objectEditor.moveMode='smart';objectEditor.transformMode='move';}}
   }
   syncObjectControls();if(threeRenderer)threeRenderer.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
-  if(options.openEditor&&obj)openSelectedAssetEditor();
-  if(!additive)globalThis.YPLogoReplacement?.onSelect(id);
+  globalThis.YPLogoReplacement?.refresh();
+  if(options.openEditor!==false)openSelectionEditor();
   if(S.view==='plan')render();
 }
-function selectLogoPlacement(selected=true){
+function selectLogoPlacement(selected=true,options={}){
+  if(selected&&selectionInteractionBlocked())return;
   logoEditor.selected=!!selected;
   if(logoEditor.selected)setObjectSelection([SCENE_ASSET_IDS.brand],SCENE_ASSET_IDS.brand);
   else if(objectEditor.selectedId===SCENE_ASSET_IDS.brand)setObjectSelection([]);
   syncObjectControls();
-  if(selected)globalThis.YPLogoReplacement?.onSelect(SCENE_ASSET_IDS.brand);
+  if(selected&&options.openEditor!==false)openSelectionEditor();
   if(threeRenderer)threeRenderer.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
   if(S.view==='plan')render();
 }
 function selectSceneItem(id,options={}){
+  if(id&&selectionInteractionBlocked())return;
   const item=sceneItemById(id);if(!item||item.selectable===false){setObjectSelection([]);logoEditor.selected=false;syncObjectControls();if(threeRenderer)threeRenderer.setSceneSelection([],null);if(S.view==='plan')render();return;}
   if(item.object){selectObject(id,options);return;}
   const additive=options.additive===true||options.toggle===true||objectEditor.multiSelect===true,current=new Set(selectedSceneItemIds());
   if(additive){current.has(id)?current.delete(id):current.add(id);setObjectSelection([...current],current.has(id)?id:([...current].at(-1)||null));}
   else setObjectSelection([id],id);
   logoEditor.selected=objectEditor.selectedId===SCENE_ASSET_IDS.brand;
-  if(logoEditor.selected&&!additive)globalThis.YPLogoReplacement?.onSelect(SCENE_ASSET_IDS.brand);
   syncObjectControls();if(threeRenderer)threeRenderer.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
+  globalThis.YPLogoReplacement?.refresh();
+  if(options.openEditor!==false)openSelectionEditor();
   if(S.view==='plan')render();
 }
 function systemSceneState(id){S.sceneItemState=S.sceneItemState&&typeof S.sceneItemState==='object'?S.sceneItemState:{};return S.sceneItemState[id]||(S.sceneItemState[id]={});}
@@ -3980,7 +4039,8 @@ function renderAssetList(){
       if(action==='lock'){event.stopPropagation();if(!item.system)setSceneItemsLocked([id],!item.locked);return;}
       if(item.selectable===false){selectSceneItem(id);return;}
       const checkbox=event.target.closest('.asset-list-check'),shift=event.shiftKey;
-      if(shift&&assetListUI.anchorId){const list=assetListUI.visibleIds||[],a=list.indexOf(assetListUI.anchorId),b=list.indexOf(id);if(a>=0&&b>=0){const range=list.slice(Math.min(a,b),Math.max(a,b)+1),current=new Set((event.ctrlKey||event.metaKey)?selectedSceneItemIds():[]);range.forEach(candidate=>current.add(candidate));setObjectSelection([...current],id);logoEditor.selected=id===SCENE_ASSET_IDS.brand;syncObjectControls();return;}}
+      if(selectionInteractionBlocked())return;
+      if(shift&&assetListUI.anchorId){const list=assetListUI.visibleIds||[],a=list.indexOf(assetListUI.anchorId),b=list.indexOf(id);if(a>=0&&b>=0){const range=list.slice(Math.min(a,b),Math.max(a,b)+1),current=new Set((event.ctrlKey||event.metaKey)?selectedSceneItemIds():[]);range.forEach(candidate=>current.add(candidate));setObjectSelection([...current],id);logoEditor.selected=id===SCENE_ASSET_IDS.brand;syncObjectControls();openSelectionEditor();return;}}
       selectSceneItem(id,{additive:!!checkbox||event.ctrlKey||event.metaKey,toggle:!!checkbox||event.ctrlKey||event.metaKey});assetListUI.anchorId=id;};
     row.ondblclick=event=>{if(!event.target.closest('button,input'))focusSceneItem(id);};
     row.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectSceneItem(id,{additive:event.ctrlKey||event.metaKey,toggle:event.ctrlKey||event.metaKey});}};
@@ -4279,13 +4339,9 @@ function syncAssetSettingsForm(){
   YPAssetFaceStickers.syncForm(obj);
 }
 function openAssetSettings(mode='surface'){
+  if(selectedSceneItemIds().length>1){openSelectionEditor();return;}
   const obj=objectById(objectEditor.selectedId);if(!obj){
-    const item=sceneItemById(objectEditor.selectedId);if(!item?.system)return;
-    const wallFace=window.YPWallFinishUI?.faceFromId(item.id);if(wallFace){window.YPWallFinishUI.openFace(wallFace);return;}
-    const page=item.id===SCENE_ASSET_IDS.brand?'signage':item.id.startsWith('structure.wall.')||item.id===SCENE_ASSET_IDS.floor?'finish':item.id===SCENE_ASSET_IDS.room||item.id===SCENE_ASSET_IDS.door?'storage':'catalog',
-      source=document.querySelector('.dock-tool[data-dock-page="'+page+'"]');
-    if(source)showDockPage(page,source);
-    announceCatalog('เปิดการตั้งค่า '+item.name+' แล้ว','success');return;
+    openSelectionEditor();return;
   }
   if(mode!=='advanced'&&YPAssetFaceStickers.supported(obj)){if(objectLocked(obj)){announceCatalog('ปลดล็อกอุปกรณ์ก่อนแก้ไข','error');return;}return YPAssetParts.open();}
   const modal=document.getElementById('mAssetSettings');modal.dataset.settingsMode=mode==='advanced'?'advanced':'surface';
@@ -4660,7 +4716,10 @@ function syncObjectControls(){
   box.classList.toggle('on',!!sceneItem||brandSelected);
   box.classList.toggle('structure-active',!!obj&&(isEntranceFrameObject(obj)||isDownlightBeamObject(obj)));
   const info=document.getElementById('placementGridInfo');
-  if(obj){
+  if(selectionCount>1){
+    box.textContent='เลือก '+selectionCount+' ชิ้น · '+selectedSceneItemIds().map(id=>sceneItemById(id)?.name).join(' · ');
+    if(info)info.textContent='เลือก '+selectionCount+' ชิ้น · จัดการคำสั่งร่วมกันใน Asset Editor';
+  }else if(obj){
     const name=selectedAssetName(obj),p=obj.position||{},snap=S.placementSnap===false?'วางอิสระ':'Snap to Grid '+placementStepLabel(),
       scale=sceneObjectScaleValue(obj),worldSize=sceneObjectWorldSize(obj),moveLabel=objectEditor.transformMode==='resize'?'Resize Dimensions':objectEditor.transformMode==='scale'?'Scale Transform '+Math.round(scale*100)+'%':({smart:'Smart Move',plane:'ย้ายพื้น X/Z',height:'ยก–ลด Y',surface:'Snap พื้นผิว'}[objectEditor.moveMode]);
     const anchor=obj.placement?.anchorAttachment,anchorLabel=anchor?' · แม่เหล็ก '+esc(anchor.sourceAnchorId)+' → '+esc(anchor.targetId)+' / '+esc(anchor.targetAnchorId):'';
@@ -4736,8 +4795,14 @@ function syncObjectControls(){
   if(threeRenderer)threeRenderer.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);
   syncFinePositionControls();
   const advancedSettings=document.getElementById('btnAssetAdvancedSettings');if(advancedSettings)advancedSettings.disabled=!obj||selectionCount!==1;
+  if(selectionCount>1){
+    ['btnResizeObject','btnScaleObject','btnFlipObjectX','btnFlipObjectY','btnFlipObjectZ','btnDuplicateObject','btnReplaceObject','btnLockObject','btnDeleteObject'].forEach(id=>{const button=document.getElementById(id);if(button)button.disabled=true;});
+    document.getElementById('btnOpenAssetSettings').disabled=false;
+    if(selectionCount!==selectedObjectIds().length){document.getElementById('btnMoveSmart').disabled=true;document.getElementById('btnRotateObject').disabled=true;}
+  }
   renderAssetList();
   window.dispatchEvent(new CustomEvent('yp:asset-editor-sync'));
+  syncSelectionEditorContext();
 }
 function objectListLabel(){
   if(!S.objects.length)return'ไม่มี';
@@ -5838,7 +5903,7 @@ function build(){
   document.getElementById('assetResetSurface').onclick=()=>resetSelectedObjectSurface(true);
 
   document.querySelectorAll('[data-asset-tab]').forEach(button=>{
-    button.onclick=()=>setAssetTab(button.dataset.assetTab);
+    button.onclick=()=>{setAssetTab(button.dataset.assetTab);syncSelectionEditorContext();};
   });
   const myAssetFile=document.getElementById('myAssetFile'),myAssetChoose=document.getElementById('myAssetChoose');
   if(myAssetChoose&&myAssetFile){
@@ -6078,7 +6143,7 @@ function selectBoothType(type){
   const selected=TYPES.find(item=>item.k===type);if(!selected||!selected.on)return;
   const previousType=S.type;
   S.type=type;
-  if(type==='backdrop'&&previousType!=='backdrop'){S.W=6;S.D=3;S.H=2.4;}
+  if(type==='backdrop'&&previousType!=='backdrop')YPPhotoBackdropDefault.apply(S,{preserveGraphics:true});
   if(type==='island'&&previousType!=='island'){S.W=6;S.D=6;S.H=2.4;S.floor='carpet';}
   if(isFixedBoothType(type)){S.W=6;S.D=3;S.H=2.4;}
   if(type==='photo360'&&!Number.isFinite(Number(S.wallRadius)))S.wallRadius=PHOTO360_DEFAULT_RADIUS;
@@ -6248,7 +6313,9 @@ class ThreeBoothRenderer{
       const click=this.assetEditorClick,moved=this.pointerDrag?.moved;this.assetEditorClick=null;
       this.finishObjectDrag(e);
       // Open after release so resizing the viewport cannot move the object under the pointer.
-      if(e.type==='pointerup'&&click?.pointerId===e.pointerId&&!moved&&objectEditor.selectedId===click.id)openSelectedAssetEditor();
+      if(e.type==='pointerup'&&click?.pointerId===e.pointerId&&!moved&&Math.hypot(e.clientX-click.x,e.clientY-click.y)<=5){
+        if(click.clear)selectObject(null);else if(click.scene)selectSceneItem(click.id,{additive:click.additive});else openSelectionEditor();
+      }
     };
     this.onObjectLostPointerCapture=e=>this.finishObjectDrag(e);
     this.onObjectPointerLeave=()=>{if(!this.pointerDrag){this.setHoveredAnchorMarker(null);this.setHoveredResizeHandle(null);}};
@@ -7041,11 +7108,12 @@ class ThreeBoothRenderer{
     this.selectionCycle={signature,x:event.clientX,y:event.clientY,index};return ordered.slice(index).concat(ordered.slice(0,index));
   }
   beginObjectDrag(event){
+    if(selectionInteractionBlocked())return;
     if(!sceneAssetRegistry.listAssets().length||event.isPrimary===false)return;
     if(event.pointerType!=='touch'&&event.button!==0)return;
     const resizeMarker=this.pickResizeHandle(event),anchorMarker=resizeMarker?null:this.pickAnchorMarker(event);
     const sceneHits=resizeMarker||anchorMarker?[]:this.sceneSelectionHits(event);
-    if(!resizeMarker&&!anchorMarker&&!sceneHits.length){selectObject(null);return;}
+    if(!resizeMarker&&!anchorMarker&&!sceneHits.length){this.assetEditorClick={clear:true,pointerId:event.pointerId,x:event.clientX,y:event.clientY};return;}
     const hit=resizeMarker?{object:resizeMarker,point:resizeMarker.getWorldPosition(new this.THREE.Vector3())}:anchorMarker?{object:anchorMarker,point:anchorMarker.getWorldPosition(new this.THREE.Vector3())}:sceneHits[0].hit;
     const markerAsset=resizeMarker||anchorMarker?sceneAssetRegistry.getAssetById(hit.object.userData.objectId):null;
     if(resizeMarker){
@@ -7065,7 +7133,12 @@ class ThreeBoothRenderer{
     }
     if(hit.object.userData.brandPlacement||markerAsset?.id===SCENE_ASSET_IDS.brand){
       const face=BoothSpec.logoWall||'back',point=this.logoPoint(event,face),coords=this.logoCoordinates(point,face);if(!coords)return;
-      event.preventDefault();event.stopImmediatePropagation();selectLogoPlacement(true);this.controls.enabled=false;
+      event.preventDefault();event.stopImmediatePropagation();
+      const additive=objectEditor.multiSelect||event.shiftKey||event.ctrlKey||event.metaKey;
+      selectSceneItem(SCENE_ASSET_IDS.brand,{additive,openEditor:false});
+      this.assetEditorClick={id:SCENE_ASSET_IDS.brand,pointerId:event.pointerId,x:event.clientX,y:event.clientY};
+      if(additive)return;
+      this.controls.enabled=false;
       if(anchorMarker)this.setActiveAnchorMarker(anchorMarker);
       this.renderer.domElement.setPointerCapture(event.pointerId);
       this.pointerDrag={kind:'logo',pointerId:event.pointerId,face,startU:BoothSpec.logoMount==='floor'?BoothSpec.logoFloorX:BoothSpec.logoWallU,
@@ -7076,11 +7149,14 @@ class ThreeBoothRenderer{
     const hitAsset=anchorMarker?sceneAssetRegistry.getAssetById(hit.object.userData.objectId):sceneHits[0].asset,id=hitAsset?.id||hit.object.userData.objectId,
       obj=objectById(id),root=this.objectMeshes.get(id),mode=objectEditor.moveMode,
       sourceAnchorId=String(hit.object.userData.snapAnchorId||'');
-    if(!obj||!root){if(hitAsset){event.preventDefault();event.stopImmediatePropagation();selectSceneItem(hitAsset.id);if(event.altKey)announceCatalog('เลือกวัตถุซ้อนลำดับถัดไป: '+hitAsset.name,'success');}return;}
+    if(!obj||!root){if(hitAsset){
+      this.assetEditorClick={scene:true,id:hitAsset.id,additive:objectEditor.multiSelect||event.shiftKey||event.ctrlKey||event.metaKey,pointerId:event.pointerId,x:event.clientX,y:event.clientY};
+      if(event.altKey)announceCatalog('เลือกวัตถุซ้อนลำดับถัดไป: '+hitAsset.name,'success');
+    }return;}
     event.preventDefault();event.stopImmediatePropagation();positionObjectToolbar(event.clientX,event.clientY);
     const additive=objectEditor.multiSelect||event.shiftKey||event.ctrlKey||event.metaKey;
-    selectObject(id,{additive});
-    if(selectedObjectIds().includes(id))this.assetEditorClick={id,pointerId:event.pointerId,x:event.clientX,y:event.clientY};
+    selectObject(id,{additive,openEditor:false});
+    this.assetEditorClick={id,pointerId:event.pointerId,x:event.clientX,y:event.clientY};
     if(additive)return;
     if(objectLocked(obj)){announceCatalog('Asset นี้ถูกล็อกอยู่ กด Unlock เพื่อแก้ไขตำแหน่ง','error');return;}
     const memberIds=selectedObjectIds(),members=memberIds.map(objectById).filter(Boolean);
@@ -8689,10 +8765,11 @@ function planSVG(){
   const ox=(VW-W*sc)/2,oy=(VH-D*sc)/2;
   const P=(x,y)=>[ox+x*sc,oy+y*sc];
   const a=palette(),t=boothWallThickness(S),curve=wallCurveInfo(S);
+  const sceneAttrs=id=>'class="plan-scene-item" data-scene-id="'+id+'" tabindex="0" role="button" aria-label="'+esc(sceneItemById(id)?.name||'องค์ประกอบบูธ')+'"'+(selectedSceneItemIds().includes(id)?' style="filter:drop-shadow(0 0 2px #ff2688)"':'');
   let g=`<defs><marker id="plan-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 8 4 L 0 8 z" fill="#ff7ab8"/></marker></defs>
     <rect width="${VW}" height="${VH}" fill="#0a0b0e"/>`;
-  g+=`<rect x="${ox}" y="${oy}" width="${(W*sc).toFixed(1)}" height="${(D*sc).toFixed(1)}"
+  g+=`<rect ${sceneAttrs(SCENE_ASSET_IDS.floor)} x="${ox}" y="${oy}" width="${(W*sc).toFixed(1)}" height="${(D*sc).toFixed(1)}"
        fill="${floorColor()}" opacity=".35" stroke="#333a44" stroke-width="1"/>`;
   if(S.floor==='sticker'&&S.floorStickerData){
     const sw=Math.min(W,Math.max(.1,S.floorStickerW))*sc,sd=Math.min(D,Math.max(.1,S.floorStickerD))*sc;
@@ -8704,7 +8781,7 @@ function planSVG(){
       artwork=`<defs><pattern id="floor-sticker-pattern" patternUnits="userSpaceOnUse" x="${(cx+dx).toFixed(1)}" y="${(cy+dy).toFixed(1)}" width="${pw.toFixed(1)}" height="${ph.toFixed(1)}" patternTransform="rotate(${rotation} ${cx.toFixed(1)} ${cy.toFixed(1)})"><image href="${S.floorStickerData}" width="${pw.toFixed(1)}" height="${ph.toFixed(1)}" preserveAspectRatio="none"/></pattern></defs><rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sd.toFixed(1)}" fill="url(#floor-sticker-pattern)"/>`;
     }else artwork=`<image href="${S.floorStickerData}" x="${(sx+dx).toFixed(1)}" y="${(sy+dy).toFixed(1)}" width="${sw.toFixed(1)}" height="${sd.toFixed(1)}" preserveAspectRatio="xMidYMid ${mode==='cover'?'slice':'meet'}" transform="rotate(${rotation} ${(cx+dx).toFixed(1)} ${(cy+dy).toFixed(1)})"/>`;
     g+=`<defs><clipPath id="floor-sticker-clip"><rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sd.toFixed(1)}"/></clipPath></defs>
-      <g clip-path="url(#floor-sticker-clip)">${artwork}</g>
+      <g ${sceneAttrs(SCENE_ASSET_IDS.floorGraphic)} clip-path="url(#floor-sticker-clip)">${artwork}</g>
       <rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sd.toFixed(1)}" fill="none" stroke="#f72585" stroke-width="1"/>`;
   }
   if(viewGridVisible){
@@ -8718,20 +8795,21 @@ function planSVG(){
     g+='</g>';
   }
   const wall=(x,y,w,d,face='back')=>{const p=P(x,y);
-    return `<rect x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" width="${(w*sc).toFixed(1)}"
+    return `<rect ${sceneAttrs(registryWallId(face))} x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" width="${(w*sc).toFixed(1)}"
       height="${(d*sc).toFixed(1)}" fill="${wallFaceColor(S,face,a)}" stroke="rgba(0,0,0,.45)" stroke-width=".8"/>`;};
   const curvedBackWall=()=>{
     if(!curve)return wall(0,0,W,t);
     const front=[],back=[],segments=64;
     for(let i=0;i<=segments;i++){const p=curve.pointAt(i/segments,t/2),q=P(p.x,p.z);front.push(q[0].toFixed(1)+','+q[1].toFixed(1));}
     for(let i=segments;i>=0;i--){const p=curve.pointAt(i/segments,-t/2),q=P(p.x,p.z);back.push(q[0].toFixed(1)+','+q[1].toFixed(1));}
-    return `<polygon points="${front.concat(back).join(' ')}" fill="${wallFaceColor(S,'back',a)}" stroke="rgba(0,0,0,.45)" stroke-width=".8"/>`;
+    return `<polygon ${sceneAttrs(SCENE_ASSET_IDS.wallBack)} points="${front.concat(back).join(' ')}" fill="${wallFaceColor(S,'back',a)}" stroke="rgba(0,0,0,.45)" stroke-width=".8"/>`;
   };
   const wl=typ().walls;
   if(wl.indexOf('left')>=0&&sceneItemVisible(SCENE_ASSET_IDS.wallLeft))g+=wall(0,0,t,D,'left');
   if(wl.indexOf('right')>=0&&sceneItemVisible(SCENE_ASSET_IDS.wallRight))g+=wall(W-t,0,t,D,'right');
   if(wl.indexOf('back')>=0&&sceneItemVisible(SCENE_ASSET_IDS.wallBack))g+=curvedBackWall();
   if(hasStore()&&sceneItemVisible(SCENE_ASSET_IDS.room)){const G=storeGeom(t),p=P(G.x,G.y);
+    g+='<g '+sceneAttrs(SCENE_ASSET_IDS.room)+'>';
     g+=`<rect x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" width="${(G.w*sc).toFixed(1)}"
       height="${(G.d*sc).toFixed(1)}" fill="${S.stSurf==='sticker'?a.acc:stPaintColor(a)}"
       stroke="rgba(0,0,0,.5)" stroke-width=".8"/>`;
@@ -8750,11 +8828,11 @@ function planSVG(){
       if(S.stDoor==='front')g+=dl(ax,G.y+G.d,ax,G.y+G.d-dw);
       if(S.stDoor==='left') g+=dl(G.x,ay,G.x+dd,ay);
       if(S.stDoor==='right')g+=dl(G.x+G.w,ay,G.x+G.w-dd,ay);
-    }}
+    }g+='</g>';}
   const photoPlatform=photo360PlatformLayout(S);
   if(photoPlatform&&sceneItemVisible(SCENE_ASSET_IDS.photo360)){
     const center=P(photoPlatform.x,photoPlatform.z),radius=photoPlatform.diameter*sc/2;
-    g+=`<circle cx="${center[0].toFixed(1)}" cy="${center[1].toFixed(1)}" r="${radius.toFixed(1)}"
+    g+=`<circle ${sceneAttrs(SCENE_ASSET_IDS.photo360)} cx="${center[0].toFixed(1)}" cy="${center[1].toFixed(1)}" r="${radius.toFixed(1)}"
       fill="#343b45" fill-opacity=".92" stroke="#f72585" stroke-width="1.5"/>
       <text x="${center[0].toFixed(1)}" y="${(center[1]+3.5).toFixed(1)}" fill="#f2f3f5" font-size="9"
       font-weight="600" text-anchor="middle" font-family="'Noto Sans Thai',sans-serif">แท่น 360 Ø1 ม.</text>`;
@@ -8800,7 +8878,7 @@ function planSVG(){
     const shape=placementShape(size,x,z,rotation),ordered=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([aa,bb])=>P(
       shape.x+shape.axes[0].x*shape.half[0]*aa+shape.axes[1].x*shape.half[1]*bb,
       shape.z+shape.axes[0].z*shape.half[0]*aa+shape.axes[1].z*shape.half[1]*bb)),center=P(x,z),title=logoPlacementSummary(S);
-    g+=`<g class="plan-logo-placement"><title>${esc(title)}</title><polygon points="${ordered.map(point=>point.map(value=>value.toFixed(1)).join(',')).join(' ')}"
+    g+=`<g ${sceneAttrs(SCENE_ASSET_IDS.brand)}><title>${esc(title)}</title><polygon class="plan-footprint" points="${ordered.map(point=>point.map(value=>value.toFixed(1)).join(',')).join(' ')}"
       fill="${a.acc}" fill-opacity=".76" stroke="#f6d487" stroke-width="1.6"/><text x="${center[0].toFixed(1)}" y="${(center[1]+3).toFixed(1)}"
       fill="${inkOn(a.acc)}" font-size="8" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="${a.acc}" stroke-width="2"
       font-family="'Noto Sans Thai',sans-serif">${S.logoMount==='floor'?'โลโก้ตั้งพื้น':'โลโก้ติดผนัง'}</text></g>`;
@@ -8830,6 +8908,7 @@ function bindPlanObjectInteractions(container){
   let drag=null;const marquee=globalThis.YPPlanSelection.bind(container);
   const point=event=>{const svg=container.querySelector('svg'),matrix=svg?.getScreenCTM();return matrix?new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse()):null;};
   container.onpointerdown=event=>{
+    if(selectionInteractionBlocked())return;
     if(marquee.down(event))return;
     const node=event.target.closest?.('.plan-object');if(!node||event.button!==0||event.isPrimary===false||event.shiftKey||event.ctrlKey||event.metaKey||objectEditor.multiSelect)return;
     const obj=objectById(node.dataset.objectId);if(!obj)return;
@@ -8865,14 +8944,14 @@ function bindPlanObjectInteractions(container){
   };
   container.onpointerup=finish;container.onpointercancel=finish;
   container.onlostpointercapture=event=>marquee.up(event);
-  container.querySelectorAll('.plan-object').forEach(node=>{
+  container.querySelectorAll('.plan-object,.plan-scene-item').forEach(node=>{
     const activate=(restoreFocus,event)=>{
-      const id=node.dataset.objectId;selectObject(id,{openEditor:true,additive:!!(event?.shiftKey||event?.ctrlKey||event?.metaKey)});
-      if(restoreFocus)requestAnimationFrame(()=>[...container.querySelectorAll('.plan-object')].find(item=>item.dataset.objectId===id)?.focus());
+      const id=node.dataset.objectId||node.dataset.sceneId;selectSceneItem(id,{openEditor:true,additive:!!(event?.shiftKey||event?.ctrlKey||event?.metaKey)});
+      if(restoreFocus)requestAnimationFrame(()=>[...container.querySelectorAll('.plan-object,.plan-scene-item')].find(item=>(item.dataset.objectId||item.dataset.sceneId)===id)?.focus());
     };
     node.addEventListener('click',event=>{if(Date.now()<(container._planIgnoreClickUntil||0))return;activate(false,event);});
     node.addEventListener('keydown',event=>{
-      if(event.key==='Enter'||event.key===' '){event.preventDefault();activate(true);}
+      if(event.key==='Enter'||event.key===' '){event.preventDefault();activate(true,event);}
     });
   });
 }
@@ -9627,6 +9706,26 @@ moveToolSection('settingsColors','dockBrandBody');
 moveToolSection('settingsStorage','dockStorageBody');
 moveToolSection('settingsFloor','dockFinishBody');
 moveToolSection('settingsWall','dockFinishBody');
+function selectFinishTab(key,focus=false){
+  const tabs=[...document.querySelectorAll('[data-finish-tab]')];
+  if(!tabs.some(tab=>tab.dataset.finishTab===key))return;
+  tabs.forEach(tab=>{
+    const active=tab.dataset.finishTab===key,panel=document.getElementById(tab.getAttribute('aria-controls'));
+    tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;
+    panel.hidden=!active;panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby',tab.id);panel.tabIndex=0;
+    if(active&&focus)tab.focus({preventScroll:true});
+  });
+  document.getElementById('dockFinishPage').scrollTop=0;
+}
+document.querySelectorAll('[data-finish-tab]').forEach(tab=>{
+  tab.onclick=()=>selectFinishTab(tab.dataset.finishTab);
+  tab.onkeydown=event=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    event.preventDefault();event.stopPropagation();
+    selectFinishTab(event.key==='Home'?'floor':event.key==='End'?'wall':tab.dataset.finishTab==='floor'?'wall':'floor',true);
+  };
+});
+selectFinishTab('floor');
 moveToolSection('settingsBrand','dockSignageBody');
 moveToolSection('settingsLights','dockLightingBody');
 const brandBar=document.querySelector('.brandbar'),signageSection=document.getElementById('settingsBrand');
@@ -9660,8 +9759,9 @@ function showDockPage(page,source){
   if(activePage)activePage.scrollTop=0;
   if(page==='prompt')updatePromptPreview();
   updateDockPromptAction();
+  syncSelectionEditorContext();
 }
-document.querySelectorAll('.dock-tool[data-dock-page]').forEach(b=>b.onclick=()=>showDockPage(b.dataset.dockPage,b));
+document.querySelectorAll('.dock-tool[data-dock-page]').forEach(b=>b.onclick=()=>{if(b.dataset.dockPage==='catalog')setAssetTab('catalog');showDockPage(b.dataset.dockPage,b);});
 const gridMenuButton=document.getElementById('dockGridMenu'),gridSubmenu=document.getElementById('gridSubmenu');
 function closeGridSubmenu(returnFocus=false){
   gridSubmenu.hidden=true;gridMenuButton.setAttribute('aria-expanded','false');
@@ -9995,10 +10095,10 @@ fp.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
 const releaseNotesModal=document.getElementById('mRelease');
 const QUICK_SETUP_STEPS=Object.freeze(['intro','business','layout','brand','floor','room','loading']);
 const QUICK_SETUP_PROGRESS_STEPS=Object.freeze(['business','layout','brand','floor','room']);
-const QUICK_SETUP_TYPE_KEYS=Object.freeze(['inline','corner','penin','island']);
+const QUICK_SETUP_TYPE_KEYS=Object.freeze(['inline','corner','penin','island','backdrop','photo360']);
 let quickSetupStep='intro',quickSetupDraft=null,quickBusinessAttempted=false,quickLayoutAttempted=false,quickBrandAttempted=false,quickSetupCompleting=false;
 let quickSetupFirstRun=true;
-const quickBoothDefaults=type=>window.YPQuickSetupContext?.boothDefaultsFor(type)||({inline:{width:6,depth:3,height:2.4,displaySize:'3 × 6 ม.',openSides:1},corner:{width:6,depth:3,height:2.4,displaySize:'3 × 6 ม.',openSides:2},penin:{width:6,depth:6,height:2.4,displaySize:'6 × 6 ม.',openSides:3},island:{width:6,depth:6,height:2.4,displaySize:'6 × 6 ม.',openSides:4}}[type]||null);
+const quickBoothDefaults=type=>window.YPQuickSetupContext?.boothDefaultsFor(type)||({inline:{width:6,depth:3,height:2.4,displaySize:'3 × 6 ม.',openSides:1},corner:{width:6,depth:3,height:2.4,displaySize:'3 × 6 ม.',openSides:2},penin:{width:6,depth:6,height:2.4,displaySize:'6 × 6 ม.',openSides:3},island:{width:6,depth:6,height:2.4,displaySize:'6 × 6 ม.',openSides:4},backdrop:{width:6,depth:3,height:2.4,displaySize:'3 × 6 ม.',openSides:3},photo360:{width:6,depth:3,height:2.4,displaySize:'3 × 6 ม.',openSides:3}}[type]||null);
 const normalizedQuickHex=(value,fallback='#2E7D4F')=>window.YPQuickSetupContext?.normalizeHexColor(value,fallback)||(/^#[0-9a-fA-F]{6}$/.test(String(value||''))?String(value).toUpperCase():fallback);
 function quickSetupDraftFromEditor(){
   const boothType=QUICK_SETUP_TYPE_KEYS.includes(S.type)?S.type:'inline',preset=quickBoothDefaults(boothType)||quickBoothDefaults('inline');
@@ -10045,7 +10145,7 @@ function updateQuickBusinessStep(){
 }
 function buildQuickLayoutChoices(){
   const typeHost=document.getElementById('quickBoothTypes');typeHost.innerHTML='';
-  TYPES.filter(item=>item.on&&QUICK_SETUP_TYPE_KEYS.includes(item.k)).forEach(type=>{const preset=quickBoothDefaults(type.k);typeHost.appendChild(createQuickChoice({value:type.k,label:type.n,detail:(preset?.displaySize||'')+' · เปิด '+(preset?.openSides||0)+' ด้าน',
+  TYPES.filter(item=>item.on&&QUICK_SETUP_TYPE_KEYS.includes(item.k)).forEach(type=>{const preset=quickBoothDefaults(type.k);typeHost.appendChild(createQuickChoice({value:type.k,label:type.n,detail:(preset?.displaySize||'')+' · '+(['backdrop','photo360'].includes(type.k)?type.s:'เปิด '+(preset?.openSides||0)+' ด้าน'),
     selected:quickSetupDraft?.boothType===type.k,onSelect:value=>{const previous=quickSetupDraft.boothType,picked=quickBoothDefaults(value);quickSetupDraft.boothType=value;
       if(picked)Object.assign(quickSetupDraft,{width:picked.width,depth:picked.depth,height:picked.height});
       if(value==='corner'&&previous!=='corner')quickSetupDraft.cornerSide='';if(value!=='corner')quickSetupDraft.cornerSide='';
@@ -10133,6 +10233,7 @@ function completeQuickSetup(){
     const categoryChanged=S.cat!==category.k;S.cat=category.k;S.customBusinessCategory=category.k==='other'?String(quickSetupDraft.customBusinessCategory||'').trim():'';
     S.businessBrief=YPBusinessBrief.normalize(quickSetupDraft.businessBrief);
     if(categoryChanged&&!S.pairTouched)S.pair=category.pr;
+    if(type.k==='backdrop')YPPhotoBackdropDefault.apply(S,{preserveGraphics:true});
     S.type=type.k;S.cornerSide=type.k==='corner'?quickSetupDraft.cornerSide:'right';S.W=preset.width;S.D=preset.depth;S.H=preset.height;
     S.primary=normalizedQuickHex(quickSetupDraft.primary);S.colTouched=true;if(!S.logoColorTouched)S.logoColor=S.primary;
     S.raise=Number(quickSetupDraft.raise)||0;S.floor=quickSetupDraft.floor||'carpet';S.carpet=quickSetupDraft.carpet||'grey';S.tile=quickSetupDraft.tile||'woodL';
@@ -10480,12 +10581,12 @@ window.addEventListener('beforeunload',()=>{if(threeRenderer)threeRenderer.dispo
 <script src="js/booth-theme.js?v=20260913-lighting-1"></script>
 <link rel="stylesheet" href="css/booth-theme.css?v=20260911-1">
 <script src="js/booth-theme-ui.js?v=20260911-1"></script>
-<script src="js/wall-finish-ui.js?v=20260911-1"></script>
+<script src="js/wall-finish-ui.js?v=20260921-tabs"></script>
 <script src="js/keyboard-shortcuts.js?v=20260911-1"></script>
 <script src="js/business-brief-ui.js?v=20260918-compact-1"></script>
 <link rel="stylesheet" href="css/wizard-v2.css?v=20260918-compact-1">
-<script src="js/wizard-model.js?v=20260913-floor-defaults-1"></script>
+<script src="js/wizard-model.js?v=20260921-photo-types"></script>
 <script src="js/wizard-logo.js?v=20260913-1"></script>
-<script src="js/wizard-v2.js?v=20260918-edit-later"></script>
+<script src="js/wizard-v2.js?v=20260921-photo-backdrop-default"></script>
 </body>
 </html>

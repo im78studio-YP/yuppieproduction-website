@@ -57,7 +57,11 @@ test('Booth preset ใช้แกน W/D เดิมและขนาดม�
 });
 
 test('Booth preset ที่ไม่รองรับไม่สร้างค่าหลอก', () => {
-  assert.equal(api.boothDefaultsFor('photo360'), null);
+  for(const key of ['backdrop','photo360']){
+    const p=api.boothDefaultsFor(key);
+    assert.deepEqual([p.width,p.depth,p.height,p.openSides],[6,3,2.4,3]);
+  }
+  assert.equal(api.boothDefaultsFor('cross'), null);
 });
 
 test('HEX สีแบรนด์ถูก normalize และมี fallback ที่ปลอดภัย', () => {

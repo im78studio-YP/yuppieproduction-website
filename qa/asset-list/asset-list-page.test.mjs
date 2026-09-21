@@ -20,7 +20,7 @@ test('ผนังและโลโก้ใช้ Contextual Toolbar ชุด
   assert.match(html,/toolbar\.classList\.toggle\('scene-asset-selected',systemAssetSelected\)/);
   assert.doesNotMatch(html,/scene-asset-selected \.btn[^}]*display:none/);
   assert.match(html,/brandSelected\?false:!obj\|\|locked/);
-  assert.match(html,/function openAssetSettings\(mode='surface'\)[\s\S]*item\.id===SCENE_ASSET_IDS\.brand\?'signage'[\s\S]*'finish'/);
+  assert.match(html,/function openAssetSettings\(mode='surface'\)[\s\S]{0,300}openSelectionEditor\(\)/);
   assert.match(html,/function deleteSelectedObject\(\)[\s\S]*item\?\.system[\s\S]*setSceneItemsVisibility\(\[item\.id\],false\)/);
 });
 

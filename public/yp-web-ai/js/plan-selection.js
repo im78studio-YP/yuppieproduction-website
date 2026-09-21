@@ -6,8 +6,8 @@
   const point=event=>{const matrix=container.querySelector('svg')?.getScreenCTM();return matrix?new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse()):null;};
   function targets(rect){
    const ids=new Set();
-   container.querySelectorAll('.plan-object').forEach(node=>{
-    const polygon=node.querySelector('.plan-footprint'),id=node.dataset.objectId;
+   container.querySelectorAll('.plan-object,[data-scene-id="branding.logo.main"]').forEach(node=>{
+    const polygon=node.querySelector('.plan-footprint'),id=node.dataset.objectId||node.dataset.sceneId;
     if(!polygon||!sceneItemSelectable(id))return;
     const points=Array.from(polygon.points);
     if(!points.length||!points.every(p=>p.x>=rect.x&&p.x<=rect.x+rect.w&&p.y>=rect.y&&p.y<=rect.y+rect.h))return;
@@ -21,11 +21,12 @@
   container._planSelectionDispose=()=>{clear();window.removeEventListener('keydown',key,true);container.onpointerdown=container.onpointermove=container.onpointerup=container.onpointercancel=container.onlostpointercapture=null;};
   return{
    down(event){
-    if(event.button!==0||event.isPrimary===false||!event.target.closest?.('svg')||event.target.closest('.plan-object,.plan-logo-placement'))return false;
+    const sceneNode=event.target.closest?.('.plan-scene-item'),floor=sceneNode&&['structure.floor.main','branding.graphic.floor'].includes(sceneNode.dataset.sceneId);
+    if(event.button!==0||event.isPrimary===false||!event.target.closest?.('svg')||event.target.closest('.plan-object,.plan-logo-placement')||sceneNode&&!floor)return false;
     const start=point(event),svg=container.querySelector('svg');if(!start)return false;
     const overlay=document.createElementNS('http://www.w3.org/2000/svg','g');overlay.setAttribute('pointer-events','none');overlay.classList.add('plan-marquee');
     overlay.innerHTML='<rect fill="#f72585" fill-opacity=".12" stroke="#ff7ab8" stroke-width="1.2" stroke-dasharray="4 3"/><text fill="#fff" stroke="#17111c" stroke-width="3" paint-order="stroke" font-size="10"></text>';svg.append(overlay);
-    state={pointerId:event.pointerId,start,clientX:event.clientX,clientY:event.clientY,overlay,moved:false,ids:[],base:(event.shiftKey||event.ctrlKey||event.metaKey||objectEditor.multiSelect)?selectedSceneItemIds().slice():[]};
+    state={pointerId:event.pointerId,start,clientX:event.clientX,clientY:event.clientY,overlay,moved:false,ids:[],clickedId:floor?sceneNode.dataset.sceneId:null,additive:!!(event.shiftKey||event.ctrlKey||event.metaKey||objectEditor.multiSelect),base:(event.shiftKey||event.ctrlKey||event.metaKey||objectEditor.multiSelect)?selectedSceneItemIds().slice():[]};
     container.setPointerCapture(event.pointerId);event.preventDefault();return true;
    },
    move(event){
@@ -39,8 +40,9 @@
     if(!state||event.pointerId!==state.pointerId)return false;
     if(event.type==='pointercancel'||event.type==='lostpointercapture'){cancel();return true;}
     this.move(event);const old=clear();container._planIgnoreClickUntil=Date.now()+300;
+    if(!old.moved&&old.clickedId){selectSceneItem(old.clickedId,{additive:old.additive});return true;}
     setObjectSelection([...old.base,...(old.moved?old.ids:[])]);logoEditor.selected=objectEditor.selectedId===SCENE_ASSET_IDS.brand;
-    syncObjectControls();if(threeRenderer)threeRenderer.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);render();return true;
+    syncObjectControls();if(threeRenderer)threeRenderer.setSceneSelection(selectedSceneItemIds(),objectEditor.selectedId);render();openSelectionEditor();return true;
    }
   };
  }

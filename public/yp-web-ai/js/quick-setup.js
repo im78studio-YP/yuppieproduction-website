@@ -164,7 +164,9 @@
     inline: Object.freeze({ width: 6, depth: 3, height: 2.4, displaySize: '3 × 6 ม.', openSides: 1 }),
     corner: Object.freeze({ width: 6, depth: 3, height: 2.4, displaySize: '3 × 6 ม.', openSides: 2 }),
     penin: Object.freeze({ width: 6, depth: 6, height: 2.4, displaySize: '6 × 6 ม.', openSides: 3 }),
-    island: Object.freeze({ width: 6, depth: 6, height: 2.4, displaySize: '6 × 6 ม.', openSides: 4 })
+    island: Object.freeze({ width: 6, depth: 6, height: 2.4, displaySize: '6 × 6 ม.', openSides: 4 }),
+    backdrop: Object.freeze({ width: 6, depth: 3, height: 2.4, displaySize: '3 × 6 ม.', openSides: 3 }),
+    photo360: Object.freeze({ width: 6, depth: 3, height: 2.4, displaySize: '3 × 6 ม.', openSides: 3 })
   });
 
   function boothDefaultsFor(type) {

@@ -80,34 +80,36 @@
  function begin(mode,start='business'){
    const ws=YPProjectWorkspace.state();if(!ws.ready||ws.busy||ws.pendingDraft)return;
    const original=YPProjectBridge.capture();session={mode,original,expectedDesign:model.designSignature(original.spec),active:ws.active,target:ws.active,base:mode==='current'?structuredClone(original):YPProjectBridge.initialSnapshot()};
-   const s=original.spec;quickSetupDraft={businessCategoryId:s.cat,customBusinessCategory:s.customBusinessCategory||'',businessBrief:YPBusinessBrief.normalize(s.businessBrief),boothType:model.steps&&['inline','corner','penin','island'].includes(s.type)?s.type:'inline',cornerSide:s.cornerSide||'right',width:s.W,depth:s.D,height:s.H,brandTouched:true,primary:s.primary,templateId:null};
+   const s=original.spec;quickSetupDraft={businessCategoryId:s.cat,customBusinessCategory:s.customBusinessCategory||'',businessBrief:YPBusinessBrief.normalize(s.businessBrief),boothType:QUICK_SETUP_TYPE_KEYS.includes(s.type)?s.type:'inline',cornerSide:s.cornerSide||'right',width:s.W,depth:s.D,height:s.H,brandTouched:true,primary:s.primary,templateId:null};
+   if(mode==='new'&&quickSetupDraft.boothType==='backdrop')YPPhotoBackdropDefault.apply(session.base.spec);
    selected=mode==='current'?'current':'blank';filter='all';logoControl.reset();resetCustom();show(start);
  }
  function resetCustom(restoreOriginal=false){if(restoreOriginal)logoControl.reset();Object.assign(quickSetupDraft,{theme:null,...model.floorDefaults(session.base.spec,restoreOriginal||selected==='current'),roomMode:'keep'});}
  function pick(id){
    selected=id;const d=quickSetupDraft;
    session.base=id==='current'?structuredClone(session.original):id==='blank'?YPProjectBridge.initialSnapshot():bridge(d.boothType).snapshot(id,{cornerSide:d.cornerSide});
+   if(d.boothType==='backdrop'&&(id==='blank'||(id==='current'&&session.original.spec.type!=='backdrop')))YPPhotoBackdropDefault.apply(session.base.spec,{dimensions:false,preserveGraphics:id==='current'});
    d.templateId=['blank','current'].includes(id)?null:id;d.primary=session.base.spec.primary;resetCustom();buildTemplates();
  }
  function updateArea(){
    const d=quickSetupDraft,error=model.validate(d);$('quickLayoutError').textContent=error;$('quickLayoutNext').disabled=!!error;
-   $('quickLayoutSummary').textContent=Number.isFinite(d.width*d.depth)?'กว้าง '+d.width+' × ลึก '+d.depth+' × สูง '+d.height+' ม. · '+(d.width*d.depth).toFixed(1)+' ตร.ม.':'';
+   $('quickLayoutSummary').textContent=Number.isFinite(d.width*d.depth)?'กว้าง '+d.width+' × ลึก '+d.depth+' × สูง '+d.height+' ม. · '+(d.width*d.depth).toFixed(1)+' ตร.ม.'+(d.boothType==='photo360'?' · ขนาดคงที่ · ปรับรัศมีผนังโค้งได้ในหน้าออกแบบ':''):'';
    for(const key of ['width','depth','height'])$('wizard-'+key).setAttribute('aria-invalid',String(!Number.isFinite(d[key])||d[key]<(key==='height'?2.4:1)||d[key]>(key==='height'?4.9:30)));
  }
  function buildArea(){
-   const d=quickSetupDraft;for(const key of ['width','depth','height'])$('wizard-'+key).value=d[key];
+   const d=quickSetupDraft;for(const key of ['width','depth','height']){$('wizard-'+key).value=d[key];$('wizard-'+key).disabled=d.boothType==='photo360';}
    const host=$('quickBoothTypes');host.replaceChildren();
-   for(const t of TYPES.filter(t=>['inline','corner','penin','island'].includes(t.k))){host.append(createQuickChoice({value:t.k,label:t.n,detail:'เปิด '+quickBoothDefaults(t.k).openSides+' ด้าน',selected:d.boothType===t.k,onSelect:()=>{if(d.boothType!==t.k){d.boothType=t.k;d.cornerSide=d.cornerSide||'right';pick(session.mode==='current'?'current':'blank');}buildArea();}}));}
+   for(const t of TYPES.filter(t=>t.on&&QUICK_SETUP_TYPE_KEYS.includes(t.k))){host.append(createQuickChoice({value:t.k,label:t.n,detail:['backdrop','photo360'].includes(t.k)?t.s:'เปิด '+quickBoothDefaults(t.k).openSides+' ด้าน',selected:d.boothType===t.k,onSelect:()=>{if(d.boothType!==t.k){d.boothType=t.k;if(['backdrop','photo360'].includes(t.k)){const p=quickBoothDefaults(t.k);Object.assign(d,{width:p.width,depth:p.depth,height:p.height});}d.cornerSide=d.cornerSide||'right';pick(session.mode==='current'?'current':'blank');}buildArea();}}));}
    const corners=$('quickCornerSides');corners.hidden=d.boothType!=='corner';corners.replaceChildren();for(const c of CORNER_SIDES)corners.append(createQuickChoice({value:c.k,label:c.n,detail:c.s,selected:d.cornerSide===c.k,onSelect:()=>{d.cornerSide=c.k;if(template())pick(selected);buildArea();}}));updateArea();
  }
  function buildTemplates(){
    const d=quickSetupDraft;cards.replaceChildren();
    for(const id of (session.mode==='current'?['current','blank']:['blank'])){const b=action(id==='current'?'เก็บแบบปัจจุบัน':'เริ่มจากบูธเปล่า',()=>pick(id));b.dataset.template=id;b.setAttribute('aria-pressed',String(id===selected));cards.append(b);}
-   const list=library(d.boothType).templates.filter(t=>filter!=='exact'||(t.width||6)===d.width&&(t.depth||3)===d.depth);
+   const list=(library(d.boothType)?.templates||[]).filter(t=>filter!=='exact'||(t.width||6)===d.width&&(t.depth||3)===d.depth);
    for(const t of list){const b=action('',()=>pick(t.id));b.dataset.template=t.id;b.classList.add('wizard-template-card');b.setAttribute('aria-pressed',String(selected===t.id));const img=node('img');img.src=imageFor(t);img.alt='';img.loading='lazy';b.append(img,node('strong',t.name),node('span',(t.width||6)+' × '+(t.depth||3)+' ม. · สูง '+(t.height||2.4)+' ม.'),node('small',t.tagline||''));cards.append(b);}
    for(const f of ['all','exact'])$('wizard-filter-'+f).setAttribute('aria-pressed',String(filter===f));
    const t=template();$('wizard-original-size').hidden=!t;
-   choiceNote.textContent=(list.length?'':'ไม่มีเทมเพลตตรงขนาดนี้ เลือก “ทุกขนาด” เพื่อปรับใช้ได้ · ')+(t?'เลือก '+t.name+' · ':selected==='current'?'เก็บงานปัจจุบัน · ':'บูธเปล่า · ')+'พื้นที่ที่จะใช้ '+d.width+' × '+d.depth+' × '+d.height+' ม.'+(t&&((t.width||6)!==d.width||(t.depth||3)!==d.depth||(t.height||2.4)!==d.height)?' · ขนาดต่างจากต้นฉบับ ปรับเฉพาะพื้นที่ระบบ ไม่ยืดหรือย้ายชิ้นส่วนอัตโนมัติ':'');
+   choiceNote.textContent=(library(d.boothType)?(list.length?'':'ไม่มีเทมเพลตตรงขนาดนี้ เลือก “ทุกขนาด” เพื่อปรับใช้ได้ · '):'ใช้รูปแบบผนังที่เลือก · เพิ่มอุปกรณ์และกราฟิกต่อในหน้าออกแบบได้ · ')+(t?'เลือก '+t.name+' · ':selected==='current'?'เก็บงานปัจจุบัน · ':'บูธเปล่า · ')+'พื้นที่ที่จะใช้ '+d.width+' × '+d.depth+' × '+d.height+' ม.'+(t&&((t.width||6)!==d.width||(t.depth||3)!==d.depth||(t.height||2.4)!==d.height)?' · ขนาดต่างจากต้นฉบับ ปรับเฉพาะพื้นที่ระบบ ไม่ยืดหรือย้ายชิ้นส่วนอัตโนมัติ':'');
  }
  function themeValue(){return quickSetupDraft.theme||session.base.spec.boothColorTheme||{name:'กำหนดเอง',primary:session.base.spec.primary||'#f72585',secondary:'#f3f0e8',accent:'#30343b'};}
  function fillTheme(){for(const k of ['primary','secondary','accent'])$('wizard-color-'+k).value=themeValue()[k];$('wizard-theme-original').setAttribute('aria-pressed',String(!quickSetupDraft.theme));YPBoothTheme.presets.forEach((p,i)=>$('wizard-theme-'+i).setAttribute('aria-pressed',String(quickSetupDraft.theme?.name===p.name)));}

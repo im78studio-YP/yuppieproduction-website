@@ -122,8 +122,16 @@
    surfaceEditor?.dispose();pathEditor?.dispose();keyLight.shadow.map?.dispose();if(highlight){highlight.geometry.dispose();highlight.material.dispose();}
    parts.forEach(e=>global.YPAssetEdgeGlow?.clear(e));owned.forEach(m=>m.dispose());environment?.dispose();gl?.dispose();gl?.forceContextLoss();dialog.close();dialog.remove();active=null;trigger?.isConnected&&trigger.focus();
   }
-  active={close:dispose};
-  function guardKeys(event){if(!dialog.open)return;if(event.key==='Escape'){event.preventDefault();dispose();}if(event.key!=='Tab')event.stopImmediatePropagation();}
+  let draftBaseline=null;
+  const draftState=()=>JSON.stringify({appearance:appearanceDraft,parts:sanitize(draft),surfaces:surfaceEditor?.data(),name:$('#assetWholeName').value});
+  function requestClose(){
+   if(draftBaseline===null||draftState()===draftBaseline&&!surfaceEditor?.pending()&&!pathEditor?.incomplete()){dispose();return;}
+   let prompt=$('[data-exit-draft]');
+   if(!prompt){prompt=document.createElement('section');prompt.dataset.exitDraft='';prompt.setAttribute('role','alert');prompt.style.cssText='padding:14px;border:1px solid #f72585;background:#20151e';prompt.innerHTML='<p>มีการแก้ไขที่ยังไม่บันทึก ต้องการทำอย่างไร?</p><button class="btn pri" type="button" data-exit-save>บันทึกและปิด</button> <button class="btn" type="button" data-exit-discard>ทิ้งการแก้ไข</button> <button class="btn" type="button" data-exit-continue>แก้ไขต่อ</button>';dialog.querySelector('footer').before(prompt);prompt.querySelector('[data-exit-save]').onclick=()=>{$('[data-part-save]').click();};prompt.querySelector('[data-exit-discard]').onclick=dispose;prompt.querySelector('[data-exit-continue]').onclick=()=>{prompt.hidden=true;};}
+   prompt.hidden=false;prompt.querySelector('[data-exit-continue]').focus();
+  }
+  active={close:requestClose};
+  function guardKeys(event){if(!dialog.open)return;if(event.key==='Escape'){event.preventDefault();requestClose();}if(event.key!=='Tab')event.stopImmediatePropagation();}
   window.addEventListener('keydown',guardKeys,true);
   try{gl=new T.WebGLRenderer({antialias:true,alpha:false});gl.setPixelRatio(Math.min(devicePixelRatio,2));gl.outputColorSpace=T.SRGBColorSpace;gl.toneMapping=T.ACESFilmicToneMapping;viewport.append(gl.domElement);controls=new r.controls.constructor(camera,gl.domElement);controls.enableDamping=true;
    gl.shadowMap.enabled=true;gl.shadowMap.type=T.PCFSoftShadowMap;
@@ -163,9 +171,9 @@
    gl.domElement.addEventListener('pointerdown',event=>{if(event.isPrimary!==false&&event.button===0)down={x:event.clientX,y:event.clientY};});
    gl.domElement.addEventListener('pointerup',event=>{if(!down||Math.hypot(event.clientX-down.x,event.clientY-down.y)>5){down=null;return;}down=null;const rect=gl.domElement.getBoundingClientRect();camera.updateMatrixWorld();model.updateMatrixWorld(true);ray.setFromCamera(new T.Vector2((event.clientX-rect.left)/rect.width*2-1,1-(event.clientY-rect.top)/rect.height*2),camera);const hits=ray.intersectObjects([...new Set(parts.map(e=>e.node))],false);const hit=hits.find(h=>{for(let n=h.object;n&&n!==scene;n=n.parent)if(!n.visible)return false;return true;});if(surfaceEditor?.click(hit))return;if(pathEditor?.click(event,hit))return;if(hit){const i=parts.findIndex(e=>e.node===hit.object&&e.slot===(hit.face?.materialIndex||0));if(i>=0){if($('#assetPickMode').value==='whole')surfaceEditor.setScope('part');choose(i);}}});
    gl.domElement.addEventListener('pointercancel',()=>{down=null;});
-   function tick(){if(closed)return;controls.update();gl.render(scene,camera);frameId=requestAnimationFrame(tick);}choose(0);surfaceEditor.setScope('surface');if(initialSurfaces.length){$('#assetSavedSurfaces').value='0';$('#assetSavedSurfaces').onchange();}tick();
+   function tick(){if(closed)return;controls.update();gl.render(scene,camera);frameId=requestAnimationFrame(tick);}choose(0);surfaceEditor.setScope('surface');if(initialSurfaces.length){$('#assetSavedSurfaces').value='0';$('#assetSavedSurfaces').onchange();}draftBaseline=draftState();tick();
   }catch(error){dispose();throw error;}
-  dialog.querySelectorAll('[data-part-close]').forEach(button=>button.onclick=dispose);dialog.addEventListener('cancel',event=>{event.preventDefault();dispose();});
+  dialog.querySelectorAll('[data-part-close]').forEach(button=>button.onclick=requestClose);dialog.addEventListener('cancel',event=>{event.preventDefault();requestClose();});
   dialog.addEventListener('keydown',event=>event.stopPropagation());
   $('[data-part-save]').onclick=()=>{
    if(surfaceEditor?.pending()){status.textContent='กำลังโหลดภาพ กรุณารอสักครู่';return;}

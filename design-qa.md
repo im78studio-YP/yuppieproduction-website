@@ -586,6 +586,27 @@ passed
 2. The image-mode default is now `true`; the existing independent state and event binding were preserved.
 3. Post-fix focused comparison confirms the requested checked state with no visual regression.
 
+## 2026-09-21 — Floor/wall tabs matched to catalog reference
+
+- Scope: restyle the existing floor/wall switcher; preserve controls and switching behavior.
+- Source visual truth: C:/Users/Admin/AppData/Local/Temp/codex-clipboard-30e0a609-e6e1-449a-9cec-a22513009bae.png (365 × 130 pixels).
+- Implementation screenshot: qa/project-workspace/finish-tabs-reference-floor.png (1270 × 912 pixels).
+- Local route: http://127.0.0.1:4173/yp-web-ai/index.html?comparePreview=1
+- Viewport: 1270 × 912 CSS pixels, DPR 1, no density rescaling. Reference is a component crop, not a full-page target; compare the tab row only. Two equal tabs instead of three is intentional for floor/wall.
+- State: floor selected in screenshot; wall click and Left-arrow return also verified in the in-app browser.
+- Full-view comparison: source and implementation emitted together in the same comparison input. Header, panel and content remain intact.
+- Focused region: tab row is legible at native scale in the full capture; separate cropping is unnecessary. Computed styles confirm 36 px height, 8/8/0/0 px corners, 11.5 px type and a 2 px inset active underline.
+- Typography: reuses existing asset-tab family, weight, size and responsive font rule; Thai labels remain readable.
+- Layout: 6 px gap, equal columns, square bottom corners joining the header baseline; no clipping or wrapping.
+- Colors/tokens: exact existing asset-tab tokens for background, border, hover and selected pink state.
+- Image quality: no raster/icon assets are part of this tab component; no image generation needed.
+- Copy: floor/wall labels intentionally replace catalog labels; no other content changes.
+- Interaction/console: click and keyboard selection update visible panels and selected states; no captured console errors.
+- Comparison history: previous pill-like 44 px controls replaced with the existing 36 px asset-tab styling; first post-change comparison passed with no further visual changes needed.
+- Findings: no actionable P0/P1/P2 differences. Mobile-specific browser capture was not repeated in this style-only pass; shared mobile asset-tab rule is preserved.
+- Implementation checklist: reuse component styling, preserve ARIA and handlers, inspect active/inactive states — complete.
+- final result: passed
+
 ## Final result
 
 passed
