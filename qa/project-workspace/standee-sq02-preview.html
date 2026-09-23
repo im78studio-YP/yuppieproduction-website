@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Standee SQ02 import QA</title>
+<style>body{background:#20242b;color:#fff;font:16px system-ui;padding:24px}button,a{padding:12px;margin:8px;display:inline-block;color:inherit}iframe{width:900px;height:500px}pre{white-space:pre-wrap}</style>
+<h1>Standee_SQ02 import QA</h1>
+<p>Isolated compare preview. Does not change the saved booth.</p>
+<button id="run" disabled>Verify and render shelf</button><a id="download" hidden>Download WebP</a>
+<pre id="status">Loading application…</pre><div id="preview"></div>
+<iframe id="app" src="/yp-web-ai/index.html?comparePreview=1"></iframe>
+<script>
+const frame=document.querySelector('#app'),status=document.querySelector('#status'),button=document.querySelector('#run');
+frame.addEventListener('load',async()=>{
+ try{await frame.contentWindow.YPProjectBridge.ready;frame.contentWindow.YPQuickSetupBridge.close();button.disabled=false;status.textContent='Ready';}
+ catch(e){status.textContent='FAIL: '+e.message;}
+});
+button.addEventListener('click',async()=>{
+ button.disabled=true;status.textContent='Checking source, materials and catalogue renderer…';
+ let renderer;
+ try{
+  const w=frame.contentWindow,id='imported-standee-sq02',item=w.YPImportedStructureAssets.find(item=>item.catalogId===id),r=await w.loadThreeRenderer(),T=r.THREE;
+  if(!item||item.sceneAssetType!=='Shelf'||item.category!=='display')throw Error('Incorrect catalogue classification');
+  r.requestFurnitureTemplate(item);await Promise.all([...r.furnitureLoads.values(),...r.fixtureLoads.values()]);
+  if(!r.furnitureTemplates.has(id))throw Error('Model did not load');
+  const source=await r.modelLoader.loadAsync(item.modelUrl),sourceSize=new T.Box3().setFromObject(source.scene).getSize(new T.Vector3());
+  const object=w.makeCatalogObject(id,0,0),root=r.buildCatalogObject(object),scene=new T.Scene();scene.background=new T.Color('#697585');scene.add(root);root.updateMatrixWorld(true);
+  const bounds=new T.Box3().setFromObject(root),center=bounds.getCenter(new T.Vector3()),size=bounds.getSize(new T.Vector3());
+  for(const vector of [size,sourceSize])vector.toArray().forEach((v,i)=>{if(Math.abs(v-[1.3,1.6,.7][i])>.005)throw Error('Incorrect dimensions: '+vector.toArray());});
+  const parts=w.YPAssetParts.entries(root);if(parts.length!==11)throw Error('Expected 11 independently editable parts');
+  const materials=parts.map(p=>({name:p.original.name,map:!!p.original.map,metalness:p.original.metalness,color:p.original.color?.getHexString()}));
+  if(!materials.some(m=>m.map))throw Error('Embedded texture not preserved');
+  if(!materials.some(m=>!m.map&&m.metalness===0))throw Error('Missing neutral fallback material');
+  root.position.sub(center);root.updateMatrixWorld(true);const span=Math.max(size.x,size.y,size.z),camera=new T.OrthographicCamera(-1,1,1,-1,.001,span*30);
+  camera.position.set(4,2.8,6).normalize().multiplyScalar(span*5);camera.lookAt(0,0,0);camera.updateMatrixWorld(true);
+  const fit=new T.Box3(),box=new T.Box3().setFromObject(root);
+  for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z])fit.expandByPoint(new T.Vector3(x,y,z).applyMatrix4(camera.matrixWorldInverse));
+  const half=Math.max((fit.max.y-fit.min.y)/2,(fit.max.x-fit.min.x)/2/(4/3))*1.18,cx=(fit.min.x+fit.max.x)/2,cy=(fit.min.y+fit.max.y)/2;
+  camera.left=cx-half*4/3;camera.right=cx+half*4/3;camera.top=cy+half;camera.bottom=cy-half;camera.updateProjectionMatrix();
+  scene.add(new T.HemisphereLight(0xffffff,0x7a8494,2));const key=new T.DirectionalLight(0xfff5e8,3);key.position.set(span*2,span*4,span*5);scene.add(key);
+  const fill=new T.DirectionalLight(0xc7dbff,1.1);fill.position.set(-span*4,span,span*2);scene.add(fill);
+  renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(320,240);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.render(scene,camera);
+  const image=new Image();image.src=renderer.domElement.toDataURL('image/webp',.9);document.querySelector('#preview').replaceChildren(image);
+  const link=document.querySelector('#download');link.href=image.src;link.download=id+'.webp';link.hidden=false;
+  status.textContent='PASS: catalogue, source/rendered dimensions, 11 editable parts, embedded texture and neutral base.\n'+JSON.stringify({size:object.size,source:sourceSize.toArray(),materials},null,2);
+ }catch(e){status.textContent='FAIL: '+e.stack;}finally{renderer?.dispose();renderer?.forceContextLoss();button.disabled=false;}
+});
+</script></html>
