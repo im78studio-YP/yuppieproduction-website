@@ -5713,8 +5713,8 @@ function wire(){
     const f=e.dataTransfer.files[0]; if(f&&/^image\//.test(f.type)) loadImg(f); });
 
   /* คู่ช่องเลือกสี + ช่องพิมพ์รหัสสี — ผูกครั้งเดียว ไม่สร้าง DOM ใหม่ระหว่างพิมพ์ */
-  const bindColor=(colorEl,hexEl,get,set)=>{
-    const apply=h=>{ set(h); schedule(false,'m'); };
+  const bindColor=(colorEl,hexEl,get,set,mode)=>{
+    const apply=h=>{ set(h); schedule(false,mode); };
     if(colorEl) colorEl.addEventListener('input',e=>apply(e.target.value));
     if(!hexEl) return;
     const commit=()=>{ const h=normHex(hexEl.value);
@@ -5736,9 +5736,9 @@ function wire(){
   });
   /* สีกล่อง — กรอบข้างและฝาหลังแยกกัน */
   bindColor($('#frameColor'), $('#frameHex'),
-    ()=>S.box.frameColor, h=>{ S.box.frameColor=h; if(Array.isArray(S.box.bandColors)) S.box.bandColors[0]=h; syncBoxColorUI(); syncBoxBandUI(); });
+    ()=>S.box.frameColor, h=>{ S.box.frameColor=h; if(Array.isArray(S.box.bandColors)) S.box.bandColors[0]=h; syncBoxColorUI(); syncBoxBandUI(); },'m');
   bindColor($('#backColor'), $('#backHex'),
-    ()=>S.box.backColor, h=>{ S.box.backColor=h; syncBoxColorUI(); });
+    ()=>S.box.backColor, h=>{ S.box.backColor=h; syncBoxColorUI(); },'m');
   $('#btnPalReset').addEventListener('click',resetPalette);
   /* ขนาดชิ้นงานเป็นมิลลิเมตร */
   const sizeGo=(el,axis)=>{

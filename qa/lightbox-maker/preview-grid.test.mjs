@@ -98,6 +98,28 @@ test('Only edits that affect the raster request a new grid',()=>{
   assert.equal(run(c,"BIND.find(b=>b[0]==='expFmt')[5]"),'n');
 });
 
+test('Ring colour bindings refresh the raster palette while box colours reuse it',()=>{
+  const {c,flush}=fixture();
+  run(c,`globalThis.fields={};document.querySelector=id=>fields[id]??={value:'',handlers:{},classList:{toggle(){}},
+    addEventListener(type,fn){this.handlers[type]=fn;}};
+    syncRingUI=syncBoxColorUI=syncBoxBandUI=()=>{};
+    globalThis.calls=[];ensurePalette(1);
+    recompute=reuse=>{calls.push(reuse?'mesh':'raster');if(!reuse)ensurePalette(1);};`);
+  run(c,script.slice(script.indexOf('  const bindColor='),script.indexOf("  $('#btnPalReset')")));
+  for(const [id,hex,path,expected] of [
+    ['#ring0c','#123456','rings[0].hex','raster'],
+    ['#ring1x','#654321','rings[1].hex','raster'],
+    ['#frameColor','#112233','box.frameColor','mesh'],
+    ['#backHex','#332211','box.backColor','mesh'],
+  ]){
+    run(c,`calls=[];fields['${id}'].value='${hex}';fields['${id}'].handlers.input({target:fields['${id}']});`);
+    flush();
+    assert.equal(run(c,'calls.join()'),expected,id);
+    assert.equal(run(c,`S.${path}`),hex,id);
+    if(id.startsWith('#ring'))assert.equal(run(c,`S.pal.find(p=>p.role==='ring'&&p.ringIndex===${id==='#ring0c'?0:1}).hex`),hex);
+  }
+});
+
 test('A shared plate layout preserves all transforms with one pack for 64 meshes',()=>{
   const {c}=fixture();
   const result=run(c,`(()=>{
