@@ -898,10 +898,18 @@ function drawSourceInto(ctx,gw,gh,cv){
   ctx.restore();
 }
 
-function buildGrid(){
-  const px = +S.exp.res;
+/* จำกัดเฉพาะพรีวิว; ส่งออกยังใช้ความละเอียดที่ผู้ใช้เลือก */
+function gridSpec(preview=false){
+  const requested=+S.exp.res;
+  if(!Number.isFinite(requested)||requested<=0) throw new Error('ความละเอียดต้องมากกว่า 0 มม.');
+  const minPx=Math.max(Math.sqrt(S.box.W*S.box.H/2000000),S.box.W/4096,S.box.H/4096);
+  const px=preview&&requested<minPx?Math.ceil(minPx*1.001*10000)/10000:requested;
   const gw = Math.max(8, Math.round(S.box.W/px));
   const gh = Math.max(8, Math.round(S.box.H/px));
+  return {px,gw,gh};
+}
+function buildGrid(preview=false){
+  const {px,gw,gh}=gridSpec(preview);
   const owner = new Uint8Array(gw*gh);                 // 0 = background
 
   if(!SRC_CACHE) rebuildSource();
@@ -3945,7 +3953,7 @@ function runChecks(){
   const PK=platePack(), BED=bedSize(), BEDH=bedHeight();
   if(art){
     const nComp=G.comp?G.comp.n:1;
-    add('ok',`ขนาดชิ้นงานจริง ${PB.w.toFixed(0)} × ${PB.h.toFixed(0)} × ${st.total.toFixed(1)} มม.`+
+    add('ok',`${G.px>+S.exp.res+1e-6?'ขนาดพรีวิวประมาณ':'ขนาดชิ้นงานจริง'} ${PB.w.toFixed(0)} × ${PB.h.toFixed(0)} × ${st.total.toFixed(1)} มม.`+
              (nComp>1?` · แยกเป็น ${nComp} ชิ้นที่ไม่ติดกัน พิมพ์ทีละชิ้นแล้วประกอบได้`:''));
     const plan=printPlan();
     if(plan.error) add('err',plan.error);
@@ -4312,6 +4320,7 @@ function exportMeshIssues(parts){
 async function doExport(){
   busy(true,'กำลังสร้างเมช…');
   await new Promise(r=>setTimeout(r,30));
+  const previewGrid=G, previewBounds=PB, previewPalette=S.pal.map(p=>({...p}));
   try{
     buildGrid();
     const parts=buildParts();
@@ -4371,10 +4380,15 @@ async function doExport(){
       download(await zipFiles(files),`${name}_แผ่นรองหลังใส_DXF_SVG.zip`);
     }
     LAST={tris:pr.reduce((a,p)=>a+p.n/12,0)};
-    updateBadges(); runChecks();
     toast('ส่งออกเรียบร้อย');
   }catch(e){ console.error(e); toast('ส่งออกไม่สำเร็จ: '+e.message); }
-  busy(false);
+  finally{
+    busy(false);
+    if(previewGrid&&G!==previewGrid){
+      G=previewGrid; PB=previewBounds; S.pal=previewPalette; V3.dirty=true;
+    }
+    updateBadges(); runChecks();
+  }
 }
 /* ---------- ไฟล์ตัดแผ่น: DXF + SVG ของอะครีลิคและพลาสวูด ---------- */
 function backingCutFiles(){
@@ -5122,9 +5136,9 @@ function schedule(needSrc,mode){
     recompute();
   }, needSrc?200:110);
 }
-function recompute(){
+function recompute(reuseGrid=false){
   try{
-    buildGrid();
+    if(!reuseGrid) buildGrid(true);
     renderPalette();
     V3.dirty=true;
     draw();
@@ -5163,7 +5177,9 @@ function updateBadges(){
     st2.push(`ราคาขาย <b>${nf(E.price,0)} ฿</b>/ชิ้น`);
   }
   if(G&&G.comp&&G.comp.n>1) st2.push(`แยกเป็น <b>${G.comp.n}</b> ชิ้น`);
-  st2.push(`ความละเอียดกริด <b>${S.exp.res} มม.</b>`);
+  st2.push(G&&G.px>+S.exp.res+1e-6
+    ? `พรีวิวประมาณ <b>${nf(G.px,2)} มม.</b> · ไฟล์พิมพ์ <b>${S.exp.res} มม.</b>`
+    : `ความละเอียดกริด <b>${S.exp.res} มม.</b>`);
   $('#status').innerHTML=st2.join(' · ');
 }
 
@@ -5472,24 +5488,54 @@ function syncPrinterFit(){
 /* ตั้งขนาดชิ้นงานเป็นมิลลิเมตร
    ขนาดจริงขึ้นกับทั้งสเกลและพื้นที่ทำงาน (baseFit เป็น min ของสองแกน)
    พอขยายพื้นที่ทำงาน ฐานสเกลก็เปลี่ยนตาม แก้สมการก้าวเดียวจึงไม่พอ — ต้องวนซ้ำ */
-function setPartSize(axis,target){
+let _sizing=false;
+async function setPartSize(axis,target){
+  if(_sizing) return;
   if(!PB||PB.empty||!isFinite(target)||target<5||target>2000) return;
   const R = 2*activeRings().reduce((a,r)=>a+(+r.w),0);
   const cur0 = axis==='w'? PB.w : PB.h;
   if(cur0<0.5) return;
   if(cur0-R<0.5){ toast('ขอบกว้างเกินกว่าจะย่อได้ ลดความกว้างขอบก่อน'); return; }
+  if(Math.abs(cur0-target)<Math.max(0.25,(G?.px||0)*1.5)) return;
+  _sizing=true; busy(true,'กำลังปรับขนาดชิ้นงาน…');
+  try{
+  await new Promise(r=>setTimeout(r,0));
+  /* ชดเชย base fit หลังขยายพื้นที่ก่อนสร้างกริด ลดรอบลองผิดลองถูก */
+  const src=SRC_CACHE?.cv;
+  const oldFit=src?baseFit(G.gw,G.gh,src)*G.px:1;
+  const angle=S.tr.rot*Math.PI/180, co=Math.cos(angle), si=Math.sin(angle);
+  const cx=PB.ux0+PB.w/2-S.box.W/2-S.tr.dx*S.box.W/200;
+  const cy=S.box.H/2-PB.my0-PB.h/2-S.tr.dy*S.box.H/200;
+  const oldX=S.tr.scale, oldY=S.tr.uniform?oldX:S.tr.scaleY;
+  const u=co*cx+si*cy, v=-si*cx+co*cy;
 
   /* ขยายพื้นที่ทำงานให้พอก่อน แล้วค่อยวนหาสเกล — ไม่งั้นรูปทรงจะโดนขอบตัด */
   const M = 2*S.box.frame + 16;
   const other0 = axis==='w'? PB.h : PB.w;
-  const other  = S.tr.uniform ? other0*(target/cur0) : other0;
+  const other  = S.tr.uniform ? (other0-R)*(target-R)/(cur0-R)+R : other0;
   S.box.W = Math.max(S.box.W, Math.ceil((axis==='w'? target : other)+M));
   S.box.H = Math.max(S.box.H, Math.ceil((axis==='h'? target : other)+M));
+  const spec=gridSpec(true), newFit=src?baseFit(spec.gw,spec.gh,src)*spec.px:1;
+  const initial=(axis==='w'||S.tr.uniform)?S.tr.scale:S.tr.scaleY;
+  const scaled=clamp(initial*(target-R)/(cur0-R)*oldFit/newFit,2,4000);
+  if(S.tr.uniform){S.tr.scale=scaled;S.tr.scaleY=scaled;}
+  else{
+    S.tr.scale*=oldFit/newFit; S.tr.scaleY*=oldFit/newFit;
+    if(axis==='w') S.tr.scale=scaled; else S.tr.scaleY=scaled;
+  }
+  /* พื้นที่ใหม่ต้องครอบทั้งรูป แม้ภาพต้นฉบับมีช่องว่างไม่เท่ากันสองข้าง */
+  const centerArtwork=()=>{
+    if(!src) return;
+    const x=u*newFit/oldFit*S.tr.scale/oldX;
+    const y=v*newFit/oldFit*(S.tr.uniform?S.tr.scale:S.tr.scaleY)/oldY;
+    S.tr.dx=-200*(co*x-si*y)/S.box.W; S.tr.dy=-200*(si*x+co*y)/S.box.H;
+  };
+  centerArtwork();
 
-  for(let it=0; it<5; it++){
-    buildGrid();                                   // อัปเดต PB แบบซิงโครนัส
+  for(let it=0; it<3; it++){
+    buildGrid(true);
     const cur = axis==='w'? PB.w : PB.h;
-    if(Math.abs(cur-target) < 0.25) break;
+    if(Math.abs(cur-target)<Math.max(0.25,G.px*1.5)||it===2) break;
     const den = cur - R; if(den < 0.5) break;
     const s0 = (axis==='w' || S.tr.uniform) ? S.tr.scale : S.tr.scaleY;
     const need = clamp(s0*(target-R)/den, 2, 4000);
@@ -5497,8 +5543,12 @@ function setPartSize(axis,target){
     if(S.tr.uniform){ S.tr.scale=need; S.tr.scaleY=need; }
     else if(axis==='w') S.tr.scale=need;
     else S.tr.scaleY=need;
+    centerArtwork();
+    await new Promise(r=>setTimeout(r,0));
   }
-  pushToUI(); recompute();
+  pushToUI(); recompute(true);
+  }catch(e){ console.error(e); toast('ปรับขนาดไม่สำเร็จ: '+e.message); }
+  finally{ _sizing=false; busy(false); }
 }
 
 /* แท็บล่างบนมือถือ: เปิดเฉพาะชุดเมนูที่เกี่ยวข้อง โดยคงพรีวิวไว้ด้านหลังตลอด */
@@ -5660,7 +5710,7 @@ function wire(){
   /* ขนาดชิ้นงานเป็นมิลลิเมตร */
   const sizeGo=(el,axis)=>{
     el.addEventListener('change',()=>setPartSize(axis,+el.value));
-    el.addEventListener('keydown',e=>{ if(e.key==='Enter') setPartSize(axis,+el.value); });
+    el.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); setPartSize(axis,+el.value); el.blur(); } });
   };
   sizeGo($('#sizeW'),'w'); sizeGo($('#sizeH'),'h');
 

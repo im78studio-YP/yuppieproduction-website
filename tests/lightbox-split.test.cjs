@@ -23,15 +23,41 @@ function studio(w = 300, h = 250, options = {}) {
       rebuildSelectedPrinter(key){applyPrinter(key);return buildParts(false);},
       backing(){S.backing.enabled=true;return buildParts(false);},
       grid(){return previewGridSpec('plate',{mn:[0,0,0],mx:[1,1,1],c:[0,0,0]},100,true);},
+      gridSize(w,h,res,preview){S.box.W=w;S.box.H=h;S.exp.res=res;return gridSpec(preview);},
+      async resize(uniform,axis){
+        S=defaults(); S.tr.uniform=uniform; S.tr.dx=12; S.tr.dy=-8;
+        SRC_CACHE={cv:{width:800,height:500}};
+        const calls=[];
+        const measure=(preview=false)=>{
+          const spec=gridSpec(preview),fit=baseFit(spec.gw,spec.gh,SRC_CACHE.cv)*spec.px;
+          const kx=fit*S.tr.scale/100,ky=fit*(S.tr.uniform?S.tr.scale:S.tr.scaleY)/100;
+          const w=540*kx+14,h=240*ky+14;
+          const cx=spec.gw*spec.px*(0.5+S.tr.dx/200)-10*kx;
+          const cy=spec.gh*spec.px*(0.5+S.tr.dy/200)-60*ky;
+          G=spec;PB={ux0:cx-w/2,my0:S.box.H-cy-h/2,w,h,empty:false};
+          calls.push(preview);return G;
+        };
+        measure(true); const before={...PB};calls.length=0;
+        buildGrid=measure; pushToUI=()=>{};recompute=reuse=>{if(!reuse)measure(true);};
+        await Promise.all([setPartSize(axis,1730),setPartSize(axis,1730)]);
+        const preview={...PB},canvas={w:S.box.W,h:S.box.H},grid={...G};
+        const previewCalls=calls.slice();measure(false);
+        return {preview,actual:{...PB},canvas,grid,calls:previewCalls,before,res:S.exp.res};
+      },
       groups:printGroups, model:make3mf, stl:stlOf, merge:mergeForSTL, support:splitSupportFiles,
       issues:exportMeshIssues,
-      async exportScene(fmt,margin){
+      async exportScene(fmt,margin,separateGrid=false){
         S.exp.fmt=fmt;if(margin!==undefined) S.exp.margin=margin;
-        const downloads=[],messages=[];
-        buildGrid=()=>G;updateBadges=()=>{};runChecks=()=>{};
+        const downloads=[],messages=[],gridCalls=[],preview=G,bounds=PB,palette=JSON.stringify(S.pal);
+        buildGrid=(usePreview=false)=>{
+          gridCalls.push(usePreview);
+          if(separateGrid){G={...G};PB={...PB};S.pal=S.pal.map(p=>({...p,name:p.name+' export'}));}
+          return G;
+        };updateBadges=()=>{};runChecks=()=>{};
         const toastNode=$('#toast');Object.defineProperty(toastNode,'textContent',{set(value){messages.push(value);}});
         download=(blob,name)=>downloads.push({blob,name});
-        await doExport();clearTimeout(toastNode._h);return {downloads,messages};
+        await doExport();clearTimeout(toastNode._h);return {downloads,messages,gridCalls,
+          restored:G===preview&&PB===bounds&&JSON.stringify(S.pal)===palette};
       },
       extrude(groups,back=false){
         const plan=printPlan(), M=Mesh('test','#ffffff');
@@ -59,6 +85,43 @@ const rectangle = (w, h) => [{ out: [[0, 0], [w, 0], [w, h], [0, h]], holes: [] 
 const area = (app, groups) => groups.reduce((a, g) => a + Math.abs(app.area(g.out)) - g.holes.reduce((s, h) => s + Math.abs(app.area(h)), 0), 0);
 const near = (a, b, eps = 1e-5) => assert.ok(Math.abs(a - b) <= eps, `${a} != ${b}`);
 const plain = value => JSON.parse(JSON.stringify(value));
+
+test('large previews bound raster allocation while exports retain the selected millimetre resolution', () => {
+  const app=studio();
+  for(const [w,h] of [[180,180],[1730,600],[1730,1730],[2000,2000],[2000,20]]){
+    for(const res of [0.1,0.15,0.25,0.4]){
+      const preview=app.gridSize(w,h,res,true),full=app.gridSize(w,h,res,false);
+      assert.ok(preview.gw*preview.gh<=2000000);
+      assert.ok(preview.gw<=4096&&preview.gh<=4096);
+      assert.ok(preview.px>=res);assert.equal(full.px,res);
+      if(w===180&&res===0.15)assert.equal(preview.px,res);
+    }
+  }
+  assert.throws(()=>app.gridSize(100,100,0,true),/ความละเอียด/);
+});
+
+test('1730 mm resize reuses bounded preview grids and coalesces Enter/change events', async () => {
+  for(const uniform of [true,false])for(const axis of ['w','h']){
+    const result=await studio().resize(uniform,axis);
+    assert.ok(result.calls.length>=1&&result.calls.length<=3);
+    assert.ok(result.calls.every(preview=>preview===true));
+    assert.ok(result.grid.gw*result.grid.gh<=2000000);
+    near(result.actual[axis],1730,1.5);
+    if(!uniform){const other=axis==='w'?'h':'w';near(result.actual[other],result.before[other],1.5);}
+    assert.ok(result.preview.ux0>0&&result.preview.my0>0);
+    assert.ok(result.preview.ux0+result.preview.w<result.canvas.w);
+    assert.ok(result.preview.my0+result.preview.h<result.canvas.h);
+    assert.equal(result.res,0.15);
+  }
+});
+
+test('export requests full resolution and restores the interactive preview and palette', async () => {
+  const app=studio();app.synthetic();
+  const result=await app.exportScene('3mf',undefined,true);
+  assert.deepEqual(plain(result.gridCalls),[false]);
+  assert.deepEqual(plain(result.messages),['ส่งออกเรียบร้อย']);
+  assert.equal(result.restored,true);
+});
 
 function assertClosed(mesh) {
   const edges = new Map();
