@@ -284,6 +284,26 @@ test('3D preview grid spans every print plate and respects rectangular printer h
   near(grid.z1, pack.bed / 2);
 });
 
+test('every tiled 3MF module starts at Z=0, including cap shells', async () => {
+  for (const mode of ['service', 'shell', 'shellCap']) {
+    const app = studio(), parts = app.synthetic(true, mode).filter(p => !p.display);
+    for (const group of app.groups(parts)) {
+      const zip = unzipStored(await (await app.model(group.parts, group.key)).arrayBuffer());
+      const model = zip.get('3D/3dmodel.model').toString('utf8');
+      const z = [...model.matchAll(/<vertex x="[^"]+" y="[^"]+" z="([^"]+)"/g)].map(m => +m[1]);
+      assert.ok(z.length > 0);
+      near(Math.min(...z), 0, 0.001);
+      assert.ok(z.every(value => value >= -0.001));
+      if (mode === 'shellCap') {
+        assert.equal(group.module, 'shell');
+        assert.ok(group.parts.every(p => p.printBase > 0));
+        const place = app.pack().items[group.key];
+        assert.ok(place && place.x > 0 && place.y > 0);
+      }
+    }
+  }
+});
+
 test('smooth work fitting a single plate retains edge material and normalizes negative back coordinates', () => {
   const app = studio();
   const original = studio().synthetic(true, 'service', false);

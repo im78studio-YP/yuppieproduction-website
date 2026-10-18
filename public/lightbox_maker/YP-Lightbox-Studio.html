@@ -2611,7 +2611,7 @@ function finishPrintParts(parts,plan){
     }
     for(const part of M.chunks.values()){
       if(!part.n) continue;
-      for(const key of ['kind','module','glow','bossCount','snapCount']) part[key]=M[key];
+      for(const key of ['kind','module','glow','gloss','printBase','bossCount','snapCount']) part[key]=M[key];
       const {x,y}=part.offset;
       for(let i=0;i<part.n;i+=12) for(let k=0;k<3;k++){ part.a[i+3+k*3]-=x; part.a[i+4+k*3]-=y; }
       part.x0-=x;part.x1-=x;part.y0-=y;part.y1-=y;
@@ -3299,7 +3299,7 @@ function platePack(){
   const maxX=Math.max(...all.map(i=>i.x+i.w)), maxY=Math.max(...all.map(i=>i.y+i.h));
   return {items,maxX,maxY,bed:BED,bedH:BEDH,fits:maxX<=BED&&maxY<=BEDH};
 }
-function printModule(p){ return p.module||(p.kind==='back'?'back':isShell()?'shell':'panel'); }
+function printModule(p){ return isShell()?'shell':p.module||(p.kind==='back'?'back':'panel'); }
 function printPlace(p,pack=platePack()){
   if(p.tile&&pack.plates) return pack.items[printModule(p)+':'+p.tile.id]||{x:0,y:0};
   if(isService()) return pack.items[p.module==='front'?'panel':p.module]||{x:0,y:0};
@@ -3403,7 +3403,7 @@ function stlOf(M){
 /* ══════════════════════════════════════════════════════════════
    3MF
    ══════════════════════════════════════════════════════════════ */
-function indexMesh(M){
+function indexMesh(M,base=M.printBase||0){
   const map=new Map(), V=[], T=[];
   const t=M.n/12;
   for(let i=0;i<t;i++){
@@ -3411,7 +3411,7 @@ function indexMesh(M){
     for(let k=0;k<3;k++){
       const x=Math.round(M.a[s+k*3]*1000)/1000,
             y=Math.round(M.a[s+k*3+1]*1000)/1000,
-            z=Math.round((M.a[s+k*3+2]-(M.printBase||0))*1000)/1000;
+            z=Math.round((M.a[s+k*3+2]-base)*1000)/1000;
       const key=x+'|'+y+'|'+z;
       let id=map.get(key);
       if(id===undefined){ id=V.length/3; map.set(key,id); V.push(x,y,z); }
@@ -3424,6 +3424,7 @@ function indexMesh(M){
 const xesc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 function make3mf(parts,title){
+  const tiled=parts.some(p=>p.tile), baseZ=tiled?printBaseZ(parts):0;
   let mats='<basematerials id="1">\n';
   parts.forEach(p=>{ mats+=`  <base name="${xesc(p.name)}" displaycolor="${p.hex.toUpperCase().padEnd(7,'0')}FF"/>\n`; });
   mats+=' </basematerials>\n';
@@ -3431,7 +3432,7 @@ function make3mf(parts,title){
   let objs='', comps='', id=2;
   const panelIds=[], standalone=[], records=[];
   parts.forEach((p,i)=>{
-    const {V,T}=indexMesh(p);
+    const {V,T}=indexMesh(p,tiled?baseZ:p.printBase||0);
     if(!T.length) return;
     let v=''; for(let k=0;k<V.length;k+=3) v+=`<vertex x="${V[k]}" y="${V[k+1]}" z="${V[k+2]}"/>`;
     let t=''; for(let k=0;k<T.length;k+=3) t+=`<triangle v1="${T[k]}" v2="${T[k+1]}" v3="${T[k+2]}"/>`;
