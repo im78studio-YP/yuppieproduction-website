@@ -102,7 +102,7 @@ test('Slider updates reuse printable meshes; state and file export are wired',()
   assert.equal(run(c,'calls.join()'),'backing');
   const refresh=html.match(/function refreshBackingPreview\(\)\{[\s\S]*?\n\}/)[0];
   assert.doesNotMatch(refresh,/buildGrid\(|buildParts\(/);
-  assert.ok(html.includes("'sheet','backing']"));
+  assert.equal(run(c,"projectState({src:{},box:{},backing:{enabled:true,offset:7}}).backing.offset"),7);
   assert.ok(html.includes('S.backing=backingSpec()'));
   assert.ok(html.includes('_แผ่นรองหลังใส_DXF_SVG.zip'));
 });

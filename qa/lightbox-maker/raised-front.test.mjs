@@ -34,7 +34,7 @@ test('เผื่อสวมแผ่นแสดงเฉพาะ shell ม�
 test('ชื่อส่งออก shell แสดง 3MF + DXF + SVG ตรงกับไฟล์ที่แนบจริง',()=>{
   assert.ok(html.includes("mfOption.textContent=sh?'3MF + DXF + SVG (แนะนำ)':'3MF รวมทุกชิ้น (แนะนำ)'"));
   assert.ok(html.includes('id="exportFormatHint"'));
-  assert.match(html,/if\(isShell\(\)\)\{\s*busy\(true,'กำลังเขียนไฟล์ตัดแผ่น…'\);[\s\S]*?await cutFilesZip\(\)/);
+  assert.match(html,/if\(isShell\(\)\)\{\s*phase\('กำลังเขียนไฟล์ตัดแผ่น…'\);[\s\S]*?await cutFilesZip\(\)/);
 });
 
 test('Lightbox Maker ไม่มีโหมดชิ้นหน้ายกขอบรุ่นเดิม',()=>{

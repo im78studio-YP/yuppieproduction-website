@@ -182,8 +182,8 @@ test('เกาะสีในช่องว่างถูกแยกจา�
 test('5D ยังคงโครงสร้างสามโมดูล แต่มีชื่อและเอกสารผลิตแยกจากงานมาตรฐาน',()=>{
   assert.match(html,/function isService\(\)[\s\S]*?S\.build\.mode==='face5d'/);
   assert.match(html,/return isFace5DChamfer\(\)\?'ชั้นสีหน้า 5D ขอบ Chamfer \+ กันแสงรั่ว':isFace5DRounded\(\)\?'ชั้นสีหน้า 5D ขอบโค้งมน \+ กันแสงรั่ว'/);
-  assert.match(html,/if\(isFace5DChamfer\(\)\) download\(blob,`\$\{name\}_ชุดชั้นสีหน้า_5D_Chamfer\.3mf`\)/);
-  assert.match(html,/else if\(isFace5DRounded\(\)\) download\(blob,`\$\{name\}_ชุดชั้นสีหน้า_5D_ขอบโค้งมน\.3mf`\)/);
+  assert.ok(html.includes("isFace5DChamfer()?'ชุดชั้นสีหน้า_5D_Chamfer'"));
+  assert.ok(html.includes("isFace5DRounded()?'ชุดชั้นสีหน้า_5D_ขอบโค้งมน'"));
   assert.match(html,/ชั้นสีหน้าแบบ 5D ขอบโค้งมน: ผิวสีหนา /);
   assert.match(html,/ชั้นสีหน้าแบบ 5D Chamfer: ผิวสีหนา /);
 });

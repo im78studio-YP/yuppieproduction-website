@@ -158,6 +158,12 @@ table.kv tr.sub td{color:var(--tx2)}
 .toast.on{opacity:1}
 .busy{position:absolute;inset:0;background:#0e1013cc;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:5}
 .busy.on{display:flex}
+#exportProgress{width:220px;accent-color:var(--acc)}
+#draftRecovery{padding:8px 14px;background:var(--panel2);border-bottom:1px solid var(--line)}
+#draftRecovery[hidden]{display:none}
+#draftRecovery .btn{margin-left:8px}
+#draftStatus{font-size:11px;color:var(--tx2);white-space:nowrap}
+@media(max-width:720px){#draftStatus{display:none}}
 .spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 
@@ -211,10 +217,12 @@ table.kv tr.sub td{color:var(--tx2)}
   <input class="docname" id="docname" value="YUPPIE PRODUCTION">
   <div class="spacer"></div>
   <button class="btn gh" id="btnNew">ล้าง</button>
+  <span id="draftStatus" role="status"></span>
   <button class="btn gh" id="btnSaveProj">บันทึกโปรเจ็ค</button>
   <button class="btn gh" id="btnOpenProj">เปิดไฟล์</button>
   <button class="btn pri" id="btnExport">ส่งออกไฟล์พิมพ์</button>
 </header>
+<div id="draftRecovery" hidden role="status">พบร่างงานที่บันทึกไว้ <span id="draftName"></span> <button class="btn" id="btnRestoreDraft">กู้คืนงาน</button> <button class="btn gh" id="btnSkipDraft">ข้าม</button></div>
 
 <main>
 
@@ -412,7 +420,7 @@ Studio</textarea>
       <button data-a="reset">รีเซ็ตมุม</button>
     </div>
     <div class="glhint" id="glhint">ลากเพื่อหมุน · ล้อเลื่อนเพื่อซูม · Shift+ลาก เลื่อนภาพ · ดับเบิลคลิกรีเซ็ต</div>
-    <div class="busy" id="busy"><div class="spin"></div><div id="busyTx">กำลังคำนวณ…</div></div>
+    <div class="busy" id="busy"><div class="spin"></div><div id="busyTx" role="status">กำลังคำนวณ…</div><progress id="exportProgress" hidden></progress><button class="btn" id="btnCancelExport" hidden>ยกเลิกการส่งออก</button></div>
   </div>
   <div class="statusbar" id="status"></div>
 </div>
@@ -593,6 +601,7 @@ Studio</textarea>
    YP Lightbox Studio — core: state, raster, quantize, masks, rects
    ══════════════════════════════════════════════════════════════ */
 "use strict";
+const ENGINE_SCRIPT=document.currentScript?.textContent||'';
 
 const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -2333,11 +2342,19 @@ function addSolid(M,mask,z0,z1,noMirrorX,boxes){
    ══════════════════════════════════════════════════════════════ */
 
 /* ---------- growable triangle buffer: 12 floats/tri (n + 3 verts) ---------- */
-function Mesh(name,hex,noTri){ return {name,hex,noTri:!!noTri,a:noTri?new Float32Array(0):new Float32Array(12*4096),n:0,vol:0,
+let EXPORT_MESH_BUDGET=null;
+function reserveExportMesh(bytes,oldBytes=0){
+  if(!EXPORT_MESH_BUDGET)return;
+  if(EXPORT_MESH_BUDGET.used+bytes>EXPORT_MESH_BUDGET.limit)
+    throw new Error('เมชใหญ่เกินขีดจำกัดหน่วยความจำ กรุณาแยกงานหรือเลือกความละเอียดหยาบขึ้น');
+  EXPORT_MESH_BUDGET.used+=bytes-oldBytes;
+}
+function Mesh(name,hex,noTri){ if(!noTri)reserveExportMesh(12*4096*4);return {name,hex,noTri:!!noTri,a:noTri?new Float32Array(0):new Float32Array(12*4096),n:0,vol:0,
     x0:1e9,x1:-1e9,y0:1e9,y1:-1e9,z0:1e9,z1:-1e9}; }
 function _grow(M,need){
   if(M.n+need<=M.a.length) return;
   let cap=M.a.length; while(cap<M.n+need) cap*=2;
+  reserveExportMesh(cap*4,M.a.byteLength);
   const b=new Float32Array(cap); b.set(M.a.subarray(0,M.n)); M.a=b;
 }
 function tri(M,p,q,r,nx,ny,nz){
@@ -3541,24 +3558,26 @@ async function deflateRaw(u8){
     return out;
   }catch(e){ return null; }
 }
-async function zipFiles(files){
+async function zipFiles(files,release=false){
   const parts=[], central=[]; let off=0;
-  for(const f of files){
-    const nameB=enc(f.name), crc=crc32(f.data);
-    let body=await deflateRaw(f.data), method=8;
-    if(!body||body.length>=f.data.length){ body=f.data; method=0; }
+  for(let i=0;i<files.length;i++){
+    const f=files[i],data=f.data instanceof Blob?new Uint8Array(await f.data.arrayBuffer()):f.data;
+    const nameB=enc(f.name), crc=crc32(data);
+    let body=await deflateRaw(data), method=8;
+    if(!body||body.length>=data.length){ body=data; method=0; }
+    if(release)files[i]=null;
     const lh=new Uint8Array(30+nameB.length), dv=new DataView(lh.buffer);
     /* บิต 11 = ชื่อไฟล์เป็น UTF-8 · ไม่ตั้งไว้ Windows จะอ่านชื่อไทยเป็นตัวยึกยือ */
     dv.setUint32(0,0x04034b50,true); dv.setUint16(4,20,true); dv.setUint16(6,0x800,true);
     dv.setUint16(8,method,true); dv.setUint16(10,0,true); dv.setUint16(12,0x2821,true);
-    dv.setUint32(14,crc,true); dv.setUint32(18,body.length,true); dv.setUint32(22,f.data.length,true);
+    dv.setUint32(14,crc,true); dv.setUint32(18,body.length,true); dv.setUint32(22,data.length,true);
     dv.setUint16(26,nameB.length,true); dv.setUint16(28,0,true);
     lh.set(nameB,30);
     parts.push(lh,body);
     const cd=new Uint8Array(46+nameB.length), cv=new DataView(cd.buffer);
     cv.setUint32(0,0x02014b50,true); cv.setUint16(4,20,true); cv.setUint16(6,20,true);
     cv.setUint16(8,0x800,true); cv.setUint16(10,method,true); cv.setUint16(12,0,true); cv.setUint16(14,0x2821,true);
-    cv.setUint32(16,crc,true); cv.setUint32(20,body.length,true); cv.setUint32(24,f.data.length,true);
+    cv.setUint32(16,crc,true); cv.setUint32(20,body.length,true); cv.setUint32(24,data.length,true);
     cv.setUint16(28,nameB.length,true); cv.setUint32(42,off,true);
     cd.set(nameB,46);
     central.push(cd);
@@ -3594,6 +3613,7 @@ function partFileLabel(M){
 function mergeForSTL(name,parts,hex){
   const live=parts.filter(p=>p&&p.n); const M=Mesh(name,hex||'#808080',false);
   const n=live.reduce((a,p)=>a+p.n,0);
+  reserveExportMesh(Math.max(12,n)*4,M.a.byteLength);
   M.a=new Float32Array(Math.max(12,n)); M.n=0;
   live.forEach(p=>{ M.a.set(p.a.subarray(0,p.n),M.n); M.n+=p.n; });
   /* แต่ละโมดูลเก็บพิกัด z ตามตำแหน่งตอนประกอบ ตัวกล่อง 5D จึงเริ่มที่ faceH
@@ -4322,79 +4342,188 @@ function exportMeshIssues(parts){
   }
   return issues;
 }
-async function doExport(){
-  busy(true,'กำลังสร้างเมช…');
-  await new Promise(r=>setTimeout(r,30));
-  const previewGrid=G, previewBounds=PB, previewPalette=S.pal.map(p=>({...p}));
-  try{
-    buildGrid();
-    const parts=buildParts();
-    PARTS=parts;
-    const pr=parts.filter(p=>!p.display);          // แผ่นอะครีลิค/พลาสวูดมีไว้ดูเฉยๆ ไม่ส่งไปพิมพ์
-    const meshIssues=exportMeshIssues(pr);
-    if(meshIssues.length) throw new Error(meshIssues.join(' · '));
-    const name=productionBaseName();
-    const fmt=S.exp.fmt;
-    const divided=pr.some(p=>p.tile), groups=divided?printGroups(pr):[];
-    if(fmt==='3mf'||fmt==='both'||fmt==='all'){
-      busy(true,'กำลังเขียนไฟล์ 3MF…'); await new Promise(r=>setTimeout(r,20));
-      if(divided){
-        const files=splitSupportFiles(pr,name);
-        for(const g of groups){
-          const blob=await make3mf(g.parts,`${S.name} · ${g.module} · ${g.tile.id}`);
-          files.push({name:`${name}_${g.module}_${g.tile.id}.3mf`,data:new Uint8Array(await blob.arrayBuffer())});
-        }
-        download(await zipFiles(files),`${name}_แบ่งพิมพ์_3MF.zip`);
-      }else{
-        const blob=await make3mf(pr,S.name);
-        if(isFace5DChamfer()) download(blob,`${name}_ชุดชั้นสีหน้า_5D_Chamfer.3mf`);
-        else if(isFace5DRounded()) download(blob,`${name}_ชุดชั้นสีหน้า_5D_ขอบโค้งมน.3mf`);
-        else
-        download(blob,`${name}_${isShell()?'ตัวกล่อง':isLayered()?'ชุดฝาหน้าซ้อนชั้นกันแสงรั่ว':isService()?'ชุดฝหน้าถอดเปลี่ยนได้':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
+/* Keep the export raster aligned to the original pixel lattice, cropping only empty margins. */
+function exportWorkspace(state,source,bounds,previewPx=1){
+  const res=+state.exp.res,b=state.box,t=state.tr;
+  if(!Number.isFinite(res)||res<=0)throw new Error('ความละเอียดต้องมากกว่า 0 มม.');
+  const gw=Math.max(8,Math.round(b.W/res)),gh=Math.max(8,Math.round(b.H/res));
+  const before=gw*gh;
+  if(source&&bounds&&!bounds.empty&&state.shape.mode==='contour'){
+    const pad=Math.max(8,previewPx*3);
+    // Hardware candidates sample at 1 and 1.5 mm. Preserve both sampling phases after cropping.
+    const a=Math.max(1,Math.round(1/res)),c=Math.max(1,Math.round(1.5/res));
+    let d=a,e=c;while(e){const r=d%e;d=e;e=r;}const stride=a*c/d;
+    const x0=Math.max(0,Math.floor((bounds.ux0-pad)/res/stride)*stride);
+    const y0=Math.max(0,Math.floor((b.H-bounds.my0-bounds.h-pad)/res/stride)*stride);
+    const x1=Math.min(gw,Math.ceil((bounds.ux0+bounds.w+pad)/res));
+    const y1=Math.min(gh,Math.ceil((b.H-bounds.my0+pad)/res));
+    const w=Math.max(8,x1-x0),h=Math.max(8,y1-y0);
+    const fit=(nx,ny,W)=>{const inset=b.frame/(W/nx);return Math.min((nx-inset*2)/source.width,(ny-inset*2)/source.height);};
+    if(w<gw||h<gh){
+      const oldFit=fit(gw,gh,b.W),newFit=fit(w,h,w*res);
+      if(!(oldFit>0&&newFit>0))throw new Error('พื้นที่งานเล็กกว่าความหนากรอบ');
+      const oldX=t.scale,oldY=t.uniform?oldX:t.scaleY;
+      t.scale=oldX*oldFit/newFit;t.scaleY=oldY*oldFit/newFit;
+      t.dx=200*(gw*(.5+t.dx/200)-x0)/w-100;
+      t.dy=200*(gh*(.5+t.dy/200)-y0)/h-100;
+      b.W=w*res;b.H=h*res;
+    }
+  }
+  const cells=Math.max(8,Math.round(b.W/res))*Math.max(8,Math.round(b.H/res));
+  if(!Number.isFinite(cells)||cells>32000000)
+    throw new Error('งานนี้ใช้กริดเกิน 32 ล้านช่อง กรุณาแบ่งงานหรือเลือกความละเอียดหยาบขึ้นก่อนส่งออก');
+  return {before,cells,res};
+}
+
+async function generateExportFiles(progress=()=>{}){
+  const files=[],started=performance.now(),timings={};
+  let at=started;
+  const phase=(name,done,total)=>progress({name,done,total});
+  phase('กำลังสร้างกริดความละเอียดเต็ม…');buildGrid();
+  if(G.empty||PB.empty)throw new Error('ยังไม่มีชิ้นงานสำหรับส่งออก');
+  timings.gridMs=performance.now()-at;at=performance.now();
+  phase('กำลังสร้างเมช…');
+  const parts=buildParts();
+  const pr=parts.filter(p=>!p.display);
+  const issues=exportMeshIssues(pr);if(issues.length)throw new Error(issues.join(' · '));
+  timings.meshMs=performance.now()-at;at=performance.now();
+  const name=productionBaseName(),fmt=S.exp.fmt,divided=pr.some(p=>p.tile),groups=divided?printGroups(pr):[];
+  if(fmt==='3mf'||fmt==='both'||fmt==='all'){
+    if(divided){
+      const rounds=splitSupportFiles(pr,name);
+      for(let i=0;i<groups.length;i++){
+        const g=groups[i];phase('กำลังเขียนไฟล์ 3MF',i,groups.length);
+        rounds.push({name:`${name}_${g.module}_${g.tile.id}.3mf`,data:await make3mf(g.parts,`${S.name} · ${g.module} · ${g.tile.id}`)});
       }
+      phase('กำลังรวมชุด 3MF…',groups.length,groups.length);
+      files.push({name:`${name}_แบ่งพิมพ์_3MF.zip`,blob:await zipFiles(rounds,true)});
+    }else{
+      phase('กำลังเขียนไฟล์ 3MF…');const blob=await make3mf(pr,S.name);
+      const suffix=isFace5DChamfer()?'ชุดชั้นสีหน้า_5D_Chamfer':isFace5DRounded()?'ชุดชั้นสีหน้า_5D_ขอบโค้งมน':isShell()?'ตัวกล่อง':isLayered()?'ชุดฝาหน้าซ้อนชั้นกันแสงรั่ว':isService()?'ชุดฝหน้าถอดเปลี่ยนได้':'ชุดชิ้นส่วนพิมพ์';
+      files.push({name:`${name}_${suffix}.3mf`,blob});
     }
-    if(fmt==='stl'||fmt==='both'||fmt==='all'){
-      busy(true,'กำลังเขียนไฟล์ STL…'); await new Promise(r=>setTimeout(r,20));
-      const files=divided?groups.map(g=>({name:`${name}_${g.module}_${g.tile.id}.stl`,
-        data:stlOf(mergeForSTL(g.key,g.parts,g.parts[0].hex))})):isFrontModule()? [
-        {name:`${name}_ฝาหน้า_รวมชั้นกระจายแสง.stl`,data:stlOf(mergeForSTL(frontModuleLabel()+' (รวมชั้นกระจายแสง)',pr.filter(p=>p.module==='front'),'#F2F2E8'))},
-        {name:`${name}_ตัวกล่อง.stl`,data:stlOf(mergeForSTL('ตัวกล่อง',pr.filter(p=>p.module==='box'),S.box.frameColor))},
-        {name:`${name}_ฐาน_ฝาหลัง.stl`,data:stlOf(mergeForSTL('ฐาน/ฝาหลัง',pr.filter(p=>p.module==='back'),S.box.backColor))}
-      ] : pr.map(p=>({name:`${name}_${partFileLabel(p)}.stl`,data:stlOf(p)}));
-      files.push({name:`${name}_คำแนะนำการพิมพ์.txt`,data:enc(readme(parts))});
-      if(divided) files.push(...splitSupportFiles(pr,name));
-      download(await zipFiles(files), `${name}_ชิ้นส่วนพิมพ์_STL.zip`);
-    }
-    if(fmt==='obj'||fmt==='all'){
-      busy(true,'กำลังเขียนไฟล์ OBJ + MTL…'); await new Promise(r=>setTimeout(r,20));
-      const O=objMtl(pr,name);
-      download(await zipFiles([
-        {name:`${name}.obj`,data:enc(O.obj)},
-        {name:`${name}.mtl`,data:enc(O.mtl)}
-      ]), `${name}_พรีวิวสี_OBJ.zip`);
-    }
-    if(isShell()){
-      busy(true,'กำลังเขียนไฟล์ตัดแผ่น…'); await new Promise(r=>setTimeout(r,20));
-      const blob=await cutFilesZip();
-      if(blob) download(blob, `${name}_แผ่นตัด.zip`);
-    }
-    if(backingSpec().enabled){
-      busy(true,'กำลังเขียนไฟล์แผ่นรองหลังใส…');
-      const files=backingCutFiles();
-      if(!files.length)throw new Error('ไม่พบเส้นตัดแผ่นรองหลัง');
-      download(await zipFiles(files),`${name}_แผ่นรองหลังใส_DXF_SVG.zip`);
-    }
-    LAST={tris:pr.reduce((a,p)=>a+p.n/12,0)};
-    toast('ส่งออกเรียบร้อย');
-  }catch(e){ console.error(e); toast('ส่งออกไม่สำเร็จ: '+e.message); }
-  finally{
-    busy(false);
-    if(previewGrid&&G!==previewGrid){
-      G=previewGrid; PB=previewBounds; S.pal=previewPalette; V3.dirty=true;
-    }
-    updateBadges(); runChecks();
+  }
+  if(fmt==='stl'||fmt==='both'||fmt==='all'){
+    phase('กำลังเขียนไฟล์ STL…');
+    const rounds=divided?groups.map(g=>({name:`${name}_${g.module}_${g.tile.id}.stl`,data:new Blob([stlOf(mergeForSTL(g.key,g.parts,g.parts[0].hex))])})):isFrontModule()?[
+      {name:`${name}_ฝาหน้า_รวมชั้นกระจายแสง.stl`,data:new Blob([stlOf(mergeForSTL(frontModuleLabel()+' (รวมชั้นกระจายแสง)',pr.filter(p=>p.module==='front'),'#F2F2E8'))])},
+      {name:`${name}_ตัวกล่อง.stl`,data:new Blob([stlOf(mergeForSTL('ตัวกล่อง',pr.filter(p=>p.module==='box'),S.box.frameColor))])},
+      {name:`${name}_ฐาน_ฝาหลัง.stl`,data:new Blob([stlOf(mergeForSTL('ฐาน/ฝาหลัง',pr.filter(p=>p.module==='back'),S.box.backColor))])}
+    ]:pr.map(p=>({name:`${name}_${partFileLabel(p)}.stl`,data:new Blob([stlOf(p)])}));
+    rounds.push({name:`${name}_คำแนะนำการพิมพ์.txt`,data:enc(readme(parts))});
+    if(divided)rounds.push(...splitSupportFiles(pr,name));
+    files.push({name:`${name}_ชิ้นส่วนพิมพ์_STL.zip`,blob:await zipFiles(rounds,true)});
+  }
+  if(fmt==='obj'||fmt==='all'){
+    phase('กำลังเขียนไฟล์ OBJ + MTL…');const O=objMtl(pr,name);
+    files.push({name:`${name}_พรีวิวสี_OBJ.zip`,blob:await zipFiles([{name:`${name}.obj`,data:enc(O.obj)},{name:`${name}.mtl`,data:enc(O.mtl)}],true)});
+  }
+  if(isShell()){
+    phase('กำลังเขียนไฟล์ตัดแผ่น…');const blob=await cutFilesZip();
+    if(blob)files.push({name:`${name}_แผ่นตัด.zip`,blob});
+  }
+  if(backingSpec().enabled){
+    phase('กำลังเขียนไฟล์แผ่นรองหลังใส…');const cuts=backingCutFiles();
+    if(!cuts.length)throw new Error('ไม่พบเส้นตัดแผ่นรองหลัง');
+    files.push({name:`${name}_แผ่นรองหลังใส_DXF_SVG.zip`,blob:await zipFiles(cuts,true)});
+  }
+  timings.writeMs=performance.now()-at;timings.totalMs=performance.now()-started;
+  return {files,report:{...timings,cells:G.gw*G.gh,res:G.px,tris:pr.reduce((a,p)=>a+p.n/12,0),meshBytes:pr.reduce((a,p)=>a+p.a.byteLength,0)}};
+}
+
+async function bundleExportFiles(result,progress){
+  if(result.files.length<2)return result;
+  progress({name:'กำลังรวมชุดไฟล์ผลิต…'});
+  const started=performance.now(),inputs=result.files.map(f=>({name:f.name,data:f.blob}));
+  result.files=[];
+  const blob=await zipFiles(inputs,true),ms=performance.now()-started;
+  result.files=[{name:productionBaseName()+'_ชุดไฟล์ผลิต.zip',blob}];
+  result.report.writeMs+=ms;result.report.totalMs+=ms;return result;
+}
+function exportWorkerMain(){
+  self.onmessage=async({data})=>{
+    try{
+      S=data.state;SRC_CACHE=data.source;
+      const workspace=exportWorkspace(S,SRC_CACHE.cv,data.bounds,data.previewPx);
+      EXPORT_MESH_BUDGET={used:0,limit:256*1024*1024};
+      const progress=p=>self.postMessage({type:'progress',...p});
+      const result=await bundleExportFiles(await generateExportFiles(progress),progress);
+      result.report.originalCells=workspace.before;
+      self.postMessage({type:'done',...result});
+    }catch(e){self.postMessage({type:'error',message:e.message});}
+  };
+}
+function createExportWorker(){
+  if(typeof Worker==='undefined'||typeof OffscreenCanvas==='undefined'||typeof createImageBitmap==='undefined')
+    throw new Error('เบราว์เซอร์นี้ไม่รองรับส่งออกเบื้องหลัง กรุณาใช้ Chrome หรือ Edge รุ่นปัจจุบัน');
+  const shim=`const window=self;const document={readyState:'loading',addEventListener(){},createElement(tag){if(tag==='canvas')return new OffscreenCanvas(1,1);throw new Error('Unsupported export element: '+tag);}};\n`;
+  const url=URL.createObjectURL(new Blob([shim,ENGINE_SCRIPT,'\n(',exportWorkerMain.toString(),')();'],{type:'text/javascript'}));
+  try{return {worker:new Worker(url),url};}catch(e){URL.revokeObjectURL(url);throw e;}
+}
+let EXPORT_JOB=null,EXPORT_REPORT=null,PROJECT_LOADING=false;
+function exportControls(locked,previous){
+  if(!locked){for(const [el,value] of previous||[])el.inert=value;return previous;}
+  return ['header','#left','#right','#mobileNav','#draftRecovery'].map(selector=>{const el=$(selector),value=el.inert;el.inert=true;return [el,value];});
+}
+function cancelExport(){
+  if(!EXPORT_JOB)return;
+  EXPORT_JOB.cancelled=true;
+  const e=new Error('ยกเลิกการส่งออก');e.name='AbortError';EXPORT_JOB.reject?.(e);
+}
+async function doExport(){
+  if(EXPORT_JOB)return;
+  if(PROJECT_LOADING){toast('รอเปิดโปรเจกต์เสร็จก่อนส่งออก');return;}
+  if(_sizing){toast('รอปรับขนาดชิ้นงานเสร็จก่อนส่งออก');return;}
+  const job=EXPORT_JOB={cancelled:false},bitmaps=[];
+  const controls=exportControls(true);
+  busy(true,'กำลังเตรียมส่งออก…');$('#btnCancelExport').hidden=false;
+  const meter=$('#exportProgress');meter.hidden=false;meter.removeAttribute('value');
+  try{
+    // The snapshot and prepared artwork belong exclusively to this worker, never to the preview.
+    const pendingRaster=_geometryPending||_needSrc;
+    if(_needSrc||!SRC_CACHE){rebuildSource();_needSrc=false;}
+    const state=projectSnapshot(),cache=SRC_CACHE;
+    delete state.src.fontData;delete state.src.imgSrc;
+    if(!cache)throw new Error('ยังไม่มีชิ้นงานสำหรับส่งออก');
+    const bounds=!pendingRaster&&G&&!G.empty?{...PB}:null,previewPx=G?.px||1;
+    exportWorkspace(JSON.parse(JSON.stringify(state)),cache.cv,bounds,previewPx);
+    const canvases=[cache.cv,cache.inner,...(cache.layers||[])].filter(Boolean);
+    if(canvases.reduce((n,cv)=>n+cv.width*cv.height*4,0)>64*1024*1024)
+      throw new Error('ภาพต้นทางใหญ่เกินขีดจำกัด กรุณาลดขนาดภาพหรือแบ่งข้อความก่อนส่งออก');
+    const bitmap=async cv=>{if(!cv)return null;const b=await createImageBitmap(cv);bitmaps.push(b);return b;};
+    const source={kind:cache.kind,cv:await bitmap(cache.cv),inner:await bitmap(cache.inner)};
+    if(cache.layers){source.layers=[];for(const cv of cache.layers)source.layers.push(await bitmap(cv));}
+    if(job.cancelled){const e=new Error('ยกเลิกการส่งออก');e.name='AbortError';throw e;}
+    Object.assign(job,createExportWorker());
+    const result=await new Promise((resolve,reject)=>{
+      job.reject=reject;
+      job.worker.onerror=e=>{e.preventDefault();reject(new Error(e.message||'การส่งออกเบื้องหลังหยุดทำงาน'));};
+      job.worker.onmessageerror=()=>reject(new Error('รับข้อมูลไฟล์ส่งออกไม่สำเร็จ'));
+      job.worker.onmessage=({data})=>{
+        if(data.type==='progress'){
+          $('#busyTx').textContent=data.total?`${data.name} ${data.done}/${data.total}`:data.name;
+          if(data.total){meter.max=data.total;meter.value=data.done;}else meter.removeAttribute('value');
+        }else if(data.type==='error')reject(new Error(data.message));
+        else if(data.type==='done')resolve(data);
+      };
+      job.worker.postMessage({state,source,bounds,previewPx},bitmaps);
+    });
+    if(job.cancelled)return;
+    EXPORT_REPORT=result.report;
+    console.info('Lightbox export performance',JSON.stringify(result.report));
+    for(const f of result.files)download(f.blob,f.name);
+    toast('ส่งออกเรียบร้อย · '+(result.report.totalMs/1000).toFixed(1)+' วินาที');
+  }catch(e){
+    if(e.name==='AbortError')toast('ยกเลิกการส่งออกแล้ว');
+    else{console.error(e);toast('ส่งออกไม่สำเร็จ: '+e.message);}
+  }finally{
+    job.worker?.terminate();if(job.url)URL.revokeObjectURL(job.url);
+    bitmaps.forEach(b=>b.close());EXPORT_JOB=null;
+    exportControls(false,controls);$('#btnCancelExport').hidden=true;meter.hidden=true;busy(false);
+    if(DRAFT_DIRTY)queueDraftSave();
   }
 }
+
 /* ---------- ไฟล์ตัดแผ่น: DXF + SVG ของอะครีลิคและพลาสวูด ---------- */
 function backingCutFiles(){
   const g=backingGeometry();if(!g?.count)return [];
@@ -5146,6 +5275,7 @@ function setLabel(lab,v,fmt){
 let _t=null, _needSrc=false, _geometryPending=false, _meshPending=false;
 let _quotePending=false, _backingPending=false, _drawPending=false;
 function schedule(needSrc,mode){
+  queueDraftSave();
   if(mode==='n'&&!needSrc) return;
   if(needSrc) _needSrc=true;
   if(needSrc||!mode) _geometryPending=true;
@@ -5579,7 +5709,7 @@ async function setPartSize(axis,target){
     centerArtwork();
     await new Promise(r=>setTimeout(r,0));
   }
-  pushToUI(); recompute(true);
+  pushToUI(); recompute(true); queueDraftSave();
   }catch(e){ console.error(e); toast('ปรับขนาดไม่สำเร็จ: '+e.message); }
   finally{ _sizing=false; busy(false); }
 }
@@ -5618,7 +5748,7 @@ function wire(){
       if(e.key==='Enter'){ e.preventDefault(); el.dispatchEvent(new Event('change',{bubbles:true})); el.blur(); }
     });
   }
-  $('#docname').addEventListener('input',e=>S.name=e.target.value);
+  $('#docname').addEventListener('input',e=>{S.name=e.target.value;queueDraftSave();});
   $('#expBed').addEventListener('change',e=>{ applyPrinter(e.target.value); pushToUI(); schedule(false,'m'); });
   $$('#mobileNav .mobile-tab').forEach(b=>b.addEventListener('click',()=>showMobilePanel(b.dataset.panel)));
 
@@ -5655,9 +5785,10 @@ function wire(){
   $('#fontFile').addEventListener('change',async e=>{
     const f=e.target.files[0]; if(!f) return;
     try{
-      const face=new FontFace('UserFont',await f.arrayBuffer());
+      const fontData=await readFileDataURL(f);
+      const face=new FontFace('UserFont',`url("${fontData}")`);
       await face.load(); document.fonts.add(face);
-      S.src.font='UserFont'; pushToUI(); schedule(true); toast('โหลดฟอนต์ '+f.name+' แล้ว (เลือก UserFont)');
+      S.src.font='UserFont';S.src.fontData=fontData; pushToUI(); schedule(true); toast('โหลดฟอนต์ '+f.name+' แล้ว (เลือก UserFont)');
     }catch(err){ toast('อ่านฟอนต์ไม่ได้: '+err.message); }
   });
 
@@ -5749,6 +5880,7 @@ function wire(){
 
   /* buttons */
   $('#btnExport').addEventListener('click',doExport);
+  $('#btnCancelExport').addEventListener('click',cancelExport);
   $('#btnPng').addEventListener('click',()=>{
     setView(S.ui.view==='3d'?'design':'3d');
   });
@@ -5764,7 +5896,7 @@ function wire(){
   });
   $('#btnSaveProj').addEventListener('click',()=>{
     saveModePalette();
-    const o=JSON.parse(JSON.stringify({...S,src:{...S.src,imgData:null}}));
+    const o=projectSnapshot();
     download(new Blob([JSON.stringify(o,null,2)],{type:'application/json'}),safeName(S.name)+'.lightbox.json');
     toast('บันทึกโปรเจ็คแล้ว');
   });
@@ -5776,19 +5908,7 @@ function wire(){
         try{
           const o=JSON.parse(rd.result);
           if(o.p&&o.n){ applyTemplate(o); return; }            // template file
-          const base=defaults();
-          S=Object.assign(base,o);
-          for(const k of ['src','tr','art','box','hw','price','exp','ui','build','sheet','backing']) S[k]=Object.assign(base[k],o[k]||{});
-          S.pal=(o.pal||base.pal).map(p=>({...p}));
-          S.palByMode=Object.assign(base.palByMode,o.palByMode||{});
-          S.shape=Object.assign(base.shape,o.shape||{});
-          S.shape.mode='contour';                      // ไม่มีโหมดแผ่นสี่เหลี่ยมแล้ว
-          if(!S.box.backColor) S.box.backColor=S.box.frameColor;
-          S.src.imgData=null;
-          if(!S.palByMode[S.src.mode]) saveModePalette(S.src.mode);
-          const go=()=>{ pushToUI(); rebuildSource(); schedule(false); toast('เปิดโปรเจ็คแล้ว'); };
-          if(S.src.imgSrc){ const im=new Image(); im.onload=()=>{S.src.imgData=im;go();}; im.onerror=go; im.src=S.src.imgSrc; }
-          else go();
+          loadProject(o).then(()=>toast('เปิดโปรเจ็คแล้ว')).catch(e=>toast('เปิดโปรเจ็คไม่สำเร็จ: '+e.message));
         }catch(e){ toast('ไฟล์ไม่ถูกต้อง'); }
       };
       rd.readAsText(f); };
@@ -5827,15 +5947,132 @@ function arrangeMenuFlow(){
   if(shape&&art&&shape.parentElement!==art.parentElement) art.after(shape);
 }
 
+/* One draft per tab prevents two open jobs from overwriting each other. */
+let DRAFT_DB=null,DRAFT_ID=null,DRAFT_READY=false,DRAFT_DIRTY=false,DRAFT_REV=0;
+let DRAFT_TIMER=null,DRAFT_WRITE=Promise.resolve(),DRAFT_CANDIDATE=null,DRAFT_QUEUED_REV=-1;
+function projectSnapshot(){
+  const state=JSON.parse(JSON.stringify({...S,src:{...S.src,imgData:null}}));
+  state.palByMode={...state.palByMode,[state.src.mode]:clonePalette(S.pal)};
+  return state;
+}
+function draftStatus(text,error){
+  const el=$('#draftStatus');el.textContent=text;el.title=error?.message||text;
+}
+function openDraftDB(){
+  if(DRAFT_DB)return DRAFT_DB;
+  DRAFT_DB=new Promise((resolve,reject)=>{
+    const request=indexedDB.open('yp-lightbox-studio',1);
+    request.onupgradeneeded=()=>{
+      const store=request.result.createObjectStore('drafts',{keyPath:'id'});
+      store.createIndex('savedAt','savedAt');
+    };
+    request.onerror=()=>reject(request.error);
+    request.onblocked=()=>reject(new Error('ฐานข้อมูลร่างถูกเปิดด้วยเวอร์ชันอื่น'));
+    request.onsuccess=()=>{
+      const db=request.result;db.onversionchange=()=>{db.close();DRAFT_DB=null;};resolve(db);
+    };
+  }).catch(e=>{DRAFT_DB=null;throw e;});
+  return DRAFT_DB;
+}
+async function draftTransaction(mode,action){
+  const db=await openDraftDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('drafts',mode),request=action(tx.objectStore('drafts'));
+    let result;request.onsuccess=()=>result=request.result;
+    tx.oncomplete=()=>resolve(result);tx.onerror=tx.onabort=()=>reject(tx.error||request.error||new Error('บันทึกร่างไม่สำเร็จ'));
+  });
+}
+function queueDraftSave(){
+  DRAFT_DIRTY=true;DRAFT_REV++;
+  if(!DRAFT_READY)return;
+  if(DRAFT_CANDIDATE){$('#draftRecovery').hidden=true;DRAFT_CANDIDATE=null;}
+  clearTimeout(DRAFT_TIMER);draftStatus('ร่างยังไม่บันทึก');
+  DRAFT_TIMER=setTimeout(saveDraftNow,800);
+}
+function saveDraftNow(){
+  clearTimeout(DRAFT_TIMER);
+  if(!DRAFT_READY||!DRAFT_DIRTY)return DRAFT_WRITE;
+  if(DRAFT_QUEUED_REV===DRAFT_REV)return DRAFT_WRITE;
+  if(_sizing||EXPORT_JOB){DRAFT_TIMER=setTimeout(saveDraftNow,500);return DRAFT_WRITE;}
+  const rev=DRAFT_REV,record={id:DRAFT_ID,savedAt:Date.now(),state:projectSnapshot()};
+  DRAFT_QUEUED_REV=rev;
+  draftStatus('กำลังบันทึกร่าง…');
+  DRAFT_WRITE=DRAFT_WRITE.then(()=>draftTransaction('readwrite',store=>store.put(record))).then(()=>{
+    if(rev===DRAFT_REV){DRAFT_DIRTY=false;draftStatus('ร่างบันทึกแล้ว '+new Date(record.savedAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}));}
+  }).catch(e=>{DRAFT_DIRTY=true;draftStatus('บันทึกร่างไม่ได้',e);console.error('Draft save failed',e);})
+    .finally(()=>{if(DRAFT_QUEUED_REV===rev)DRAFT_QUEUED_REV=-1;});
+  return DRAFT_WRITE;
+}
+async function initDrafts(){
+  try{
+    DRAFT_ID=sessionStorage.getItem('yp-lightbox-draft-id');
+    if(!DRAFT_ID){DRAFT_ID=crypto.randomUUID();sessionStorage.setItem('yp-lightbox-draft-id',DRAFT_ID);}
+    const own=await draftTransaction('readonly',store=>store.get(DRAFT_ID));
+    const latest=own?null:await draftTransaction('readonly',store=>store.index('savedAt').openCursor(null,'prev'));
+    DRAFT_CANDIDATE=own||latest?.value||null;
+    DRAFT_READY=true;
+    // Never replace edits made while IndexedDB was opening with an older draft.
+    if(DRAFT_DIRTY){queueDraftSave();return;}
+    if(DRAFT_CANDIDATE){
+      $('#draftName').textContent='“'+DRAFT_CANDIDATE.state.name+'” · '+new Date(DRAFT_CANDIDATE.savedAt).toLocaleString('th-TH');
+      $('#draftRecovery').hidden=false;draftStatus('มีร่างให้กู้คืน');
+    }else draftStatus('บันทึกร่างอัตโนมัติ');
+  }catch(e){DRAFT_READY=false;draftStatus('ใช้ร่างอัตโนมัติไม่ได้',e);console.error('Draft storage unavailable',e);}
+}
+function readFileDataURL(file){
+  return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(r.error);r.readAsDataURL(file);});
+}
+function projectState(o){
+  if(!o||typeof o!=='object'||!o.src||!o.box)throw new Error('ไฟล์โปรเจกต์ไม่มีข้อมูลชิ้นงาน');
+  const base=defaults(),next={...base,...o};
+  for(const k of ['src','tr','art','box','hw','price','exp','ui','build','face','sheet','backing','shape'])next[k]={...base[k],...o[k]};
+  if(!Number.isFinite(+next.box.W)||!Number.isFinite(+next.box.H)||next.box.W<=0||next.box.H<=0)
+    throw new Error('ขนาดชิ้นงานในโปรเจกต์ไม่ถูกต้อง');
+  next.pal=(o.pal||base.pal).map(p=>({...p}));
+  next.rings=(o.rings||base.rings).map(p=>({...p}));
+  next.palByMode={...base.palByMode,...o.palByMode};next.shape.mode='contour';
+  if(!next.box.backColor)next.box.backColor=next.box.frameColor;
+  next.src.imgData=null;return next;
+}
+async function loadProject(o){
+  if(EXPORT_JOB||PROJECT_LOADING)throw new Error('รอให้งานปัจจุบันเสร็จก่อนเปิดโปรเจกต์');
+  PROJECT_LOADING=true;
+  const controls=exportControls(true);busy(true,'กำลังเปิดโปรเจกต์…');
+  try{
+    const next=projectState(o);
+    if(next.src.font==='UserFont'&&next.src.fontData){
+      const face=new FontFace('UserFont',`url("${next.src.fontData}")`);await face.load();document.fonts.add(face);
+    }
+    if(next.src.imgSrc)next.src.imgData=await new Promise((resolve,reject)=>{
+      const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('เปิดภาพในโปรเจกต์ไม่ได้'));im.src=next.src.imgSrc;
+    });
+    S=next;if(!S.palByMode[S.src.mode])saveModePalette(S.src.mode);
+    $('#draftRecovery').hidden=true;
+    pushToUI();rebuildSource();schedule(false);
+  }finally{PROJECT_LOADING=false;exportControls(false,controls);busy(false);}
+}
+function wireDrafts(){
+  $('#btnRestoreDraft').addEventListener('click',async()=>{
+    try{await loadProject(DRAFT_CANDIDATE.state);toast('กู้คืนงานแล้ว');}
+    catch(e){toast('กู้คืนไม่สำเร็จ: '+e.message);}
+  });
+  $('#btnSkipDraft').addEventListener('click',()=>{$('#draftRecovery').hidden=true;DRAFT_CANDIDATE=null;});
+  window.addEventListener('pagehide',saveDraftNow);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveDraftNow();});
+  window.addEventListener('beforeunload',e=>{if(DRAFT_DIRTY){e.preventDefault();e.returnValue='';}});
+  initDrafts();
+}
+
 /* ---------- boot ---------- */
 function boot(){
   arrangeMenuFlow(); attachNumBoxes(); wire(); pushToUI(); rebuildSource(); recompute();
   $('#stageLabel').textContent='แบบ';
+  wireDrafts();
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 window.__LB={get S(){return S;}, get G(){return G;}, buildParts, stlOf, make3mf, estimate, recompute, defaults,
              jointSpec, partMatrix, screwPoints, snapPoints, platePack, panelBounds, activeRings, bedSize, bossPoints, bottomInfo, panelClipped, edt,
-             get PB(){return PB;}, get PARTS(){return PARTS;},
+             get PB(){return PB;}, get PARTS(){return PARTS;}, get exportReport(){return EXPORT_REPORT;},
              set S(v){S=v;}, rebuildSource, buildGrid, geomStack,
              isShell, shellSpec, sheetLoops, sheetHoles, dxfOf, svgCutOf, cutMetrics, cutFilesZip, readme};
 </script>

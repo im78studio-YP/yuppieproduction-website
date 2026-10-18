@@ -9,7 +9,7 @@ const source = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 
 function studio(w = 300, h = 250, options = {}) {
   const nodes = new Map();
-  const context = vm.createContext({ console, TextEncoder, Blob, setTimeout, clearTimeout,
+  const context = vm.createContext({ console, TextEncoder, Blob, performance, setTimeout, clearTimeout,
     document: { readyState: 'loading', addEventListener() {}, querySelector(selector) {
       if (!nodes.has(selector)) nodes.set(selector, { textContent: '', classList: { toggle() {}, add() {}, remove() {} } });
       return nodes.get(selector);
@@ -69,18 +69,11 @@ function studio(w = 300, h = 250, options = {}) {
       },
       groups:printGroups, model:make3mf, stl:stlOf, merge:mergeForSTL, support:splitSupportFiles,
       issues:exportMeshIssues,
-      async exportScene(fmt,margin,separateGrid=false){
-        S.exp.fmt=fmt;if(margin!==undefined) S.exp.margin=margin;
-        const downloads=[],messages=[],gridCalls=[],preview=G,bounds=PB,palette=JSON.stringify(S.pal);
-        buildGrid=(usePreview=false)=>{
-          gridCalls.push(usePreview);
-          if(separateGrid){G={...G};PB={...PB};S.pal=S.pal.map(p=>({...p,name:p.name+' export'}));}
-          return G;
-        };updateBadges=()=>{};runChecks=()=>{};
-        const toastNode=$('#toast');Object.defineProperty(toastNode,'textContent',{set(value){messages.push(value);}});
-        download=(blob,name)=>downloads.push({blob,name});
-        await doExport();clearTimeout(toastNode._h);return {downloads,messages,gridCalls,
-          restored:G===preview&&PB===bounds&&JSON.stringify(S.pal)===palette};
+      async exportScene(fmt,margin){
+        S.exp.fmt=fmt;if(margin!==undefined)S.exp.margin=margin;
+        const gridCalls=[];buildGrid=(preview=false)=>{gridCalls.push(preview);return G;};
+        const result=await generateExportFiles();
+        return {downloads:result.files.map(f=>({blob:f.blob,name:f.name})),gridCalls,report:result.report};
       },
       extrude(groups,back=false){
         const plan=printPlan(), M=Mesh('test','#ffffff');
@@ -158,12 +151,11 @@ test('1730 mm resize reuses bounded preview grids and coalesces Enter/change eve
   }
 });
 
-test('export requests full resolution and restores the interactive preview and palette', async () => {
+test('export engine requests full resolution and reports the unchanged selected resolution', async () => {
   const app=studio();app.synthetic();
-  const result=await app.exportScene('3mf',undefined,true);
+  const result=await app.exportScene('3mf');
   assert.deepEqual(plain(result.gridCalls),[false]);
-  assert.deepEqual(plain(result.messages),['ส่งออกเรียบร้อย']);
-  assert.equal(result.restored,true);
+  assert.equal(result.report.res,1);
 });
 
 function assertClosed(mesh) {
@@ -374,7 +366,6 @@ test('5D curved and chamfer modes keep their existing complete meshes and export
     assert.ok(parts.every(p => !p.tile));
     assert.deepEqual(plain(parts.map(p => [p.kind, p.n, p.vol])), plain(original.map(p => [p.kind, p.n, p.vol])));
     const result = await app.exportScene('3mf');
-    assert.deepEqual(plain(result.messages), ['ส่งออกเรียบร้อย']);
     assert.equal(result.downloads.length, 1);
     assert.match(result.downloads[0].name, mode === 'face5d' ? /5D_ขอบโค้งมน\.3mf$/ : /5D_Chamfer\.3mf$/);
   }
@@ -426,7 +417,6 @@ test('export action bundles individual print rounds with assembly instructions f
     const app = studio(), parts = app.synthetic();
     const result = await app.exportScene(fmt);
     assert.equal(result.downloads.length, 1);
-    assert.deepEqual(plain(result.messages), ['ส่งออกเรียบร้อย']);
     const files = unzipStored(await result.downloads[0].blob.arrayBuffer());
     const manifest = JSON.parse(files.get('assembly.json').toString('utf8'));
     assert.equal(manifest.groups.length, app.groups(parts).length);
@@ -491,7 +481,6 @@ test('173 cm export includes a matching front, box, and back file for every 256 
   const app = studio();
   app.synthetic(true, 'service', true, 'snap', { width: 1730, height: 100, printer: 'bambu-a1' });
   const result = await app.exportScene('3mf');
-  assert.deepEqual(plain(result.messages), ['ส่งออกเรียบร้อย']);
   assert.equal(result.downloads.length, 1);
   const files = unzipStored(await result.downloads[0].blob.arrayBuffer());
   const manifest = JSON.parse(files.get('assembly.json').toString('utf8'));
