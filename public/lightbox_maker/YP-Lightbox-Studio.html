@@ -1461,9 +1461,31 @@ function sdfOf(mask,gw,gh,box){
     const xA=Math.max(0,bx-R), xB=Math.min(W-1,bx+R);
     for(let y=yA;y<=yB;y++){ const r=y*W; for(let x=xA;x<=xB;x++) need[r+x]=1; }
   }
-  for(let j=0;j<sd.length;j++){
+  /* Outside R + 4 cells of a boundary the field stays constant through both
+     radius-2 separable smoothing passes. Skip those cells without changing
+     any distances; 32-cell runs keep traversal cheap on dense/small masks. */
+  const runs=[];
+  if(band.length*16>=W*H){
+    // Dense/noisy masks already cover most cells; avoid building sparse runs.
+    for(let y=0;y<H;y++)runs.push([y,0,W]);
+  }else{
+    const stride=32, cols=Math.ceil(W/stride), active=new Uint8Array(cols*H), reach=R+4;
+    for(const i of band){
+      const x=i%W, y=(i-x)/W;
+      const a=Math.floor(Math.max(0,x-reach)/stride), b=Math.floor(Math.min(W-1,x+reach)/stride);
+      for(let yy=Math.max(0,y-reach);yy<=Math.min(H-1,y+reach);yy++)
+        active.fill(1,yy*cols+a,yy*cols+b+1);
+    }
+    for(let y=0;y<H;y++) for(let b=0;b<cols;){
+      if(!active[y*cols+b]){b++;continue;}
+      const a=b++;while(b<cols&&active[y*cols+b])b++;
+      runs.push([y,a*stride,Math.min(W,b*stride)]);
+    }
+  }
+  for(const [jy,xA,xB] of runs) for(let jx=xA;jx<xB;jx++){
+    const j=jy*W+jx;
     if(!need[j]) continue;
-    const jx=j%W, jy=(j-jx)/W, want=inb[j]?0:1;
+    const want=inb[j]?0:1;
     let best=FAR*FAR;
     for(let dy=-R;dy<=R;dy++){
       const y=jy+dy; if(y<0||y>=H) continue;
@@ -1486,18 +1508,18 @@ function sdfOf(mask,gw,gh,box){
      แต่ไปเฉลี่ยความคลาดจากการปัดเป็นเซลล์ทิ้ง — ได้เส้นตรงจริงๆ
      (เกลี่ยที่ "สนามระยะ" ไม่ใช่ที่ mask จึงลบมุมแหลมน้อยกว่ามาก) */
   const raw=Float32Array.from(sd);
-  const tmp=new Float32Array(W*H);
+  const tmp=Float32Array.from(sd);
   for(let pass=0;pass<2;pass++){
-    for(let y=0;y<H;y++){ const r=y*W;
-      for(let x=0;x<W;x++){
+    for(const [y,xA,xB] of runs){ const r=y*W;
+      for(let x=xA;x<xB;x++){
         const a=sd[r+Math.max(0,x-2)], b=sd[r+Math.max(0,x-1)], c=sd[r+x];
         const d2=sd[r+Math.min(W-1,x+1)], e=sd[r+Math.min(W-1,x+2)];
         tmp[r+x]=(a+2*b+3*c+2*d2+e)/9;
       } }
-    for(let y=0;y<H;y++){ const r=y*W;
+    for(const [y,xA,xB] of runs){ const r=y*W;
       const rm2=Math.max(0,y-2)*W, rm1=Math.max(0,y-1)*W;
       const rp1=Math.min(H-1,y+1)*W, rp2=Math.min(H-1,y+2)*W;
-      for(let x=0;x<W;x++)
+      for(let x=xA;x<xB;x++)
         sd[r+x]=(tmp[rm2+x]+2*tmp[rm1+x]+3*tmp[r+x]+2*tmp[rp1+x]+tmp[rp2+x])/9;
     }
   }
@@ -1507,13 +1529,13 @@ function sdfOf(mask,gw,gh,box){
        การหนีบไว้ทำให้เส้นคงความกว้างไว้ได้ ไม่ใช่แค่ "รอดแบบบางเป็นเส้นผม"
      (เคยเจอสองรอบ: หนีบแค่เครื่องหมาย → ชั้นสีเหลือกว้างเกือบศูนย์ earcut คายสามเหลี่ยมแบนเพียบ) */
   const LIM=0.6;
-  for(let i=0;i<sd.length;i++){
+  for(const [y,xA,xB] of runs) for(let i=y*W+xA;i<y*W+xB;i++){
     const r=raw[i], d=sd[i]-r;
     let v = r + (d>LIM? LIM : d<-LIM? -LIM : d);
     if((r<0)!==(v<0) || v===0) v = r<0? -0.15 : 0.15;
     sd[i]=v;
   }
-  return {sd,W,H,x0,y0};
+  return {sd,W,H,x0,y0,runs};
 }
 
 /* ---------- marching squares ----------
@@ -1527,7 +1549,10 @@ function msLoops(F,iso){
     if(!(t>=0)) t=0; else if(t>1) t=1;
     return horiz? [x+t,y] : [x,y+t];
   };
-  for(let y=0;y<H-1;y++) for(let x=0;x<W-1;x++){
+  // At zero, constant regions cannot cross the contour. Reuse the same runs
+  // in row order so vertex ordering and triangulation remain unchanged.
+  const runs=iso===0&&F.runs?F.runs:Array.from({length:H-1},(_,y)=>[y,0,W-1]);
+  for(const [y,xA,xB] of runs) for(let x=xA;y<H-1&&x<Math.min(W-1,xB);x++){
     const ia=y*W+x, ib=ia+1, ic=ia+W+1, id=ia+W;
     const sa=sd[ia],sb=sd[ib],sc=sd[ic],sq=sd[id];
     const A=sa<iso,B=sb<iso,C=sc<iso,D=sq<iso;
@@ -3216,16 +3241,16 @@ function buildPartMeshes(nt){
     const sd=Math.min(S.hw.screwDepth, b.depth-6);     // ความลึกรูนำ
     const bossLen=Math.min(sd+1.5, b.depth-4);          // ความยาวเสา นับจากด้านหลังเข้ามา
     const z0=zTop-bossLen;
-    const bossM=maskWhere((i,x,y)=>P[i]&&nearBoss(x,y,bwc));
+    const bossM=maskWhereNear(BP,bwc,(i,x,y)=>P[i]&&nearBoss(x,y,bwc));
     /* ตัวเสา + รูนำ */
-    addFrame(maskWhere((i,x,y)=>bossM[i]&&!inCircle(x,y,prc)), z0-ZEPS, zTop, false, boxesAt(BP,bwc), true);
+    addFrame(maskWhereNear(BP,bwc,(i,x,y)=>bossM[i]&&!inCircle(x,y,prc)), z0-ZEPS, zTop, false, boxesAt(BP,bwc), true);
     /* ลาดรับ 45° จากผนังกรอบขึ้นมาหาเสา — ไม่งั้นเสาลอยกลางอากาศ พิมพ์ไม่ได้ */
     const taperH=Math.min(S.hw.bossW, z0-st.frameZ0);
     const NT=Math.max(2,Math.min(8,Math.round(taperH/0.9)));
     if(taperH>0.4) for(let j=0;j<NT;j++){
       const t = fw + ((j+1)/NT)*(S.hw.bossW/px);
       const zA = z0-taperH + j*(taperH/NT), zB = zA + taperH/NT;
-      addFrame(maskWhere((i,x,y)=>bossM[i]&&DI[i]<=t), j? zA-ZEPS : zA, zB, false, boxesAt(BP,bwc), true);
+      addFrame(maskWhereNear(BP,bwc,(i,x,y)=>bossM[i]&&DI[i]<=t), j? zA-ZEPS : zA, zB, false, boxesAt(BP,bwc), true);
     }
   }
   FMs.forEach(FM=>{ FM.kind='frame'; FM.module=isFrontModule()?'box':''; FM.bossCount=BP.length; FM.snapCount=SP.length; parts.push(FM); });
