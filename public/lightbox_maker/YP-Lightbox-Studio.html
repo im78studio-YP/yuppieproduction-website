@@ -334,6 +334,8 @@ Studio</textarea>
         </select></div>
       <div class="row"><label>พื้นที่ทำงาน</label><input type="number" id="bW" class="num" value="256" readonly>
         <span class="unit">×</span><input type="number" id="bH" class="num" value="256" readonly><span class="unit">มม.</span></div>
+      <div class="row"><label for="autoSplit">แบ่งชิ้นอัตโนมัติ</label><input type="checkbox" id="autoSplit" checked></div>
+      <div class="row"><label for="bedMargin">เผื่อขอบทุกด้าน</label><input type="number" id="bedMargin" class="num" min="0" step="1" value="10"><span class="unit">มม. (10 มม. = 1 ซม.)</span></div>
       <div class="printer-fit" id="printerFit">—</div>
     </div>
   </div>
@@ -633,7 +635,7 @@ function defaults(){ return {
   backing:{ enabled:false, offset:5, thickness:3 },
   price:{ qty:1, fil:750, mach:25, laborMin:25, laborRate:300, led:150, waste:8, margin:45, flush:120,
           acr:2200, pls:850, cut:35 },
-  exp:{ res:0.15, fmt:'3mf', layerH:0.2, printer:'bambu-a1', bed:256, bedH:256, smooth:true },
+  exp:{ res:0.15, fmt:'3mf', layerH:0.2, printer:'bambu-a1', bed:256, bedH:256, margin:10, autoSplit:true, smooth:true },
   ui:{ showFrame:true, showGrid:false, view:'design' }
 };}
 let S = defaults();
@@ -1895,6 +1897,7 @@ function contoursOf(mask,gw,gh,noMirrorX,boxes,space){
    จึงต้องสร้างผนังจาก "ขอบนอกของผลลัพธ์ earcut" แทน ปิดสนิทโดยโครงสร้างเสมอ */
 function addPrism(M,groups,z0,z1){
   if(z1<=z0) return;
+  if(ACTIVE_PRINT_PLAN&&!M.tile&&!M.display){ splitPrism(M,groups,z0,z1); return; }
   const seenPt=new Map();      // ใช้ร่วมกันทุกกลุ่ม จุดบีบเกิดข้ามกลุ่มได้ด้วย
   for(const g of groups){
     let area=Math.abs(loopArea(g.out));
@@ -2303,6 +2306,7 @@ function addChamferSolid(M,mask,z0,z1,height,angle,noMirrorX,boxes,outerOnly=fal
 /* ---------- ทางเข้าเดียวที่ buildParts เรียกใช้ ---------- */
 function addSolid(M,mask,z0,z1,noMirrorX,boxes){
   if(z1<=z0) return;
+  if(noMirrorX) M.noMirrorX=true;
   if(M.noTri){
     /* รอบคิดราคา ต้องการแค่ปริมาตรกับช่วง z — นับเซลล์เร็วกว่าสร้างรูปหลายเหลี่ยมมาก */
     let c=0; for(let i=0;i<mask.length;i++) if(mask[i]) c++;
@@ -2346,6 +2350,9 @@ function quad(M,p0,p1,p2,p3,nx,ny,nz){
 }
 function addBox(M,x0,y0,z0,x1,y1,z1){
   if(x1<=x0||y1<=y0||z1<=z0) return;
+  if(ACTIVE_PRINT_PLAN&&!M.tile&&!M.display){
+    addPrism(M,[{out:[[x0,y0],[x1,y0],[x1,y1],[x0,y1]],holes:[]}],z0,z1); return;
+  }
   M.vol += (x1-x0)*(y1-y0)*(z1-z0);
   if(x0<M.x0) M.x0=x0; if(x1>M.x1) M.x1=x1;
   if(y0<M.y0) M.y0=y0; if(y1>M.y1) M.y1=y1;
@@ -2487,6 +2494,141 @@ function geomStack(){
 function bedSize(){ return Math.max(80, +S.exp.bed||256); }
 function bedHeight(){ return Math.max(80, +S.exp.bedH||bedSize()); }
 const PGAP=8;
+
+/* แนวตัดอิงพิกัดตอนประกอบเดียวกันทุกชั้น; กลับแกนเฉพาะตอนพิมพ์ฝาหน้า */
+function printPlan(){
+  const bed=bedSize(), bedH=bedHeight(), raw=+S.exp.margin;
+  const margin=Number.isFinite(raw)&&raw>=0?raw:10;
+  /* ผิวโค้ง/เฉียง 5D ใช้ mesh คนละชนิด จึงคงเส้นทางส่งออกเดิมไว้ */
+  const w=bed-2*margin, h=bedH-2*margin, enabled=S.exp.autoSplit!==false&&!isFace5D();
+  /* เส้นขอบเนียนอาจยื่นจากกรอบเซลล์ครึ่งช่อง รวมทั้งฝาหลังที่กลับแกน
+     สำรองหนึ่งช่องรอบนอกเพื่อเก็บเนื้อเดิมครบและยังไม่ล้ำระยะเผื่อบนฐาน */
+  const padding=S.exp.smooth!==false&&G?G.px:0;
+  const plan={bed,bedH,margin,w,h,padding,enabled,tiles:[],nx:1,ny:1,error:''};
+  if(enabled&&(w<1||h<1)){ plan.error='ระยะเผื่อขอบต้องเหลือพื้นที่พิมพ์อย่างน้อย 1 มม. ทั้งสองแกน'; return plan; }
+  if(!PB||PB.empty||!PB.w||!PB.h) return plan;
+  const width=PB.w+2*padding, height=PB.h+2*padding;
+  plan.nx=enabled?Math.max(1,Math.ceil((width-1e-7)/w)):1;
+  plan.ny=enabled?Math.max(1,Math.ceil((height-1e-7)/h)):1;
+  if(plan.nx*plan.ny>512){ plan.error='จำนวนชิ้นย่อยเกิน 512 ช่อง กรุณาลดระยะเผื่อขอบหรือเลือกฐานพิมพ์ใหญ่ขึ้น'; return plan; }
+  for(let r=0;r<plan.ny;r++) for(let c=0;c<plan.nx;c++){
+    plan.tiles.push({id:`R${r+1}C${c+1}`,row:r+1,col:c+1,
+      x0:-padding+width*c/plan.nx,x1:-padding+width*(c+1)/plan.nx,
+      y0:-padding+height*(plan.ny-r-1)/plan.ny,y1:-padding+height*(plan.ny-r)/plan.ny});
+  }
+  return plan;
+}
+let ACTIVE_PRINT_PLAN=null;
+
+/* ตัดสามเหลี่ยมจากเส้นขอบที่เกลี่ยแล้ว แล้วรวมขอบกลับเป็นรูปปิด
+   จึงรักษารู/ส่วนเว้าและแนวตัดตรงกัน โดยไม่เกลี่ย mask แยกจนเกิดช่องว่างที่รอยต่อ */
+function clipPrintGroups(groups,bounds){
+  if(groups.every(g=>[g.out,...g.holes].every(r=>r.every(p=>p[0]>=bounds.x0&&p[0]<=bounds.x1&&p[1]>=bounds.y0&&p[1]<=bounds.y1)))) return groups;
+  const edges=new Map(), points=new Map();
+  const pointKey=p=>Math.round(p[0]*1e7)+','+Math.round(p[1]*1e7);
+  const edge=(a,b)=>{
+    const ka=pointKey(a), kb=pointKey(b); if(ka===kb) return;
+    points.set(ka,a); points.set(kb,b);
+    const reverse=kb+'|'+ka, key=ka+'|'+kb;
+    if(edges.has(reverse)) edges.delete(reverse); else edges.set(key,[ka,kb]);
+  };
+  const planes=[[0,bounds.x0,1],[0,bounds.x1,-1],[1,bounds.y0,1],[1,bounds.y1,-1]];
+  for(const g of groups){
+    const pts=g.out.slice(), holes=[];
+    for(const h of g.holes){ holes.push(pts.length); pts.push(...h); }
+    let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+    for(const p of pts){ x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1]); }
+    if(x1<=bounds.x0||x0>=bounds.x1||y1<=bounds.y0||y0>=bounds.y1) continue;
+    const idx=earcut(pts,holes);
+    for(let i=0;i<idx.length;i+=3){
+      let poly=[pts[idx[i]],pts[idx[i+1]],pts[idx[i+2]]];
+      if(loopArea(poly)<0) poly.reverse();
+      for(const [axis,value,sign] of planes){
+        if(!poly.length) break;
+        const out=[];
+        for(let j=0;j<poly.length;j++){
+          const a=poly[j],b=poly[(j+1)%poly.length];
+          const ia=sign*(a[axis]-value)>=0, ib=sign*(b[axis]-value)>=0;
+          if(ia) out.push(a);
+          if(ia!==ib){
+            const t=(value-a[axis])/(b[axis]-a[axis]);
+            const p=[a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])]; p[axis]=value; out.push(p);
+          }
+        }
+        poly=out;
+      }
+      if(poly.length<3||Math.abs(loopArea(poly))<1e-10) continue;
+      for(let j=0;j<poly.length;j++) edge(poly[j],poly[(j+1)%poly.length]);
+    }
+  }
+  const next=new Map();
+  for(const [key,[a,b]] of edges){ if(!next.has(a)) next.set(a,[]); next.get(a).push({key,b}); }
+  const loops=[];
+  while(edges.size){
+    const [,[start]]=edges.entries().next().value;
+    let at=start; const loop=[];
+    do{
+      loop.push(points.get(at));
+      const candidates=next.get(at)||[];
+      const e=candidates.find(e=>edges.has(e.key));
+      if(!e) throw new Error('แนวตัดไม่ปิดสนิท กรุณาตรวจรูปทรงต้นฉบับ');
+      edges.delete(e.key); at=e.b;
+    }while(at!==start);
+    if(loop.length>=3&&Math.abs(loopArea(loop))>1e-8) loops.push(loop);
+  }
+  const result=loops.filter(p=>loopArea(p)>0).map(out=>({out,holes:[]}));
+  const inside=(p,ring)=>{
+    let yes=false;
+    for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+      const a=ring[i],b=ring[j];
+      if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0]) yes=!yes;
+    }
+    return yes;
+  };
+  for(const hole of loops.filter(p=>loopArea(p)<0)){
+    const hosts=result.filter(g=>inside(hole[0],g.out)).sort((a,b)=>Math.abs(loopArea(a.out))-Math.abs(loopArea(b.out)));
+    if(!hosts.length) throw new Error('ไม่พบขอบนอกของรูหลังตัดแบ่ง');
+    hosts[0].holes.push(hole);
+  }
+  return result;
+}
+function splitPrism(M,groups,z0,z1){
+  if(!M.chunks) M.chunks=new Map();
+  for(const tile of ACTIVE_PRINT_PLAN.tiles){
+    const bounds={x0:M.noMirrorX?tile.x0:PB.w-tile.x1,x1:M.noMirrorX?tile.x1:PB.w-tile.x0,y0:tile.y0,y1:tile.y1};
+    const clipped=clipPrintGroups(groups,bounds); if(!clipped.length) continue;
+    let part=M.chunks.get(tile.id);
+    if(!part){ part=Mesh(M.name+' · '+tile.id,M.hex); part.tile=tile; part.offset={x:bounds.x0,y:bounds.y0}; M.chunks.set(tile.id,part); }
+    addPrism(part,clipped,z0,z1);
+  }
+}
+function finishPrintParts(parts,plan){
+  const out=[];
+  for(const M of parts){
+    if(M.display||M.noTri||!plan.enabled){ out.push(M); continue; }
+    if(!M.chunks){
+      M.tile=plan.tiles[0]; M.offset={x:0,y:0}; out.push(M); continue;
+    }
+    for(const part of M.chunks.values()){
+      if(!part.n) continue;
+      for(const key of ['kind','module','glow','bossCount','snapCount']) part[key]=M[key];
+      const {x,y}=part.offset;
+      for(let i=0;i<part.n;i+=12) for(let k=0;k<3;k++){ part.a[i+3+k*3]-=x; part.a[i+4+k*3]-=y; }
+      part.x0-=x;part.x1-=x;part.y0-=y;part.y1-=y;
+      out.push(part);
+    }
+  }
+  return out;
+}
+function buildParts(nt){
+  if(!G||!G.panel) buildGrid();
+  PB=panelBounds();
+  const plan=printPlan();
+  if(plan.error&&!nt) throw new Error(plan.error);
+  ACTIVE_PRINT_PLAN=!nt&&plan.enabled&&plan.tiles.length?plan:null;
+  try{ return finishPrintParts(buildPartMeshes(nt),plan); }
+  finally{ ACTIVE_PRINT_PLAN=null; }
+}
 
 /* ขอบล่างของรูปทรง — หาช่วงผนังล่างที่ต่อเนื่องยาวพอจะบากสายไฟได้
    ขอบล่างของโลโก้มักเป็นหยัก ถ้าบากที่ปลายหยักแคบๆ จะกินผนังหายไปทั้งท่อน */
@@ -2730,7 +2872,7 @@ function backingGeometry(){
 }
 function backingPart(){
   const g=backingGeometry();if(!g?.groups.length)return null;
-  const spec=backingSpec(),M=Mesh('แผ่นรองหลังอะครีลิคใส (ตัดแผ่น)','#b8e7f2');
+  const spec=backingSpec(),M=Mesh('แผ่นรองหลังอะครีลิคใส (ตัดแผ่น)','#b8e7f2'); M.display=true;
   const groups=g.groups.map(g=>({out:g.out.map(p=>[PB.w-p[0],p[1]]).reverse(),holes:[]}));
   const z=geomStack().total;
   addPrism(M,groups,z,z+spec.thickness);M.kind='backing';M.display=true;M.opacity=0.25;M.gloss=true;
@@ -2828,14 +2970,14 @@ function buildShell(nt){
   if(!nt){
     const SL=sheetLoops(true);
     if(SL.length){
-      const A=Mesh('แผ่นอะครีลิคขาวนม · ผ่านแสง 80% (ตัดเลเซอร์)',ACRYLIC_433_PREVIEW);
+      const A=Mesh('แผ่นอะครีลิคขาวนม · ผ่านแสง 80% (ตัดเลเซอร์)',ACRYLIC_433_PREVIEW); A.display=true;
       addPrism(A,SL,0,H.acrT); A.kind='acrylic'; A.display=true; A.glow=true;
       A.lightTransmission=ACRYLIC_PREVIEW_TRANSMISSION; A.gloss=true;
       parts.push(A);
     }
     const BL=sheetLoops(true,'back');
     if(BL.length){
-      const Bp=Mesh('แผ่นพลาสวูดขาวทึบ (ตัด CNC)','#FFFFFF');
+      const Bp=Mesh('แผ่นพลาสวูดขาวทึบ (ตัด CNC)','#FFFFFF'); Bp.display=true;
       addPrism(Bp,BL,H.zB2,H.zB2+H.plsT); Bp.kind='plaswood'; Bp.display=true;
       parts.push(Bp);
     }
@@ -2865,8 +3007,7 @@ function frameBandSpec(z0,z1){
   return out;
 }
 
-
-function buildParts(nt){
+function buildPartMeshes(nt){
   if(!G||!G.panel) buildGrid();
   if(!G||!G.panel||G.empty) { PB=panelBounds(); return []; }
   if(isShell()){ PB=panelBounds(); return PB.empty? [] : appendBacking(buildShell(nt),nt); }
@@ -2936,7 +3077,7 @@ function buildParts(nt){
       M.gloss=true;
     }else addSolid(M,mk,0,layerT);
     M.kind='color'; M.module=isFrontModule()?'front':''; M.glow=!!p.glow;
-    if(M.n) parts.push(M);
+    if(M.n||M.chunks?.size) parts.push(M);
   }
 
   /* --- 2. ชั้นกระจายแสง --- */
@@ -3134,6 +3275,20 @@ function buildParts(nt){
 function platePack(){
   const BED=bedSize(), BEDH=bedHeight();
   const w=PB.w||S.box.W, h=PB.h||S.box.H;
+  const plan=printPlan();
+  if(plan.enabled&&plan.tiles.length){
+    const modules=isService()?['front','box','back']:isShell()?['shell']:['panel','back'];
+    const count=modules.length*plan.tiles.length, cols=Math.ceil(Math.sqrt(count));
+    const plates=[], items={};
+    for(const module of modules) for(const tile of plan.tiles){
+      const i=plates.length, bx=(i%cols)*(BED+PGAP), by=Math.floor(i/cols)*(BEDH+PGAP);
+      const it={key:module+':'+tile.id,module,tile,bx,by,x:bx+plan.margin,y:by+plan.margin,w:tile.x1-tile.x0,h:tile.y1-tile.y0};
+      plates.push(it); items[it.key]=it;
+      if(!items[module==='front'||module==='shell'?'panel':module]) items[module==='front'||module==='shell'?'panel':module]=it;
+    }
+    return {items,plates,plan,bed:BED,bedH:BEDH,maxX:cols*(BED+PGAP)-PGAP,maxY:Math.ceil(count/cols)*(BEDH+PGAP)-PGAP,
+      fits:plates.every(p=>p.w<=plan.w+1e-6&&p.h<=plan.h+1e-6)};
+  }
   const items={panel:{x:0,y:0,w,h}};
   if(isFrontModule()){
     /* เรียง 3 ชิ้นแนวตั้งตามลำดับประกอบ: หน้า → กล่อง → ฐาน */
@@ -3143,6 +3298,43 @@ function platePack(){
   const all=Object.values(items);
   const maxX=Math.max(...all.map(i=>i.x+i.w)), maxY=Math.max(...all.map(i=>i.y+i.h));
   return {items,maxX,maxY,bed:BED,bedH:BEDH,fits:maxX<=BED&&maxY<=BEDH};
+}
+function printModule(p){ return p.module||(p.kind==='back'?'back':isShell()?'shell':'panel'); }
+function printPlace(p,pack=platePack()){
+  if(p.tile&&pack.plates) return pack.items[printModule(p)+':'+p.tile.id]||{x:0,y:0};
+  if(isService()) return pack.items[p.module==='front'?'panel':p.module]||{x:0,y:0};
+  return p.place||{x:0,y:0};
+}
+function printGroups(parts){
+  const groups=new Map();
+  for(const p of parts){
+    if(!p.n) continue;
+    const key=printModule(p)+':'+p.tile.id;
+    if(!groups.has(key)) groups.set(key,{key,tile:p.tile,module:printModule(p),parts:[]});
+    groups.get(key).parts.push(p);
+  }
+  return [...groups.values()];
+}
+function splitReadme(parts){
+  const plan=printPlan();
+  return ['YP Lightbox Studio — ผังแบ่งพิมพ์',
+    `ฐาน ${plan.bed} × ${plan.bedH} มม. · เผื่อขอบด้านละ ${plan.margin} มม. · ใช้ได้ ${plan.w} × ${plan.h} มม.`,
+    `แบ่ง ${plan.nx} คอลัมน์ × ${plan.ny} แถว ใช้แนวตัดเดียวกันทุกชั้นโดยไม่ย่อชิ้นงาน`,
+    'หมายเลข R = แถวจากบนลงล่าง, C = คอลัมน์จากซ้ายไปขวา เมื่อมองด้านหน้าป้ายที่ประกอบแล้ว',
+    'ฝาหน้าพิมพ์คว่ำ จึงกลับซ้าย–ขวาบนฐาน แต่หมายเลขตรงกับกล่องและฝาหลังเมื่อประกอบ',
+    'วางแต่ละไฟล์กึ่งกลางฐานพิมพ์ พิมพ์แยกรอบ แล้วประกอบตามหมายเลขใน assembly.json',
+    'รอยแบ่งเป็นหน้าตัดชนตรง ต้องยึดชิ้นข้างเคียงด้วยกาวหรือแผ่นเสริมตามวัสดุที่ใช้',
+    ...printGroups(parts).map(g=>`${g.module}_${g.tile.id}: กรอบแบ่ง ${(g.tile.x1-g.tile.x0).toFixed(2)} × ${(g.tile.y1-g.tile.y0).toFixed(2)} มม.`),
+    '',readme(parts)].join('\n');
+}
+function splitSupportFiles(parts,name){
+  const plan=printPlan();
+  const manifest={units:'mm',width:PB.w,height:PB.h,bed:[plan.bed,plan.bedH],margin:plan.margin,
+    usable:[plan.w,plan.h],rows:plan.ny,columns:plan.nx,
+    groups:printGroups(parts).map(g=>({file:`${name}_${g.module}_${g.tile.id}`,module:g.module,tile:g.tile,
+      printOrigin:g.parts[0].offset,mirrorX:g.module!=='back'}))};
+  return [{name:'assembly.json',data:enc(JSON.stringify(manifest,null,2))},
+    {name:`${name}_ผังประกอบ.txt`,data:enc(splitReadme(parts))}];
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -3249,7 +3441,12 @@ function make3mf(parts,title){
     id++;
   });
   let items='';
-  if(isFrontModule()){
+  if(parts.some(p=>p.tile)){
+    const asmId=id++, margin=printPlan().margin;
+    comps=`<object id="${asmId}" type="model" name="${xesc(title)}"><components>`+
+      records.map(r=>`<component objectid="${r.id}"/>`).join('')+'</components></object>\n';
+    items=`<item objectid="${asmId}" transform="1 0 0 0 1 0 0 0 1 ${margin} ${margin} 0"/>`;
+  }else if(isFrontModule()){
     const PK=platePack();
     const makeGroup=(key,label,place)=>{
       const group=records.filter(r=>r.p.module===key); if(!group.length) return;
@@ -3295,6 +3492,7 @@ ${mats}${objs}${comps} </resources>
 function objMtl(parts,base){
   const PK=isFrontModule()?platePack():null;
   const placeOf=p=>{
+    if(p.tile) return printPlace(p);
     if(!PK) return p.place||{x:0,y:0};
     if(p.module==='front') return PK.items.panel;
     if(p.module==='box') return PK.items.box;
@@ -3458,7 +3656,11 @@ function draw(){
   const stage=$('#stage'), maxW=stage.clientWidth-32, maxH=stage.clientHeight-32;
   const view=S.ui.view;
   let aw=b.W, ah=b.H;
-  if(view==='plate'){ aw=Math.max(bedSize(),bedHeight())*1.06; ah=Math.max(bedSize(),bedHeight())*1.06; }
+  if(view==='plate'){
+    const pack=platePack();
+    aw=(pack.plates?pack.maxX:Math.max(bedSize(),bedHeight()))*1.06;
+    ah=(pack.plates?pack.maxY:Math.max(bedSize(),bedHeight()))*1.06;
+  }
   if(view==='layers'){ aw=b.W*1.35; ah=b.H*1.35; }
   const k=Math.min(maxW/aw, maxH/ah, 8);
   cv.width=Math.max(200,Math.round(aw*k)); cv.height=Math.max(160,Math.round(ah*k));
@@ -3500,6 +3702,18 @@ function draw(){
     c.drawImage(img,0,0,cv.width,cv.height);
   }
 
+  if(view==='design'){
+    const plan=printPlan();
+    if(plan.enabled&&plan.tiles.length>1){
+      c.save(); c.strokeStyle='#ff2d8f'; c.fillStyle='#b40058'; c.lineWidth=1; c.setLineDash([5,4]); c.font='11px sans-serif';
+      for(const tile of plan.tiles){
+        const x=(PB.ux0+tile.x0)*px,y=(b.H-PB.my0-tile.y1)*px;
+        c.strokeRect(x,y,(tile.x1-tile.x0)*px,(tile.y1-tile.y0)*px);
+        c.fillText(tile.id,x+4,y+13);
+      }
+      c.restore();
+    }
+  }
   if(S.ui.showGrid){
     c.strokeStyle=view==='lit'?'#ffffff22':'#00000018'; c.lineWidth=1;
     for(let x=10;x<b.W;x+=10){ c.beginPath(); c.moveTo(x*px,0); c.lineTo(x*px,cv.height); c.stroke(); }
@@ -3577,6 +3791,21 @@ function drawLayers(c,cv,px){
 
 function drawPlate(c,cv,px){
   const b=S.box, st=geomStack(), BED=bedSize(), BEDH=bedHeight(), PK=platePack();
+  if(PK.plates){
+    const mx=(cv.width-PK.maxX*px)/2,my=(cv.height-PK.maxY*px)/2;
+    const labels={front:'ฝาหน้า',box:'ตัวกล่อง',back:'ฝาหลัง',shell:'ตัวกล่อง',panel:'หน้า+กรอบ'};
+    c.font='11px sans-serif'; c.textAlign='left';
+    for(const it of PK.plates){
+      c.fillStyle='#e7e9ec'; c.strokeStyle='#9aa0a8'; c.setLineDash([]);
+      c.fillRect(mx+it.bx*px,my+it.by*px,BED*px,BEDH*px);c.strokeRect(mx+it.bx*px,my+it.by*px,BED*px,BEDH*px);
+      c.strokeStyle='#77818c';c.setLineDash([4,3]);
+      c.strokeRect(mx+it.x*px,my+it.y*px,PK.plan.w*px,PK.plan.h*px);c.setLineDash([]);
+      c.fillStyle='#ff2d8f26';c.strokeStyle='#ff2d8f';
+      c.fillRect(mx+it.x*px,my+it.y*px,it.w*px,it.h*px);c.strokeRect(mx+it.x*px,my+it.y*px,it.w*px,it.h*px);
+      c.fillStyle='#2a2e35';c.fillText(`${labels[it.module]} ${it.tile.id}`,mx+it.x*px+3,my+it.y*px+13);
+    }
+    return;
+  }
   const m=(Math.max(BED,BEDH)*1.055-Math.max(BED,BEDH))/2*px;
   c.fillStyle='#e7e9ec'; c.fillRect(m,m,BED*px,BEDH*px);
   c.strokeStyle='#0000000f';
@@ -3717,7 +3946,11 @@ function runChecks(){
     const nComp=G.comp?G.comp.n:1;
     add('ok',`ขนาดชิ้นงานจริง ${PB.w.toFixed(0)} × ${PB.h.toFixed(0)} × ${st.total.toFixed(1)} มม.`+
              (nComp>1?` · แยกเป็น ${nComp} ชิ้นที่ไม่ติดกัน พิมพ์ทีละชิ้นแล้วประกอบได้`:''));
-    if(PB.w>BED||PB.h>BEDH){
+    const plan=printPlan();
+    if(plan.error) add('err',plan.error);
+    else if(plan.enabled){
+      add('ok',`พื้นที่พิมพ์หลังเผื่อขอบด้านละ ${plan.margin} มม. = ${plan.w} × ${plan.h} มม. · แบ่งอัตโนมัติ ${plan.nx} × ${plan.ny} ช่องต่อชั้น รอยตัดตรงกันทุกชั้น`);
+    }else if(PB.w>BED||PB.h>BEDH){
       const nx=Math.ceil(PB.w/BED), ny=Math.ceil(PB.h/BEDH);
       add('warn',`แผ่นหน้ากว้าง ${PB.w.toFixed(0)} × สูง ${PB.h.toFixed(0)} มม. ใหญ่กว่าฐาน ${BED} × ${BEDH} มม. — `+
         (G.comp&&G.comp.n>1? `แต่งานแยกเป็น ${G.comp.n} ชิ้นอยู่แล้ว พิมพ์ทีละชิ้นได้`
@@ -3728,7 +3961,7 @@ function runChecks(){
   if(st.total>250) add('warn','ความสูงตอนพิมพ์เกิน 250 มม. เช็คระยะ Z ของเครื่องก่อน');
   if(isShell()){
     const H=shellSpec();
-    add('ok',`ตัวกล่องพิมพ์สูง ${(H.total-(H.cap?H.acrT:0)).toFixed(1)} มม. — หน้าอะครีลิค ${H.acrT} มม. · หลังพลาสวูด ${H.plsT} มม.`);
+    add('ok',`ตัวกล่อง${printPlan().tiles.length>1?'แบบแบ่งชิ้น':''}พิมพ์สูง ${(H.total-(H.cap?H.acrT:0)).toFixed(1)} มม. — หน้าอะครีลิค ${H.acrT} มม. · หลังพลาสวูด ${H.plsT} มม.`);
     if(H.cav<6) add('err',`โพรงไฟเหลือลึกแค่ ${H.cav.toFixed(1)} มม. ใส่ไฟไม่ลง — เพิ่มความลึกกล่อง หรือลดความกว้างคิ้ว`);
     else if(H.cav<12) add('warn',`โพรงไฟลึก ${H.cav.toFixed(1)} มม. เส้นไฟ LED ส่วนใหญ่ต้องการอย่างน้อย 12 มม. เพื่อให้แสงเกลี่ยทั่วหน้า`);
     else add('ok',`โพรงไฟลึก ${H.cav.toFixed(1)} มม. — พอสำหรับเส้นไฟ LED ทั่วไป`);
@@ -4045,6 +4278,11 @@ function exportMeshIssues(parts){
   const printable=(parts||[]).filter(p=>p&&!p.display);
   for(const p of printable){
     if(!p.n) continue;                         // สีที่ไม่มีพื้นที่จริงไม่ต้องสร้าง facet
+    if(p.tile){
+      const plan=printPlan();
+      if(p.x0 < -0.001||p.y0 < -0.001||p.x1>plan.w+0.001||p.y1>plan.h+0.001)
+        issues.push(`${p.name}: ชิ้นงานเกินพื้นที่พิมพ์หลังเผื่อขอบ`);
+    }
     if(p.n%12){ issues.push(`${p.name||'ชิ้นงาน'}: จำนวนข้อมูลเมชไม่ครบหนึ่งสามเหลี่ยม`); continue; }
     for(let i=0;i<p.n;i++){
       if(!Number.isFinite(p.a[i])){
@@ -4082,22 +4320,34 @@ async function doExport(){
     if(meshIssues.length) throw new Error(meshIssues.join(' · '));
     const name=productionBaseName();
     const fmt=S.exp.fmt;
+    const divided=pr.some(p=>p.tile), groups=divided?printGroups(pr):[];
     if(fmt==='3mf'||fmt==='both'||fmt==='all'){
       busy(true,'กำลังเขียนไฟล์ 3MF…'); await new Promise(r=>setTimeout(r,20));
-      const blob=await make3mf(pr,S.name);
-      if(isFace5DChamfer()) download(blob,`${name}_ชุดชั้นสีหน้า_5D_Chamfer.3mf`);
-      else if(isFace5DRounded()) download(blob,`${name}_ชุดชั้นสีหน้า_5D_ขอบโค้งมน.3mf`);
-      else
-      download(blob,`${name}_${isShell()?'ตัวกล่อง':isLayered()?'ชุดฝาหน้าซ้อนชั้นกันแสงรั่ว':isService()?'ชุดฝหน้าถอดเปลี่ยนได้':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
+      if(divided){
+        const files=splitSupportFiles(pr,name);
+        for(const g of groups){
+          const blob=await make3mf(g.parts,`${S.name} · ${g.module} · ${g.tile.id}`);
+          files.push({name:`${name}_${g.module}_${g.tile.id}.3mf`,data:new Uint8Array(await blob.arrayBuffer())});
+        }
+        download(await zipFiles(files),`${name}_แบ่งพิมพ์_3MF.zip`);
+      }else{
+        const blob=await make3mf(pr,S.name);
+        if(isFace5DChamfer()) download(blob,`${name}_ชุดชั้นสีหน้า_5D_Chamfer.3mf`);
+        else if(isFace5DRounded()) download(blob,`${name}_ชุดชั้นสีหน้า_5D_ขอบโค้งมน.3mf`);
+        else
+        download(blob,`${name}_${isShell()?'ตัวกล่อง':isLayered()?'ชุดฝาหน้าซ้อนชั้นกันแสงรั่ว':isService()?'ชุดฝหน้าถอดเปลี่ยนได้':'ชุดชิ้นส่วนพิมพ์'}.3mf`);
+      }
     }
     if(fmt==='stl'||fmt==='both'||fmt==='all'){
       busy(true,'กำลังเขียนไฟล์ STL…'); await new Promise(r=>setTimeout(r,20));
-      const files=isFrontModule()? [
+      const files=divided?groups.map(g=>({name:`${name}_${g.module}_${g.tile.id}.stl`,
+        data:stlOf(mergeForSTL(g.key,g.parts,g.parts[0].hex))})):isFrontModule()? [
         {name:`${name}_ฝาหน้า_รวมชั้นกระจายแสง.stl`,data:stlOf(mergeForSTL(frontModuleLabel()+' (รวมชั้นกระจายแสง)',pr.filter(p=>p.module==='front'),'#F2F2E8'))},
         {name:`${name}_ตัวกล่อง.stl`,data:stlOf(mergeForSTL('ตัวกล่อง',pr.filter(p=>p.module==='box'),S.box.frameColor))},
         {name:`${name}_ฐาน_ฝาหลัง.stl`,data:stlOf(mergeForSTL('ฐาน/ฝาหลัง',pr.filter(p=>p.module==='back'),S.box.backColor))}
       ] : pr.map(p=>({name:`${name}_${partFileLabel(p)}.stl`,data:stlOf(p)}));
       files.push({name:`${name}_คำแนะนำการพิมพ์.txt`,data:enc(readme(parts))});
+      if(divided) files.push(...splitSupportFiles(pr,name));
       download(await zipFiles(files), `${name}_ชิ้นส่วนพิมพ์_STL.zip`);
     }
     if(fmt==='obj'||fmt==='all'){
@@ -4463,9 +4713,10 @@ function previewGridSpec(mode,B,eyeY,enabled){
   if(!enabled)return null;
   const plate=mode==='plate', y=plate?0:B.mn[1]-0.4;
   if(eyeY<=y+0.2)return null; // Match the studio floor's below-floor visibility.
-  const hx=plate?bedSize()/2:Math.max(80,(B.mx[0]-B.mn[0])*0.75+40);
-  const hz=plate?bedSize()/2:Math.max(80,(B.mx[2]-B.mn[2])*0.75+40);
-  const cx=plate?0:B.c[0], cz=plate?0:B.c[2];
+  const pack=plate?platePack():null, multi=!!pack?.plates;
+  const hx=plate?(multi?pack.maxX:bedSize())/2:Math.max(80,(B.mx[0]-B.mn[0])*0.75+40);
+  const hz=plate?(multi?pack.maxY:bedHeight())/2:Math.max(80,(B.mx[2]-B.mn[2])*0.75+40);
+  const cx=plate?(multi?(pack.maxX-bedSize())/2:0):B.c[0], cz=plate?(multi?(bedSize()-pack.maxY)/2:0):B.c[2];
   const step=10*Math.pow(2,Math.max(0,Math.ceil(Math.log2(Math.max(hx,hz)*2/1000))));
   return {x0:cx-hx,x1:cx+hx,z0:cz-hz,z1:cz+hz,y:y+0.04,step,
           color:mode==='lit'?[0.28,0.32,0.39]:[0.52,0.55,0.60]};
@@ -4495,7 +4746,8 @@ function partMatrix(M,mode){
   const ex = mode==='exp';
   if(mode==='plate'){
     let place=M.place||{x:0,y:0};
-    if(isFrontModule()){
+    if(M.tile) place=printPlace(M);
+    else if(isFrontModule()){
       const PK=platePack();
       if(M.module==='front') place=PK.items.panel;
       else if(M.module==='box') place=PK.items.box;
@@ -4511,9 +4763,9 @@ function partMatrix(M,mode){
   if(M.kind==='back'){
     /* ฝาหลังพิมพ์ผิวนอกติดฐาน บ่าชี้ขึ้น — ประกอบโดยหันบ่าเข้าในกล่อง
        จึงเป็นการหมุนรอบแกน Z (det=+1) ไม่ใช่การพลิก */
-    return mkM(1,0,0, 0,1,0, 0,0,1, -W/2, -H/2, -st.total + (ex?EXPLODE.back:0));
+    return mkM(1,0,0, 0,1,0, 0,0,1, -W/2+(M.offset?.x||0), -H/2+(M.offset?.y||0), -st.total + (ex?EXPLODE.back:0));
   }
-  return mkM(-1,0,0, 0,1,0, 0,0,-1, W/2, -H/2, ex?(EXPLODE[M.kind]||0):0);
+  return mkM(-1,0,0, 0,1,0, 0,0,-1, W/2-(M.offset?.x||0), -H/2+(M.offset?.y||0), ex?(EXPLODE[M.kind]||0):0);
 }
 
 /* ---------- ขอบเขตฉากต่อโหมด (ใช้ตั้งกล้องให้พอดีเสมอ) ---------- */
@@ -4533,7 +4785,10 @@ function sceneBounds(mode){
           T[2]*px+T[6]*py+T[10]*pz+T[14]);
     }
   }
-  if(mode==='plate'){ const B2=bedSize()/2; eat(-B2,0,-B2); eat(B2,0,B2); }
+  if(mode==='plate'){
+    const pack=platePack(), B2=bedSize()/2;
+    eat(-B2,0,B2);eat((pack.plates?pack.maxX:bedSize())-B2,0,B2-(pack.plates?pack.maxY:bedHeight()));
+  }
   if(mx[0]<mn[0]){ mn[0]=mn[1]=mn[2]=-50; mx[0]=mx[1]=mx[2]=50; }
   const r=Math.max(20, 0.5*Math.hypot(mx[0]-mn[0],mx[1]-mn[1],mx[2]-mn[2]));
   const out={mn,mx,c:[(mn[0]+mx[0])/2,(mn[1]+mx[1])/2,(mn[2]+mx[2])/2],r};
@@ -4752,6 +5007,8 @@ const BIND=[
  ['ring1w','rings.1.w','num','ring1wV',v=>v+' มม.',''],
  ['bW','exp.bed','num',null,null,''],
  ['bH','exp.bedH','num',null,null,''],
+ ['autoSplit','exp.autoSplit','bool',null,null,''],
+ ['bedMargin','exp.margin','num',null,null,''],
  ['bDepth','box.depth','num','bDepthV',v=>v+' มม.',''],
  ['bColorT','box.colorT','num','bColorTV',v=>v+' มม.',''],
  ['face5dH','face.height5d','num','face5dHV',v=>v+' มม.',''],
@@ -4929,6 +5186,8 @@ function pushToUI(){
   if(!isFinite(+S.face.edgeR)||+S.face.edgeR<0.6||+S.face.edgeR>2.4) S.face.edgeR=2;
   if(!isFinite(+S.face.chamferH)||+S.face.chamferH<0.6||+S.face.chamferH>2.4) S.face.chamferH=2;
   if(!isFinite(+S.face.chamferAngle)||+S.face.chamferAngle<20||+S.face.chamferAngle>70) S.face.chamferAngle=45;
+  if(S.exp.autoSplit===undefined) S.exp.autoSplit=true;
+  if(!Number.isFinite(+S.exp.margin)||+S.exp.margin<0) S.exp.margin=10;
   if(!['off','standard','strict'].includes(S.art.seal)) S.art.seal='off';
   if(!isFinite(+S.art.choke)) S.art.choke=0.6;
   /* โปรไฟล์หน้ากล่องไฟหัว 0.4 มม.: สีหน้า 0.4–2.4 (ค่าเริ่มต้น 0.6) และ diffuser 0.4–1.2 */
@@ -5191,6 +5450,15 @@ function syncSizeUI(){
 /* แสดงความสัมพันธ์ระหว่างขนาดจริงและฐานของเครื่องที่เลือกไว้ตั้งแต่เมนู 2 */
 function syncPrinterFit(){
   const out=$('#printerFit'); if(!out) return;
+  $('#autoSplit').disabled=isFace5D(); $('#bedMargin').disabled=isFace5D();
+  const plan=printPlan();
+  if(plan.error){ out.className='printer-fit warn';out.textContent=plan.error;return; }
+  if(plan.enabled){
+    out.className='printer-fit ok';
+    out.textContent=`พื้นที่ใช้ได้ ${nf(plan.w,1)} × ${nf(plan.h,1)} มม. หลังเผื่อขอบด้านละ ${plan.margin} มม.`+
+      (plan.tiles.length?` · ${plan.nx} คอลัมน์ × ${plan.ny} แถวต่อชั้น · รอยตัดตรงกันทุกชั้น`:'');
+    return;
+  }
   const bed=bedSize(), bedH=bedHeight();
   if(!PB||PB.empty){ out.className='printer-fit'; out.textContent=`พื้นที่ทำงานจากเครื่อง ${bed} × ${bedH} มม.`; return; }
   const w=PB.w, h=PB.h, fits=w<=bed&&h<=bedH;
@@ -5198,6 +5466,7 @@ function syncPrinterFit(){
   out.innerHTML=fits
     ? `✓ ชิ้นงาน ${w.toFixed(0)} × ${h.toFixed(0)} มม. พิมพ์บนฐาน ${bed} × ${bedH} มม. ได้`
     : `! ชิ้นงาน ${w.toFixed(0)} × ${h.toFixed(0)} มม. เกินฐาน ${bed} × ${bedH} มม. — เลือกเครื่องใหญ่ขึ้น หรือแยกพิมพ์`;
+  if(isFace5D()) out.textContent='โหมด 5D ส่งออกทั้งชิ้นตามเดิม ยังไม่รองรับแบ่งอัตโนมัติ · '+out.textContent;
 }
 /* ตั้งขนาดชิ้นงานเป็นมิลลิเมตร
    ขนาดจริงขึ้นกับทั้งสเกลและพื้นที่ทำงาน (baseFit เป็น min ของสองแกน)
@@ -5250,6 +5519,7 @@ function wire(){
     el.addEventListener(ev,()=>{
       let v = kind==='bool'?el.checked : kind==='num'? (+el.value||0) : el.value;
       if(kind==='num'&&el.value==='') v=0;
+      if(id==='bedMargin'&&(!Number.isFinite(v)||v<0)){ el.value=S.exp.margin; return; }
       if(id==='fillHoles'){
         if(S.src.mode==='image') S.shape.fillHolesImage=!!v;
         else S.shape.fillHoles=!!v;
