@@ -190,7 +190,16 @@ test('5D ยังคงโครงสร้างสามโมดูล แ�
 
 test('ตัวกล่อง 5D ลงฐานพิมพ์ที่ระดับเดียวกับชิ้นหน้าและฝาหลัง',()=>{
   assert.match(html,/function printBaseZ\(parts\)\{[\s\S]*?return Number\.isFinite\(z\)\?z:0;[\s\S]*?\}/);
-  assert.match(html,/const peers=M\.module\?\(V3\.parts\|\|\[\]\)\.filter\(p=>p\.module===M\.module\):\[M\];/);
+  const c=geometryContext();
+  const placements=vm.runInContext(`(()=>{
+    S.build.mode='face5d';PB={w:100,h:50,empty:false};
+    V3.parts=[{module:'front',n:12,z0:0},{module:'front',n:12,z0:5},
+      {module:'box',n:12,z0:5.6},{module:'back',n:12,z0:0}];
+    const layout=plateRenderLayout();
+    return V3.parts.map(p=>({z0:p.z0,base:printBaseZ(V3.parts.filter(q=>q.module===p.module)),
+      plain:partMatrix(p,'plate')[13],shared:partMatrix(p,'plate',layout)[13]}));
+  })()`,c);
+  for(const p of placements){assert.ok(Math.abs(p.plain+p.base)<1e-6);assert.equal(p.shared,p.plain);}
   assert.match(html,/return mkM\(1,0,0, 0,0,1, 0,-1,0, px-BED\/2, -baseZ, BED\/2-py\);/);
   assert.match(html,/const ids=group\.map\(r=>r\.id\), baseZ=printBaseZ\(group\.map\(r=>r\.p\)\);/);
   assert.match(html,/\$\{place\.x\} \$\{place\.y\} \$\{-baseZ\}/);

@@ -3612,7 +3612,7 @@ function printBaseZ(parts){
    YP Lightbox Studio — preview, checks, pricing, UI
    ══════════════════════════════════════════════════════════════ */
 
-let PARTS=null, LAST=null;
+let PARTS=null, LAST=null, QUOTE_CACHE=null;
 const toast=(m)=>{ const t=$('#toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),2200); };
 const busy=(on,m)=>{ $('#busy').classList.toggle('on',!!on); if(m)$('#busyTx').textContent=m; };
 
@@ -4114,7 +4114,13 @@ function runChecks(){
 
 /* ══════════ COSTING ══════════ */
 const DENSITY=1.24;   // g/cm³ PLA
-function estimate(allParts){
+function sheetCostMetrics(){
+  const front=sheetLoops(false),back=sheetLoops(false,'back');
+  if(!front.length) return null;
+  const f=cutMetrics(front),b=cutMetrics(back);
+  return {areaM2:f.areaM2,bbM2:PB.w*PB.h/1e6,perM:f.perM+b.perM,hasBack:back.length>0};
+}
+function estimate(allParts,sheetMetrics){
   const p=S.price, b=S.box, st=geomStack(), lh=Math.max(0.06,+S.exp.layerH);
   const parts=allParts.filter(P=>!P.display);      // แผ่นอะครีลิค/พลาสวูดคิดแยกต่างหาก
   const byColor=new Map(); let vol=0, tris=0;
@@ -4144,14 +4150,13 @@ function estimate(allParts){
      แผ่นวัสดุขายเป็นแผ่นใหญ่ ตัดชิ้นเดียวยังต้องเสียเศษ จึงคิดจากกรอบสี่เหลี่ยมของชิ้น */
   let cSheet=0, sheet=null;
   if(isShell()){
-    const SL=sheetLoops(false), BL=sheetLoops(false,'back');
-    if(SL.length){
-      const m=cutMetrics(SL);
-      const bbM2=(PB.w*PB.h)/1e6;                  // เศษที่เสียจริงตอนตัด = กรอบสี่เหลี่ยมของชิ้น
-      const cAcr=bbM2*(+p.acr||0), cPls=BL.length?bbM2*(+p.pls||0):0;
-      const cCut=(m.perM+cutMetrics(BL).perM)*(+p.cut||0);
+    const m=sheetMetrics===undefined?sheetCostMetrics():sheetMetrics;
+    if(m){
+      const {bbM2,perM}=m;
+      const cAcr=bbM2*(+p.acr||0), cPls=m.hasBack?bbM2*(+p.pls||0):0;
+      const cCut=perM*(+p.cut||0);
       cSheet=cAcr+cPls+cCut;
-      sheet={areaM2:m.areaM2, bbM2, perM:m.perM+cutMetrics(BL).perM, cAcr, cPls, cCut};
+      sheet={areaM2:m.areaM2, bbM2, perM, cAcr, cPls, cCut};
     }
   }
   const cost = cFil+cMach+cLab+p.led+cSheet;
@@ -4724,11 +4729,11 @@ function glBuild(){
 }
 
 /* Preview-only floor lines: bounded density, one reusable GPU buffer, no mesh rebuild. */
-function previewGridSpec(mode,B,eyeY,enabled){
+function previewGridSpec(mode,B,eyeY,enabled,layout){
   if(!enabled)return null;
   const plate=mode==='plate', y=plate?0:B.mn[1]-0.4;
   if(eyeY<=y+0.2)return null; // Match the studio floor's below-floor visibility.
-  const pack=plate?platePack():null, multi=!!pack?.plates;
+  const pack=plate?(layout?.pack||platePack()):null, multi=!!pack?.plates;
   const hx=plate?(multi?pack.maxX:bedSize())/2:Math.max(80,(B.mx[0]-B.mn[0])*0.75+40);
   const hz=plate?(multi?pack.maxY:bedHeight())/2:Math.max(80,(B.mx[2]-B.mn[2])*0.75+40);
   const cx=plate?(multi?(pack.maxX-bedSize())/2:0):B.c[0], cz=plate?(multi?(bedSize()-pack.maxY)/2:0):B.c[2];
@@ -4756,14 +4761,21 @@ function previewGridBuffer(gl,spec){
 const EXPLODE={color:46,face5dwall:46,diffuser:46,lightseal:46,frame:0,back:-38,shell:0,acrylic:46,plaswood:-46,backing:-85};
 /* ชิ้นที่มีไว้ดูเฉยๆ (อะครีลิค/พลาสวูด) ไม่ต้องโผล่ในผังฐานพิมพ์ */
 const skipIn=(M,mode)=> mode==='plate' && M.display;
-function partMatrix(M,mode){
+/* ผังและฐานโมดูลเหมือนกันทุกเมชในเฟรมเดียว ไม่ต้องจัดใหม่ทีละชิ้น */
+function plateRenderLayout(parts=V3.parts||[]){
+  const bases=new Map();
+  for(const p of parts) if(p.module&&p.n&&Number.isFinite(p.z0))
+    bases.set(p.module,Math.min(bases.get(p.module)??Infinity,p.z0));
+  return {pack:platePack(),bases};
+}
+function partMatrix(M,mode,layout){
   const st=geomStack(), W=PB.w||S.box.W, H=PB.h||S.box.H, BED=bedSize();
   const ex = mode==='exp';
   if(mode==='plate'){
     let place=M.place||{x:0,y:0};
-    if(M.tile) place=printPlace(M);
+    if(M.tile) place=printPlace(M,layout?.pack);
     else if(isFrontModule()){
-      const PK=platePack();
+      const PK=layout?.pack||platePack();
       if(M.module==='front') place=PK.items.panel;
       else if(M.module==='box') place=PK.items.box;
       else if(M.module==='back') place=PK.items.back;
@@ -4771,8 +4783,8 @@ function partMatrix(M,mode){
     const px=place.x, py=place.y;
     /* โมเดลเก็บ z ตามตำแหน่งประกอบ แต่บนฐานพิมพ์ทุกโมดูลต้องวางฐานต่ำสุดที่ y=0
        ใช้ค่าต่ำสุดร่วมของทั้งโมดูลเพื่อรักษาระยะซ้อนชั้นภายในชิ้นหน้า/ตัวกล่อง */
-    const peers=M.module?(V3.parts||[]).filter(p=>p.module===M.module):[M];
-    const baseZ=printBaseZ(peers);
+    const baseZ=layout&&M.module ? (layout.bases.get(M.module)||0)
+      : printBaseZ(M.module?(V3.parts||[]).filter(p=>p.module===M.module):[M]);
     return mkM(1,0,0, 0,0,1, 0,-1,0, px-BED/2, -baseZ, BED/2-py);
   }
   if(M.kind==='back'){
@@ -4784,7 +4796,7 @@ function partMatrix(M,mode){
 }
 
 /* ---------- ขอบเขตฉากต่อโหมด (ใช้ตั้งกล้องให้พอดีเสมอ) ---------- */
-function sceneBounds(mode){
+function sceneBounds(mode,layout){
   if(V3.bounds && V3.bounds[mode]) return V3.bounds[mode];
   const mn=[1e9,1e9,1e9], mx=[-1e9,-1e9,-1e9];
   const eat=(x,y,z)=>{ if(x<mn[0])mn[0]=x; if(x>mx[0])mx[0]=x;
@@ -4792,7 +4804,7 @@ function sceneBounds(mode){
                        if(z<mn[2])mn[2]=z; if(z>mx[2])mx[2]=z; };
   for(const B of V3.buf){
     const M=B.M; if(skipIn(M,mode)) continue;
-    const T=partMatrix(M,mode);
+    const T=partMatrix(M,mode,layout);
     for(let i=0;i<8;i++){
       const px=(i&1)?M.x1:M.x0, py=(i&2)?M.y1:M.y0, pz=(i&4)?M.z1:M.z0;
       eat(T[0]*px+T[4]*py+T[8]*pz+T[12],
@@ -4801,7 +4813,7 @@ function sceneBounds(mode){
     }
   }
   if(mode==='plate'){
-    const pack=platePack(), B2=bedSize()/2;
+    const pack=layout?.pack||platePack(), B2=bedSize()/2;
     eat(-B2,0,B2);eat((pack.plates?pack.maxX:bedSize())-B2,0,B2-(pack.plates?pack.maxY:bedHeight()));
   }
   if(mx[0]<mn[0]){ mn[0]=mn[1]=mn[2]=-50; mx[0]=mx[1]=mx[2]=50; }
@@ -4832,7 +4844,8 @@ function glRender(){
   gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 
   const FOV=0.62, c=V3.cam;
-  const B=sceneBounds(V3.mode);
+  const layout=V3.mode==='plate'?plateRenderLayout():undefined;
+  const B=sceneBounds(V3.mode,layout);
   const asp=cv.width/cv.height;
   const fit=B.r/Math.tan(FOV/2)/Math.min(1,asp*0.92);
   const dist=Math.max(40, fit*1.16*c.dist/400);
@@ -4888,7 +4901,7 @@ function glRender(){
   }
 
   /* The same checkbox controls 2D, studio, exploded, lit and print-bed grids. */
-  const gridSpec=previewGridSpec(V3.mode,B,eye[1],S.ui.showGrid);
+  const gridSpec=previewGridSpec(V3.mode,B,eye[1],S.ui.showGrid,layout);
   if(gridSpec){
     const grid=previewGridBuffer(gl,gridSpec);
     gl.bindBuffer(gl.ARRAY_BUFFER,grid.b);
@@ -4903,7 +4916,7 @@ function glRender(){
 
   for(const B of V3.buf){
     const M=B.M; if(skipIn(M,V3.mode)) continue;
-    const Mm=partMatrix(M,V3.mode);
+    const Mm=partMatrix(M,V3.mode,layout);
     gl.uniformMatrix4fv(L.uM,false,Mm);
     gl.uniformMatrix4fv(L.uMVP,false,m4mul(PV,Mm));
     const rgb=hex2rgb(M.hex).map(v=>v/255);
@@ -4935,7 +4948,7 @@ function glRender(){
       gl.uniform1f(L.uGrow,pass);
       for(const B of V3.buf){
         const M=B.M; if(!haloOf(M)||skipIn(M,V3.mode)) continue;
-        const Mm=partMatrix(M,V3.mode);
+        const Mm=partMatrix(M,V3.mode,layout);
         gl.uniformMatrix4fv(L.uM,false,Mm);
         gl.uniformMatrix4fv(L.uMVP,false,m4mul(PV,Mm));
         const rgb=hex2rgb(M.hex).map(v=>v/255);
@@ -4954,6 +4967,14 @@ function glRender(){
 }
 
 /* ---------- interaction ---------- */
+let _glFrame=null;
+function glRequestRender(){
+  if(_glFrame!==null) return;
+  _glFrame=requestAnimationFrame(()=>{
+    _glFrame=null;
+    if(S.ui.view==='3d') glRender();
+  });
+}
 function bindGLEvents(cv){
   cv.addEventListener('mousedown',e=>{
     V3.drag={x:e.clientX,y:e.clientY,pan:e.shiftKey||e.button===1||e.button===2};
@@ -4966,13 +4987,13 @@ function bindGLEvents(cv){
     V3.drag.x=e.clientX; V3.drag.y=e.clientY;
     if(V3.drag.pan){ V3.cam.px-=dx*0.35; V3.cam.py+=dy*0.35; }
     else{ V3.cam.yaw-=dx*0.008; V3.cam.pitch=clamp(V3.cam.pitch+dy*0.008,-1.45,1.45); }
-    if(S.ui.view==='3d') glRender();
+    if(S.ui.view==='3d') glRequestRender();
   });
   window.addEventListener('mouseup',()=>V3.drag=null);
   cv.addEventListener('wheel',e=>{
     e.preventDefault();
     V3.cam.dist=clamp(V3.cam.dist*(1+Math.sign(e.deltaY)*0.11),70,2200);
-    glRender();
+    glRequestRender();
   },{passive:false});
   cv.addEventListener('dblclick',glReset);
 }
@@ -5002,7 +5023,7 @@ function glFail(msg){
 const gp=p=>p.split('.').reduce((o,k)=>o[k],S);
 const sp=(p,v)=>{const a=p.split('.'),l=a.pop();a.reduce((o,k)=>o[k],S)[l]=v;};
 
-/* el, path, kind, labelEl, fmt, flags: s=needs source rebuild, q=quote only */
+/* flags: s=source, m=mesh using existing grid, q=quote, n=state only */
 const BIND=[
  ['txtContent','src.text','str',null,null,'s'],
  ['txtFont','src.font','str',null,null,'s'],
@@ -5016,44 +5037,44 @@ const BIND=[
  ['colN','art.n','num','colNV',v=>v,''],
  ['colSmooth','art.smooth','num','colSmoothV',v=>v,''],
  ['glowMode','art.glowMode','str',null,null,'g'],
- ['boxBandN','box.bandN','num','boxBandNV',v=>v+' สี',''],
+ ['boxBandN','box.bandN','num','boxBandNV',v=>v+' สี','m'],
   ['fillHoles','shape.fillHoles','bool',null,null,''],
  ['ring0w','rings.0.w','num','ring0wV',v=>v+' มม.',''],
  ['ring1w','rings.1.w','num','ring1wV',v=>v+' มม.',''],
- ['bW','exp.bed','num',null,null,''],
- ['bH','exp.bedH','num',null,null,''],
- ['autoSplit','exp.autoSplit','bool',null,null,''],
- ['bedMargin','exp.margin','num',null,null,''],
- ['bDepth','box.depth','num','bDepthV',v=>v+' มม.',''],
- ['bColorT','box.colorT','num','bColorTV',v=>v+' มม.',''],
- ['face5dH','face.height5d','num','face5dHV',v=>v+' มม.',''],
- ['face5dR','face.edgeR','num','face5dRV',v=>v+' มม.',''],
- ['face5dCH','face.chamferH','num','face5dCHV',v=>v+' มม.',''],
- ['face5dA','face.chamferAngle','num','face5dAV',v=>v+'°',''],
- ['bDiff','box.diff','num','bDiffV',v=>v+' มม.',''],
- ['bBgT','box.bgT','num','bBgTV',v=>v+' มม.',''],
+ ['bW','exp.bed','num',null,null,'m'],
+ ['bH','exp.bedH','num',null,null,'m'],
+ ['autoSplit','exp.autoSplit','bool',null,null,'m'],
+ ['bedMargin','exp.margin','num',null,null,'m'],
+ ['bDepth','box.depth','num','bDepthV',v=>v+' มม.','m'],
+ ['bColorT','box.colorT','num','bColorTV',v=>v+' มม.','m'],
+ ['face5dH','face.height5d','num','face5dHV',v=>v+' มม.','m'],
+ ['face5dR','face.edgeR','num','face5dRV',v=>v+' มม.','m'],
+ ['face5dCH','face.chamferH','num','face5dCHV',v=>v+' มม.','m'],
+ ['face5dA','face.chamferAngle','num','face5dAV',v=>v+'°','m'],
+ ['bDiff','box.diff','num','bDiffV',v=>v+' มม.','m'],
+ ['bBgT','box.bgT','num','bBgTV',v=>v+' มม.','m'],
  ['bFrame','box.frame','num','bFrameV',v=>v+' มม.',''],
- ['bBack','box.back','num','bBackV',v=>v+' มม.',''],
- ['buildMode','build.mode','str',null,null,''],
- ['shAcrT','sheet.acrT','num','shAcrTV',v=>v+' มม.',''],
- ['shRim','sheet.frontRim','num','shRimV',v=>v+' มม.',''],
- ['shPlsT','sheet.plsT','num','shPlsTV',v=>v+' มม.',''],
- ['shBackRim','sheet.backRim','num','shBackRimV',v=>v+' มม.',''],
- ['shCl','sheet.cl','num','shClV',v=>v+' มม./ข้าง',''],
+ ['bBack','box.back','num','bBackV',v=>v+' มม.','m'],
+ ['buildMode','build.mode','str',null,null,'m'],
+ ['shAcrT','sheet.acrT','num','shAcrTV',v=>v+' มม.','m'],
+ ['shRim','sheet.frontRim','num','shRimV',v=>v+' มม.','m'],
+ ['shPlsT','sheet.plsT','num','shPlsTV',v=>v+' มม.','m'],
+ ['shBackRim','sheet.backRim','num','shBackRimV',v=>v+' มม.','m'],
+ ['shCl','sheet.cl','num','shClV',v=>v+' มม./ข้าง','m'],
  ['backingOn','backing.enabled','bool',null,null,'b'],
  ['backingOffset','backing.offset','num','backingOffsetV',v=>v+' มม.','b'],
  ['backingT','backing.thickness','num','backingTV',v=>v+' มม.','b'],
- ['holeType','hw.hole','str',null,null,''],
- ['holeDia','hw.dia','num','holeDiaV',v=>v+' มม.',''],
- ['hangHole','hw.hang','bool',null,null,''],
- ['jointType','hw.joint','str',null,null,''],
- ['lipH','hw.lipH','num','lipHV',v=>v+' มม.',''],
- ['lipW','hw.lipW','num','lipWV',v=>v+' มม.',''],
- ['lipCl','hw.lipCl','num','lipClV',v=>v+' มม.',''],
- ['bossW','hw.bossW','num','bossWV',v=>v+' มม.',''],
- ['screwDepth','hw.screwDepth','num','screwDepthV',v=>v+' มม.',''],
- ['snapBarb','hw.snapBarb','num','snapBarbV',v=>v+' มม.',''],
- ['snapW','hw.snapW','num','snapWV',v=>v+' มม.',''],
+ ['holeType','hw.hole','str',null,null,'m'],
+ ['holeDia','hw.dia','num','holeDiaV',v=>v+' มม.','m'],
+ ['hangHole','hw.hang','bool',null,null,'m'],
+ ['jointType','hw.joint','str',null,null,'m'],
+ ['lipH','hw.lipH','num','lipHV',v=>v+' มม.','m'],
+ ['lipW','hw.lipW','num','lipWV',v=>v+' มม.','m'],
+ ['lipCl','hw.lipCl','num','lipClV',v=>v+' มม.','m'],
+ ['bossW','hw.bossW','num','bossWV',v=>v+' มม.','m'],
+ ['screwDepth','hw.screwDepth','num','screwDepthV',v=>v+' มม.','m'],
+ ['snapBarb','hw.snapBarb','num','snapBarbV',v=>v+' มม.','m'],
+ ['snapW','hw.snapW','num','snapWV',v=>v+' มม.','m'],
  ['pQty','price.qty','num',null,null,'q'],
  ['pFil','price.fil','num',null,null,'q'],
  ['pMach','price.mach','num',null,null,'q'],
@@ -5067,8 +5088,8 @@ const BIND=[
  ['pPls','price.pls','num',null,null,'q'],
  ['pCut','price.cut','num',null,null,'q'],
  ['expRes','exp.res','num',null,null,''],
- ['expSmooth','exp.smooth','bool',null,null,''],
- ['expFmt','exp.fmt','str',null,null,'q'],
+ ['expSmooth','exp.smooth','bool',null,null,'m'],
+ ['expFmt','exp.fmt','str',null,null,'n'],
  ['expLayerH','exp.layerH','num',null,null,'q'],
  ['showFrame','ui.showFrame','bool',null,null,'d'],
  ['showGrid','ui.showGrid','bool',null,null,'d']
@@ -5107,7 +5128,7 @@ function attachNumBoxes(){
       /* ค่าที่พิมพ์ในช่องตัวเลขต้องมีผลเท่ากับลากสไลด์ รวมถึง UI แบบไดนามิก */
       if(id==='boxBandN') syncBoxBandUI();
       if(id==='txtContent') syncLineStyleUI();
-      schedule(flag==='s', ['q','d','b'].includes(flag)?flag:null);
+      schedule(flag==='s', ['q','d','b','m','n'].includes(flag)?flag:null);
     };
     inp.addEventListener('change',commit);
     /* ออกจากช่องแล้วดึงค่าจริงกลับมาแสดง (เผื่อพิมพ์เกินช่วงหรือเว้นว่างไว้) */
@@ -5122,23 +5143,33 @@ function setLabel(lab,v,fmt){
   if(document.activeElement!==n.inp) n.inp.value=v;
 }
 
-let _t=null, _needSrc=false, _geometryPending=false;
+let _t=null, _needSrc=false, _geometryPending=false, _meshPending=false;
+let _quotePending=false, _backingPending=false, _drawPending=false;
 function schedule(needSrc,mode){
+  if(mode==='n'&&!needSrc) return;
   if(needSrc) _needSrc=true;
   if(needSrc||!mode) _geometryPending=true;
+  if(mode==='m') _meshPending=true;
+  if(mode==='q') _quotePending=true;
+  if(mode==='b') _backingPending=true;
+  if(mode==='d') _drawPending=true;
   clearTimeout(_t);
   _t=setTimeout(()=>{
-    const full=_geometryPending; _geometryPending=false;
+    const full=_geometryPending,mesh=_meshPending,quote=_quotePending;
+    const backing=_backingPending,redraw=_drawPending;
+    _geometryPending=_meshPending=_quotePending=_backingPending=_drawPending=false;
     if(_needSrc){ rebuildSource(); _needSrc=false; }
-    if(mode==='d'&&!full){ draw(); return; }
-    if(mode==='q'){ refreshQuote(); return; }
-    if(mode==='b'&&!full){ refreshBackingPreview(); return; }
-    recompute();
+    /* งานเบาที่มาตามหลังต้องไม่กลบการเปลี่ยนรูปทรงที่ยังรออยู่ */
+    if(full||mesh){ recompute(!full); return; }
+    if(quote){ refreshQuote(true); updateBadges(); }
+    if(backing) refreshBackingPreview();
+    else if(redraw) draw();
   }, needSrc?200:110);
 }
 function recompute(reuseGrid=false){
+  QUOTE_CACHE=null;
   try{
-    if(!reuseGrid) buildGrid(true);
+    if(!reuseGrid||!G?.panel) buildGrid(true);
     renderPalette();
     V3.dirty=true;
     draw();
@@ -5151,14 +5182,16 @@ function recompute(reuseGrid=false){
     syncModeUI();
   }catch(e){ console.error(e); toast('คำนวณผิดพลาด: '+e.message); }
 }
-function refreshQuote(){
-  if(!G||G.empty){ $('#quoteTbl').innerHTML=''; return; }
-  const parts=buildParts(true);
+function refreshQuote(reuseParts=false){
+  if(!G||G.empty){ QUOTE_CACHE=null; $('#quoteTbl').innerHTML=''; return; }
+  if(!reuseParts||!QUOTE_CACHE||QUOTE_CACHE.grid!==G)
+    QUOTE_CACHE={grid:G,parts:buildParts(true),sheetMetrics:isShell()?sheetCostMetrics():null};
+  const parts=QUOTE_CACHE.parts;
   LAST=LAST||{}; LAST.parts=parts.length;
   const fm=parts.find(p=>p.kind==='frame');
   LAST.bossCount = fm? (fm.bossCount||0) : 0;
   LAST.snapCount = fm? (fm.snapCount||0) : 0;
-  const E=estimate(parts); LAST.E=E;
+  const E=estimate(parts,QUOTE_CACHE.sheetMetrics); LAST.E=E;
   renderQuote(E);
 }
 function updateBadges(){
@@ -5579,14 +5612,14 @@ function wire(){
       if(flag==='g'){ S.pal.forEach((p,i)=> p.glow = (S.art.glowMode==='bg')? i===0 : i>0 ); }
       if(id==='boxBandN') syncBoxBandUI();
       if(id==='txtContent') syncLineStyleUI();
-      schedule(flag==='s', ['q','d','b'].includes(flag)?flag:null);
+      schedule(flag==='s', ['q','d','b','m','n'].includes(flag)?flag:null);
     });
     if(kind==='num'&&el.type==='number') el.addEventListener('keydown',e=>{
       if(e.key==='Enter'){ e.preventDefault(); el.dispatchEvent(new Event('change',{bubbles:true})); el.blur(); }
     });
   }
   $('#docname').addEventListener('input',e=>S.name=e.target.value);
-  $('#expBed').addEventListener('change',e=>{ applyPrinter(e.target.value); pushToUI(); schedule(false); });
+  $('#expBed').addEventListener('change',e=>{ applyPrinter(e.target.value); pushToUI(); schedule(false,'m'); });
   $$('#mobileNav .mobile-tab').forEach(b=>b.addEventListener('click',()=>showMobilePanel(b.dataset.panel)));
 
   /* sections collapse */
@@ -5681,7 +5714,7 @@ function wire(){
 
   /* คู่ช่องเลือกสี + ช่องพิมพ์รหัสสี — ผูกครั้งเดียว ไม่สร้าง DOM ใหม่ระหว่างพิมพ์ */
   const bindColor=(colorEl,hexEl,get,set)=>{
-    const apply=h=>{ set(h); schedule(false); };
+    const apply=h=>{ set(h); schedule(false,'m'); };
     if(colorEl) colorEl.addEventListener('input',e=>apply(e.target.value));
     if(!hexEl) return;
     const commit=()=>{ const h=normHex(hexEl.value);

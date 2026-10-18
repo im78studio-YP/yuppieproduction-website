@@ -94,7 +94,12 @@ test('DXF and SVG have the same unmirrored 1:1 outline with no negative SVG clip
 
 test('Slider updates reuse printable meshes; state and file export are wired',()=>{
   assert.ok(html.includes("['backingOffset','backing.offset','num','backingOffsetV',v=>v+' มม.','b']"));
-  assert.ok(html.includes("if(mode==='b'&&!full){ refreshBackingPreview(); return; }"));
+  const c=fixture();
+  run(c,`globalThis.calls=[];globalThis.pending=null;
+    setTimeout=fn=>{pending=fn;return 1;};clearTimeout=()=>{};
+    recompute=()=>calls.push('geometry');refreshBackingPreview=()=>calls.push('backing');
+    schedule(false,'b');pending();`);
+  assert.equal(run(c,'calls.join()'),'backing');
   const refresh=html.match(/function refreshBackingPreview\(\)\{[\s\S]*?\n\}/)[0];
   assert.doesNotMatch(refresh,/buildGrid\(|buildParts\(/);
   assert.ok(html.includes("'sheet','backing']"));

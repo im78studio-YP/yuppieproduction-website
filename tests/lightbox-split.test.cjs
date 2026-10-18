@@ -24,6 +24,29 @@ function studio(w = 300, h = 250, options = {}) {
       backing(){S.backing.enabled=true;return buildParts(false);},
       grid(){return previewGridSpec('plate',{mn:[0,0,0],mx:[1,1,1],c:[0,0,0]},100,true);},
       gridSize(w,h,res,preview){S.box.W=w;S.box.H=h;S.exp.res=res;return gridSpec(preview);},
+      quoteProbe(){
+        let builds=0,cuts=0;const build=buildParts,metrics=sheetCostMetrics;
+        buildParts=(...args)=>{builds++;return build(...args);};
+        sheetCostMetrics=()=>{cuts++;return metrics();};
+        S.price.pls=0;refreshQuote();
+        const first={builds,cuts};
+        Object.assign(S.price,{qty:3,fil:900,mach:31,laborMin:42,laborRate:320,led:200,waste:12,margin:38,flush:150,acr:2500,pls:1200,cut:49});
+        S.exp.layerH=.15;refreshQuote(true);
+        const cached=LAST.E,after={builds,cuts};
+        const fresh=estimate(build(true));
+        return {first,after,cached,fresh,table:$('#quoteTbl').innerHTML};
+      },
+      quoteGeometryChange(){
+        let builds=0;const build=buildParts;
+        buildParts=(...args)=>{builds++;return build(...args);};
+        refreshQuote();const initial=LAST.E.vol;
+        S.box.depth+=10;
+        renderPalette=draw=runChecks=updateBadges=syncJointUI=syncSizeUI=syncPrinterFit=syncModeUI=()=>{};
+        buildGrid=()=>{throw new Error('Mesh edits must reuse the existing raster');};
+        recompute(true);const updated=LAST.E.vol;
+        refreshQuote(true);
+        return {initial,updated,builds,fresh:estimate(build(true)).vol};
+      },
       async resize(uniform,axis){
         S=defaults(); S.tr.uniform=uniform; S.tr.dx=12; S.tr.dy=-8;
         SRC_CACHE={cv:{width:800,height:500}};
@@ -85,6 +108,26 @@ const rectangle = (w, h) => [{ out: [[0, 0], [w, 0], [w, h], [0, h]], holes: [] 
 const area = (app, groups) => groups.reduce((a, g) => a + Math.abs(app.area(g.out)) - g.holes.reduce((s, h) => s + Math.abs(app.area(h)), 0), 0);
 const near = (a, b, eps = 1e-5) => assert.ok(Math.abs(a - b) <= eps, `${a} != ${b}`);
 const plain = value => JSON.parse(JSON.stringify(value));
+
+test('cached quote geometry preserves every price and layer-height calculation', () => {
+  for(const mode of ['service','fused','shell','shellCap','face5d','face5dChamfer']){
+    const app=studio();app.synthetic(true,mode);
+    const result=app.quoteProbe();
+    assert.equal(result.first.builds,1);assert.equal(result.after.builds,1,mode);
+    assert.equal(result.after.cuts,result.first.cuts,mode);
+    assert.deepEqual(plain(result.cached),plain(result.fresh),mode);
+    assert.ok(result.table.includes('รวม 3 ชิ้น'));
+    if(mode==='shell'||mode==='shellCap')assert.ok(result.cached.sheet.cPls>0);
+  }
+});
+
+test('mesh-only recompute invalidates quote geometry without rebuilding the raster', () => {
+  const app=studio();app.synthetic();
+  const result=app.quoteGeometryChange();
+  assert.equal(result.builds,2);
+  assert.ok(result.updated>result.initial);
+  near(result.updated,result.fresh);
+});
 
 test('large previews bound raster allocation while exports retain the selected millimetre resolution', () => {
   const app=studio();
