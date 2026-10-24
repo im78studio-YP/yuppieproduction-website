@@ -10,7 +10,7 @@ const run=(c,s)=>vm.runInContext(s,c),plain=v=>JSON.parse(JSON.stringify(v));
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const methodIds=['butt','lap','scarf','tongue','dowel','butterfly','dovetail','plate','nut','selftap','snap','magnet','weld'];
 const bodyIds=methodIds.slice(1,10);
-const hardwareDefaults={hole:4.2,depth:5,bolt:3.4,plateT:3,baseT:7,clearance:.2};
+const hardwareDefaults={hole:4.2,depth:5,bolt:3.4,plateT:3,baseT:7,clearance:.2,pin:3,nutFlat:5.5,nutT:2.4,magnetD:6,magnetT:3};
 
 function setMethod(app,id){
   app.c.testMethodId=id;

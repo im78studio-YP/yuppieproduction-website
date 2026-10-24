@@ -374,21 +374,27 @@ Studio</textarea>
           <div class="row"><label for="seamLength">ยาวข้ามรอยต่อ</label><input type="number" id="seamLength" class="num" min="12" max="60" step="1" value="24"><span class="unit">มม.</span></div>
           <div class="row"><label for="seamWidth">กว้างตามแนวต่อ</label><input type="number" id="seamWidth" class="num" min="4" max="30" step="1" value="8"><span class="unit">มม.</span></div>
           </div>
-          <div class="row"><label for="seamProduction">สร้างฐาน รู ตัวต่อจริง</label><input type="checkbox" id="seamProduction"><span class="unit">J08</span></div>
+          <div class="row"><label for="seamProduction">สร้างฐาน รู ตัวต่อจริง</label><input type="checkbox" id="seamProduction"><span class="unit" id="seamProductionCode">13 วิธี</span></div>
           <div id="seamHardware" hidden>
-            <p class="seam-note">J08 · สร้างเฉพาะจุดที่เลือก รอยต่ออื่นต้องยึดเพิ่มเติม · ค่าเริ่มต้นเป็นตัวอย่าง ต้องใช้รูตามอินเสิร์ตจริงและทดลองพิมพ์ก่อนประกอบป้าย</p>
-            <div class="row"><label for="seamHole">รูรับอินเสิร์ต Ø</label><input id="seamHole" class="num" type="number" min="2" max="8" step="0.1"><span class="unit">มม.</span></div>
+            <p class="seam-note" id="seamProfileNote">สร้างเฉพาะจุดที่เลือก รอยต่ออื่นต้องยึดเพิ่มเติม · ขนาดตั้งต้นเป็นตัวอย่าง ต้องปรับและทดลองกับ PETG/ฮาร์ดแวร์จริง</p>
+            <div class="row"><label for="seamHole">รูรับอินเสิร์ต Ø</label><input id="seamHole" class="num" type="number" min="1" max="10" step="0.1"><span class="unit">มม.</span></div>
             <div class="row"><label for="seamHoleDepth">ความลึกรูตัน</label><input id="seamHoleDepth" class="num" type="number" min="2" max="12" step="0.1"><span class="unit">มม.</span></div>
             <div class="row"><label for="seamBolt">รูผ่านสกรู Ø</label><input id="seamBolt" class="num" type="number" min="2" max="6" step="0.1"><span class="unit">มม.</span></div>
             <div class="row"><label for="seamPlateT">หนาแผ่นประกบ</label><input id="seamPlateT" class="num" type="number" min="2" max="8" step="0.2"><span class="unit">มม.</span></div>
             <div class="row"><label for="seamBaseT">หนาฐานรับ</label><input id="seamBaseT" class="num" type="number" min="4" max="16" step="0.2"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamFit">ระยะสวม / ข้าง</label><input id="seamFit" class="num" type="number" min="0.1" max="0.6" step="0.05"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamPin">เดือย Ø</label><input id="seamPin" class="num" type="number" min="2" max="6" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamNutFlat">น็อตปากประแจ</label><input id="seamNutFlat" class="num" type="number" min="4" max="10" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamNutT">น็อตหนา</label><input id="seamNutT" class="num" type="number" min="1.5" max="5" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamMagnetD">แม่เหล็ก Ø</label><input id="seamMagnetD" class="num" type="number" min="3" max="10" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamMagnetT">แม่เหล็กหนา</label><input id="seamMagnetT" class="num" type="number" min="1" max="5" step="0.1"><span class="unit">มม.</span></div>
             <p class="seam-note">ฐานรวมกับกรอบ มีลาดรองและรูตัน · แผ่นประกบแยกถาดพิมพ์ · ผนังกล่องในโหมดนี้อิงขอบกริดจริงเพื่อรวมเนื้อสนิท รูฐานอาจกว้างกว่าค่าที่กำหนดได้ถึง 3 เท่าของขนาดช่องกริด ควรพิมพ์ชิ้นทดสอบปรับรูตามอินเสิร์ตจริง</p>
             <p class="seam-note"><a href="https://www.spirol.com/resources/white-papers/how-to-design-the-proper-hole-for-heat-ultrasonic-inserts/" target="_blank" rel="noopener">แนวทางกำหนดรูอินเสิร์ต</a> · อย่าให้ปลายสกรูยันก้นรู</p>
           </div>
           <div id="seamProductionStatus" class="printer-fit" role="status"></div>
           <div class="row"><button id="btnSeamPlan" class="btn grow">ดูวิธี / วางบนโลโก้จริง</button></div>
           <div class="printer-fit" id="seamSummary" role="status">—</div>
-          <p class="seam-note">เขียว = พื้นที่ผ่านเบื้องต้น · แดง × = วางไม่ได้ · จุดทึบ = เลือกไว้<br>J08 เปิดสร้างจริงได้ ส่วนวิธีอื่นยังเป็นพรีวิว · ตรวจตำแหน่งซ้ำด้วยกริดความละเอียดเต็มตอนส่งออก</p>
+          <p class="seam-note">เขียว = พื้นที่ผ่านเบื้องต้น · แดง × = วางไม่ได้ · จุดทึบ = เลือกไว้<br>ครบ 13 วิธีสร้างไฟล์จริงได้ · เปลี่ยนวิธีขณะเปิดผลิตจะจัดตำแหน่งใหม่อัตโนมัติ · ตรวจซ้ำด้วยกริดละเอียดก่อนส่งออก</p>
         </div>
       </div>
     </div>
@@ -651,7 +657,7 @@ Studio</textarea>
   <p class="seam-note" id="seamMapLegend">มองจากด้านหน้า · พื้นที่ตัวต่ออยู่ด้านในกล่อง</p>
   <div class="seam-scroll" id="seamScroll"><canvas id="seamView" aria-label="ผังตำแหน่งตัวต่อบนโลโก้"></canvas></div>
   <div id="seamDetail" role="status">—</div><div id="seamList" aria-label="จุดตัวต่อที่เลือก"></div>
-  <p class="seam-note" id="seamDialogProductionNote">J08 เปิดสร้างฐาน รู และแผ่นประกบจริงได้จากเมนูด้านซ้าย วิธีอื่นยังเป็นพรีวิว</p>
+  <p class="seam-note" id="seamDialogProductionNote">เปิดสร้างชิ้นงานจริงได้จากเมนูด้านซ้าย ทั้ง 13 วิธี</p>
 </dialog>
 <script>
 /* ══════════════════════════════════════════════════════════════
@@ -694,7 +700,7 @@ function defaults(){ return {
   /* โหมดงาน — service = ฝาหน้าถอดเปลี่ยนได้ มีแผ่นกันแสงรั่วเป็นลิ้นสวม (ค่าแนะนำ) */
   build:{ mode:'service' },
   seam:{ enabled:false, method:'plate', length:24, width:8, selected:[],production:false,
-    hardware:{hole:4.2,depth:5,bolt:3.4,plateT:3,baseT:7,clearance:.2} },
+    hardware:{hole:4.2,depth:5,bolt:3.4,plateT:3,baseT:7,clearance:.2,pin:3,nutFlat:5.5,nutT:2.4,magnetD:6,magnetT:3} },
   /* รูปแบบ 5D สองแบบใช้ผิวหน้าร่วมระนาบเดียวกัน:
      face5d ใช้ fillet โค้งมนเดิม ส่วน face5dChamfer ใช้ขอบเฉียงปรับมุมได้ */
   face:{ height5d:5, edgeR:2, chamferH:2, chamferAngle:45 },
@@ -2631,7 +2637,7 @@ let ACTIVE_PRINT_PLAN=null;
 
 /* Preview only: use assembly coordinates and the existing raster. Nothing in
    this planner writes to G, PARTS or the production/export builders. */
-let SEAM_PLAN=null, SEAM_FOCUS=null, SEAM_IMAGE=null;
+let SEAM_PLAN=null, SEAM_FOCUS=null, SEAM_IMAGE=null, SEAM_AUTO_REASON='';
 // Dimensions reserve room for an experimental design; they are not validated
 // fits, hardware specifications or a claim of structural capacity.
 const SEAM_METHODS=[
@@ -2645,15 +2651,15 @@ const SEAM_METHODS=[
   {id:'plate',code:'J08',name:'แผ่นประกบ + อินเสิร์ตเกลียวโลหะ',kind:'body',length:24,width:8,minDepth:8,access:'ใช้จุดจัดแนว วางแผ่นสะพานบนฐานด้านใน และขันตาม Z จากฝาหลัง',notice:'ฐานและรูต้องอิงอินเสิร์ตรุ่นจริง ตรวจปลายสกรู ทางเข้าไขควง และการยุบค้างของ PETG'},
   {id:'nut',code:'J09',name:'แผ่นประกบ + น็อตฝัง',kind:'body',length:28,width:12,minDepth:10,access:'ใส่น็อตในช่องกันหมุน วางแผ่นประกบ แล้วขันจากฝาหลัง',notice:'ต้องมีทางใส่น็อตและกันหลุด รวมทั้งเนื้อฐานรองแรงกด ไม่ใช่เพียงรูหกเหลี่ยม'},
   {id:'selftap',code:'J10',name:'แผ่นประกบ + สกรูสำหรับพลาสติก',kind:'body',length:24,width:10,minDepth:8,access:'ยึดแผ่นเข้าฐานเสริมด้วยสกรูและรูนำสำหรับพลาสติกที่เลือกจริง',notice:'ไม่ใช้สกรูเครื่อง M3 บังคับสร้างเกลียว ต้องทดสอบรูนำ แรงขัน การแตก และเกลียวรูด'},
-  {id:'snap',code:'J11',name:'Snap-fit / คลิปสปริง',kind:'cover',length:24,width:12,minDepth:0,access:'เหมาะกับฝาเปิดซ่อมหรือจับแนวชั่วคราวระหว่างประกอบ',notice:'ไม่เปิดเป็นรอยต่อถาวรรับน้ำหนักตัวกล่อง ต้องตรวจระยะงอ ทิศชั้น และการคลายของ PETG'},
+  {id:'snap',code:'J11',name:'Snap-fit / คลิปสปริง',kind:'cover',length:24,width:12,minDepth:0,access:'เหมาะกับฝาเปิดซ่อมหรือจับแนวชั่วคราวระหว่างประกอบ',notice:'สร้างขาสปริงและสะพานล็อกจริงเมื่อเปิดส่งออกตัวต่อ ต้องตรวจระยะงอ ทิศชั้น และการคลายของ PETG; ใช้ระบบรับแรงถาวรแยก'},
   {id:'magnet',code:'J12',name:'แม่เหล็ก + บ่า / ตัวหยุด',kind:'cover',length:24,width:16,minDepth:0,access:'แม่เหล็กกันเปิด ส่วนบ่าหรือตัวหยุดรับการเลื่อน ใช้กับฝาเปิดซ่อม',notice:'ไม่ใช้แรงดูดแทนตัวรับแรงของรอยต่อถาวร ต้องยึดแม่เหล็กกันหลุดและตรวจขั้ว'},
-  {id:'weld',code:'J13',name:'เชื่อมพลาสติกด้วยความร้อน',kind:'process',length:12,width:8,minDepth:0,access:'จัดแนวบนจิ๊ก ทดลองเชื่อมด้านในด้วยวัสดุและกระบวนการ PETG จริง',notice:'แสดงแนวเชื่อมเท่านั้น ไม่กำหนดอุณหภูมิหรือความเร็ว หน้าบางเสี่ยงเสียระนาบและสี'}
+  {id:'weld',code:'J13',name:'เชื่อมพลาสติกด้วยความร้อน',kind:'process',length:12,width:8,minDepth:0,access:'จัดแนวบนจิ๊ก ทดลองเชื่อมด้านในด้วยวัสดุและกระบวนการ PETG จริง',notice:'เมื่อเปิดส่งออกตัวต่อ สร้างร่องเตรียมเชื่อมและจิ๊กจัดแนวจริง; ถอดจิ๊กก่อนเชื่อม ไม่กำหนดอุณหภูมิหรือความเร็ว หน้าบางเสี่ยงเสียระนาบและสี'}
 ];
 function seamMethod(id=seamSettings().method){return SEAM_METHODS.find(m=>m.id===id);}
 function seamSettings(value=S.seam){
   const v=value||{},num=(x,d,lo,hi)=>x==null||x===''||!Number.isFinite(+x)?d:clamp(+x,lo,hi);
-  const hardware={hole:4.2,depth:5,bolt:3.4,plateT:3,baseT:7,clearance:.2,...v.hardware};
-  for(const key of ['hole','depth','bolt','plateT','baseT','clearance'])hardware[key]=+hardware[key];
+  const hardware={hole:4.2,depth:5,bolt:3.4,plateT:3,baseT:7,clearance:.2,pin:3,nutFlat:5.5,nutT:2.4,magnetD:6,magnetT:3,...v.hardware};
+  for(const key of ['hole','depth','bolt','plateT','baseT','clearance','pin','nutFlat','nutT','magnetD','magnetT'])hardware[key]=+hardware[key];
   return {enabled:v.enabled===true,method:v.method==null?'plate':String(v.method),length:num(v.length,24,12,60),width:num(v.width,8,4,30),production:v.production===true,
     hardware,
     selected:(Array.isArray(v.selected)?v.selected:[]).slice(0,128).filter(p=>p&&['x','y'].includes(p.axis)&&
@@ -2710,12 +2716,12 @@ function buildSeamPlan(){
     spec:{length:s.length,width:s.width,setback:0,minDepth:method?.minDepth||0},truncated:false};
   if(!s.enabled){p.reason='ยังไม่เปิดวางแผนตัวต่อ';return p;}
   if(!method){p.reason='ไม่รู้จักวิธีรอยต่อที่บันทึกไว้ กรุณาเลือกวิธีจากรายการ 13 แบบ';return p;}
-  if(method.kind==='cover'){p.reason=method.code+' · '+method.access+' · ไม่ใช้เป็นจุดต่อถาวรรับน้ำหนักระหว่างชิ้นกล่อง';return p;}
+  if(method.kind==='cover'&&!s.production){p.reason=method.code+' · '+method.access+' · ไม่ใช้เป็นจุดต่อถาวรรับน้ำหนักระหว่างชิ้นกล่อง';return p;}
   if(S.build.mode!=='service'){p.reason='พรีวิวตัวต่อรองรับโหมดฝาหน้าถอดเปลี่ยนได้ก่อน';return p;}
   if(tiles.error){p.reason=tiles.error;return p;}
   if(!tiles.enabled||tiles.tiles.length<2){p.reason='เปิดแบ่งชิ้นอัตโนมัติ และใช้ชิ้นงานที่ต้องแบ่งมากกว่า 1 ช่อง';return p;}
   if(!G?.panel||G.empty||!G.comp?.lab||PB.empty){p.reason='ยังไม่มีรูปทรงโลโก้ให้ตรวจ';return p;}
-  p.applicable=method.kind==='body';
+  p.applicable=method.kind==='body'||s.production;
   const J=jointSpec();p.spec.setback=S.box.frame+(J.lip?J.cl+J.lipW:0)+1;
   const byId=new Map(tiles.tiles.map(t=>[`${t.row},${t.col}`,t]));
   for(const t of tiles.tiles){
@@ -2726,7 +2732,7 @@ function buildSeamPlan(){
         bounds:{x0:Math.min(t.x0,next.x0),x1:Math.max(t.x1,next.x1),y0:Math.min(t.y0,next.y0),y1:Math.max(t.y1,next.y1)}});
     }
   }
-  if(method.kind==='process'){
+  if(method.kind==='process'&&!s.production){
     for(const e of p.seams){
       let start=null;
       const emit=end=>{if(start!==null){p.processSegments.push({axis:e.axis,coord:e.coord,start,end,tiles:e.tiles});start=null;}};
@@ -2791,13 +2797,15 @@ let ACTIVE_SEAM_PRODUCTION=null;
 class SeamProductionError extends Error{constructor(message){super(message);this.name='SeamProductionError';}}
 function seamProductionPlan(previewPlan=null){
   const s=seamSettings();if(!s.production)return null;
-  if(!s.enabled||s.method!=='plate')throw new SeamProductionError('สร้างตัวต่อจริงรองรับ J08 เท่านั้น เปิดวางแผนและเลือก J08 หรือปิดสร้างจริงก่อนส่งออก');
+  if(!s.enabled||!seamMethod(s.method))throw new SeamProductionError('เปิดรอยต่อและเลือกวิธีที่รองรับก่อนสร้างไฟล์จริง');
   const plan=previewPlan||buildSeamPlan(),h=s.hardware;
   if(!plan.applicable||plan.truncated)throw new SeamProductionError('สร้างตัวต่อจริงไม่ได้: '+(plan.reason||'ผังมีจำนวนจุดเกินขีดจำกัด'));
-  for(const [key,lo,hi] of [['hole',2,8],['depth',2,12],['bolt',2,6],['plateT',2,8],['baseT',4,16],['clearance',0,.5]])
+  for(const [key,lo,hi] of [['hole',1,10],['depth',2,12],['bolt',2,6],['plateT',2,8],['baseT',4,16],['clearance',.1,.6],['pin',2,6],['nutFlat',4,10],['nutT',1.5,5],['magnetD',3,10],['magnetT',1,5]])
     if(!Number.isFinite(+h[key])||+h[key]<lo||+h[key]>hi)throw new SeamProductionError('ขนาดฮาร์ดแวร์ '+key+' ไม่อยู่ในช่วงที่รองรับ');
-  if(h.baseT-h.depth<1.5)throw new SeamProductionError('ฐานต้องมีเนื้อใต้รูตันอย่างน้อย 1.5 มม.');
-  if(h.bolt>=h.hole)throw new SeamProductionError('รูผ่านสกรูต้องเล็กกว่ารูรับอินเสิร์ตของฐาน');
+  if(['plate','selftap'].includes(s.method)&&h.baseT-h.depth<1.5)throw new SeamProductionError('ฐานต้องมีเนื้อใต้รูตันอย่างน้อย 1.5 มม.');
+  if(s.method==='plate'&&h.bolt>=h.hole)throw new SeamProductionError('รูผ่านสกรูต้องเล็กกว่ารูรับอินเสิร์ตของฐาน');
+  if(s.method==='selftap'&&h.hole>=h.bolt)throw new SeamProductionError('รูนำสกรูพลาสติกต้องเล็กกว่ารูผ่านของแผ่นประกบ');
+  if(s.method!=='plate'&&G.px<=S.exp.res*1.001&&(G.px>.25||h.clearance+1e-6<G.px*2))throw new SeamProductionError('งานสวมประกอบต้องใช้กริดไม่เกิน 0.25 มม. และระยะสวมต่อข้างอย่างน้อย 2 เท่าของกริด');
   const chosen=plan.candidates.filter(p=>p.selected);
   if(!chosen.length)throw new SeamProductionError('เลือกตำแหน่งตัวต่อก่อนเปิดสร้างจริง หรือกดเลือกจุดอัตโนมัติ');
   if(chosen.length>32)throw new SeamProductionError('สร้างจริงได้ไม่เกิน 32 ตัวต่อในหนึ่งงาน กรุณาแบ่งงาน');
@@ -2805,13 +2813,13 @@ function seamProductionPlan(previewPlan=null){
   const st=geomStack(),J=jointSpec(),baseTop=st.frameZ0+S.box.depth-J.lipH-h.plateT-.5;
   const baseBottom=baseTop-h.baseT,frontKeep=st.colorT+st.faceBaseT+FRONT_LIP_HEIGHT+1;
   if(baseBottom<frontKeep+2)throw new SeamProductionError('กล่องตื้นเกินไปสำหรับฐาน รูตัน แผ่นประกบ และช่องเปิดซ่อม');
-  const out={version:1,resolution:G.px,joints:[],spec:{...h},frameRaster:true};
+  const out={version:2,method:s.method,resolution:G.px,joints:[],spec:{...h},frameRaster:true};
   const tiles=new Map(printPlan().tiles.map(t=>[t.id,t]));
   for(const c of chosen){
-    const joint={...c,baseTop,baseBottom,spec:{...h},holes:[],pads:[]};
-    const radius=Math.max(h.hole/2+2,4),normal=s.length*.3;
+    const joint={...c,method:s.method,length:s.length,width:s.width,baseTop,baseBottom,spec:{...h},holes:[],pads:[]};
+    const radius=s.method==='plate'?Math.max(h.hole/2+2,4):Math.max(3,Math.min(s.width/2-1,5)),normal=s.length*.3;
     if(s.width<radius*2+G.px*2||s.length/2-normal<radius+G.px)
-      throw new SeamProductionError('พื้นที่ J08 เล็กเกินไปสำหรับเนื้อรอบรู เพิ่มความยาว/กว้างพื้นที่สำรอง');
+      throw new SeamProductionError('พื้นที่เล็กเกินไปสำหรับฐานรับ เพิ่มความยาว/กว้างพื้นที่สำรอง');
     for(const sign of [-1,1]){
       const cx=c.anchorMm.x+(c.axis==='x'?sign*normal:0),cy=c.anchorMm.y+(c.axis==='y'?sign*normal:0);
       const own=c.tiles.find(id=>{const t=tiles.get(id);return cx>t.x0&&cx<t.x1&&cy>t.y0&&cy<t.y1;});
@@ -2827,7 +2835,13 @@ function seamProductionPlan(previewPlan=null){
       }
       if(!wall)throw new SeamProductionError('ไม่มีผนังรับฐานในชิ้น '+own+' ของจุด '+c.id);
       const pad={cx,cy,wallX:wall.x,wallY:wall.y,radius,tile:own,component};
+      if(s.method!=='plate'){
+        const u0=sign<0?-s.length/2+.5:.2,u1=sign<0?-.2:s.length/2-.5,v=s.width/2-.5;
+        const corners=[[u0,-v],[u1,-v],[u0,v],[u1,v]].map(([u,v])=>seamUVPoint(joint,u,v));
+        pad.platform={x0:Math.min(...corners.map(p=>p.x)),x1:Math.max(...corners.map(p=>p.x)),y0:Math.min(...corners.map(p=>p.y)),y1:Math.max(...corners.map(p=>p.y))};
+      }
       pad.roi={x0:Math.min(cx,wall.x)-radius,x1:Math.max(cx,wall.x)+radius,y0:Math.min(cy,wall.y)-radius,y1:Math.max(cy,wall.y)+radius};
+      if(pad.platform){const p=pad.platform;pad.roi={x0:Math.min(pad.roi.x0,p.x0),x1:Math.max(pad.roi.x1,p.x1),y0:Math.min(pad.roi.y0,p.y0),y1:Math.max(pad.roi.y1,p.y1)};}
       if(out.joints.some(q=>q.pads.some(p=>p.tile===own&&seamOverlap(p.roi,pad.roi,1))))throw new SeamProductionError('ฐานรับซ้อนกับฐานของตัวต่ออีกจุด กรุณาลดหรือเลื่อนตำแหน่ง');
       const mask=seamPadRuns(pad,Infinity,null,plan.keepouts,true);if(!mask.length)throw new SeamProductionError('ฐานว่าง '+c.id);
       let depthFromWall=2;
@@ -2835,6 +2849,26 @@ function seamProductionPlan(previewPlan=null){
       pad.taperStart=baseBottom-depthFromWall;
       if(pad.taperStart<frontKeep)throw new SeamProductionError('ความลึกไม่พอทำลาดรองฐาน '+c.id+' เพิ่มความลึกกล่อง');
       joint.pads.push(pad);joint.holes.push({x:cx,y:cy,diameter:+h.hole,baseZ0:baseTop-h.depth,baseZ1:baseTop,tile:own});
+    }
+    if(s.method!=='plate'){
+      joint.design=seamMethodDesign(joint,h);
+      if(!joint.design?.components?.length)throw new SeamProductionError('วิธีนี้ไม่ได้สร้างชิ้นส่วนผลิต');
+      if(s.method==='nut')for(const pad of joint.pads){
+        const sign=Math.sign(seamUVAt(joint,pad.cx,pad.cy).u),half=(h.nutFlat+2*h.clearance)/2;
+        const runs=seamPadRuns(pad);
+        // Cuts stop at the reserved footprint. A sloped wall can leave part
+        // of its support arm beyond that mouth and obstruct nut insertion.
+        for(let n=0;n<runs.length;n+=3)for(let x=runs[n+1];x<runs[n+2];x++){
+          const p=seamUVAt(joint,(x+.5)*G.px-PB.ux0,S.box.H-(runs[n]+.5)*G.px-PB.my0);
+          if(p.u*sign>s.length/2+1e-6&&Math.abs(p.v)<=half)
+            throw new SeamProductionError('ช่องใส่น็อตถูกแขนฐานบัง เลื่อนจุดหรือเพิ่มความยาวพื้นที่สำรอง');
+        }
+      }
+      joint.holes=[];
+      if(joint.design.baseCuts.some(c=>c.z0<-h.baseT+1.5))throw new SeamProductionError('ช่องรับตัวต่อเหลือพื้นก้นบางกว่า 1.5 มม. เพิ่มความหนาฐาน');
+      if(joint.design.clearanceRequired&&h.clearance<joint.design.clearanceRequired)throw new SeamProductionError('ระยะสวมเล็กเกินไปสำหรับวิธีนี้');
+      const upper=Math.max(0,...joint.design.baseAdds.map(o=>o.z1),...joint.design.components.map(c=>c.flipYZ?(c.assemblyZ||0):Math.max(...c.slabs.map(o=>o.z1))+(c.assemblyZ||0)));
+      if(baseTop+upper>st.frameZ0+S.box.depth-1)throw new SeamProductionError('ชิ้นต่อสูงชนฝาหลัง เพิ่มความสูงบ่าฝาหลังหรือปรับขนาดชิ้นต่อ');
     }
     out.joints.push(joint);
   }
@@ -2854,6 +2888,7 @@ function seamPadRuns(pad,wallLimit=Infinity,hole=null,keepouts=[],validate=false
         const xx=(x+.5)*px-PB.ux0,yy=S.box.H-(y+.5)*px-PB.my0,i=y*G.gw+x;
         const t=clamp(((xx-pad.wallX)*dx+(yy-pad.wallY)*dy)/Math.max(l2,1e-9),0,1);
         on=(xx-pad.wallX-t*dx)**2+(yy-pad.wallY-t*dy)**2<=r*r;
+        if(pad.platform){const p=pad.platform;on=on||(xx>=p.x0&&xx<=p.x1&&yy>=p.y0&&yy<=p.y1);}
         if(on&&validate){
           if((!G.panel[i]&&t>.25)||(G.panel[i]&&G.comp.lab[i]!==pad.component))throw new SeamProductionError('แขนฐานออกนอกเนื้อโลโก้ กรุณาเลือกจุดใหม่');
           if(G.panel[i]&&(xx<=tile.x0||xx>=tile.x1||yy<=tile.y0||yy>=tile.y1))throw new SeamProductionError('แขนฐานชนรอยแบ่งอื่น กรุณาเลือกจุดใหม่');
@@ -2868,19 +2903,98 @@ function seamPadRuns(pad,wallLimit=Infinity,hole=null,keepouts=[],validate=false
   }
   return rows;
 }
+function seamUVPoint(j,u,v){return j.axis==='x'?{x:j.anchorMm.x+u,y:j.anchorMm.y+v}:{x:j.anchorMm.x-v,y:j.anchorMm.y+u};}
+function seamUVAt(j,x,y){return j.axis==='x'?{u:x-j.anchorMm.x,v:y-j.anchorMm.y}:{u:y-j.anchorMm.y,v:j.anchorMm.x-x};}
+function seamDesignRuns(j,slab,bounds={u0:-j.length/2,u1:j.length/2,v0:-j.width/2,v1:j.width/2}){
+  const corners=[[bounds.u0,bounds.v0],[bounds.u0,bounds.v1],[bounds.u1,bounds.v0],[bounds.u1,bounds.v1]].map(([u,v])=>seamUVPoint(j,u,v));
+  const px=G.px,x0=Math.max(0,Math.floor((Math.min(...corners.map(p=>p.x))+PB.ux0)/px)),x1=Math.min(G.gw,Math.ceil((Math.max(...corners.map(p=>p.x))+PB.ux0)/px));
+  const y0=Math.max(0,Math.floor((S.box.H-PB.my0-Math.max(...corners.map(p=>p.y)))/px)),y1=Math.min(G.gh,Math.ceil((S.box.H-PB.my0-Math.min(...corners.map(p=>p.y)))/px));
+  const runs=[];
+  for(let y=y0;y<y1;y++){
+    let start=-1;
+    for(let x=x0;x<=x1;x++){
+      const p=seamUVAt(j,(x+.5)*px-PB.ux0,S.box.H-(y+.5)*px-PB.my0),i=y*G.gw+x;
+      const on=x<x1&&G.panel[i]&&slab.contains(p.u,p.v,i);
+      if(on&&start<0)start=x;
+      if(!on&&start>=0){runs.push(y,start,x);start=-1;}
+    }
+  }
+  return runs;
+}
+function seamProcessOps(j,prep){
+  if(!prep)return [];
+  const near=j.pads.reduce((a,p)=>a+seamUVAt(j,p.wallX,p.wallY).v,0)/j.pads.length;
+  let wallV=null,distance=Infinity;
+  for(let v=near-S.box.frame-4;v<=near+S.box.frame+4;v+=G.px){
+    const p=seamUVPoint(j,0,v),i=seamCell(p.x,p.y);
+    if(i>=0&&G.panel[i]&&G.edtIn[i]*G.px<=S.box.frame&&Math.abs(v-near)<distance){wallV=v;distance=Math.abs(v-near);}
+  }
+  if(wallV===null)throw new SeamProductionError('ไม่พบหน้าตัดผนังสำหรับเตรียมรอยต่อ '+j.id);
+  const zTop=geomStack().frameZ0+S.box.depth,ops=[],bounds={u0:-prep.width,u1:prep.width,v0:wallV-S.box.frame-3,v1:wallV+S.box.frame+3};
+  if(prep.kind==='weld'){
+    const steps=6;
+    for(let k=0;k<steps;k++){
+      const z0=zTop-prep.depth+prep.depth*k/steps,z1=zTop-prep.depth+prep.depth*(k+1)/steps,half=prep.width*(k+.5)/steps/2;
+      ops.push({z0,z1,cut:true,runs:seamDesignRuns(j,{contains:(u,v)=>Math.abs(u)<=half},bounds)});
+    }
+  }else{
+    const st=geomStack();ops.push({z0:st.colorT+st.faceBaseT+FRONT_LIP_HEIGHT+1,z1:zTop-2,cut:true,
+      runs:seamDesignRuns(j,{contains:(u,v,i)=>Math.abs(u)<=prep.width/2&&G.edtIn[i]*G.px>S.box.frame*.5},bounds)});
+  }
+  return ops;
+}
+function seamLocalVolume(M,component,j){
+  const old={G,PB,W:S.box.W,H:S.box.H,plan:ACTIVE_PRINT_PLAN};
+  // A small independent grid preserves fine fit details even when the artwork
+  // preview is adaptive. Its size depends only on the physical connector.
+  const px=Math.min(G.px,.15),w=component.u1-component.u0,h=component.v1-component.v0;
+  const gw=Math.ceil(w/px),gh=Math.ceil(h/px),ops=[];
+  for(const slab of component.slabs){
+    if(slab.z1<=slab.z0)continue;
+    const runs=[];
+    for(let y=0;y<gh;y++){
+      let start=-1;
+      for(let x=0;x<=gw;x++){
+        const on=x<gw&&slab.contains(component.u0+(x+.5)*px,component.v1-(y+.5)*px);
+        if(on&&start<0)start=x;
+        if(!on&&start>=0){runs.push(y,start,x);start=-1;}
+      }
+    }
+    ops.push({runs,z0:slab.z0,z1:slab.z1,cut:!!slab.cut});
+  }
+  try{
+    G={px,gw,gh};PB={w,h,ux0:0,my0:0};S.box.W=w;S.box.H=h;ACTIVE_PRINT_PLAN=null;
+    seamFrameUnion(M,ops);
+    // The frame volume builder prints a mirrored X. Undo that for independent
+    // connector coordinates and reverse triangle winding with the reflection.
+    if(!M.noTri)for(let i=0;i<M.n;i+=12){M.a[i]=-M.a[i];for(let k=0;k<3;k++)M.a[i+3+k*3]=w-M.a[i+3+k*3];for(let k=0;k<3;k++){const at=i+6+k,b=M.a[at];M.a[at]=M.a[i+9+k];M.a[i+9+k]=b;}}
+  }finally{G=old.G;PB=old.PB;S.box.W=old.W;S.box.H=old.H;ACTIVE_PRINT_PLAN=old.plan;}
+  const flipped=!!component.flipYZ,u=component.u0,v=flipped?-component.v0:component.v0,z=j.baseTop+(component.assemblyZ||0);
+  const p=seamUVPoint(j,u,v);M.assemblyAnchor={x:p.x,y:p.y,z};
+  M.assemblyBasis=j.axis==='x'?[1,0,0,0,flipped?-1:1,0,0,0,flipped?-1:1]:[0,1,0,flipped?1:-1,0,0,0,0,flipped?-1:1];
+  if(!M.n&&!M.noTri)throw new SeamProductionError('ชิ้นต่อ '+component.id+' ไม่มีรูปทรงที่พิมพ์ได้');
+  if(M.n){
+    const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];
+    for(let i=0;i<M.n;i+=12)for(let k=0;k<3;k++)for(let d=0;d<3;d++){const v=M.a[i+3+k*3+d];min[d]=Math.min(min[d],v);max[d]=Math.max(max[d],v);}
+    for(let i=0;i<M.n;i+=12)for(let k=0;k<3;k++)for(let d=0;d<3;d++)M.a[i+3+k*3+d]-=min[d];
+    const B=M.assemblyBasis;for(let d=0;d<3;d++)M.assemblyAnchor[['x','y','z'][d]]+=B[d]*min[0]+B[3+d]*min[1]+B[6+d]*min[2];
+    M.x0=M.y0=M.z0=0;M.x1=max[0]-min[0];M.y1=max[1]-min[1];M.z1=max[2]-min[2];
+  }
+}
 function seamMaskRuns(mask){
   const out=[],w=G.gw;
   for(let y=0;y<G.gh;y++){let x=0;while(x<w){while(x<w&&!mask[y*w+x])x++;if(x===w)break;const a=x;while(x<w&&mask[y*w+x])x++;out.push(y,a,x);}}
   return out;
 }
 function seamUnionRows(ops,z,clip){
-  const rows=new Map();
+  const rows=new Map(),cuts=new Map();
   for(const op of ops)if(z>op.z0&&z<op.z1)for(let i=0;i<op.runs.length;i+=3){
     const y=op.runs[i];if(y<clip.y0||y>=clip.y1)continue;
     const a=Math.max(op.runs[i+1],clip.x0),b=Math.min(op.runs[i+2],clip.x1);if(b<=a)continue;
-    if(!rows.has(y))rows.set(y,[]);rows.get(y).push([a,b]);
+    const target=op.cut?cuts:rows;if(!target.has(y))target.set(y,[]);target.get(y).push([a,b]);
   }
-  for(const [y,runs] of rows){runs.sort((a,b)=>a[0]-b[0]);const out=[];for(const r of runs){const last=out[out.length-1];if(last&&r[0]<=last[1])last[1]=Math.max(last[1],r[1]);else out.push(r.slice());}rows.set(y,out);}
+  for(const target of [rows,cuts])for(const [y,runs] of target){runs.sort((a,b)=>a[0]-b[0]);const out=[];for(const r of runs){const last=out[out.length-1];if(last&&r[0]<=last[1])last[1]=Math.max(last[1],r[1]);else out.push(r.slice());}target.set(y,out);}
+  for(const [y,runs] of cuts){const remaining=seamRunDiff(rows.get(y),runs);if(remaining.length)rows.set(y,remaining);else rows.delete(y);}
   return rows;
 }
 function seamRunDiff(a=[],b=[]){
@@ -2975,9 +3089,176 @@ function seamFrameUnion(M,ops){
     if(part.n||part.noTri){part.x0=PB.w-tile.x1;part.x1=PB.w-tile.x0;part.y0=tile.y0;part.y1=tile.y1;part.z0=zs[0];part.z1=zs[zs.length-1];if(M.chunks)M.chunks.set(tile.id,part);}
   }
 }
+// Templates use joint-local U across the seam and V along it. The generic
+// builder owns rasterization/CSG; these predicates describe real solids/cuts.
+function seamMethodDesign(j,h){
+  const method=j.method||S.seam.method,L=+j.length,W=+j.width,c=+h.clearance||0;
+  if(method==='plate')return null;
+  if(!SEAM_METHODS.some(m=>m.id===method))throw new SeamProductionError('ไม่รู้จักรูปแบบผลิตตัวต่อ '+method);
+  if(!Number.isFinite(L)||!Number.isFinite(W)||L<12||W<4)throw new SeamProductionError('พื้นที่ตัวต่อไม่มีขนาดที่ใช้ผลิตได้');
+  const a=L/2,b=W/2,margin=Math.min(1,W/12),bi=b-margin,T=+h.plateT||3,baseT=+h.baseT||8;
+  const out={baseCuts:[],baseAdds:[],components:[],hardware:[],notes:[],features:[
+    {kind:'coordinate-system',units:'mm',u:'across-seam',v:'along-seam',z:'relative-to-baseTop'}]};
+  const rect=(u0,u1,v0,v1)=>(u,v)=>u>=u0&&u<=u1&&v>=v0&&v<=v1;
+  const circle=(u0,v0,r)=>(u,v)=>(u-u0)**2+(v-v0)**2<=r*r;
+  const slab=(z0,z1,contains,cut=false)=>({z0,z1,contains,...(cut?{cut:true}:{})});
+  const component=(id,label,u0,u1,v0,v1,slabs,extra={})=>out.components.push({id,label,u0,u1,v0,v1,slabs,...extra});
+  const body=rect(-a+margin,a-margin,-bi,bi),centers=[-L*.3,L*.3];
+  const bolt=+h.bolt||3.4,depth=Math.min(+h.depth||6,baseT-1.5-c);
+  const plateSlabs=thickness=>[slab(0,thickness,body),...centers.map(u=>slab(0,thickness,circle(u,0,bolt/2),true))];
+  const requireSpace=(ok,message)=>{if(!ok)throw new SeamProductionError(message);};
+  const jig=(kind,window)=>{
+    const rail=Math.min(1.5,W/4),u0=-a+margin,u1=a-margin,v0=-bi,v1=bi,outer=rect(u0,u1,v0,v1);
+    const frame=(u,v)=>outer(u,v)&&(!window||Math.abs(u)>=window||Math.abs(v)>=bi-rail);
+    const pin=Math.min(+h.pin||3,W/3),pinDepth=Math.min(3,depth),solids=[slab(0,2,frame)];
+    for(const u of centers){
+      solids.push(slab(2,2+pinDepth,circle(u,0,pin/2)));
+      out.baseCuts.push(slab(-pinDepth-c,0,circle(u,0,pin/2+c),true));
+    }
+    component('jig','จิ๊กจัดแนวชั่วคราวพร้อมเดือย',u0,u1,v0,v1,solids,{role:'temporary-jig',flipYZ:true,assemblyZ:2});
+    out.features.push({kind:'temporary-alignment-pins',centersUV:centers.map(u=>[u,0]),diameter:pin,pocketDiameter:pin+2*c,pinLength:pinDepth,pocketDepth:pinDepth+c,plateT:2});
+    out.notes.push('เดือยจิ๊กลงรูตันสองฝั่งเพื่อคุมแนวระหว่าง'+kind+' ใช้แรงจับยึดพอเหมาะและถอดจิ๊กภายหลัง ไม่ใช่แผ่นรับแรงถาวร');
+  };
+  if(method==='butt'){
+    const width=Math.min(1.2,L/12),d=Math.min(.6,baseT-1.5);
+    out.baseCuts.push(slab(-d,0,rect(-width/2,width/2,-bi,bi),true));
+    out.processPrep={kind:'glue',width,depth:d};jig('บ่มกาว',0);
+    out.features.push({kind:'glue-reservoir',width,depth:d});
+    out.notes.push('ร่องสำรองกาวอยู่บนฐานด้านใน เลือกกาวและ bondline จากคูปอง PETG; หน้าตัดชนตรงยังต้องใช้จิ๊ก');
+  }else if(method==='lap'){
+    const r=Math.min(L*.18,a-3),low=(T-c)/2;
+    requireSpace(low>.5,'ความหนาบ่าซ้อนไม่พอเมื่อหักระยะสวม');
+    component('A','อะแดปเตอร์บ่าซ้อน A',-a+margin,r,-bi,bi,[
+      slab(0,T,rect(-a+margin,-r-c/2,-bi,bi)),slab(0,low,rect(-r-c/2,r,-bi,bi))]);
+    component('B','อะแดปเตอร์บ่าซ้อน B',-r,a-margin,-bi,bi,[
+      slab(0,T,rect(r+c/2,a-margin,-bi,bi)),slab(0,low,rect(-r,r+c/2,-bi,bi))],{flipYZ:true,assemblyZ:T});
+    out.features.push({kind:'lap-adapters',overlapLength:2*r,lowerLipT:low,assembledHeight:T,clearance:c,flippedComponent:'B'});
+    out.notes.push('ติดอะแดปเตอร์ A/B ลงฐานด้วยกาว พลิก B ตามผังให้บ่าบนซ้อนบ่าล่าง; ผิวคู่เว้นระยะสวม ไม่ใช้กาวเติมแทนเนื้อฐาน');
+  }else if(method==='scarf'){
+    const r=Math.min(L*.18,a-3),steps=8,A=[],B=[];
+    for(let k=0;k<steps;k++){
+      A.push(slab(T*k/steps,T*(k+1)/steps,rect(-a+margin,r-2*r*k/steps,-bi,bi)));
+      B.push(slab(T*k/steps,T*(k+1)/steps,rect(r-2*r*(steps-1-k)/steps+c,a-margin,-bi,bi)));
+    }
+    component('A','อะแดปเตอร์ Scarf A',-a+margin,r,-bi,bi,A);
+    component('B','อะแดปเตอร์ Scarf B',-r+2*r/steps+c,a-margin,-bi,bi,B,{flipYZ:true,assemblyZ:T});
+    out.features.push({kind:'stepped-scarf',steps,run:2*r,rise:T,clearance:c,flippedComponent:'B'});
+    out.notes.push('ผิวเฉียงทำเป็น 8 ขั้นตาม Z และมีระยะสวม; ติดกาวบนฐานและผิวคู่ ใช้จิ๊กกันไถล ไม่ให้ปลายบางรับแรงลอกโดยลำพัง');
+  }else if(method==='tongue'){
+    const reach=Math.min(L*.2,a-3),half=bi*.45,tongue=rect(-c/2,reach,-half,half);
+    component('A','อะแดปเตอร์ลิ้น A',-a+margin,reach,-bi,bi,[slab(0,T,rect(-a+margin,-c/2,-bi,bi)),slab(0,T,tongue)]);
+    component('B','อะแดปเตอร์ร่อง B',c/2,a-margin,-bi,bi,[slab(0,T,rect(c/2,a-margin,-bi,bi)),
+      slab(0,T,rect(c/2,reach+c,-half-c,half+c),true)]);
+    out.features.push({kind:'tongue-and-open-slot',reach,tongueWidth:2*half,height:T,clearance:c,insertionAxis:'U'});
+    out.notes.push('เลื่อนลิ้นตาม U เข้าในร่องเปิดของ B ก่อนติดกาวลงฐาน ต้องยึดกันถอน; ร่องทะลุเพื่อไม่ให้มีหลังคาพิมพ์ลอย');
+  }else if(method==='dowel'){
+    const pin=+h.pin||3,pinDepth=depth;
+    requireSpace(pinDepth>=2&&pin+2*c+2<=W,'พื้นที่หรือความลึกไม่พอสำหรับเดือยและผนังรอบรู');
+    const solids=[slab(0,T,body)];
+    for(const u of centers){
+      solids.push(slab(T,T+pinDepth,circle(u,0,pin/2)));
+      out.baseCuts.push(slab(-pinDepth-c,0,circle(u,0,pin/2+c),true));
+    }
+    component('key','สะพานเดือยแยก 2 จุด',-a+margin,a-margin,-bi,bi,solids,{flipYZ:true,assemblyZ:T});
+    out.features.push({kind:'dowel-pins',centersUV:centers.map(u=>[u,0]),diameter:pin,length:pinDepth,pocketDiameter:pin+2*c,pocketDepth:pinDepth+c,plateT:T});
+    out.notes.push('พิมพ์เดือยชี้ขึ้นแล้วพลิกลงรูตันบนฐานสองฝั่ง เดือยคุมแนว; ใช้กาวกันถอนและทดสอบระยะสวมจริง');
+  }else if(method==='butterfly'){
+    const half=L*.32,wide=bi*.8,neck=wide*.38,keyT=Math.min(T,baseT-1.5-c);
+    const bow=(extra)=>(u,v)=>Math.abs(u)<=half+extra&&Math.abs(v)<=neck+(wide-neck)*Math.min(1,Math.abs(u)/half)+extra;
+    requireSpace(keyT>=2&&wide-neck>c,'พื้นที่ลิ่มผีเสื้อหรือเนื้อคอร่องไม่พอ');
+    out.baseCuts.push(slab(-keyT-c,0,bow(c),true));
+    component('key','ลิ่มผีเสื้อแยก',-half,half,-wide,wide,[slab(0,keyT,bow(0))],{flipYZ:true,assemblyZ:0});
+    out.features.push({kind:'butterfly-key',length:2*half,outerWidth:2*wide,neckWidth:2*neck,keyT,pocketDepth:keyT+c,clearance:c,insertionAxis:'Z'});
+    out.notes.push('ใส่ลิ่มลงร่องคู่จากฝาหลังให้ผิวบนเสมอฐาน ใช้กาวกันยกออกตาม Z; คอร่องและทิศชั้นต้องทดสอบ');
+  }else if(method==='dovetail'){
+    const reach=Math.min(L*.2,a-3),neck=bi*.3,head=bi*.65,H=Math.max(5,T+2),stop=1.2;
+    const rail=extra=>(u,v)=>u>=-c/2-extra&&u<=reach+extra&&Math.abs(v)<=neck+(head-neck)*clamp((u+extra)/reach,0,1)+extra;
+    requireSpace(head+c+1<=bi&&H-stop-c>2,'พื้นที่รางหางเหยี่ยวหรือ stop ไม่พอ');
+    component('A','อะแดปเตอร์รางหางเหยี่ยว A',-a+margin,reach,-bi,bi,[
+      slab(0,H,rect(-a+margin,-c/2,-bi,bi)),slab(0,H-stop-c,rail(0))],{flipYZ:true,assemblyZ:H});
+    component('B','อะแดปเตอร์รางรับ B พร้อม stop',c/2,a-margin,-bi,bi,[slab(0,H,rect(c/2,a-margin,-bi,bi)),
+      slab(stop,H,rail(c),true)]);
+    out.features.push({kind:'sliding-dovetail',reach,neckWidth:2*neck,headWidth:2*head,height:H,railZ0:stop+c,stopT:stop,clearance:c,insertionAxis:'Z'});
+    out.notes.push('เลื่อน A ลงตาม Z จากฝาหลังจนถึง stop ของ B แล้วติดกาวลงฐาน; ต้องเหลือทางสอดและตรวจลำดับประกอบทุก seam โดยเฉพาะผังสองแกน');
+  }else if(method==='nut'){
+    const flat=+h.nutFlat||5.5,nutT=+h.nutT||2.4,roof=Math.max(1.5,T/2),pocketH=nutT+2*c;
+    const radius=(flat+2*c)/Math.sqrt(3),bottom=-roof-pocketH;
+    requireSpace(baseT+bottom>=1.5&&radius+1<=L*.2&&flat+2*c+2<=W,'ฐานหรือพื้นที่รอบน็อตไม่พอสำหรับหลังคา ช่องใส่ และพื้นรูตัน');
+    for(const u of centers){
+      const hex=(x,y)=>{x=Math.abs(x-u);y=Math.abs(y);return x<=radius&&y<=(flat+2*c)/2&&Math.sqrt(3)*x+y<=flat+2*c;};
+      out.baseCuts.push(slab(bottom,0,circle(u,0,bolt/2),true),slab(bottom,-roof,hex,true),
+        slab(bottom,-roof,rect(u<0?-a-1:u,u<0?u:a+1,-(flat+2*c)/2,(flat+2*c)/2),true));
+    }
+    component('plate','แผ่นประกบสำหรับน็อตฝัง',-a+margin,a-margin,-bi,bi,plateSlabs(T));
+    out.hardware=[{id:'nut-custom',name:'น็อตตามช่องหกเหลี่ยมที่กำหนด',quantity:2,spec:{acrossFlats:flat,thickness:nutT}},
+      {id:'bolt-custom',name:'สกรูสำหรับน็อตที่กำหนด',quantity:2,spec:{clearanceHole:bolt,plateT:T,roof}}];
+    out.features.push({kind:'captured-side-entry-nuts',centersUV:centers.map(u=>[u,0]),roofT:roof,pocketZ0:bottom,pocketZ1:-roof,pocketAcrossFlats:flat+2*c,boltHoleDiameter:bolt,entryDirection:'outward-U'});
+    out.notes.push('สอดน็อตจากปลายนอก U ของฐานแต่ละฝั่งเข้าใต้หลังคาก่อนติดแผ่น หลังคารับแรงดึงจากน็อต ไม่ใช่ช่องเปิดด้านบน; ตรวจทางใส่น็อตและความยาวสกรูไม่ให้ยันพื้น');
+  }else if(method==='selftap'){
+    const pilot=+h.hole||2.5;
+    requireSpace(pilot<bolt&&depth>=2&&pilot+2<=W,'รูนำสกรูพลาสติกต้องเล็กกว่ารูผ่านและมีเนื้อ/ความลึกเพียงพอ');
+    for(const u of centers)out.baseCuts.push(slab(-depth,0,circle(u,0,pilot/2),true));
+    component('plate','แผ่นประกบสำหรับสกรูพลาสติก',-a+margin,a-margin,-bi,bi,plateSlabs(T));
+    out.hardware=[{id:'plastic-screw-custom',name:'สกรูสำหรับพลาสติกตามรูนำที่กำหนด',quantity:2,spec:{pilot,engagement:depth,clearanceHole:bolt,plateT:T}}];
+    out.features.push({kind:'blind-plastic-screw-pilots',centersUV:centers.map(u=>[u,0]),pilotDiameter:pilot,depth,floorT:baseT-depth,plateHoleDiameter:bolt});
+    out.notes.push('กำหนดรูนำและสกรูขึ้นรูปเกลียวสำหรับ PETG ตามผู้ผลิต/คูปองจริง ไม่ใช้สกรูเครื่องบังคับสร้างเกลียว');
+  }else if(method==='snap'){
+    const stem=1.2,postW=Math.min(3,W/4),barb=.8,seat=Math.max(1.5,T/2),top=seat+T,lead=1.4,postTop=top+c+lead;
+    const solids=[slab(0,T,body)];
+    requireSpace(bi>postW/2+2.5,'พื้นที่ด้านข้างขาสแนปไม่พอสำหรับฐานรอง');
+    for(const u of centers){
+      const sign=Math.sign(u),u0=u-stem/2,u1=u+stem/2;
+      out.baseAdds.push(slab(0,postTop,rect(u0,u1,-postW/2,postW/2)));
+      for(const v of [-postW/2-1.6,postW/2+1.6])out.baseAdds.push(slab(0,seat,rect(u-1.5,u+1.5,v-.7,v+.7)));
+      for(let k=0;k<6;k++){
+        const extension=barb*(1-k/6),lo=sign<0?u0-extension:u0,hi=sign>0?u1+extension:u1;
+        out.baseAdds.push(slab(top+c+lead*k/6,top+c+lead*(k+1)/6,rect(lo,hi,-postW/2,postW/2)));
+      }
+      const lo=u0-c-(sign>0?barb:0),hi=u1+c+(sign<0?barb:0);
+      solids.push(slab(0,T,rect(lo,hi,-postW/2-c,postW/2+c),true));
+    }
+    component('bridge','สะพานคลิปพร้อมช่องหลบขาสปริง',-a+margin,a-margin,-bi,bi,solids,{assemblyZ:seat,role:'assembly-aid'});
+    out.features.push({kind:'cantilever-snap-posts',centersUV:centers.map(u=>[u,0]),stemT:stem,stemWidth:postW,postHeight:postTop,barbProjection:barb,barbZ0:top+c,leadHeight:lead,seatHeight:seat,plateT:T,clearance:c});
+    out.notes.push('ขาตั้งมีหัวขอและลาดนำเข้า แผ่นนั่งบนเสารอง ไม่กดขาสปริงค้าง; คลิปเป็นตัวยึดระหว่างประกอบ/ฝาซ่อม ไม่ใช้รับน้ำหนักป้ายค้าง ต้องทดสอบการงอและ PETG');
+  }else if(method==='magnet'){
+    const d=+h.magnetD||6,mt=+h.magnetT||3,stop=.8,edge=margin+stop,magT=Math.max(T,mt+c+1.5),u0=-a+edge+c,u1=a-edge-c,v0=-b+edge+c,v1=b-edge-c;
+    requireSpace(baseT-mt-c>=1.5&&v1-v0>=d+2*c+1.5&&L*.2>=d/2+c+edge,'พื้นที่แม่เหล็ก/ตัวหยุดหรือความหนาพื้นไม่พอ');
+    const solids=[slab(0,magT,rect(u0,u1,v0,v1))];
+    for(const u of centers){
+      out.baseCuts.push(slab(-mt-c,0,circle(u,0,d/2+c),true));
+      solids.push(slab(magT-mt-c,magT,circle(u,0,d/2+c),true));
+    }
+    out.baseAdds.push(slab(0,1.5,rect(-a+margin,-a+edge,-b+margin,b-margin)),
+      slab(0,1.5,rect(a-edge,a-margin,-b+margin,b-margin)),
+      slab(0,1.5,rect(-a+edge,a-edge,-b+margin,-b+edge)),
+      slab(0,1.5,rect(-a+edge,a-edge,b-edge,b-margin)));
+    component('bridge','สะพานแม่เหล็กพร้อมช่องรับคู่',u0,u1,v0,v1,solids,{flipYZ:true,assemblyZ:magT,role:'service-cover'});
+    out.hardware=[{id:'magnet-custom',name:'แม่เหล็กตามช่องรับที่กำหนด',quantity:4,spec:{diameter:d,thickness:mt,pairs:2}}];
+    out.features.push({kind:'paired-magnet-pockets',centersUV:centers.map(u=>[u,0]),pocketDiameter:d+2*c,pocketDepth:mt+c,bridgeT:magT,bridgeFloorT:magT-mt-c,stopWidth:stop,stopHeight:1.5,clearance:c});
+    out.notes.push('พิมพ์ช่องแม่เหล็กหงายแล้วพลิกลงเข้าคู่ฐาน ตรวจขั้วและยึดแม่เหล็กกันหลุด; rails รับการเลื่อน XY แม่เหล็กกันเปิด ไม่ใช้เป็น seam ถาวรรับน้ำหนักหลัก');
+  }else if(method==='weld'){
+    const width=Math.min(2.4,L/10),d=Math.min(1.2,baseT-1.5),steps=6;
+    for(let k=0;k<steps;k++){
+      const half=width*(k+1)/steps/2;
+      out.baseCuts.push(slab(-d+d*k/steps,-d+d*(k+1)/steps,rect(-half,half,-bi,bi),true));
+    }
+    out.processPrep={kind:'weld',width,depth:d};jig('เชื่อมด้านใน',width);
+    out.features.push({kind:'stepped-weld-v-preparation',width,depth:d,steps});
+    out.notes.push('ร่องเตรียมเชื่อมเป็น V แบบขั้นเฉพาะฐานด้านใน จิ๊กมีช่องเข้าถึงแนวเชื่อม; ต้องทดลองความร้อน วัสดุเติม และการเสียรูป PETG ไม่เชื่อมหน้าส่องแสงบางโดยตรง');
+  }
+  return out;
+}
 function seamConnectorParts(production,nt){
   if(!production)return [];
-  return production.joints.map(j=>{
+  return production.joints.flatMap(j=>{
+    if(j.method!=='plate')return j.design.components.map((component,index)=>{
+      const M=Mesh(seamMethod(j.method).code+' · '+component.label+' · '+j.id,S.box.frameColor,nt);
+      M.module='joint';M.kind='connector';M.noMirrorX=true;M.printBase=0;M.jointId=j.id+'_'+component.id;
+      seamLocalVolume(M,component,j);
+      M.joint={method:j.method,parentId:j.id,componentId:component.id,role:component.role||'installed',tiles:j.tiles,axis:j.axis,seamIndex:j.seamIndex,tileIndex:j.tileIndex,along:j.along,
+        spec:production.spec,holes:[],supports:j.pads,features:j.design.features||[],notes:j.design.notes||[],primaryComponent:index===0,hardware:index===0?j.design.hardware:[]};
+      return M;
+    });
     const f=j.footprint,w=f.x1-f.x0,h=f.y1-f.y0,spec=production.spec;
     const M=Mesh('ตัวต่อ J08 · '+j.id,S.box.frameColor,nt);M.module='joint';M.kind='connector';M.noMirrorX=true;M.printBase=0;M.jointId=j.id;
     M.assemblyAnchor={x:f.x0,y:f.y0,z:j.baseTop};
@@ -2987,7 +3268,7 @@ function seamConnectorParts(production,nt){
     const holes=j.holes.map(p=>{const r=spec.bolt/2;return Array.from({length:48},(_,i)=>{const a=-i*Math.PI/24;return [p.x-f.x0+Math.cos(a)*r,p.y-f.y0+Math.sin(a)*r];});});
     const saved=ACTIVE_PRINT_PLAN;ACTIVE_PRINT_PLAN=null;
     try{addPrism(M,[{out:[[0,0],[w,0],[w,h],[0,h]],holes}],0,spec.plateT);}finally{ACTIVE_PRINT_PLAN=saved;}
-    return M;
+    return [M];
   });
 }
 
@@ -3682,15 +3963,21 @@ function buildPartMeshes(nt){
     }
   }
   if(frameOps){
-    const addRuns=(runs,za,zb)=>bandSpec.forEach((B,i)=>{const z0=Math.max(za,B.z0),z1=Math.min(zb,B.z1);if(z1>z0)frameOps[i].push({z0,z1,runs});});
+    const addRuns=(runs,za,zb,cut=false)=>bandSpec.forEach((B,i)=>{const z0=Math.max(za,B.z0),z1=Math.min(zb,B.z1);if(z1>z0)frameOps[i].push({z0,z1,runs,...(cut?{cut:true}:{})});});
     for(const joint of ACTIVE_SEAM_PRODUCTION.joints)for(let i=0;i<joint.pads.length;i++){
       const pad=joint.pads[i],hole=joint.holes[i],steps=Math.max(2,Math.ceil((joint.baseBottom-pad.taperStart)/.8));
       for(let n=0;n<steps;n++){
         const za=pad.taperStart+(joint.baseBottom-pad.taperStart)*n/steps,zb=pad.taperStart+(joint.baseBottom-pad.taperStart)*(n+1)/steps;
         addRuns(seamPadRuns(pad,b.frame+za-pad.taperStart),za,zb);
       }
-      addRuns(seamPadRuns(pad),joint.baseBottom,hole.baseZ0);
-      addRuns(seamPadRuns(pad,Infinity,hole),hole.baseZ0,joint.baseTop);
+      if(joint.method==='plate'){
+        addRuns(seamPadRuns(pad),joint.baseBottom,hole.baseZ0);
+        addRuns(seamPadRuns(pad,Infinity,hole),hole.baseZ0,joint.baseTop);
+      }else addRuns(seamPadRuns(pad),joint.baseBottom,joint.baseTop);
+    }
+    for(const joint of ACTIVE_SEAM_PRODUCTION.joints)if(joint.design){
+      for(const slab of [...joint.design.baseAdds,...joint.design.baseCuts.map(s=>({...s,cut:true}))])addRuns(seamDesignRuns(joint,slab),joint.baseTop+slab.z0,joint.baseTop+slab.z1,slab.cut);
+      for(const op of seamProcessOps(joint,joint.design.processPrep))addRuns(op.runs,op.z0,op.z1,true);
     }
     FMs.forEach((M,i)=>seamFrameUnion(M,frameOps[i]));
   }
@@ -3823,8 +4110,8 @@ function splitReadme(parts){
     'หมายเลข R = แถวจากบนลงล่าง, C = คอลัมน์จากซ้ายไปขวา เมื่อมองด้านหน้าป้ายที่ประกอบแล้ว',
     'ฝาหน้าพิมพ์คว่ำ จึงกลับซ้าย–ขวาบนฐาน แต่หมายเลขตรงกับกล่องและฝาหลังเมื่อประกอบ',
     'วางแต่ละไฟล์กึ่งกลางฐานพิมพ์ พิมพ์แยกรอบ แล้วประกอบตามหมายเลขใน assembly.json',
-    parts.some(p=>p.module==='joint'&&p.n)?'ตัวกล่องมีฐานและแผ่นประกบ J08 ตาม assembly.json; ผิวหน้าและฝาหลังยังต้องจัดแนวและปิดแสงตามแนวแบ่ง':'รอยแบ่งเป็นหน้าตัดชนตรง ต้องยึดชิ้นข้างเคียงด้วยกาวหรือแผ่นเสริมตามวัสดุที่ใช้',
-    ...printGroups(parts).map(g=>g.jointId?`joint_${g.jointId}: แผ่นประกบ ${(g.parts[0].x1-g.parts[0].x0).toFixed(2)} × ${(g.parts[0].y1-g.parts[0].y0).toFixed(2)} มม. · พิมพ์ 1 ชิ้นต่อป้าย`:`${g.module}_${g.tile.id}: กรอบแบ่ง ${(g.tile.x1-g.tile.x0).toFixed(2)} × ${(g.tile.y1-g.tile.y0).toFixed(2)} มม.`),
+    parts.some(p=>p.module==='joint'&&p.n)?'ตัวกล่องมีฐานและชิ้นต่อ/จิ๊กตาม assembly.json; ผิวหน้าและฝาหลังยังต้องจัดแนวและปิดแสงตามแนวแบ่ง':'รอยแบ่งเป็นหน้าตัดชนตรง ต้องยึดชิ้นข้างเคียงด้วยกาวหรือแผ่นเสริมตามวัสดุที่ใช้',
+    ...printGroups(parts).map(g=>g.jointId?`joint_${g.jointId}: ${g.parts[0].joint?.method==='plate'?'แผ่นประกบ':'ชิ้นต่อ/จิ๊ก'} ${(g.parts[0].x1-g.parts[0].x0).toFixed(2)} × ${(g.parts[0].y1-g.parts[0].y0).toFixed(2)} มม. · พิมพ์ 1 ชิ้นต่อป้าย`:`${g.module}_${g.tile.id}: กรอบแบ่ง ${(g.tile.x1-g.tile.x0).toFixed(2)} × ${(g.tile.y1-g.tile.y0).toFixed(2)} มม.`),
     '',readme(parts)].join('\n');
 }
 function splitSupportFiles(parts,name){
@@ -3844,7 +4131,12 @@ function splitSupportFiles(parts,name){
     const orderQuantity=Math.max(1,Math.floor(+S.price.qty||1));
     manifest.schemaVersion=2;
     manifest.joints=joints.map(p=>({jointId:p.jointId,file:`${name}_joint_${fileToken(p.jointId)}`,quantityPerSign:1,
-      assemblyAnchor:p.assemblyAnchor,printBounds:{width:p.x1-p.x0,height:p.y1-p.y0,depth:p.z1-p.z0},...p.joint}));
+      assemblyAnchor:p.assemblyAnchor,...(p.assemblyBasis?{assemblyBasis:p.assemblyBasis}:{}),printBounds:{width:p.x1-p.x0,height:p.y1-p.y0,depth:p.z1-p.z0},...p.joint}));
+    if(joints.some(p=>p.joint.method!=='plate')){
+      manifest.schemaVersion=3;const parents=new Map();
+      for(const p of joints){const id=p.joint.parentId||p.jointId;if(!parents.has(id))parents.set(id,{id,method:p.joint.method,tiles:p.joint.tiles,components:[],notes:p.joint.notes||[]});parents.get(id).components.push({id:p.jointId,role:p.joint.role||'installed',file:`${name}_joint_${fileToken(p.jointId)}`});}
+      manifest.jointAssemblies=[...parents.values()];
+    }
     manifest.bom={orderQuantity,printedConnectorsPerSign:joints.length,printedConnectorsTotal:joints.length*orderQuantity,
       hardwarePerSign:[...hardware.values()],hardwareTotal:[...hardware.values()].map(h=>({...h,quantity:h.quantity*orderQuantity}))};
   }
@@ -4322,12 +4614,12 @@ function syncSeamMethodUI(){
     if(!method){const option=document.createElement('option');option.value=s.method;option.textContent='ไม่รู้จักวิธี: '+s.method;option.dataset.unknown='true';el.append(option);}
     el.value=s.method;
   }
-  $('#seamDimensions').hidden=method?.kind!=='body';
+  $('#seamDimensions').hidden=method?.kind!=='body'&&!s.production;
   $('#seamMethodInfo').textContent=method?method.access:'โปรเจกต์นี้ใช้วิธีที่ไม่รู้จัก กรุณาเลือกจากรายการ';
   $('#seamMethodName').textContent=method?method.code+' · '+method.name:'วิธีรอยต่อไม่รองรับ';
   $('#seamMethodGuide').textContent=method?.access||'';
   $('#seamMethodNotice').textContent=method?.notice||'';
-  $('#seamMapLegend').textContent=method?.kind==='body'
+  $('#seamMapLegend').textContent=method?.kind==='body'||s.production
     ?'มองจากด้านหน้า · เขียว ○ พื้นที่ XY ผ่านเบื้องต้น / แดง × วางไม่ได้ / จุดทึบ เลือกแล้ว · คลิกจุดหรือใกล้แนวตัดเพื่อทดลองตำแหน่ง'
     :method?.kind==='process'?'สีส้ม = แนวทำงานเฉพาะหน้าตัดผนังที่รอยแบ่งจริง · ไม่มีจุดตัวต่อรับแรงให้เลือก':'แสดงโลโก้อ้างอิง · วิธีนี้ใช้กับฝาซ่อมหรือจับแนวชั่วคราว จึงไม่แสดงจุดต่อถาวรบนตัวกล่อง';
   drawSeamMethodDiagram(method);
@@ -4335,7 +4627,14 @@ function syncSeamMethodUI(){
 function changeSeamMethod(id){
   const method=seamMethod(id);if(!method)return;
   S.seam={...seamSettings(),method:id,length:method.length,width:method.width};
+  if(S.seam.production){prepareSeamProduction();autoSelectSeamPoints();}
   refreshSeamPlan();queueDraftSave();if(S.seam.production)schedule(false,'m');else draw();
+}
+function prepareSeamProduction(){
+  const s=S.seam; s.length=Math.max(32,s.length);s.width=Math.max(12,s.width);
+  if(s.method!=='plate')s.hardware.clearance=Math.max(.35,s.hardware.clearance);
+  if(s.method==='selftap'&&s.hardware.hole>=s.hardware.bolt)s.hardware.hole=Math.min(2.5,s.hardware.bolt-.5);
+  if(s.method==='plate'&&s.hardware.hole<=s.hardware.bolt)s.hardware.hole=Math.max(4.2,s.hardware.bolt+.8);
 }
 function drawSeamProcesses(c,cv){
   const plan=SEAM_PLAN;if(plan?.kind!=='process')return;
@@ -4421,37 +4720,43 @@ function drawSeamDialog(){
 function refreshSeamPlan(){
   SEAM_PLAN=buildSeamPlan();SEAM_IMAGE=null;SEAM_FOCUS=null;syncSeamUI();drawSeamDialog();
 }
-function updateSeamSelection(selected,focusId){
-  S.seam.selected=selected;SEAM_PLAN=buildSeamPlan();
+function updateSeamSelection(selected,focusId,autoReason=''){
+  S.seam.selected=selected;SEAM_AUTO_REASON=autoReason;SEAM_PLAN=buildSeamPlan();
   SEAM_FOCUS=SEAM_PLAN.candidates.find(p=>p.id===focusId)||null;
   queueDraftSave();syncSeamUI();if(S.seam.production)schedule(false,'m');else draw();drawSeamDialog();
 }
 function syncSeamProductionUI(){
   const s=seamSettings(),active=s.production;
-  $('#seamProduction').checked=active;$('#seamProduction').disabled=s.method!=='plate'&&!active;
+  $('#seamProduction').checked=active;$('#seamProduction').disabled=!seamMethod(s.method);
+  $('#seamProductionCode').textContent=seamMethod(s.method)?.code||'—';
   $('#seamHardware').hidden=!active;
-  for(const [id,key] of [['seamHole','hole'],['seamHoleDepth','depth'],['seamBolt','bolt'],['seamPlateT','plateT'],['seamBaseT','baseT']])$('#'+id).value=s.hardware[key];
+  for(const [id,key] of [['seamHole','hole'],['seamHoleDepth','depth'],['seamBolt','bolt'],['seamPlateT','plateT'],['seamBaseT','baseT'],['seamFit','clearance'],['seamPin','pin'],['seamNutFlat','nutFlat'],['seamNutT','nutT'],['seamMagnetD','magnetD'],['seamMagnetT','magnetT']])$('#'+id).value=s.hardware[key];
+  const show=(id,yes)=>$('#'+id).closest('.row').hidden=!yes;
+  show('seamHole',['plate','selftap'].includes(s.method));show('seamHoleDepth',['plate','selftap'].includes(s.method));show('seamBolt',['plate','nut','selftap'].includes(s.method));
+  show('seamFit',s.method!=='plate');show('seamPin',['butt','dowel','weld'].includes(s.method));show('seamNutFlat',s.method==='nut');show('seamNutT',s.method==='nut');show('seamMagnetD',s.method==='magnet');show('seamMagnetT',s.method==='magnet');
+  $('label[for="seamHole"]').textContent=s.method==='selftap'?'รูนำพลาสติก Ø':'รูรับอินเสิร์ต Ø';
+  $('#seamProfileNote').textContent=seamMethod(s.method)?.code+' · สร้างเฉพาะจุดที่เลือก ขนาดตั้งต้นเป็นตัวอย่าง ต้องทดสอบ PETG และฮาร์ดแวร์จริง'+(['lap','scarf','tongue','dovetail'].includes(s.method)?' · พิมพ์ชุด A/B แยกแล้วติดบนฐานด้วยกาว':'' )+(['snap','magnet'].includes(s.method)?' · ใช้จับแนว/ถอดได้ ต้องมีระบบรับน้ำหนักถาวรแยก':'');
   const out=$('#seamProductionStatus');out.hidden=!active;
   let text='พรีวิวเท่านั้น — ไฟล์พิมพ์ยังไม่มีฐาน รู หรือตัวต่อจากจุดเหล่านี้';
   if(active){
-    try{const p=seamProductionPlan(SEAM_PLAN);text=`สร้างจริง J08 · ${p.joints.length} แผ่นประกบ · ${p.joints.length*2} ฐานพร้อมรูตัน · ตรวจซ้ำก่อนส่งออก`;out.className='printer-fit ok';}
-    catch(e){if(!(e instanceof SeamProductionError))throw e;text='ยังสร้างไฟล์ตัวต่อไม่ได้: '+e.message;out.className='printer-fit warn';}
+    try{const p=seamProductionPlan(SEAM_PLAN),count=p.joints.reduce((n,j)=>n+(j.design?.components.length||1),0);text=`สร้างจริง ${seamMethod(s.method).code} · ${p.joints.length} จุด · ${count} ชิ้นต่อ/จิ๊ก · ${p.joints.length*2} ฐานรับ · ตรวจซ้ำก่อนส่งออก`;out.className='printer-fit ok';}
+    catch(e){if(!(e instanceof SeamProductionError))throw e;text='ยังสร้างไฟล์ตัวต่อไม่ได้: '+(!s.selected.length&&SEAM_AUTO_REASON?SEAM_AUTO_REASON:e.message);out.className='printer-fit warn';}
     out.textContent=text;
   }
   $('#seamExportHint').textContent=text;$('#seamDialogProductionNote').textContent=text;
 }
 function autoSelectSeamPoints(){
-  const previous=S.seam.selected;S.seam.selected=[];const plan=buildSeamPlan(),chosen=[];
+  const previous=S.seam.selected;S.seam.selected=[];const plan=buildSeamPlan(),chosen=[];let reason='';
   for(const p of plan.candidates){
     if(!p.valid||chosen.some(q=>seamOverlap(p.footprint,q.footprint))||chosen.length>=(S.seam.production?32:128))continue;
     if(S.seam.production){
       S.seam.selected=[...chosen,p].map(({axis,seamIndex,tileIndex,along})=>({axis,seamIndex,tileIndex,along}));
-      try{seamProductionPlan({...plan,candidates:[...chosen,p].map(q=>({...q,selected:true}))});}catch(e){if(!(e instanceof SeamProductionError))throw e;continue;}
+      try{seamProductionPlan({...plan,candidates:[...chosen,p].map(q=>({...q,selected:true}))});}catch(e){if(!(e instanceof SeamProductionError))throw e;reason||=e.message;continue;}
     }
     chosen.push(p);
   }
   S.seam.selected=previous;
-  updateSeamSelection(chosen.map(({axis,seamIndex,tileIndex,along})=>({axis,seamIndex,tileIndex,along})));
+  updateSeamSelection(chosen.map(({axis,seamIndex,tileIndex,along})=>({axis,seamIndex,tileIndex,along})),undefined,chosen.length?'':reason);
   if(!chosen.length&&S.seam.production)toast('ยังไม่มีจุดที่ฐานจริงวางได้ ปรับพื้นที่สำรองหรือความลึกกล่อง');
 }
 function pickSeam(e){
@@ -5047,9 +5352,10 @@ function exportMeshIssues(parts){
         issues.push(`${p.name}: ตัวต่อเกินพื้นที่พิมพ์หลังเผื่อขอบ`);
       if(!p.jointId||jointIds.has(id))issues.push(`${p.name}: หมายเลขตัวต่อหายหรือซ้ำ`);
       jointIds.add(id);
-      if(p.tile||p.noMirrorX!==true||!p.assemblyAnchor||!['x','y','z'].every(k=>Number.isFinite(p.assemblyAnchor[k]))||p.joint?.method!=='plate'||!Array.isArray(p.joint?.tiles)||p.joint.tiles.length!==2)
+      if(p.tile||p.noMirrorX!==true||!p.assemblyAnchor||!['x','y','z'].every(k=>Number.isFinite(p.assemblyAnchor[k]))||!seamMethod(p.joint?.method)||!Array.isArray(p.joint?.tiles)||p.joint.tiles.length!==2)
         issues.push(`${p.name}: ข้อมูลตำแหน่งประกอบตัวต่อไม่ครบ`);
-      if(!Array.isArray(p.joint?.hardware)||!p.joint.hardware.length||p.joint.hardware.some(h=>!h||!h.id||!h.name||!Number.isInteger(h.quantity)||h.quantity<1))
+      if(p.assemblyBasis&&(p.assemblyBasis.length!==9||p.assemblyBasis.some(v=>!Number.isFinite(v))))issues.push(`${p.name}: ทิศประกอบไม่ถูกต้อง`);
+      if(!Array.isArray(p.joint?.hardware)||p.joint.hardware.some(h=>!h||!h.id||!h.name||!Number.isInteger(h.quantity)||h.quantity<1)||(['plate','nut','selftap','magnet'].includes(p.joint?.method)&&p.joint.primaryComponent!==false&&!p.joint.hardware.length))
         issues.push(`${p.name}: รายการฮาร์ดแวร์ตัวต่อไม่ครบ`);
     }
     if(p.tile){
@@ -5335,6 +5641,14 @@ function cutReadme(G0,holes,Gb=G0){
 
 function jointReadme(parts){
   const joints=parts.filter(p=>p.module==='joint'&&p.n);if(!joints.length)return [];
+  if(joints.some(p=>p.joint.method!=='plate'))return ['', 'รอยต่อผลิตจริง — หน่วยมิลลิเมตร',
+    'ตรวจคู่ชิ้นใน assembly.json: jointAssemblies รวมชิ้น A/B หรือจิ๊กที่เป็นชุดเดียวกัน; assemblyAnchor/assemblyBasis เป็นพิกัดประกอบ ไม่ใช่ตำแหน่งบนฐานพิมพ์',
+    `พิมพ์ชิ้นต่อ/จิ๊ก ${joints.length} ชิ้นต่อป้าย แยกไฟล์ลงฐาน Z=0 พร้อมเผื่อขอบ ${printPlan().margin} มม.`,
+    'แบบบ่าซ้อน/เฉียง/ลิ้น–ร่อง/หางเหยี่ยวใช้ชิ้น A/B แยกพิมพ์ แล้วติดบนฐานในกล่องด้วยกาวที่ผ่านการทดสอบ ไม่ใช่ลิ้นยื่นเกินแนวแบ่งของชิ้นกล่อง',
+    'temporary-jig เป็นจิ๊กชั่วคราว ถอดหลังบ่มกาวหรือก่อนใช้ความร้อน ไม่ใช่ตัวยึดรับแรงค้าง',
+    'สแนปและแม่เหล็กเป็นตัวจับแนว/ส่วนที่ถอดได้ ต้องมีระบบยึดรับน้ำหนักถาวรแยกตามงานจริง',
+    'ตรวจ support/bridging ใน slicer โดยเฉพาะชิ้นเฉียง บ่าซ้อน และคลิป ทดสอบ PETG และระยะสวมด้วยฮาร์ดแวร์จริงก่อนผลิตป้าย',
+    ...joints.flatMap(p=>[`${p.jointId} · ${seamMethod(p.joint.method).code} · ${p.joint.role||'installed'} · ${(p.joint.tiles||[]).join(' ↔ ')}`,...(p.joint.notes||[]),...(p.joint.hardware||[]).map(h=>h.name+' '+h.quantity+' ชิ้น')])];
   return ['', 'ตัวต่อระหว่างชิ้นกล่อง J08 — ชิ้นพิมพ์จริง',
     `พิมพ์แผ่นประกบแยก ${joints.length} ชิ้นต่อป้าย แต่ละไฟล์วางฐาน Z=0 และเผื่อขอบเครื่องด้านละ ${printPlan().margin} มม.`,
     'ประกอบกล่องบนจิ๊กให้ผิวหน้าเสมอ ติดตั้งอินเสิร์ตตามรุ่นและค่าที่กำหนด วางแผ่นบนฐานด้านใน แล้วขันจากฝาหลัง',
@@ -5670,6 +5984,7 @@ function partMatrix(M,mode,layout){
   }
   if(M.module==='joint'){
     const a=M.assemblyAnchor;
+    if(M.assemblyBasis){const b=M.assemblyBasis;return mkM(b[0],b[3],b[6],b[1],b[4],b[7],-b[2],-b[5],-b[8],a.x-W/2,a.y-H/2,-a.z-(ex?18:0));}
     return mkM(1,0,0, 0,1,0, 0,0,-1,a.x-W/2,a.y-H/2,-a.z-(ex?18:0));
   }
   if(M.kind==='back'){
@@ -6493,10 +6808,10 @@ function wire(){
   });
   $('#seamProduction').addEventListener('change',e=>{
     S.seam.production=e.target.checked;
-    if(e.target.checked){S.seam.length=Math.max(32,S.seam.length);S.seam.width=Math.max(12,S.seam.width);autoSelectSeamPoints();}
+    if(e.target.checked){prepareSeamProduction();autoSelectSeamPoints();}
     refreshSeamPlan();queueDraftSave();schedule(false,'m');
   });
-  for(const [id,key,lo,hi] of [['seamHole','hole',2,8],['seamHoleDepth','depth',2,12],['seamBolt','bolt',2,6],['seamPlateT','plateT',2,8],['seamBaseT','baseT',4,16]]){
+  for(const [id,key,lo,hi] of [['seamHole','hole',1,10],['seamHoleDepth','depth',2,12],['seamBolt','bolt',2,6],['seamPlateT','plateT',2,8],['seamBaseT','baseT',4,16],['seamFit','clearance',.1,.6],['seamPin','pin',2,6],['seamNutFlat','nutFlat',4,10],['seamNutT','nutT',1.5,5],['seamMagnetD','magnetD',3,10],['seamMagnetT','magnetT',1,5]]){
     const el=$('#'+id);el.addEventListener('change',()=>{const value=+el.value;if(el.value===''||!Number.isFinite(value)||value<lo||value>hi){el.value=S.seam.hardware[key];return;}S.seam.hardware[key]=value;refreshSeamPlan();schedule(false,'m');});
     el.addEventListener('keydown',e=>{if(e.key==='Enter'){el.dispatchEvent(new Event('change'));el.blur();}});
   }

@@ -237,8 +237,8 @@ test('Two-axis joints retain PB-local hole positions and assembly placement unde
   }
 });
 
-test('Production with unsupported methods or missing/stale/invalid selections is rejected explicitly',()=>{
-  for(const method of [...methods.filter(m=>m!=='plate'),'future-connector']){
+test('Production with an unknown method or missing/stale/invalid selections is rejected explicitly',()=>{
+  for(const method of ['future-connector']){
     const app=fixture();app.select();app.c.testMethod=method;run(app.c,'S.seam.method=testMethod;');
     assert.throws(()=>app.build(false),undefined,`${method} must not silently export butt joints`);
   }
