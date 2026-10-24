@@ -123,6 +123,19 @@ input[type=range]{width:100%;accent-color:var(--acc);background:none;border:0;pa
 .viewbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
 .stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:16px}
 #view{max-width:100%;max-height:100%;border-radius:6px;box-shadow:0 8px 40px #000a}
+.seam-controls{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+#seamDialog{width:min(1200px,94vw);max-width:94vw;max-height:92vh;padding:16px;background:var(--panel);color:var(--tx);border:1px solid var(--line);border-radius:12px}
+#seamDialog::backdrop{background:#000b}
+.seam-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.seam-toolbar .grow{flex:1}
+.seam-toolbar select{width:auto}
+.seam-note{font-size:12px;line-height:1.5;color:var(--tx2);margin:8px 0}
+.seam-scroll{max-height:55vh;overflow:auto;background:#e5e7eb;border-radius:6px}
+#seamView{display:block;cursor:crosshair}
+#seamDetail{min-height:42px;margin:10px 0;white-space:pre-line}
+#seamList{display:flex;gap:6px;flex-wrap:wrap;max-height:90px;overflow:auto}
+#seamList button{font-size:11px;padding:4px 7px}
+#seamList button[aria-pressed="true"]{border-color:#26b57d}
 .stagelabel{position:absolute;left:14px;top:12px;color:var(--tx2);font-size:11.5px;background:#0008;padding:4px 9px;border-radius:6px}
 #gl{border-radius:6px;box-shadow:0 8px 40px #000a;cursor:grab;display:block}
 #gl:active{cursor:grabbing}
@@ -345,6 +358,17 @@ Studio</textarea>
       <div class="row"><label for="autoSplit">แบ่งชิ้นอัตโนมัติ</label><input type="checkbox" id="autoSplit" checked></div>
       <div class="row"><label for="bedMargin">เผื่อขอบทุกด้าน</label><input type="number" id="bedMargin" class="num" min="0" step="1" value="10"><span class="unit">มม. (10 มม. = 1 ซม.)</span></div>
       <div class="printer-fit" id="printerFit">—</div>
+      <div class="seam-controls">
+        <div class="row"><label for="seamEnabled">วางแผนตัวต่อ (พรีวิว)</label><input type="checkbox" id="seamEnabled"></div>
+        <div id="seamOptions" hidden>
+          <p class="seam-note">แผ่นพาดรอยต่อด้านในกล่อง · ขนาดพื้นที่สำรองทดลอง</p>
+          <div class="row"><label for="seamLength">ยาวข้ามรอยต่อ</label><input type="number" id="seamLength" class="num" min="12" max="60" step="1" value="24"><span class="unit">มม.</span></div>
+          <div class="row"><label for="seamWidth">กว้างตามแนวต่อ</label><input type="number" id="seamWidth" class="num" min="4" max="30" step="1" value="8"><span class="unit">มม.</span></div>
+          <div class="row"><button id="btnSeamPlan" class="btn grow">ดู / วางบนโลโก้จริง</button></div>
+          <div class="printer-fit" id="seamSummary" role="status">—</div>
+          <p class="seam-note">เขียว = ผ่านเบื้องต้น · แดง × = วางไม่ได้ · จุดทึบ = เลือกไว้<br>ตรวจพื้นที่ XY จากกริดพรีวิว ยังไม่รับรองความแข็งแรงหรือระยะสวม<br><b>ไฟล์พิมพ์ยังไม่มีฐาน รู หรือตัวต่อจากพรีวิวนี้</b></p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -583,6 +607,7 @@ Studio</textarea>
         </select></div>
       <div class="row"><label>ความสูงชั้น</label><input type="number" id="expLayerH" class="num" value="0.2" step="0.02"><span class="unit">มม.</span></div>
       <p class="hint" id="exportFormatHint">3MF จะรวมทุกชิ้นไว้ในไฟล์เดียว แต่ละชิ้นแยกวัตถุพร้อมชื่อสี — เปิดใน Bambu Studio แล้วกำหนดเส้นให้แต่ละชิ้นได้เลย</p>
+      <p class="seam-note" id="seamExportHint" hidden><b>ตำแหน่งตัวต่อเป็นพรีวิวเท่านั้น ไฟล์พิมพ์ยังไม่มีฐาน รู หรือตัวต่อเหล่านี้</b></p>
     </div>
   </div>
 
@@ -596,6 +621,14 @@ Studio</textarea>
 </nav>
 </div>
 <div class="toast" id="toast"></div>
+<dialog id="seamDialog" aria-labelledby="seamTitle">
+  <div class="seam-toolbar"><strong id="seamTitle">ตำแหน่งตัวต่อบนโลโก้จริง</strong><span class="grow"></span><button class="btn" id="btnSeamClose">ปิด</button></div>
+  <div class="seam-toolbar"><button class="btn" id="btnSeamAuto">เลือกจุดที่ผ่านให้อัตโนมัติ</button><button class="btn" id="btnSeamClear">ล้างจุดที่เลือก</button><label for="seamZoom">ซูม</label><select id="seamZoom"><option value="1">100%</option><option value="2">200%</option><option value="4">400%</option></select></div>
+  <p class="seam-note">มองจากด้านหน้า · พื้นที่ตัวต่ออยู่ด้านในกล่อง · เขียว ○ ผ่านเบื้องต้น / แดง × วางไม่ได้ / เขียวทึบ เลือกแล้ว<br>คลิกจุดเพื่อตรวจ / เลือก / ยกเลิก หรือคลิกใกล้แนวตัดเพื่อทดลองตำแหน่งใหม่</p>
+  <div class="seam-scroll" id="seamScroll"><canvas id="seamView" aria-label="ผังตำแหน่งตัวต่อบนโลโก้"></canvas></div>
+  <div id="seamDetail" role="status">—</div><div id="seamList" aria-label="จุดตัวต่อที่เลือก"></div>
+  <p class="seam-note"><b>พรีวิวเท่านั้น — ไฟล์พิมพ์ยังไม่มีฐาน รู หรือตัวต่อเหล่านี้</b> · ตรวจเฉพาะพื้นที่ XY โดยประมาณจากกริด ยังไม่ตรวจความแข็งแรงและระยะ Z รายละเอียด</p>
+</dialog>
 <script>
 /* ══════════════════════════════════════════════════════════════
    YP Lightbox Studio — core: state, raster, quantize, masks, rects
@@ -636,6 +669,7 @@ function defaults(){ return {
        snapBarb:0.45, snapW:12 },
   /* โหมดงาน — service = ฝาหน้าถอดเปลี่ยนได้ มีแผ่นกันแสงรั่วเป็นลิ้นสวม (ค่าแนะนำ) */
   build:{ mode:'service' },
+  seam:{ enabled:false, length:24, width:8, selected:[] },
   /* รูปแบบ 5D สองแบบใช้ผิวหน้าร่วมระนาบเดียวกัน:
      face5d ใช้ fillet โค้งมนเดิม ส่วน face5dChamfer ใช้ขอบเฉียงปรับมุมได้ */
   face:{ height5d:5, edgeR:2, chamferH:2, chamferAngle:45 },
@@ -2570,6 +2604,123 @@ function printPlan(){
 }
 let ACTIVE_PRINT_PLAN=null;
 
+/* Preview only: use assembly coordinates and the existing raster. Nothing in
+   this planner writes to G, PARTS or the production/export builders. */
+let SEAM_PLAN=null, SEAM_FOCUS=null, SEAM_IMAGE=null;
+function seamSettings(value=S.seam){
+  const v=value||{},num=(x,d,lo,hi)=>x==null||x===''||!Number.isFinite(+x)?d:clamp(+x,lo,hi);
+  return {enabled:v.enabled===true,length:num(v.length,24,12,60),width:num(v.width,8,4,30),
+    selected:(Array.isArray(v.selected)?v.selected:[]).slice(0,128).filter(p=>p&&['x','y'].includes(p.axis)&&
+      Number.isInteger(p.seamIndex)&&p.seamIndex>0&&Number.isInteger(p.tileIndex)&&p.tileIndex>0&&Number.isFinite(p.along))
+      .map(p=>({axis:p.axis,seamIndex:p.seamIndex,tileIndex:p.tileIndex,along:p.along}))};
+}
+function seamCell(x,y){
+  const gx=Math.floor((PB.ux0+x)/G.px),gy=Math.floor((S.box.H-PB.my0-y)/G.px);
+  if(gx<0||gx>=G.gw||gy<0||gy>=G.gh)return -1;
+  return gy*G.gw+gx;
+}
+function seamOverlap(a,b,gap=2){
+  return a.x0<b.x1+gap&&a.x1>b.x0-gap&&a.y0<b.y1+gap&&a.y1>b.y0-gap;
+}
+function seamCandidateAt(plan,axis,seamIndex,tileIndex,along){
+  const edge=plan.seams.find(e=>e.axis===axis&&e.seamIndex===seamIndex&&e.tileIndex===tileIndex);
+  const x=axis==='x'?edge?.coord:along,y=axis==='y'?edge?.coord:along;
+  const hx=(axis==='x'?plan.spec.length:plan.spec.width)/2,hy=(axis==='x'?plan.spec.width:plan.spec.length)/2;
+  const p={id:`${axis}${seamIndex}-T${tileIndex}-${Math.round(along*100)}`,axis,seamIndex,tileIndex,along,
+    tiles:edge?.tiles||[],anchorMm:{x,y},footprint:{x0:x-hx,x1:x+hx,y0:y-hy,y1:y+hy},valid:false,code:'',reason:''};
+  const fail=(code,reason)=>Object.assign(p,{code,reason});
+  if(!plan.applicable||!edge||!Number.isFinite(along))return fail('inactive','แนวต่อนี้ไม่มีในผังแบ่งปัจจุบัน');
+  const f=p.footprint, guard=Math.max(.5,G.px);
+  if(f.x0<edge.bounds.x0+guard||f.x1>edge.bounds.x1-guard||f.y0<edge.bounds.y0+guard||f.y1>edge.bounds.y1-guard)
+    return fail('tile','พื้นที่ตัวต่อชนแนวตัดอื่นหรือขอบชิ้นพิมพ์');
+  const center=seamCell(x,y),lab=G.comp.lab;
+  const left=seamCell(x-(axis==='x'?G.px:0),y-(axis==='y'?G.px:0));
+  const right=seamCell(x+(axis==='x'?G.px:0),y+(axis==='y'?G.px:0));
+  if(center<0||!G.panel[center]||left<0||right<0||!G.panel[left]||!G.panel[right])return fail('outside','แนวต่อตรงนี้เป็นช่องว่างหรือไม่มีเนื้อทั้งสองฝั่ง');
+  const component=lab[center];
+  if(lab[left]!==component||lab[right]!==component)return fail('component','รูปทรงคนละชิ้น ไม่ต่อเนื่องข้ามแนวตัด');
+  // Inspect every cell intersecting the whole footprint plus a safety border;
+  // testing only its centre/corners misses holes and thin notches inside it.
+  const gx0=Math.floor((PB.ux0+f.x0-guard)/G.px),gx1=Math.floor((PB.ux0+f.x1+guard)/G.px);
+  const gy0=Math.floor((S.box.H-PB.my0-f.y1-guard)/G.px),gy1=Math.floor((S.box.H-PB.my0-f.y0+guard)/G.px);
+  if(gx0<0||gy0<0||gx1>=G.gw||gy1>=G.gh)return fail('outside','พื้นที่ตัวต่อออกนอกโลโก้');
+  for(let gy=gy0;gy<=gy1;gy++)for(let gx=gx0;gx<=gx1;gx++){
+    const i=gy*G.gw+gx;
+    if(!G.panel[i]||G.edtIn[i]*G.px<plan.spec.setback)return fail('outside','พื้นที่ตัวต่อไม่พอ หรือใกล้ขอบ / บ่าฝาหลังเกินไป');
+    if(lab[i]!==component)return fail('component','พื้นที่ตัวต่อคร่อมรูปทรงคนละชิ้น');
+  }
+  for(const sign of [-1,1]){
+    const i=seamCell(x+(axis==='x'?sign*plan.spec.length*.3:0),y+(axis==='y'?sign*plan.spec.length*.3:0));
+    if(i<0||G.edtIn[i]*G.px>plan.spec.setback+plan.spec.width/2+4)
+      return fail('support','ปีกตัวต่ออยู่ห่างผนังเกินระยะฐานรับที่สำรอง');
+  }
+  if(S.box.depth<jointSpec().lipH+8)return fail('depth','กล่องตื้นเกินไปสำหรับพื้นที่สำรองใต้บ่าฝาหลัง');
+  if(plan.keepouts.some(k=>seamOverlap(f,k,0)))return fail('hardware','ชนพื้นที่สกรู สแนป รูแขวน หรือช่องสายไฟเดิม');
+  p.componentId=component;p.valid=true;p.code='ok';p.reason='พื้นที่ XY ผ่านเบื้องต้น มีเนื้อทั้งสองฝั่งและอยู่ใกล้ผนัง';return p;
+}
+function buildSeamPlan(){
+  const s=seamSettings(),tiles=printPlan();
+  const p={version:1,requested:s.enabled,applicable:false,reason:'',resolution:G?.px||0,seams:[],candidates:[],keepouts:[],
+    spec:{length:s.length,width:s.width,setback:0},truncated:false};
+  if(!s.enabled){p.reason='ยังไม่เปิดวางแผนตัวต่อ';return p;}
+  if(S.build.mode!=='service'){p.reason='พรีวิวตัวต่อรองรับโหมดฝาหน้าถอดเปลี่ยนได้ก่อน';return p;}
+  if(tiles.error){p.reason=tiles.error;return p;}
+  if(!tiles.enabled||tiles.tiles.length<2){p.reason='เปิดแบ่งชิ้นอัตโนมัติ และใช้ชิ้นงานที่ต้องแบ่งมากกว่า 1 ช่อง';return p;}
+  if(!G?.panel||G.empty||!G.comp?.lab||PB.empty){p.reason='ยังไม่มีรูปทรงโลโก้ให้ตรวจ';return p;}
+  p.applicable=true;
+  const J=jointSpec();p.spec.setback=S.box.frame+(J.lip?J.cl+J.lipW:0)+1;
+  const byId=new Map(tiles.tiles.map(t=>[`${t.row},${t.col}`,t]));
+  for(const t of tiles.tiles){
+    for(const axis of ['x','y']){
+      const next=byId.get(axis==='x'?`${t.row},${t.col+1}`:`${t.row+1},${t.col}`);if(!next)continue;
+      p.seams.push({axis,seamIndex:axis==='x'?t.col:t.row,tileIndex:axis==='x'?t.row:t.col,
+        coord:axis==='x'?t.x1:t.y0,start:axis==='x'?t.y0:t.x0,end:axis==='x'?t.y1:t.x1,tiles:[t.id,next.id],
+        bounds:{x0:Math.min(t.x0,next.x0),x1:Math.max(t.x1,next.x1),y0:Math.min(t.y0,next.y0),y1:Math.max(t.y1,next.y1)}});
+    }
+  }
+  const keep=(points,r)=>{for(const [gx,gy] of points){
+    const x=(gx+.5)*G.px-PB.ux0,y=S.box.H-(gy+.5)*G.px-PB.my0;
+    p.keepouts.push({x0:x-r,x1:x+r,y0:y-r,y1:y+r});
+  }};
+  keep(screwPoints(),J.bw/2+3);keep(snapPoints(),J.fingerW/2+3);
+  if(S.hw.hang)keep(hangPoints(),5);
+  if(S.hw.hole==='frame'){const b=bottomInfo();keep([[b.cx,b.y1]],S.hw.dia/2+4);}
+  const selected=[];
+  for(const v of s.selected){
+    const c=seamCandidateAt(p,v.axis,v.seamIndex,v.tileIndex,v.along);c.selected=true;
+    if(c.valid&&selected.some(q=>q.valid&&seamOverlap(q.footprint,c.footprint))){c.valid=false;c.code='overlap';c.reason='พื้นที่ซ้อนกับตัวต่อที่เลือกไว้ก่อนหน้า';}
+    selected.push(c);
+  }
+  p.candidates.push(...selected);
+  const add=(e,along)=>{
+    if(p.candidates.length>=512){p.truncated=true;return;}
+    if(selected.some(c=>c.axis===e.axis&&c.seamIndex===e.seamIndex&&c.tileIndex===e.tileIndex&&Math.abs(c.along-along)<G.px))return;
+    const c=seamCandidateAt(p,e.axis,e.seamIndex,e.tileIndex,along);
+    if(c.valid&&selected.some(q=>q.valid&&seamOverlap(q.footprint,c.footprint))){c.valid=false;c.code='overlap';c.reason='พื้นที่ซ้อนกับตัวต่อที่เลือกแล้ว';}
+    p.candidates.push(c);
+  };
+  for(const e of p.seams){
+    let start=null,key='';
+    const emit=end=>{
+      if(start===null)return;
+      const offset=p.spec.setback+s.width/2+G.px*2,span=end-start;
+      if(span>offset*2+s.width+2){add(e,start+offset);add(e,end-offset);}
+      else add(e,(start+end)/2);
+    };
+    for(let v=e.start+G.px/2;v<e.end;v+=G.px){
+      const a=seamCell(e.axis==='x'?e.coord-G.px:v,e.axis==='y'?e.coord-G.px:v);
+      const b=seamCell(e.axis==='x'?e.coord+G.px:v,e.axis==='y'?e.coord+G.px:v);
+      const hasA=a>=0&&G.panel[a],hasB=b>=0&&G.panel[b];
+      const k=hasA||hasB?`${hasA?G.comp.lab[a]:-1},${hasB?G.comp.lab[b]:-1}`:'';
+      if(k!==key){emit(v-G.px/2);start=k?v-G.px/2:null;key=k;}
+      if(p.truncated)break;
+    }
+    if(p.truncated)break;
+    emit(e.end);
+  }
+  return p;
+}
+
 /* ตัดสามเหลี่ยมจากเส้นขอบที่เกลี่ยแล้ว แล้วรวมขอบกลับเป็นรูปปิด
    จึงรักษารู/ส่วนเว้าและแนวตัดตรงกัน โดยไม่เกลี่ย mask แยกจนเกิดช่องว่างที่รอยต่อ */
 function clipPrintGroups(groups,bounds){
@@ -3780,6 +3931,114 @@ function draw(){
     c.setLineDash([5,4]); c.strokeStyle=view==='lit'?'#ffffff2a':'#00000030';
     c.strokeRect(f,f,cv.width-f*2,cv.height-f*2); c.setLineDash([]);
   }
+  if(view==='design')drawSeamOverlay(c,cv);
+}
+
+function seamCanvasPoint(cv,x,y){
+  return [(PB.ux0+x)*cv.width/(G.gw*G.px),(S.box.H-PB.my0-y)*cv.height/(G.gh*G.px)];
+}
+function drawSeamOverlay(c,cv){
+  const plan=SEAM_PLAN;if(!plan?.applicable)return;
+  c.save();c.lineWidth=2;
+  for(const p of plan.candidates){
+    if(!Number.isFinite(p.anchorMm.x)||!Number.isFinite(p.anchorMm.y))continue;
+    const [x,y]=seamCanvasPoint(cv,p.anchorMm.x,p.anchorMm.y),color=p.valid?'#008759':'#db293e';
+    if(p.selected||p.id===SEAM_FOCUS?.id){
+      const f=p.footprint,a=seamCanvasPoint(cv,f.x0,f.y1),b=seamCanvasPoint(cv,f.x1,f.y0);
+      c.fillStyle=p.valid?'#00ad7133':'#f33c5540';c.fillRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);
+      c.strokeStyle=color;c.strokeRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);
+    }
+    c.beginPath();c.arc(x,y,p.selected?6:4.5,0,Math.PI*2);c.strokeStyle='#fff';c.lineWidth=4;c.stroke();
+    c.strokeStyle=color;c.lineWidth=2;c.stroke();
+    if(p.selected&&p.valid){c.fillStyle=color;c.fill();}
+    if(!p.valid){c.beginPath();c.moveTo(x-3,y-3);c.lineTo(x+3,y+3);c.moveTo(x+3,y-3);c.lineTo(x-3,y+3);c.stroke();}
+  }
+  if(SEAM_FOCUS&&!plan.candidates.some(p=>p.id===SEAM_FOCUS.id)){
+    const p=SEAM_FOCUS,[x,y]=seamCanvasPoint(cv,p.anchorMm.x,p.anchorMm.y);
+    c.strokeStyle=p.valid?'#008759':'#db293e';
+    const a=seamCanvasPoint(cv,p.footprint.x0,p.footprint.y1),b=seamCanvasPoint(cv,p.footprint.x1,p.footprint.y0);
+    c.strokeRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);c.strokeRect(x-7,y-7,14,14);
+  }
+  c.restore();
+}
+function syncSeamUI(){
+  const s=seamSettings(),plan=SEAM_PLAN;
+  $('#seamOptions').hidden=!s.enabled;$('#seamEnabled').checked=s.enabled;
+  $('#seamExportHint').hidden=!s.enabled;
+  $('#seamLength').value=s.length;$('#seamWidth').value=s.width;
+  $('#btnSeamPlan').disabled=!plan?.applicable;
+  const out=$('#seamSummary');
+  if(!plan?.applicable){out.className='printer-fit';out.textContent=plan?.reason||'เปิดพรีวิวเพื่อคำนวณตำแหน่ง';return;}
+  const valid=plan.candidates.filter(p=>p.valid).length,selected=plan.candidates.filter(p=>p.selected),bad=plan.candidates.length-valid;
+  out.className='printer-fit '+(valid?'ok':'warn');
+  out.textContent=`ผ่านเบื้องต้น ${valid} จุด · วางไม่ได้ ${bad} จุด · เลือก ${selected.length} จุด`+
+    (selected.some(p=>!p.valid)?' (มีจุดที่ต้องแก้)':'')+` · กริดประมาณ ${nf(plan.resolution,2)} มม.`+
+    (plan.truncated?' · แสดงถึง 512 จุด กรุณาลดจำนวนแนวตัด':'');
+  if(!plan.candidates.length)out.textContent='ไม่พบแนวตัดผ่านเนื้อโลโก้ จึงยังไม่มีจุดเสนอ';
+}
+function drawSeamDialog(){
+  if(!$('#seamDialog').open)return;
+  const cv=$('#seamView'),plan=SEAM_PLAN;
+  $('#btnSeamAuto').disabled=!plan?.applicable;$('#btnSeamClear').disabled=!S.seam.selected.length;
+  if(!plan?.applicable){$('#seamDetail').textContent=plan?.reason||'ยังไม่มีผังตัวต่อ';cv.width=cv.height=1;$('#seamList').replaceChildren();return;}
+  SEAM_IMAGE=SEAM_IMAGE||gridImage('design');
+  const zoom=+$('#seamZoom').value||1,fit=Math.max(240,$('#seamScroll').clientWidth);
+  const scale=Math.min(fit/G.gw,500/G.gh)*zoom;
+  cv.width=Math.max(1,Math.round(G.gw*scale));cv.height=Math.max(1,Math.round(G.gh*scale));
+  const c=cv.getContext('2d');c.fillStyle='#f3f4f6';c.fillRect(0,0,cv.width,cv.height);c.drawImage(SEAM_IMAGE,0,0,cv.width,cv.height);
+  c.save();c.strokeStyle='#555a';c.lineWidth=1;c.setLineDash([6,4]);
+  for(const e of plan.seams){
+    const a=seamCanvasPoint(cv,e.axis==='x'?e.coord:e.start,e.axis==='y'?e.coord:e.start);
+    const b=seamCanvasPoint(cv,e.axis==='x'?e.coord:e.end,e.axis==='y'?e.coord:e.end);
+    c.beginPath();c.moveTo(...a);c.lineTo(...b);c.stroke();
+  }c.restore();drawSeamOverlay(c,cv);
+  const focus=SEAM_FOCUS;
+  const position=focus&&Number.isFinite(focus.anchorMm.x)&&Number.isFinite(focus.anchorMm.y)
+    ?` · X ${nf(focus.anchorMm.x,1)}, Y ${nf(focus.anchorMm.y,1)} มม.`:'';
+  $('#seamDetail').textContent=focus?`${focus.valid?'✓ ผ่านเบื้องต้น':'× วางไม่ได้'} · ${focus.tiles.join(' ↔ ')}${position}\n${focus.reason}`:
+    $('#seamSummary').textContent+'\nคลิกจุดเพื่ออ่านเหตุผลและเลือกตำแหน่ง';
+  const list=$('#seamList');list.replaceChildren();
+  for(const p of plan.candidates.filter(p=>p.selected)){
+    const button=document.createElement('button');button.className='btn';button.textContent=(p.valid?'✓ ':'× ')+p.id;button.setAttribute('aria-pressed','true');
+    button.addEventListener('click',()=>{SEAM_FOCUS=p;drawSeamDialog();});list.append(button);
+    const remove=document.createElement('button');remove.className='btn';remove.textContent='ลบ';remove.setAttribute('aria-label','ลบจุด '+p.id);
+    remove.addEventListener('click',()=>updateSeamSelection(S.seam.selected.filter(s=>!(s.axis===p.axis&&s.seamIndex===p.seamIndex&&s.tileIndex===p.tileIndex&&s.along===p.along))));list.append(remove);
+  }
+}
+function refreshSeamPlan(){
+  SEAM_PLAN=buildSeamPlan();SEAM_IMAGE=null;SEAM_FOCUS=null;syncSeamUI();drawSeamDialog();
+}
+function updateSeamSelection(selected,focusId){
+  S.seam.selected=selected;SEAM_PLAN=buildSeamPlan();
+  SEAM_FOCUS=SEAM_PLAN.candidates.find(p=>p.id===focusId)||null;
+  queueDraftSave();syncSeamUI();draw();drawSeamDialog();
+}
+function pickSeam(e){
+  const plan=SEAM_PLAN,cv=e.currentTarget;
+  if(!plan?.applicable||EXPORT_JOB||PROJECT_LOADING||(cv.id==='view'&&S.ui.view!=='design'))return;
+  const r=cv.getBoundingClientRect(),u=(e.clientX-r.left)*cv.width/r.width,v=(e.clientY-r.top)*cv.height/r.height;
+  let focus=null,best=11;
+  for(const p of plan.candidates){
+    const a=seamCanvasPoint(cv,p.anchorMm.x,p.anchorMm.y),d=Math.hypot((a[0]-u)*r.width/cv.width,(a[1]-v)*r.height/cv.height);
+    if(d<best){focus=p;best=d;}
+  }
+  if(!focus){
+    const x=u*G.gw*G.px/cv.width-PB.ux0,y=S.box.H-PB.my0-v*G.gh*G.px/cv.height;
+    let edge=null,dist=12;
+    for(const s of plan.seams){
+      const along=s.axis==='x'?y:x;if(along<s.start||along>s.end)continue;
+      const d=Math.abs((s.axis==='x'?x:y)-s.coord)*(s.axis==='x'?cv.width/(G.gw*G.px)*r.width/cv.width:cv.height/(G.gh*G.px)*r.height/cv.height);
+      if(d<dist){dist=d;edge=s;}
+    }
+    if(!edge)return;
+    focus=seamCandidateAt(plan,edge.axis,edge.seamIndex,edge.tileIndex,+(edge.axis==='x'?y:x).toFixed(2));
+    if(focus.valid&&plan.candidates.some(p=>p.selected&&p.valid&&seamOverlap(p.footprint,focus.footprint))){focus.valid=false;focus.code='overlap';focus.reason='พื้นที่ซ้อนกับตัวต่อที่เลือกแล้ว';}
+  }
+  if(focus.selected){updateSeamSelection(S.seam.selected.filter(s=>!(s.axis===focus.axis&&s.seamIndex===focus.seamIndex&&s.tileIndex===focus.tileIndex&&s.along===focus.along)),focus.id);return;}
+  if(focus.valid){
+    if(S.seam.selected.length>=128){toast('เลือกได้ไม่เกิน 128 จุด');return;}
+    const {axis,seamIndex,tileIndex,along}=focus;updateSeamSelection([...S.seam.selected,{axis,seamIndex,tileIndex,along}],focus.id);
+  }else{SEAM_FOCUS=focus;draw();drawSeamDialog();}
 }
 
 function drawLayers(c,cv,px){
@@ -4311,6 +4570,7 @@ function applyTemplate(t){
   Object.assign(S.src,p.src||{});
   Object.assign(S.tr,p.tr||{});
   Object.assign(S.art,p.art||{});
+  if(p.seam)S.seam=seamSettings(p.seam);
   if(p.pal) S.pal=p.pal.map((x,i)=>({name:i?'สี '+i:'พื้นหลัง',...x}));
   S.src.imgData=null; S.src.imgSrc='';
   pushToUI(); rebuildSource(); schedule(false); toast('ใช้เทมเพลต: '+t.n);
@@ -5326,6 +5586,7 @@ function recompute(reuseGrid=false){
   try{
     if(!reuseGrid||!G?.panel) buildGrid(true);
     renderPalette();
+    refreshSeamPlan();
     V3.dirty=true;
     draw();
     refreshQuote();
@@ -5373,6 +5634,7 @@ function updateBadges(){
 
 /* ---------- push state → controls ---------- */
 function pushToUI(){
+  S.seam=seamSettings();
   S.backing=backingSpec();
   S.sheet=S.sheet||{};
   S.sheet.cl=sheetClearance(S.sheet.cl);
@@ -5412,7 +5674,7 @@ function pushToUI(){
   $('#colN').disabled = S.src.mode!=='image';
   const cn=NUMBOX.get('colNV'); if(cn) cn.inp.disabled = S.src.mode!=='image';
   syncRingUI(); syncBoxColorUI(); syncLineStyleUI(); syncBoxBandUI(); syncJointUI(); syncSizeUI(); syncModeUI(); syncArtModeUI();
-  syncPreviewAction();
+  syncPreviewAction();syncSeamUI();
 }
 
 const VIEW_LABEL={design:'แบบ',lit:'จำลองตอนติดไฟ',layers:'แยกชั้นการพิมพ์',plate:'ผังฐานพิมพ์','3d':'มุมมอง 3 มิติ'};
@@ -5752,6 +6014,29 @@ function showMobilePanel(panel){
 }
 
 function wire(){
+  $('#seamEnabled').addEventListener('change',e=>{
+    S.seam.enabled=e.target.checked;refreshSeamPlan();queueDraftSave();draw();
+  });
+  for(const [id,key,lo,hi] of [['seamLength','length',12,60],['seamWidth','width',4,30]]){
+    const el=$('#'+id);el.addEventListener('change',()=>{
+      const value=+el.value;
+      if(el.value===''||!Number.isFinite(value)||value<lo||value>hi){el.value=S.seam[key];return;}
+      S.seam[key]=value;refreshSeamPlan();queueDraftSave();draw();
+    });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'){el.dispatchEvent(new Event('change'));el.blur();}});
+  }
+  $('#btnSeamPlan').addEventListener('click',()=>{$('#seamDialog').showModal();drawSeamDialog();});
+  $('#btnSeamClose').addEventListener('click',()=>$('#seamDialog').close());
+  $('#seamZoom').addEventListener('change',drawSeamDialog);
+  $('#seamView').addEventListener('click',pickSeam);$('#view').addEventListener('click',pickSeam);
+  $('#btnSeamClear').addEventListener('click',()=>updateSeamSelection([]));
+  $('#btnSeamAuto').addEventListener('click',()=>{
+    S.seam.selected=[];const plan=buildSeamPlan(),chosen=[];
+    for(const p of plan.candidates){
+      if(p.valid&&!chosen.some(q=>seamOverlap(p.footprint,q.footprint))&&chosen.length<128)chosen.push(p);
+    }
+    updateSeamSelection(chosen.map(({axis,seamIndex,tileIndex,along})=>({axis,seamIndex,tileIndex,along})));
+  });
   for(const [id,path,kind,lab,fmt,flag] of BIND){
     const el=document.getElementById(id); if(!el) continue;
     const ev = (kind==='bool'||el.tagName==='SELECT'||(kind==='num'&&el.type==='number'))?'change':'input';
@@ -5791,7 +6076,7 @@ function wire(){
   $('#tplList').innerHTML=TEMPLATES.map((t,i)=>`<span class="chip" data-i="${i}">${t.n}</span>`).join('');
   $$('#tplList .chip').forEach(c=>c.addEventListener('click',()=>applyTemplate(TEMPLATES[+c.dataset.i])));
   $('#btnTplSave').addEventListener('click',()=>{
-    const t={n:S.name,p:{box:{...S.box},src:{...S.src,imgData:null,imgSrc:''},tr:{...S.tr},art:{...S.art},
+    const t={n:S.name,p:{box:{...S.box},src:{...S.src,imgData:null,imgSrc:''},tr:{...S.tr},art:{...S.art},seam:seamSettings(),
       pal:S.pal.map(p=>({hex:p.hex,glow:p.glow}))}};
     download(new Blob([JSON.stringify(t,null,2)],{type:'application/json'}),safeName(S.name)+'.tpl.json');
     toast('บันทึกเทมเพลตแล้ว');
@@ -6050,7 +6335,8 @@ function readFileDataURL(file){
 function projectState(o){
   if(!o||typeof o!=='object'||!o.src||!o.box)throw new Error('ไฟล์โปรเจกต์ไม่มีข้อมูลชิ้นงาน');
   const base=defaults(),next={...base,...o};
-  for(const k of ['src','tr','art','box','hw','price','exp','ui','build','face','sheet','backing','shape'])next[k]={...base[k],...o[k]};
+  for(const k of ['src','tr','art','box','hw','price','exp','ui','build','face','sheet','backing','shape','seam'])next[k]={...base[k],...o[k]};
+  next.seam=seamSettings(next.seam);
   if(!Number.isFinite(+next.box.W)||!Number.isFinite(+next.box.H)||next.box.W<=0||next.box.H<=0)
     throw new Error('ขนาดชิ้นงานในโปรเจกต์ไม่ถูกต้อง');
   next.pal=(o.pal||base.pal).map(p=>({...p}));
