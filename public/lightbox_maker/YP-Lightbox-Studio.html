@@ -126,16 +126,22 @@ input[type=range]{width:100%;accent-color:var(--acc);background:none;border:0;pa
 .seam-controls{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 #seamDialog{width:min(1200px,94vw);max-width:94vw;max-height:92vh;padding:16px;background:var(--panel);color:var(--tx);border:1px solid var(--line);border-radius:12px}
 #seamDialog::backdrop{background:#000b}
+#seamDialog[open]{display:flex;flex-direction:column;height:min(900px,92vh)}
 .seam-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .seam-toolbar .grow{flex:1}
 .seam-toolbar select{width:auto}
 .seam-note{font-size:12px;line-height:1.5;color:var(--tx2);margin:8px 0}
-.seam-scroll{max-height:55vh;overflow:auto;background:#e5e7eb;border-radius:6px}
-#seamView{display:block;cursor:crosshair}
+.seam-scroll{flex:1;min-height:120px;max-height:45vh;overflow:auto;background:#e5e7eb;border-radius:6px}
+#seamView{display:block;margin-inline:auto;cursor:crosshair}
 #seamDetail{min-height:42px;margin:10px 0;white-space:pre-line}
 #seamList{display:flex;gap:6px;flex-wrap:wrap;max-height:90px;overflow:auto}
 #seamList button{font-size:11px;padding:4px 7px}
 #seamList button[aria-pressed="true"]{border-color:#26b57d}
+.seam-method-card{display:flex;gap:14px;align-items:center;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;margin-bottom:10px}
+#seamMethodView{width:240px;max-width:40%;height:auto;flex-shrink:0;background:#10141c;border-radius:6px}
+.seam-method-card .seam-note{margin:4px 0}
+#seamDialog>.seam-toolbar,#seamDialog>.seam-method-card,#seamDialog>.seam-note,#seamDetail,#seamList{flex-shrink:0}
+@media(max-width:600px){.seam-method-card{align-items:flex-start;flex-direction:column}#seamMethodView{max-width:100%;width:240px}}
 .stagelabel{position:absolute;left:14px;top:12px;color:var(--tx2);font-size:11.5px;background:#0008;padding:4px 9px;border-radius:6px}
 #gl{border-radius:6px;box-shadow:0 8px 40px #000a;cursor:grab;display:block}
 #gl:active{cursor:grabbing}
@@ -361,10 +367,14 @@ Studio</textarea>
       <div class="seam-controls">
         <div class="row"><label for="seamEnabled">วางแผนตัวต่อ (พรีวิว)</label><input type="checkbox" id="seamEnabled"></div>
         <div id="seamOptions" hidden>
-          <p class="seam-note">แผ่นพาดรอยต่อด้านในกล่อง · ขนาดพื้นที่สำรองทดลอง</p>
+          <div class="row"><label for="seamMethod">วิธีรอยต่อ · 13 แบบ</label><select id="seamMethod" class="grow"></select></div>
+          <p class="seam-note" id="seamMethodInfo"></p>
+          <div id="seamDimensions">
+          <p class="seam-note">ขนาดพื้นที่สำรองทดลอง · ใช้วิธีที่เลือกกับทุกจุด</p>
           <div class="row"><label for="seamLength">ยาวข้ามรอยต่อ</label><input type="number" id="seamLength" class="num" min="12" max="60" step="1" value="24"><span class="unit">มม.</span></div>
           <div class="row"><label for="seamWidth">กว้างตามแนวต่อ</label><input type="number" id="seamWidth" class="num" min="4" max="30" step="1" value="8"><span class="unit">มม.</span></div>
-          <div class="row"><button id="btnSeamPlan" class="btn grow">ดู / วางบนโลโก้จริง</button></div>
+          </div>
+          <div class="row"><button id="btnSeamPlan" class="btn grow">ดูวิธี / วางบนโลโก้จริง</button></div>
           <div class="printer-fit" id="seamSummary" role="status">—</div>
           <p class="seam-note">เขียว = ผ่านเบื้องต้น · แดง × = วางไม่ได้ · จุดทึบ = เลือกไว้<br>ตรวจพื้นที่ XY จากกริดพรีวิว ยังไม่รับรองความแข็งแรงหรือระยะสวม<br><b>ไฟล์พิมพ์ยังไม่มีฐาน รู หรือตัวต่อจากพรีวิวนี้</b></p>
         </div>
@@ -623,8 +633,10 @@ Studio</textarea>
 <div class="toast" id="toast"></div>
 <dialog id="seamDialog" aria-labelledby="seamTitle">
   <div class="seam-toolbar"><strong id="seamTitle">ตำแหน่งตัวต่อบนโลโก้จริง</strong><span class="grow"></span><button class="btn" id="btnSeamClose">ปิด</button></div>
+  <div class="seam-toolbar"><label for="seamDialogMethod">วิธีรอยต่อ</label><select id="seamDialogMethod"></select><span class="seam-note">13 วิธี · พรีวิวหลักการและพื้นที่สำรอง</span></div>
+  <div class="seam-method-card"><canvas id="seamMethodView" width="360" height="150" aria-label="ภาพหลักการรอยต่อที่เลือก"></canvas><div><strong id="seamMethodName"></strong><p class="seam-note" id="seamMethodGuide"></p><p class="seam-note" id="seamMethodNotice"></p><p class="seam-note">ภาพหลักการ ไม่ใช่รูปทรงผลิต · ค่าพื้นที่สำรองยังต้องทดสอบกับ PETG จริง</p></div></div>
   <div class="seam-toolbar"><button class="btn" id="btnSeamAuto">เลือกจุดที่ผ่านให้อัตโนมัติ</button><button class="btn" id="btnSeamClear">ล้างจุดที่เลือก</button><label for="seamZoom">ซูม</label><select id="seamZoom"><option value="1">100%</option><option value="2">200%</option><option value="4">400%</option></select></div>
-  <p class="seam-note">มองจากด้านหน้า · พื้นที่ตัวต่ออยู่ด้านในกล่อง · เขียว ○ ผ่านเบื้องต้น / แดง × วางไม่ได้ / เขียวทึบ เลือกแล้ว<br>คลิกจุดเพื่อตรวจ / เลือก / ยกเลิก หรือคลิกใกล้แนวตัดเพื่อทดลองตำแหน่งใหม่</p>
+  <p class="seam-note" id="seamMapLegend">มองจากด้านหน้า · พื้นที่ตัวต่ออยู่ด้านในกล่อง</p>
   <div class="seam-scroll" id="seamScroll"><canvas id="seamView" aria-label="ผังตำแหน่งตัวต่อบนโลโก้"></canvas></div>
   <div id="seamDetail" role="status">—</div><div id="seamList" aria-label="จุดตัวต่อที่เลือก"></div>
   <p class="seam-note"><b>พรีวิวเท่านั้น — ไฟล์พิมพ์ยังไม่มีฐาน รู หรือตัวต่อเหล่านี้</b> · ตรวจเฉพาะพื้นที่ XY โดยประมาณจากกริด ยังไม่ตรวจความแข็งแรงและระยะ Z รายละเอียด</p>
@@ -669,7 +681,7 @@ function defaults(){ return {
        snapBarb:0.45, snapW:12 },
   /* โหมดงาน — service = ฝาหน้าถอดเปลี่ยนได้ มีแผ่นกันแสงรั่วเป็นลิ้นสวม (ค่าแนะนำ) */
   build:{ mode:'service' },
-  seam:{ enabled:false, length:24, width:8, selected:[] },
+  seam:{ enabled:false, method:'plate', length:24, width:8, selected:[] },
   /* รูปแบบ 5D สองแบบใช้ผิวหน้าร่วมระนาบเดียวกัน:
      face5d ใช้ fillet โค้งมนเดิม ส่วน face5dChamfer ใช้ขอบเฉียงปรับมุมได้ */
   face:{ height5d:5, edgeR:2, chamferH:2, chamferAngle:45 },
@@ -2607,9 +2619,27 @@ let ACTIVE_PRINT_PLAN=null;
 /* Preview only: use assembly coordinates and the existing raster. Nothing in
    this planner writes to G, PARTS or the production/export builders. */
 let SEAM_PLAN=null, SEAM_FOCUS=null, SEAM_IMAGE=null;
+// Dimensions reserve room for an experimental design; they are not validated
+// fits, hardware specifications or a claim of structural capacity.
+const SEAM_METHODS=[
+  {id:'butt',code:'J01',name:'ชนตรง + กาว',kind:'process',length:12,width:8,minDepth:0,access:'จัดหน้าและขอบบนจิ๊ก ทากาวที่หน้าตัด แล้วรอให้บ่มเต็ม',notice:'พื้นที่หน้าตัดผนังบางมีจำกัด ไม่มีตัวคุมระดับหรือรับแรงเสริมจากกาวเอง'},
+  {id:'lap',code:'J02',name:'บ่าซ้อนด้านใน + กาว',kind:'body',length:26,width:10,minDepth:6,access:'สอดบ่าข้ามแนวต่อ ทากาวผิวซ้อน และคุมระนาบหน้าบนจิ๊ก',notice:'ต้องเพิ่มฐานเสริมและสำรองส่วนที่ยื่นก่อนแบ่งพิมพ์ ไม่เฉือนผนังบางครึ่งหนึ่งแทนฐาน'},
+  {id:'scarf',code:'J03',name:'รอยต่อเฉียง / Scarf + กาว',kind:'body',length:36,width:10,minDepth:6,access:'ประกบฐานเฉียงจากสองฝั่ง ใช้จิ๊กกันไถลระหว่างบ่มกาว',notice:'XY ไม่ตรวจมุมเฉียง ความหนาปลายตาม Z หรือแรงลอก ต้องทดลองชิ้นจริง'},
+  {id:'tongue',code:'J04',name:'ลิ้น–ร่องในฐานเสริม',kind:'body',length:28,width:12,minDepth:8,access:'สอดลิ้นเข้าร่องข้ามแนวต่อ แล้วเพิ่มกาวหรือตัวล็อกกันถอน',notice:'ต้องมีเนื้อรอบร่องและทางสอด ลิ้นติดชิ้นอาจยื่นเกินพื้นที่พิมพ์'},
+  {id:'dowel',code:'J05',name:'เดือยแยก / Spline แยก',kind:'body',length:20,width:12,minDepth:8,access:'ใส่เดือยแยกในฐานเสริมสองฝั่ง แล้วประกบพร้อมกาวหรือแผ่นรับแรง',notice:'เดือยคุมแนวแต่ยังถอนออกได้ ไม่เจาะลงผนัง 2.4 มม. โดยไม่มีฐานเสริม'},
+  {id:'butterfly',code:'J06',name:'ลิ่มผีเสื้อแยก',kind:'body',length:24,width:16,minDepth:8,access:'จัดสองฝั่งให้ชนกัน ใส่ลิ่มจากด้านใน / ฝาหลัง และยึดกันลิ่มหลุด',notice:'ต้องมีเนื้อรอบคอร่องและทางใส่ลิ่ม หน้าบางไม่ใช่ฐานรับแรงของลิ่ม'},
+  {id:'dovetail',code:'J07',name:'รางหางเหยี่ยวเลื่อน',kind:'body',length:28,width:16,minDepth:12,access:'เลื่อนรางตามความลึกจากฝาหลัง แล้วใส่ stop กันไหลตามราง',notice:'XY ผ่านยังไม่ยืนยันทางเลื่อนหรือลำดับประกอบ โดยเฉพาะผังแบ่งสองแกนหรือวงปิด'},
+  {id:'plate',code:'J08',name:'แผ่นประกบ + อินเสิร์ตเกลียวโลหะ',kind:'body',length:24,width:8,minDepth:8,access:'ใช้จุดจัดแนว วางแผ่นสะพานบนฐานด้านใน และขันตาม Z จากฝาหลัง',notice:'ฐานและรูต้องอิงอินเสิร์ตรุ่นจริง ตรวจปลายสกรู ทางเข้าไขควง และการยุบค้างของ PETG'},
+  {id:'nut',code:'J09',name:'แผ่นประกบ + น็อตฝัง',kind:'body',length:28,width:12,minDepth:10,access:'ใส่น็อตในช่องกันหมุน วางแผ่นประกบ แล้วขันจากฝาหลัง',notice:'ต้องมีทางใส่น็อตและกันหลุด รวมทั้งเนื้อฐานรองแรงกด ไม่ใช่เพียงรูหกเหลี่ยม'},
+  {id:'selftap',code:'J10',name:'แผ่นประกบ + สกรูสำหรับพลาสติก',kind:'body',length:24,width:10,minDepth:8,access:'ยึดแผ่นเข้าฐานเสริมด้วยสกรูและรูนำสำหรับพลาสติกที่เลือกจริง',notice:'ไม่ใช้สกรูเครื่อง M3 บังคับสร้างเกลียว ต้องทดสอบรูนำ แรงขัน การแตก และเกลียวรูด'},
+  {id:'snap',code:'J11',name:'Snap-fit / คลิปสปริง',kind:'cover',length:24,width:12,minDepth:0,access:'เหมาะกับฝาเปิดซ่อมหรือจับแนวชั่วคราวระหว่างประกอบ',notice:'ไม่เปิดเป็นรอยต่อถาวรรับน้ำหนักตัวกล่อง ต้องตรวจระยะงอ ทิศชั้น และการคลายของ PETG'},
+  {id:'magnet',code:'J12',name:'แม่เหล็ก + บ่า / ตัวหยุด',kind:'cover',length:24,width:16,minDepth:0,access:'แม่เหล็กกันเปิด ส่วนบ่าหรือตัวหยุดรับการเลื่อน ใช้กับฝาเปิดซ่อม',notice:'ไม่ใช้แรงดูดแทนตัวรับแรงของรอยต่อถาวร ต้องยึดแม่เหล็กกันหลุดและตรวจขั้ว'},
+  {id:'weld',code:'J13',name:'เชื่อมพลาสติกด้วยความร้อน',kind:'process',length:12,width:8,minDepth:0,access:'จัดแนวบนจิ๊ก ทดลองเชื่อมด้านในด้วยวัสดุและกระบวนการ PETG จริง',notice:'แสดงแนวเชื่อมเท่านั้น ไม่กำหนดอุณหภูมิหรือความเร็ว หน้าบางเสี่ยงเสียระนาบและสี'}
+];
+function seamMethod(id=seamSettings().method){return SEAM_METHODS.find(m=>m.id===id);}
 function seamSettings(value=S.seam){
   const v=value||{},num=(x,d,lo,hi)=>x==null||x===''||!Number.isFinite(+x)?d:clamp(+x,lo,hi);
-  return {enabled:v.enabled===true,length:num(v.length,24,12,60),width:num(v.width,8,4,30),
+  return {enabled:v.enabled===true,method:v.method==null?'plate':String(v.method),length:num(v.length,24,12,60),width:num(v.width,8,4,30),
     selected:(Array.isArray(v.selected)?v.selected:[]).slice(0,128).filter(p=>p&&['x','y'].includes(p.axis)&&
       Number.isInteger(p.seamIndex)&&p.seamIndex>0&&Number.isInteger(p.tileIndex)&&p.tileIndex>0&&Number.isFinite(p.along))
       .map(p=>({axis:p.axis,seamIndex:p.seamIndex,tileIndex:p.tileIndex,along:p.along}))};
@@ -2654,20 +2684,22 @@ function seamCandidateAt(plan,axis,seamIndex,tileIndex,along){
     if(i<0||G.edtIn[i]*G.px>plan.spec.setback+plan.spec.width/2+4)
       return fail('support','ปีกตัวต่ออยู่ห่างผนังเกินระยะฐานรับที่สำรอง');
   }
-  if(S.box.depth<jointSpec().lipH+8)return fail('depth','กล่องตื้นเกินไปสำหรับพื้นที่สำรองใต้บ่าฝาหลัง');
+  if(S.box.depth<jointSpec().lipH+(plan.spec.minDepth??8))return fail('depth','กล่องตื้นเกินไปสำหรับพื้นที่สำรองทดลองของวิธีนี้ใต้บ่าฝาหลัง');
   if(plan.keepouts.some(k=>seamOverlap(f,k,0)))return fail('hardware','ชนพื้นที่สกรู สแนป รูแขวน หรือช่องสายไฟเดิม');
   p.componentId=component;p.valid=true;p.code='ok';p.reason='พื้นที่ XY ผ่านเบื้องต้น มีเนื้อทั้งสองฝั่งและอยู่ใกล้ผนัง';return p;
 }
 function buildSeamPlan(){
-  const s=seamSettings(),tiles=printPlan();
-  const p={version:1,requested:s.enabled,applicable:false,reason:'',resolution:G?.px||0,seams:[],candidates:[],keepouts:[],
-    spec:{length:s.length,width:s.width,setback:0},truncated:false};
+  const s=seamSettings(),method=seamMethod(s.method),tiles=printPlan();
+  const p={version:2,method:s.method,kind:method?.kind,requested:s.enabled,applicable:false,reason:'',resolution:G?.px||0,seams:[],processSegments:[],candidates:[],keepouts:[],
+    spec:{length:s.length,width:s.width,setback:0,minDepth:method?.minDepth||0},truncated:false};
   if(!s.enabled){p.reason='ยังไม่เปิดวางแผนตัวต่อ';return p;}
+  if(!method){p.reason='ไม่รู้จักวิธีรอยต่อที่บันทึกไว้ กรุณาเลือกวิธีจากรายการ 13 แบบ';return p;}
+  if(method.kind==='cover'){p.reason=method.code+' · '+method.access+' · ไม่ใช้เป็นจุดต่อถาวรรับน้ำหนักระหว่างชิ้นกล่อง';return p;}
   if(S.build.mode!=='service'){p.reason='พรีวิวตัวต่อรองรับโหมดฝาหน้าถอดเปลี่ยนได้ก่อน';return p;}
   if(tiles.error){p.reason=tiles.error;return p;}
   if(!tiles.enabled||tiles.tiles.length<2){p.reason='เปิดแบ่งชิ้นอัตโนมัติ และใช้ชิ้นงานที่ต้องแบ่งมากกว่า 1 ช่อง';return p;}
   if(!G?.panel||G.empty||!G.comp?.lab||PB.empty){p.reason='ยังไม่มีรูปทรงโลโก้ให้ตรวจ';return p;}
-  p.applicable=true;
+  p.applicable=method.kind==='body';
   const J=jointSpec();p.spec.setback=S.box.frame+(J.lip?J.cl+J.lipW:0)+1;
   const byId=new Map(tiles.tiles.map(t=>[`${t.row},${t.col}`,t]));
   for(const t of tiles.tiles){
@@ -2677,6 +2709,24 @@ function buildSeamPlan(){
         coord:axis==='x'?t.x1:t.y0,start:axis==='x'?t.y0:t.x0,end:axis==='x'?t.y1:t.x1,tiles:[t.id,next.id],
         bounds:{x0:Math.min(t.x0,next.x0),x1:Math.max(t.x1,next.x1),y0:Math.min(t.y0,next.y0),y1:Math.max(t.y1,next.y1)}});
     }
+  }
+  if(method.kind==='process'){
+    for(const e of p.seams){
+      let start=null;
+      const emit=end=>{if(start!==null){p.processSegments.push({axis:e.axis,coord:e.coord,start,end,tiles:e.tiles});start=null;}};
+      for(let v=e.start+G.px/2;v<e.end;v+=G.px){
+        const i=seamCell(e.axis==='x'?e.coord:v,e.axis==='y'?e.coord:v);
+        const a=seamCell(e.axis==='x'?e.coord-G.px:v,e.axis==='y'?e.coord-G.px:v);
+        const b=seamCell(e.axis==='x'?e.coord+G.px:v,e.axis==='y'?e.coord+G.px:v);
+        const wall=i>=0&&a>=0&&b>=0&&G.panel[i]&&G.panel[a]&&G.panel[b]&&G.comp.lab[a]===G.comp.lab[b]&&G.edtIn[i]*G.px<=S.box.frame+G.px;
+        if(wall){if(start===null)start=v-G.px/2;}else emit(v-G.px/2);
+        if(p.processSegments.length>=2048){p.truncated=true;break;}
+      }
+      if(p.truncated)break;
+      emit(e.end);
+    }
+    p.reason=`${method.code} · แสดงแนว${method.id==='weld'?'เชื่อม':'ทากาวหน้าตัด'}บนผนังจริง ${p.processSegments.length} ช่วง · เป็นกระบวนการประกอบ ไม่มีตัวต่อให้เลือกเป็นจุด`;
+    return p;
   }
   const keep=(points,r)=>{for(const [gx,gy] of points){
     const x=(gx+.5)*G.px-PB.ux0,y=S.box.H-(gy+.5)*G.px-PB.my0;
@@ -3934,11 +3984,93 @@ function draw(){
   if(view==='design')drawSeamOverlay(c,cv);
 }
 
+function seamCanvasFrame(cv){
+  if(cv.id!=='seamView')return {x0:0,y0:0,width:G.gw,height:G.gh};
+  const pad=Math.ceil(10/G.px),x0=Math.max(0,PB.gx0-pad),y0=Math.max(0,PB.gy0-pad);
+  return {x0,y0,width:Math.min(G.gw,PB.gx1+pad+1)-x0,height:Math.min(G.gh,PB.gy1+pad+1)-y0};
+}
 function seamCanvasPoint(cv,x,y){
-  return [(PB.ux0+x)*cv.width/(G.gw*G.px),(S.box.H-PB.my0-y)*cv.height/(G.gh*G.px)];
+  const f=seamCanvasFrame(cv);
+  return [((PB.ux0+x)/G.px-f.x0)*cv.width/f.width,((S.box.H-PB.my0-y)/G.px-f.y0)*cv.height/f.height];
+}
+function seamCanvasPosition(cv,u,v){
+  const f=seamCanvasFrame(cv);
+  return {x:(u*f.width/cv.width+f.x0)*G.px-PB.ux0,y:S.box.H-PB.my0-(v*f.height/cv.height+f.y0)*G.px};
+}
+/* Symbols share the reserved footprint, not manufacturing geometry. */
+function drawSeamGlyph(c,x,y,w,h,id,vertical=false,color='#ffc66d'){
+  c.save();c.translate(x,y);if(vertical)c.rotate(Math.PI/2);c.scale(w,h);
+  c.fillStyle=color;c.strokeStyle=color;c.lineWidth=1.5/Math.max(1,Math.min(w,h));
+  const poly=points=>{c.beginPath();c.moveTo(...points[0]);for(const p of points.slice(1))c.lineTo(...p);c.closePath();c.fill();};
+  const ring=(xx,yy,r)=>{c.beginPath();c.arc(xx,yy,r,0,Math.PI*2);c.stroke();};
+  switch(id){
+    case 'butt':c.fillRect(-.025,-.45,.05,.9);break;
+    case 'lap':poly([[-.45,-.3],[.25,-.3],[.25,0],[.45,0],[.45,.3],[-.25,.3],[-.25,0],[-.45,0]]);break;
+    case 'scarf':poly([[-.45,-.3],[.45,-.3],[-.15,.3],[-.45,.3]]);c.beginPath();c.moveTo(-.1,.32);c.lineTo(.48,-.3);c.stroke();break;
+    case 'tongue':poly([[-.45,-.32],[-.12,-.32],[-.12,-.14],[.32,-.14],[.32,.14],[-.12,.14],[-.12,.32],[-.45,.32]]);c.strokeRect(.05,-.25,.4,.5);break;
+    case 'dowel':c.fillRect(-.4,-.28,.8,.12);c.fillRect(-.4,.16,.8,.12);c.strokeRect(-.48,-.36,.96,.72);break;
+    case 'butterfly':poly([[-.45,-.4],[0,-.16],[.45,-.4],[.45,.4],[0,.16],[-.45,.4]]);break;
+    case 'dovetail':poly([[-.44,-.4],[-.12,-.4],[.12,-.2],[.44,-.2],[.44,.2],[.12,.2],[-.12,.4],[-.44,.4]]);break;
+    case 'plate':case 'nut':case 'selftap':
+      c.strokeRect(-.45,-.35,.9,.7);
+      for(const xx of [-.28,.28]){
+        if(id==='nut'){
+          const points=Array.from({length:6},(_,i)=>[xx+Math.cos(i*Math.PI/3)*.13,Math.sin(i*Math.PI/3)*.16]);poly(points);
+        }else if(id==='selftap'){
+          c.beginPath();c.moveTo(xx-.1,-.2);c.lineTo(xx+.1,.2);c.moveTo(xx+.1,-.2);c.lineTo(xx-.1,.2);c.stroke();
+        }else ring(xx,0,.12);
+      }
+      if(id==='plate'){ring(-.08,.21,.04);ring(.08,-.21,.04);}break;
+    case 'snap':poly([[-.45,-.3],[-.32,-.3],[-.32,.1],[.22,.1],[.22,-.12],[.4,.06],[.4,.3],[-.45,.3]]);c.strokeRect(.3,-.32,.15,.24);break;
+    case 'magnet':ring(-.17,0,.17);ring(.17,0,.17);c.fillRect(-.4,.28,.8,.08);c.fillRect(.32,.05,.08,.3);break;
+    case 'weld':c.beginPath();c.moveTo(-.04,-.45);for(let i=0;i<9;i++)c.lineTo(i%2?.05:-.05,-.4+i*.1);c.stroke();break;
+  }
+  c.restore();
+}
+function drawSeamMethodDiagram(method){
+  const cv=$('#seamMethodView'),c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);
+  if(!method)return;
+  c.fillStyle='#224f69';c.fillRect(20,30,157,85);c.fillStyle='#62324f';c.fillRect(183,30,157,85);
+  c.strokeStyle='#ffffff70';c.setLineDash([4,4]);c.beginPath();c.moveTo(180,15);c.lineTo(180,125);c.stroke();c.setLineDash([]);
+  drawSeamGlyph(c,180,72,220,72,method.id);
+  c.fillStyle='#d8e0ee';c.font='12px sans-serif';c.textAlign='center';c.fillText('A',40,50);c.fillText('B',320,50);
+  c.fillText(method.kind==='cover'?'ฝา / ฐานรับ · ภาพหลักการ':method.kind==='process'?'แนวหน้าตัดผนัง · ภาพหลักการ':'พื้นที่สำรองด้านใน · มองจากฝาหลัง',180,140);
+}
+function syncSeamMethodUI(){
+  const s=seamSettings(),method=seamMethod(s.method);
+  for(const id of ['seamMethod','seamDialogMethod']){
+    const el=$('#'+id);
+    if(!el.options.length){for(const m of SEAM_METHODS){const option=document.createElement('option');option.value=m.id;option.textContent=m.code+' · '+m.name;el.append(option);}}
+    el.querySelector('option[data-unknown]')?.remove();
+    if(!method){const option=document.createElement('option');option.value=s.method;option.textContent='ไม่รู้จักวิธี: '+s.method;option.dataset.unknown='true';el.append(option);}
+    el.value=s.method;
+  }
+  $('#seamDimensions').hidden=method?.kind!=='body';
+  $('#seamMethodInfo').textContent=method?method.access:'โปรเจกต์นี้ใช้วิธีที่ไม่รู้จัก กรุณาเลือกจากรายการ';
+  $('#seamMethodName').textContent=method?method.code+' · '+method.name:'วิธีรอยต่อไม่รองรับ';
+  $('#seamMethodGuide').textContent=method?.access||'';
+  $('#seamMethodNotice').textContent=method?.notice||'';
+  $('#seamMapLegend').textContent=method?.kind==='body'
+    ?'มองจากด้านหน้า · เขียว ○ พื้นที่ XY ผ่านเบื้องต้น / แดง × วางไม่ได้ / จุดทึบ เลือกแล้ว · คลิกจุดหรือใกล้แนวตัดเพื่อทดลองตำแหน่ง'
+    :method?.kind==='process'?'สีส้ม = แนวทำงานเฉพาะหน้าตัดผนังที่รอยแบ่งจริง · ไม่มีจุดตัวต่อรับแรงให้เลือก':'แสดงโลโก้อ้างอิง · วิธีนี้ใช้กับฝาซ่อมหรือจับแนวชั่วคราว จึงไม่แสดงจุดต่อถาวรบนตัวกล่อง';
+  drawSeamMethodDiagram(method);
+}
+function changeSeamMethod(id){
+  const method=seamMethod(id);if(!method)return;
+  S.seam={...seamSettings(),method:id,length:method.length,width:method.width};
+  refreshSeamPlan();queueDraftSave();draw();
+}
+function drawSeamProcesses(c,cv){
+  const plan=SEAM_PLAN;if(plan?.kind!=='process')return;
+  c.save();c.strokeStyle='#e9a22c';c.lineWidth=4;
+  for(const s of plan.processSegments){
+    const a=seamCanvasPoint(cv,s.axis==='x'?s.coord:s.start,s.axis==='y'?s.coord:s.start);
+    const b=seamCanvasPoint(cv,s.axis==='x'?s.coord:s.end,s.axis==='y'?s.coord:s.end);
+    c.beginPath();c.moveTo(...a);c.lineTo(...b);c.stroke();
+  }c.restore();
 }
 function drawSeamOverlay(c,cv){
-  const plan=SEAM_PLAN;if(!plan?.applicable)return;
+  const plan=SEAM_PLAN;drawSeamProcesses(c,cv);if(!plan?.applicable)return;
   c.save();c.lineWidth=2;
   for(const p of plan.candidates){
     if(!Number.isFinite(p.anchorMm.x)||!Number.isFinite(p.anchorMm.y))continue;
@@ -3947,6 +4079,8 @@ function drawSeamOverlay(c,cv){
       const f=p.footprint,a=seamCanvasPoint(cv,f.x0,f.y1),b=seamCanvasPoint(cv,f.x1,f.y0);
       c.fillStyle=p.valid?'#00ad7133':'#f33c5540';c.fillRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);
       c.strokeStyle=color;c.strokeRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);
+      const w=Math.abs(b[0]-a[0]),h=Math.abs(b[1]-a[1]);
+      drawSeamGlyph(c,(a[0]+b[0])/2,(a[1]+b[1])/2,p.axis==='x'?w:h,p.axis==='x'?h:w,plan.method,p.axis==='y',color);
     }
     c.beginPath();c.arc(x,y,p.selected?6:4.5,0,Math.PI*2);c.strokeStyle='#fff';c.lineWidth=4;c.stroke();
     c.strokeStyle=color;c.lineWidth=2;c.stroke();
@@ -3966,9 +4100,10 @@ function syncSeamUI(){
   $('#seamOptions').hidden=!s.enabled;$('#seamEnabled').checked=s.enabled;
   $('#seamExportHint').hidden=!s.enabled;
   $('#seamLength').value=s.length;$('#seamWidth').value=s.width;
-  $('#btnSeamPlan').disabled=!plan?.applicable;
+  syncSeamMethodUI();
+  $('#btnSeamPlan').disabled=!s.enabled||!G?.panel||G.empty||PB.empty;
   const out=$('#seamSummary');
-  if(!plan?.applicable){out.className='printer-fit';out.textContent=plan?.reason||'เปิดพรีวิวเพื่อคำนวณตำแหน่ง';return;}
+  if(!plan?.applicable){out.className='printer-fit';out.textContent=(plan?.reason||'เปิดพรีวิวเพื่อคำนวณตำแหน่ง')+(plan?.truncated?' · แสดงแนวบางส่วนถึง 2048 ช่วง':'');return;}
   const valid=plan.candidates.filter(p=>p.valid).length,selected=plan.candidates.filter(p=>p.selected),bad=plan.candidates.length-valid;
   out.className='printer-fit '+(valid?'ok':'warn');
   out.textContent=`ผ่านเบื้องต้น ${valid} จุด · วางไม่ได้ ${bad} จุด · เลือก ${selected.length} จุด`+
@@ -3980,25 +4115,25 @@ function drawSeamDialog(){
   if(!$('#seamDialog').open)return;
   const cv=$('#seamView'),plan=SEAM_PLAN;
   $('#btnSeamAuto').disabled=!plan?.applicable;$('#btnSeamClear').disabled=!S.seam.selected.length;
-  if(!plan?.applicable){$('#seamDetail').textContent=plan?.reason||'ยังไม่มีผังตัวต่อ';cv.width=cv.height=1;$('#seamList').replaceChildren();return;}
+  if(!G?.panel||G.empty||PB.empty){$('#seamDetail').textContent=plan?.reason||'ยังไม่มีผังตัวต่อ';cv.width=cv.height=1;$('#seamList').replaceChildren();return;}
   SEAM_IMAGE=SEAM_IMAGE||gridImage('design');
-  const zoom=+$('#seamZoom').value||1,fit=Math.max(240,$('#seamScroll').clientWidth);
-  const scale=Math.min(fit/G.gw,500/G.gh)*zoom;
-  cv.width=Math.max(1,Math.round(G.gw*scale));cv.height=Math.max(1,Math.round(G.gh*scale));
-  const c=cv.getContext('2d');c.fillStyle='#f3f4f6';c.fillRect(0,0,cv.width,cv.height);c.drawImage(SEAM_IMAGE,0,0,cv.width,cv.height);
+  const zoom=+$('#seamZoom').value||1,fit=Math.max(240,$('#seamScroll').clientWidth),frame=seamCanvasFrame(cv);
+  const scale=Math.min(fit/frame.width,Math.max(120,$('#seamScroll').clientHeight||300)/frame.height)*zoom;
+  cv.width=Math.max(1,Math.round(frame.width*scale));cv.height=Math.max(1,Math.round(frame.height*scale));
+  const c=cv.getContext('2d');c.fillStyle='#f3f4f6';c.fillRect(0,0,cv.width,cv.height);c.drawImage(SEAM_IMAGE,frame.x0,frame.y0,frame.width,frame.height,0,0,cv.width,cv.height);
   c.save();c.strokeStyle='#555a';c.lineWidth=1;c.setLineDash([6,4]);
-  for(const e of plan.seams){
+  for(const e of plan?.seams||[]){
     const a=seamCanvasPoint(cv,e.axis==='x'?e.coord:e.start,e.axis==='y'?e.coord:e.start);
     const b=seamCanvasPoint(cv,e.axis==='x'?e.coord:e.end,e.axis==='y'?e.coord:e.end);
     c.beginPath();c.moveTo(...a);c.lineTo(...b);c.stroke();
   }c.restore();drawSeamOverlay(c,cv);
-  const focus=SEAM_FOCUS;
+  const focus=plan?.applicable?SEAM_FOCUS:null;
   const position=focus&&Number.isFinite(focus.anchorMm.x)&&Number.isFinite(focus.anchorMm.y)
     ?` · X ${nf(focus.anchorMm.x,1)}, Y ${nf(focus.anchorMm.y,1)} มม.`:'';
   $('#seamDetail').textContent=focus?`${focus.valid?'✓ ผ่านเบื้องต้น':'× วางไม่ได้'} · ${focus.tiles.join(' ↔ ')}${position}\n${focus.reason}`:
-    $('#seamSummary').textContent+'\nคลิกจุดเพื่ออ่านเหตุผลและเลือกตำแหน่ง';
+    $('#seamSummary').textContent+(plan?.applicable?'\nคลิกจุดเพื่ออ่านเหตุผลและเลือกตำแหน่ง':'');
   const list=$('#seamList');list.replaceChildren();
-  for(const p of plan.candidates.filter(p=>p.selected)){
+  for(const p of (plan?.candidates||[]).filter(p=>p.selected)){
     const button=document.createElement('button');button.className='btn';button.textContent=(p.valid?'✓ ':'× ')+p.id;button.setAttribute('aria-pressed','true');
     button.addEventListener('click',()=>{SEAM_FOCUS=p;drawSeamDialog();});list.append(button);
     const remove=document.createElement('button');remove.className='btn';remove.textContent='ลบ';remove.setAttribute('aria-label','ลบจุด '+p.id);
@@ -4023,11 +4158,11 @@ function pickSeam(e){
     if(d<best){focus=p;best=d;}
   }
   if(!focus){
-    const x=u*G.gw*G.px/cv.width-PB.ux0,y=S.box.H-PB.my0-v*G.gh*G.px/cv.height;
+    const {x,y}=seamCanvasPosition(cv,u,v),frame=seamCanvasFrame(cv);
     let edge=null,dist=12;
     for(const s of plan.seams){
       const along=s.axis==='x'?y:x;if(along<s.start||along>s.end)continue;
-      const d=Math.abs((s.axis==='x'?x:y)-s.coord)*(s.axis==='x'?cv.width/(G.gw*G.px)*r.width/cv.width:cv.height/(G.gh*G.px)*r.height/cv.height);
+      const d=Math.abs((s.axis==='x'?x:y)-s.coord)*(s.axis==='x'?r.width/(frame.width*G.px):r.height/(frame.height*G.px));
       if(d<dist){dist=d;edge=s;}
     }
     if(!edge)return;
@@ -6014,6 +6149,7 @@ function showMobilePanel(panel){
 }
 
 function wire(){
+  for(const id of ['seamMethod','seamDialogMethod'])$('#'+id).addEventListener('change',e=>changeSeamMethod(e.target.value));
   $('#seamEnabled').addEventListener('change',e=>{
     S.seam.enabled=e.target.checked;refreshSeamPlan();queueDraftSave();draw();
   });

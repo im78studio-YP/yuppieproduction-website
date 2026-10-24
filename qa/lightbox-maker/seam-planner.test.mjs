@@ -8,6 +8,16 @@ const html=fs.readFileSync(new URL('../../public/lightbox_maker/YP-Lightbox-Stud
 const source=html.match(/<script>([\s\S]*?)<\/script>/)[1];
 const run=(c,s)=>vm.runInContext(s,c),plain=v=>JSON.parse(JSON.stringify(v));
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
+const methodIds=['butt','lap','scarf','tongue','dowel','butterfly','dovetail','plate','nut','selftap','snap','magnet','weld'];
+const bodyIds=methodIds.slice(1,10);
+
+function setMethod(app,id){
+  app.c.testMethodId=id;
+  run(app.c,`(()=>{
+    const method=SEAM_METHODS.find(m=>m.id===testMethodId);
+    S.seam={...S.seam,method:testMethodId,...(method?{length:method.length,width:method.width}:{})};
+  })()`);
+}
 
 function fixture({width=144,height=100,px=.5,inside=(x,y)=>x>=0&&x<width&&y>=0&&y<height}={}){
   const c=vm.createContext({document:{readyState:'loading',addEventListener(){}},window:{},TextEncoder,console,performance,structuredClone});
@@ -78,7 +88,7 @@ function assertValidFootprintsOnPanel(app,plan){
 
 test('Seam planning defaults off and produces no manufacturing changes implicitly',()=>{
   const {c}=fixture();
-  assert.deepEqual(plain(run(c,'defaults().seam')),{enabled:false,length:24,width:8,selected:[]});
+  assert.deepEqual(plain(run(c,'defaults().seam')),{enabled:false,method:'plate',length:24,width:8,selected:[]});
   run(c,'S.seam.enabled=false;');const plan=run(c,'buildSeamPlan()');
   assert.equal(plan.requested,false);assert.equal(plan.applicable,false);assert.equal(plan.candidates.length,0);assert.ok(plan.reason);
 });
@@ -86,14 +96,112 @@ test('Seam planning defaults off and produces no manufacturing changes implicitl
 test('Old projects receive disabled defaults and partial seam settings preserve selected placements',()=>{
   const {c}=fixture();
   assert.deepEqual(plain(run(c,'projectState({src:{mode:"text"},box:{W:144,H:100}}).seam')),
-    {enabled:false,length:24,width:8,selected:[]});
+    {enabled:false,method:'plate',length:24,width:8,selected:[]});
   const selection={axis:'x',seamIndex:1,tileIndex:1,along:12};
   c.savedProject={src:{mode:'text'},box:{W:144,H:100},seam:{enabled:true,width:10,selected:[selection]}};
   const before=JSON.stringify(c.savedProject),state=run(c,'projectState(savedProject)');
-  assert.deepEqual(plain(state.seam),{enabled:true,length:24,width:10,selected:[selection]});
+  assert.deepEqual(plain(state.seam),{enabled:true,method:'plate',length:24,width:10,selected:[selection]});
   assert.equal(JSON.stringify(c.savedProject),before,'loading must not mutate the saved project');
   c.reloadedProject=plain(state);
   assert.deepEqual(plain(run(c,'projectState(reloadedProject).seam')),plain(state.seam));
+});
+
+test('All 13 joint methods have explicit identities, scope, dimensions and access guidance',()=>{
+  const {c}=fixture(),methods=plain(run(c,'SEAM_METHODS'));
+  assert.deepEqual(methods.map(m=>m.id),methodIds);
+  assert.deepEqual(methods.map(m=>m.code),methodIds.map((_,i)=>'J'+String(i+1).padStart(2,'0')));
+  for(const method of methods){
+    assert.equal(method.kind,bodyIds.includes(method.id)?'body':['butt','weld'].includes(method.id)?'process':'cover');
+    for(const field of ['name','access','notice'])assert.ok(typeof method[field]==='string'&&method[field].trim(),`${method.id}.${field}`);
+    for(const field of ['length','width','minDepth'])assert.ok(Number.isFinite(method[field])&&method[field]>=0,`${method.id}.${field}`);
+    if(method.kind==='body')assert.ok(method.length>0&&method.width>0);
+  }
+  const bodies=methods.filter(m=>m.kind==='body');
+  assert.ok(new Set(bodies.map(m=>`${m.length},${m.width}`)).size>1,'body methods need different support footprints');
+  assert.ok(new Set(bodies.map(m=>m.minDepth)).size>1,'body methods need explicit depth constraints');
+  assert.ok(new Set(bodies.map(m=>m.access)).size>1,'assembly access differs between methods');
+});
+
+test('Missing methods retain the plate default while unknown methods remain visibly unsupported',()=>{
+  const app=fixture();
+  assert.equal(run(app.c,'seamSettings({enabled:true}).method'),'plate');
+  run(app.c,"S.seam.method='future-connector';");
+  assert.equal(run(app.c,'seamSettings().method'),'future-connector');
+  const plan=app.plan();
+  assert.equal(plan.applicable,false);assert.equal(plan.candidates.length,0);assert.ok(plan.reason);
+  assert.equal(run(app.c,'S.seam.method'),'future-connector');
+  assert.equal(run(app.c,'projectState({...defaults(),seam:{enabled:true,method:"future-connector"}}).seam.method'),'future-connector');
+});
+
+test('Changing each method applies its dimensions and preserves selections for revalidation',()=>{
+  const app=fixture(),{c}=app,{candidate}=validCandidate(app);
+  c.savedSelection={axis:candidate.axis,seamIndex:candidate.seamIndex,tileIndex:candidate.tileIndex,along:candidate.along};
+  run(c,'S.seam.selected=[savedSelection];refreshSeamPlan=queueDraftSave=draw=()=>{};');
+  const selected=plain(run(c,'S.seam.selected'));
+  for(const id of methodIds){
+    c.testMethodId=id;run(c,'changeSeamMethod(testMethodId);');
+    const method=run(c,'SEAM_METHODS.find(m=>m.id===testMethodId)');
+    assert.equal(run(c,'S.seam.method'),id);
+    assert.equal(run(c,'S.seam.length'),method.length);assert.equal(run(c,'S.seam.width'),method.width);
+    assert.deepEqual(plain(run(c,'S.seam.selected')),selected);
+  }
+});
+
+for(const id of ['butt','weld'])test(`${id} process previews retain actual print seams without attachment markers`,()=>{
+  const app=fixture(),seams=plain(app.plan().seams);setMethod(app,id);const plan=app.plan();
+  assert.equal(plan.requested,true);assert.equal(plan.applicable,false);assert.ok(plan.reason);
+  assert.equal(plan.method,id);assert.equal(plan.kind,'process');
+  assert.equal(plan.candidates.length,0);assert.deepEqual(plain(plan.seams),seams);
+});
+
+for(const id of ['butt','weld'])test(`${id} process lines follow actual wall cuts and stop before a hole`,()=>{
+  const app=fixture(),seam=app.plan().seams.find(s=>s.axis==='x'&&s.start===0),{c}=app;
+  app.cut(seam.coord,25,9);setMethod(app,id);const plan=app.plan();
+  assert.ok(plan.processSegments.length>0);assert.ok(plan.processSegments.length<=2048);
+  const target=plan.processSegments.filter(s=>s.axis===seam.axis&&s.coord===seam.coord&&s.tiles.join()===seam.tiles.join());
+  assert.ok(target.some(s=>s.start>5&&s.end<45),'the hole creates additional real wall cuts inside the panel');
+  assert.ok(target.every(s=>25<s.start||25>s.end),'a process line must not cross the hole centre');
+  for(const segment of plan.processSegments){
+    assert.ok(['x','y'].includes(segment.axis));
+    for(const value of [segment.coord,segment.start,segment.end])assert.ok(Number.isFinite(value));
+    assert.ok(segment.end>segment.start);assert.equal(segment.tiles.length,2);
+    const edge=plan.seams.find(s=>s.axis===segment.axis&&s.coord===segment.coord&&s.tiles.join()===segment.tiles.join());
+    assert.ok(edge);assert.ok(segment.start>=edge.start&&segment.end<=edge.end);
+    c.testSegment=segment;
+    const onWall=run(c,`(()=>{
+      const s=testSegment;
+      for(let v=s.start+G.px/2;v<s.end;v+=G.px){
+        const x=s.axis==='x'?s.coord:v,y=s.axis==='y'?s.coord:v;
+        const i=seamCell(x,y),a=seamCell(x-(s.axis==='x'?G.px:0),y-(s.axis==='y'?G.px:0)),
+          b=seamCell(x+(s.axis==='x'?G.px:0),y+(s.axis==='y'?G.px:0));
+        if(i<0||a<0||b<0||!G.panel[i]||!G.panel[a]||!G.panel[b]||G.comp.lab[a]!==G.comp.lab[b]||G.edtIn[i]*G.px>S.box.frame+G.px)return false;
+      }return true;
+    })()`);
+    assert.equal(onWall,true,'process segments need continuous material and a real frame wall');
+  }
+});
+
+for(const id of ['snap','magnet'])test(`${id} cover closures are not advertised as permanent body joints`,()=>{
+  const app=fixture();setMethod(app,id);const plan=app.plan();
+  assert.equal(plan.method,id);assert.equal(plan.kind,'cover');
+  assert.equal(plan.requested,true);assert.equal(plan.applicable,false);assert.equal(plan.candidates.length,0);assert.ok(plan.reason);
+});
+
+for(const id of bodyIds)test(`${id} body preview keeps its complete footprint on one component without source mutation`,()=>{
+  const app=fixture();setMethod(app,id);
+  const settings=run(app.c,'JSON.stringify({S,PB})'),panel=run(app.c,'G.panel'),before=hash(new Uint8Array(panel.buffer));
+  const plan=app.plan(),method=run(app.c,'SEAM_METHODS.find(m=>m.id===S.seam.method)');
+  assert.equal(plan.applicable,true);assert.equal(plan.spec.length,method.length);assert.equal(plan.spec.width,method.width);
+  assert.equal(plan.method,id);assert.equal(plan.kind,'body');assert.equal(plan.spec.minDepth,method.minDepth);
+  assert.ok(plan.candidates.length>0);assert.ok(plan.candidates.some(c=>c.valid),`${id} should offer a feasible wall attachment`);
+  for(const candidate of plan.candidates)assertFiniteCandidate(candidate);
+  assertValidFootprintsOnPanel(app,plan);
+  assert.equal(run(app.c,'JSON.stringify({S,PB})'),settings);assert.equal(run(app.c,'G.panel'),panel);
+  assert.equal(hash(new Uint8Array(panel.buffer)),before);
+  if(method.minDepth>0){
+    app.c.tooShallow=method.minDepth-.1;run(app.c,'S.box.depth=jointSpec().lipH+tooShallow;');
+    assert.equal(app.plan().candidates.filter(c=>c.valid).length,0,`${id} must respect its minimum depth`);
+  }
 });
 
 for(const [name,setup]of[
@@ -125,6 +233,48 @@ test('Rectangular two-axis splits retain adjacent tile identities and PB-local a
     assert.equal(candidate.anchorMm[seam.axis],seam.coord);
   }
   assertValidFootprintsOnPanel(app,plan);
+});
+
+test('Main and cropped dialog canvas coordinates are inverse pairs on an asymmetric padded panel',()=>{
+  const app=fixture({width:180,height:140,inside:(x,y)=>x>=30&&x<110&&y>=12&&y<68}),{c}=app;
+  const bounds=plain(run(c,'PB')),plan=app.plan();
+  const points=[{x:0,y:0},{x:bounds.w,y:0},{x:0,y:bounds.h},{x:bounds.w,y:bounds.h},
+    {x:bounds.w*.373,y:bounds.h*.614},...plan.candidates.map(p=>plain(p.anchorMm))];
+  assert.ok(plan.candidates.length>0);
+  const close=(actual,expected)=>assert.ok(Math.abs(actual-expected)<1e-9,`${actual} != ${expected}`);
+  for(const id of ['view','seamView']){
+    c.testCanvas={id,width:700,height:240};
+    for(const point of points){
+      c.testPoint=point;
+      const result=run(c,'(()=>{const uv=seamCanvasPoint(testCanvas,testPoint.x,testPoint.y);return seamCanvasPosition(testCanvas,...uv);})()');
+      close(result.x,point.x);close(result.y,point.y);
+    }
+    for(const uv of [[0,0],[700,0],[0,240],[700,240],[245,113.76]]){
+      c.testUv=uv;
+      const result=run(c,'(()=>{const p=seamCanvasPosition(testCanvas,...testUv);return seamCanvasPoint(testCanvas,p.x,p.y);})()');
+      close(result[0],uv[0]);close(result[1],uv[1]);
+    }
+  }
+});
+
+test('Dialog crop covers PB with a 10 mm border clamped inside the grid without mutating source data',()=>{
+  for(const inside of [
+    (x,y)=>x>=30&&x<110&&y>=12&&y<68,
+    (x,y)=>x>=1&&x<120&&y>=2&&y<90
+  ]){
+    const {c}=fixture({width:180,height:140,inside}),before=run(c,'JSON.stringify({PB,G})');
+    const {bounds,grid}=plain(run(c,'({bounds:PB,grid:{width:G.gw,height:G.gh,px:G.px}})'));
+    c.testCanvas={id:'view',width:700,height:240};
+    assert.deepEqual(plain(run(c,'seamCanvasFrame(testCanvas)')),{x0:0,y0:0,width:grid.width,height:grid.height});
+    c.testCanvas.id='seamView';const frame=run(c,'seamCanvasFrame(testCanvas)'),pad=Math.ceil(10/grid.px);
+    assert.equal(frame.x0,Math.max(0,bounds.gx0-pad));assert.equal(frame.y0,Math.max(0,bounds.gy0-pad));
+    assert.equal(frame.x0+frame.width,Math.min(grid.width,bounds.gx1+pad+1));
+    assert.equal(frame.y0+frame.height,Math.min(grid.height,bounds.gy1+pad+1));
+    assert.ok(frame.x0>=0&&frame.y0>=0&&frame.x0+frame.width<=grid.width&&frame.y0+frame.height<=grid.height);
+    assert.ok(frame.x0<=bounds.gx0&&frame.y0<=bounds.gy0&&frame.x0+frame.width>=bounds.gx1+1&&frame.y0+frame.height>=bounds.gy1+1);
+    assert.ok(frame.width<grid.width&&frame.height<grid.height,'dialog should crop the asymmetric padded source');
+    assert.equal(run(c,'JSON.stringify({PB,G})'),before);
+  }
 });
 
 test('Repeated planning is deterministic and never mutates source settings, grid or panel bounds',()=>{
@@ -246,8 +396,15 @@ test('Marker generation has an explicit bounded result for dense valid print gri
   for(const candidate of plan.candidates)assertFiniteCandidate(candidate);
 });
 
-test('Disabled and enabled planning with selected previews leave exported module meshes byte-for-byte unchanged',()=>{
-  const app=fixture({width:100,height:40}),{c}=app;
+test('Process line generation reports truncation when many thin wall cuts exceed its limit',()=>{
+  const app=fixture({width:600,height:800,px:1,inside:(x,y)=>x>=0&&x<600&&y>=0&&y<800&&Math.floor(y)%3<2});
+  setMethod(app,'butt');const plan=app.plan();
+  assert.equal(plan.applicable,false);assert.equal(plan.candidates.length,0);
+  assert.equal(plan.processSegments.length,2048);assert.equal(plan.truncated,true);
+});
+
+test('All 13 enabled preview methods with retained selections leave exported module meshes byte-for-byte unchanged',()=>{
+  const app=fixture(),{c}=app;
   run(c,'S.seam.enabled=false;');
   const digest=()=>run(c,'buildParts(false)').map(m=>({name:m.name,tile:plain(m.tile),n:m.n,vol:m.vol,hash:hash(new Uint8Array(m.a.buffer,0,m.n*4))}));
   const before=digest();app.plan();const after=digest();
@@ -256,8 +413,16 @@ test('Disabled and enabled planning with selected previews leave exported module
   const {candidate}=validCandidate(app);
   c.previewSelection={axis:candidate.axis,seamIndex:candidate.seamIndex,tileIndex:candidate.tileIndex,along:candidate.along};
   run(c,'S.seam.selected=[previewSelection];');
-  const enabledPlan=app.plan();
-  assert.equal(enabledPlan.applicable,true);
-  assert.ok(enabledPlan.candidates.some(p=>p.selected&&p.valid));
-  assert.deepEqual(digest(),before,'preview selections must never add production geometry');
+  for(const id of methodIds){
+    setMethod(app,id);const enabledPlan=app.plan();
+    if(bodyIds.includes(id)){
+      assert.equal(enabledPlan.applicable,true);
+      const valid=enabledPlan.candidates.find(p=>p.valid);assert.ok(valid,`${id} should have a valid preview`);
+      c.previewSelection={axis:valid.axis,seamIndex:valid.seamIndex,tileIndex:valid.tileIndex,along:valid.along};
+      run(c,'S.seam.selected=[previewSelection];');
+      assert.ok(app.plan().candidates.some(p=>p.selected&&p.valid));
+    }
+    assert.ok(run(c,'S.seam.selected.length')>0,'changing method must retain the stored selection');
+    assert.deepEqual(digest(),before,`${id} preview selections must never add production geometry`);
+  }
 });

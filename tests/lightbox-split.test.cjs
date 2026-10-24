@@ -41,7 +41,7 @@ function studio(w = 300, h = 250, options = {}) {
         buildParts=(...args)=>{builds++;return build(...args);};
         refreshQuote();const initial=LAST.E.vol;
         S.box.depth+=10;
-        renderPalette=draw=runChecks=updateBadges=syncJointUI=syncSizeUI=syncPrinterFit=syncModeUI=()=>{};
+        renderPalette=draw=runChecks=updateBadges=syncJointUI=syncSizeUI=syncPrinterFit=syncModeUI=syncSeamUI=()=>{};
         buildGrid=()=>{throw new Error('Mesh edits must reuse the existing raster');};
         recompute(true);const updated=LAST.E.vol;
         refreshQuote(true);
