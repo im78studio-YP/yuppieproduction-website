@@ -365,7 +365,7 @@ Studio</textarea>
       <div class="row"><label for="bedMargin">เผื่อขอบทุกด้าน</label><input type="number" id="bedMargin" class="num" min="0" step="1" value="10"><span class="unit">มม. (10 มม. = 1 ซม.)</span></div>
       <div class="printer-fit" id="printerFit">—</div>
       <div class="seam-controls">
-        <div class="row"><label for="seamEnabled">วางแผนตัวต่อ (พรีวิว)</label><input type="checkbox" id="seamEnabled"></div>
+        <div class="row"><label for="seamEnabled">รอยต่อระหว่างชิ้นแบ่ง</label><input type="checkbox" id="seamEnabled"></div>
         <div id="seamOptions" hidden>
           <div class="row"><label for="seamMethod">วิธีรอยต่อ · 13 แบบ</label><select id="seamMethod" class="grow"></select></div>
           <p class="seam-note" id="seamMethodInfo"></p>
@@ -374,9 +374,21 @@ Studio</textarea>
           <div class="row"><label for="seamLength">ยาวข้ามรอยต่อ</label><input type="number" id="seamLength" class="num" min="12" max="60" step="1" value="24"><span class="unit">มม.</span></div>
           <div class="row"><label for="seamWidth">กว้างตามแนวต่อ</label><input type="number" id="seamWidth" class="num" min="4" max="30" step="1" value="8"><span class="unit">มม.</span></div>
           </div>
+          <div class="row"><label for="seamProduction">สร้างฐาน รู ตัวต่อจริง</label><input type="checkbox" id="seamProduction"><span class="unit">J08</span></div>
+          <div id="seamHardware" hidden>
+            <p class="seam-note">J08 · สร้างเฉพาะจุดที่เลือก รอยต่ออื่นต้องยึดเพิ่มเติม · ค่าเริ่มต้นเป็นตัวอย่าง ต้องใช้รูตามอินเสิร์ตจริงและทดลองพิมพ์ก่อนประกอบป้าย</p>
+            <div class="row"><label for="seamHole">รูรับอินเสิร์ต Ø</label><input id="seamHole" class="num" type="number" min="2" max="8" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamHoleDepth">ความลึกรูตัน</label><input id="seamHoleDepth" class="num" type="number" min="2" max="12" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamBolt">รูผ่านสกรู Ø</label><input id="seamBolt" class="num" type="number" min="2" max="6" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamPlateT">หนาแผ่นประกบ</label><input id="seamPlateT" class="num" type="number" min="2" max="8" step="0.2"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamBaseT">หนาฐานรับ</label><input id="seamBaseT" class="num" type="number" min="4" max="16" step="0.2"><span class="unit">มม.</span></div>
+            <p class="seam-note">ฐานรวมกับกรอบ มีลาดรองและรูตัน · แผ่นประกบแยกถาดพิมพ์ · ผนังกล่องในโหมดนี้อิงขอบกริดจริงเพื่อรวมเนื้อสนิท รูฐานอาจกว้างกว่าค่าที่กำหนดได้ถึง 3 เท่าของขนาดช่องกริด ควรพิมพ์ชิ้นทดสอบปรับรูตามอินเสิร์ตจริง</p>
+            <p class="seam-note"><a href="https://www.spirol.com/resources/white-papers/how-to-design-the-proper-hole-for-heat-ultrasonic-inserts/" target="_blank" rel="noopener">แนวทางกำหนดรูอินเสิร์ต</a> · อย่าให้ปลายสกรูยันก้นรู</p>
+          </div>
+          <div id="seamProductionStatus" class="printer-fit" role="status"></div>
           <div class="row"><button id="btnSeamPlan" class="btn grow">ดูวิธี / วางบนโลโก้จริง</button></div>
           <div class="printer-fit" id="seamSummary" role="status">—</div>
-          <p class="seam-note">เขียว = ผ่านเบื้องต้น · แดง × = วางไม่ได้ · จุดทึบ = เลือกไว้<br>ตรวจพื้นที่ XY จากกริดพรีวิว ยังไม่รับรองความแข็งแรงหรือระยะสวม<br><b>ไฟล์พิมพ์ยังไม่มีฐาน รู หรือตัวต่อจากพรีวิวนี้</b></p>
+          <p class="seam-note">เขียว = พื้นที่ผ่านเบื้องต้น · แดง × = วางไม่ได้ · จุดทึบ = เลือกไว้<br>J08 เปิดสร้างจริงได้ ส่วนวิธีอื่นยังเป็นพรีวิว · ตรวจตำแหน่งซ้ำด้วยกริดความละเอียดเต็มตอนส่งออก</p>
         </div>
       </div>
     </div>
@@ -617,7 +629,7 @@ Studio</textarea>
         </select></div>
       <div class="row"><label>ความสูงชั้น</label><input type="number" id="expLayerH" class="num" value="0.2" step="0.02"><span class="unit">มม.</span></div>
       <p class="hint" id="exportFormatHint">3MF จะรวมทุกชิ้นไว้ในไฟล์เดียว แต่ละชิ้นแยกวัตถุพร้อมชื่อสี — เปิดใน Bambu Studio แล้วกำหนดเส้นให้แต่ละชิ้นได้เลย</p>
-      <p class="seam-note" id="seamExportHint" hidden><b>ตำแหน่งตัวต่อเป็นพรีวิวเท่านั้น ไฟล์พิมพ์ยังไม่มีฐาน รู หรือตัวต่อเหล่านี้</b></p>
+      <p class="seam-note" id="seamExportHint" hidden></p>
     </div>
   </div>
 
@@ -639,7 +651,7 @@ Studio</textarea>
   <p class="seam-note" id="seamMapLegend">มองจากด้านหน้า · พื้นที่ตัวต่ออยู่ด้านในกล่อง</p>
   <div class="seam-scroll" id="seamScroll"><canvas id="seamView" aria-label="ผังตำแหน่งตัวต่อบนโลโก้"></canvas></div>
   <div id="seamDetail" role="status">—</div><div id="seamList" aria-label="จุดตัวต่อที่เลือก"></div>
-  <p class="seam-note"><b>พรีวิวเท่านั้น — ไฟล์พิมพ์ยังไม่มีฐาน รู หรือตัวต่อเหล่านี้</b> · ตรวจเฉพาะพื้นที่ XY โดยประมาณจากกริด ยังไม่ตรวจความแข็งแรงและระยะ Z รายละเอียด</p>
+  <p class="seam-note" id="seamDialogProductionNote">J08 เปิดสร้างฐาน รู และแผ่นประกบจริงได้จากเมนูด้านซ้าย วิธีอื่นยังเป็นพรีวิว</p>
 </dialog>
 <script>
 /* ══════════════════════════════════════════════════════════════
@@ -681,7 +693,8 @@ function defaults(){ return {
        snapBarb:0.45, snapW:12 },
   /* โหมดงาน — service = ฝาหน้าถอดเปลี่ยนได้ มีแผ่นกันแสงรั่วเป็นลิ้นสวม (ค่าแนะนำ) */
   build:{ mode:'service' },
-  seam:{ enabled:false, method:'plate', length:24, width:8, selected:[] },
+  seam:{ enabled:false, method:'plate', length:24, width:8, selected:[],production:false,
+    hardware:{hole:4.2,depth:5,bolt:3.4,plateT:3,baseT:7,clearance:.2} },
   /* รูปแบบ 5D สองแบบใช้ผิวหน้าร่วมระนาบเดียวกัน:
      face5d ใช้ fillet โค้งมนเดิม ส่วน face5dChamfer ใช้ขอบเฉียงปรับมุมได้ */
   face:{ height5d:5, edgeR:2, chamferH:2, chamferAngle:45 },
@@ -2639,7 +2652,10 @@ const SEAM_METHODS=[
 function seamMethod(id=seamSettings().method){return SEAM_METHODS.find(m=>m.id===id);}
 function seamSettings(value=S.seam){
   const v=value||{},num=(x,d,lo,hi)=>x==null||x===''||!Number.isFinite(+x)?d:clamp(+x,lo,hi);
-  return {enabled:v.enabled===true,method:v.method==null?'plate':String(v.method),length:num(v.length,24,12,60),width:num(v.width,8,4,30),
+  const hardware={hole:4.2,depth:5,bolt:3.4,plateT:3,baseT:7,clearance:.2,...v.hardware};
+  for(const key of ['hole','depth','bolt','plateT','baseT','clearance'])hardware[key]=+hardware[key];
+  return {enabled:v.enabled===true,method:v.method==null?'plate':String(v.method),length:num(v.length,24,12,60),width:num(v.width,8,4,30),production:v.production===true,
+    hardware,
     selected:(Array.isArray(v.selected)?v.selected:[]).slice(0,128).filter(p=>p&&['x','y'].includes(p.axis)&&
       Number.isInteger(p.seamIndex)&&p.seamIndex>0&&Number.isInteger(p.tileIndex)&&p.tileIndex>0&&Number.isFinite(p.along))
       .map(p=>({axis:p.axis,seamIndex:p.seamIndex,tileIndex:p.tileIndex,along:p.along}))};
@@ -2753,7 +2769,7 @@ function buildSeamPlan(){
     let start=null,key='';
     const emit=end=>{
       if(start===null)return;
-      const offset=p.spec.setback+s.width/2+G.px*2,span=end-start;
+      const offset=p.spec.setback+s.width/2+Math.max(.5,G.px)*2,span=end-start;
       if(span>offset*2+s.width+2){add(e,start+offset);add(e,end-offset);}
       else add(e,(start+end)/2);
     };
@@ -2769,6 +2785,210 @@ function buildSeamPlan(){
     emit(e.end);
   }
   return p;
+}
+
+let ACTIVE_SEAM_PRODUCTION=null;
+class SeamProductionError extends Error{constructor(message){super(message);this.name='SeamProductionError';}}
+function seamProductionPlan(previewPlan=null){
+  const s=seamSettings();if(!s.production)return null;
+  if(!s.enabled||s.method!=='plate')throw new SeamProductionError('สร้างตัวต่อจริงรองรับ J08 เท่านั้น เปิดวางแผนและเลือก J08 หรือปิดสร้างจริงก่อนส่งออก');
+  const plan=previewPlan||buildSeamPlan(),h=s.hardware;
+  if(!plan.applicable||plan.truncated)throw new SeamProductionError('สร้างตัวต่อจริงไม่ได้: '+(plan.reason||'ผังมีจำนวนจุดเกินขีดจำกัด'));
+  for(const [key,lo,hi] of [['hole',2,8],['depth',2,12],['bolt',2,6],['plateT',2,8],['baseT',4,16],['clearance',0,.5]])
+    if(!Number.isFinite(+h[key])||+h[key]<lo||+h[key]>hi)throw new SeamProductionError('ขนาดฮาร์ดแวร์ '+key+' ไม่อยู่ในช่วงที่รองรับ');
+  if(h.baseT-h.depth<1.5)throw new SeamProductionError('ฐานต้องมีเนื้อใต้รูตันอย่างน้อย 1.5 มม.');
+  if(h.bolt>=h.hole)throw new SeamProductionError('รูผ่านสกรูต้องเล็กกว่ารูรับอินเสิร์ตของฐาน');
+  const chosen=plan.candidates.filter(p=>p.selected);
+  if(!chosen.length)throw new SeamProductionError('เลือกตำแหน่งตัวต่อก่อนเปิดสร้างจริง หรือกดเลือกจุดอัตโนมัติ');
+  if(chosen.length>32)throw new SeamProductionError('สร้างจริงได้ไม่เกิน 32 ตัวต่อในหนึ่งงาน กรุณาแบ่งงาน');
+  const bad=chosen.find(p=>!p.valid);if(bad)throw new SeamProductionError('จุด '+bad.id+' ใช้สร้างจริงไม่ได้: '+bad.reason);
+  const st=geomStack(),J=jointSpec(),baseTop=st.frameZ0+S.box.depth-J.lipH-h.plateT-.5;
+  const baseBottom=baseTop-h.baseT,frontKeep=st.colorT+st.faceBaseT+FRONT_LIP_HEIGHT+1;
+  if(baseBottom<frontKeep+2)throw new SeamProductionError('กล่องตื้นเกินไปสำหรับฐาน รูตัน แผ่นประกบ และช่องเปิดซ่อม');
+  const out={version:1,resolution:G.px,joints:[],spec:{...h},frameRaster:true};
+  const tiles=new Map(printPlan().tiles.map(t=>[t.id,t]));
+  for(const c of chosen){
+    const joint={...c,baseTop,baseBottom,spec:{...h},holes:[],pads:[]};
+    const radius=Math.max(h.hole/2+2,4),normal=s.length*.3;
+    if(s.width<radius*2+G.px*2||s.length/2-normal<radius+G.px)
+      throw new SeamProductionError('พื้นที่ J08 เล็กเกินไปสำหรับเนื้อรอบรู เพิ่มความยาว/กว้างพื้นที่สำรอง');
+    for(const sign of [-1,1]){
+      const cx=c.anchorMm.x+(c.axis==='x'?sign*normal:0),cy=c.anchorMm.y+(c.axis==='y'?sign*normal:0);
+      const own=c.tiles.find(id=>{const t=tiles.get(id);return cx>t.x0&&cx<t.x1&&cy>t.y0&&cy<t.y1;});
+      if(!own)throw new SeamProductionError('ไม่พบชิ้นพิมพ์ของฐาน '+c.id);
+      const tile=tiles.get(own),i=seamCell(cx,cy),component=G.comp.lab[i];
+      const reach=(G.edtIn[i]+radius/G.px+3),gx=(cx+PB.ux0)/G.px,gy=(S.box.H-PB.my0-cy)/G.px;
+      let wall=null,best=Infinity;
+      for(let y=Math.max(0,Math.floor(gy-reach));y<Math.min(G.gh,gy+reach);y++)for(let x=Math.max(0,Math.floor(gx-reach));x<Math.min(G.gw,gx+reach);x++){
+        const k=y*G.gw+x;if(!G.panel[k]||G.comp.lab[k]!==component||G.edtIn[k]*G.px>S.box.frame*.65)continue;
+        const wx=(x+.5)*G.px-PB.ux0,wy=S.box.H-(y+.5)*G.px-PB.my0;
+        if(wx<tile.x0+G.px||wx>tile.x1-G.px||wy<tile.y0+G.px||wy>tile.y1-G.px)continue;
+        const d=(wx-cx)**2+(wy-cy)**2;if(d<best){best=d;wall={x:wx,y:wy};}
+      }
+      if(!wall)throw new SeamProductionError('ไม่มีผนังรับฐานในชิ้น '+own+' ของจุด '+c.id);
+      const pad={cx,cy,wallX:wall.x,wallY:wall.y,radius,tile:own,component};
+      pad.roi={x0:Math.min(cx,wall.x)-radius,x1:Math.max(cx,wall.x)+radius,y0:Math.min(cy,wall.y)-radius,y1:Math.max(cy,wall.y)+radius};
+      if(out.joints.some(q=>q.pads.some(p=>p.tile===own&&seamOverlap(p.roi,pad.roi,1))))throw new SeamProductionError('ฐานรับซ้อนกับฐานของตัวต่ออีกจุด กรุณาลดหรือเลื่อนตำแหน่ง');
+      const mask=seamPadRuns(pad,Infinity,null,plan.keepouts,true);if(!mask.length)throw new SeamProductionError('ฐานว่าง '+c.id);
+      let depthFromWall=2;
+      for(let n=0;n<mask.length;n+=3)for(let x=mask[n+1];x<mask[n+2];x++)depthFromWall=Math.max(depthFromWall,G.edtIn[mask[n]*G.gw+x]*G.px-S.box.frame);
+      pad.taperStart=baseBottom-depthFromWall;
+      if(pad.taperStart<frontKeep)throw new SeamProductionError('ความลึกไม่พอทำลาดรองฐาน '+c.id+' เพิ่มความลึกกล่อง');
+      joint.pads.push(pad);joint.holes.push({x:cx,y:cy,diameter:+h.hole,baseZ0:baseTop-h.depth,baseZ1:baseTop,tile:own});
+    }
+    out.joints.push(joint);
+  }
+  return out;
+}
+function seamPadRuns(pad,wallLimit=Infinity,hole=null,keepouts=[],validate=false){
+  const rows=[],r=pad.radius,px=G.px,R=pad.roi;
+  const a=Math.max(0,Math.floor((PB.ux0+R.x0)/px)),b=Math.min(G.gw,Math.ceil((PB.ux0+R.x1)/px));
+  const y0=Math.max(0,Math.floor((S.box.H-PB.my0-R.y1)/px)),y1=Math.min(G.gh,Math.ceil((S.box.H-PB.my0-R.y0)/px));
+  const dx=pad.cx-pad.wallX,dy=pad.cy-pad.wallY,l2=dx*dx+dy*dy;
+  const tile=printPlan().tiles.find(t=>t.id===pad.tile);
+  for(let y=y0;y<y1;y++){
+    let start=-1;
+    for(let x=a;x<=b;x++){
+      let on=false;
+      if(x<b){
+        const xx=(x+.5)*px-PB.ux0,yy=S.box.H-(y+.5)*px-PB.my0,i=y*G.gw+x;
+        const t=clamp(((xx-pad.wallX)*dx+(yy-pad.wallY)*dy)/Math.max(l2,1e-9),0,1);
+        on=(xx-pad.wallX-t*dx)**2+(yy-pad.wallY-t*dy)**2<=r*r;
+        if(on&&validate){
+          if((!G.panel[i]&&t>.25)||(G.panel[i]&&G.comp.lab[i]!==pad.component))throw new SeamProductionError('แขนฐานออกนอกเนื้อโลโก้ กรุณาเลือกจุดใหม่');
+          if(G.panel[i]&&(xx<=tile.x0||xx>=tile.x1||yy<=tile.y0||yy>=tile.y1))throw new SeamProductionError('แขนฐานชนรอยแบ่งอื่น กรุณาเลือกจุดใหม่');
+          if(G.panel[i]&&keepouts.some(k=>xx>=k.x0&&xx<=k.x1&&yy>=k.y0&&yy<=k.y1))throw new SeamProductionError('แขนฐานชนฮาร์ดแวร์เดิม กรุณาเลือกจุดใหม่');
+        }
+        on=on&&!!G.panel[i]&&G.edtIn[i]*px<=wallLimit;
+        if(on&&hole){const qx=Math.max(0,Math.abs(xx-hole.x)-px/2),qy=Math.max(0,Math.abs(yy-hole.y)-px/2);if(qx*qx+qy*qy<=(hole.diameter/2)**2)on=false;}
+      }
+      if(on&&start<0)start=x;
+      if(!on&&start>=0){rows.push(y,start,x);start=-1;}
+    }
+  }
+  return rows;
+}
+function seamMaskRuns(mask){
+  const out=[],w=G.gw;
+  for(let y=0;y<G.gh;y++){let x=0;while(x<w){while(x<w&&!mask[y*w+x])x++;if(x===w)break;const a=x;while(x<w&&mask[y*w+x])x++;out.push(y,a,x);}}
+  return out;
+}
+function seamUnionRows(ops,z,clip){
+  const rows=new Map();
+  for(const op of ops)if(z>op.z0&&z<op.z1)for(let i=0;i<op.runs.length;i+=3){
+    const y=op.runs[i];if(y<clip.y0||y>=clip.y1)continue;
+    const a=Math.max(op.runs[i+1],clip.x0),b=Math.min(op.runs[i+2],clip.x1);if(b<=a)continue;
+    if(!rows.has(y))rows.set(y,[]);rows.get(y).push([a,b]);
+  }
+  for(const [y,runs] of rows){runs.sort((a,b)=>a[0]-b[0]);const out=[];for(const r of runs){const last=out[out.length-1];if(last&&r[0]<=last[1])last[1]=Math.max(last[1],r[1]);else out.push(r.slice());}rows.set(y,out);}
+  return rows;
+}
+function seamRunDiff(a=[],b=[]){
+  const out=[];let j=0;
+  for(const [start,end] of a){let at=start;while(j<b.length&&b[j][1]<=at)j++;let k=j;while(k<b.length&&b[k][0]<end){if(b[k][0]>at)out.push([at,Math.min(end,b[k][0])]);at=Math.max(at,b[k][1]);if(at>=end)break;k++;}if(at<end)out.push([at,end]);}
+  return out;
+}
+function seamUnionTriangle(M,a,b,c,n){
+  const u=b.map((v,i)=>v-a[i]),v=c.map((q,i)=>q-a[i]);
+  const dot=(u[1]*v[2]-u[2]*v[1])*n[0]+(u[2]*v[0]-u[0]*v[2])*n[1]+(u[0]*v[1]-u[1]*v[0])*n[2];
+  if(dot<0)tri(M,a,c,b,...n);else tri(M,a,b,c,...n);
+}
+// Zip two collinear chains without dropping their boundary vertices. This
+// keeps adjoining caps and walls paired even at fractional print-tile edges.
+function seamUnionStrip(M,a,b,pointA,pointB,n){
+  let i=0,j=0;
+  while(i<a.length-1||j<b.length-1){
+    if(j===b.length-1||(i<a.length-1&&a[i+1]<=b[j+1])){
+      seamUnionTriangle(M,pointA(a[i]),pointB(b[j]),pointA(a[i+1]),n);i++;
+    }else{
+      seamUnionTriangle(M,pointA(a[i]),pointB(b[j]),pointB(b[j+1]),n);j++;
+    }
+  }
+}
+function seamUnionCap(M,rows,z,up,point,events,stride){
+  const remember=(x,y)=>{const key=y*stride+x,zs=events.get(key);if(!zs)events.set(key,[z]);else if(zs[zs.length-1]!==z)zs.push(z);};
+  const side=(a,b,other,y)=>{
+    const xs=new Set([a,b]);
+    for(const [c,d] of other||[]){if(c>a&&c<b)xs.add(c);if(d>a&&d<b)xs.add(d);}
+    // Only exposed cap edges need all unit-grid points to meet the walls.
+    // Shared strip edges need the same run endpoints on both adjacent rows.
+    for(const [c,d] of seamRunDiff([[a,b]],other))for(let x=c;x<=d;x++)xs.add(x);
+    const out=[...xs].sort((a,b)=>a-b);for(const x of out)remember(x,y);return out;
+  };
+  for(const [y,runs] of rows)for(const [a,b] of runs){
+    const top=side(a,b,rows.get(y-1),y),bottom=side(a,b,rows.get(y+1),y+1);
+    seamUnionStrip(M,top,bottom,x=>point(x,y,z),x=>point(x,y+1,z),[0,0,up?1:-1]);
+  }
+}
+// Emit only the boundary of the OR volume. Caps use exact raster strips;
+// walls retain unit XY edges but merge Z spans away from local cap events.
+function seamFrameUnion(M,ops){
+  const zs=[...new Set(ops.flatMap(o=>[o.z0,o.z1]))].sort((a,b)=>a-b),px=G.px;
+  const tiles=ACTIVE_PRINT_PLAN?.tiles||[{id:'whole',x0:0,x1:PB.w,y0:0,y1:PB.h}];
+  if(!M.noTri&&ACTIVE_PRINT_PLAN)M.chunks=new Map();
+  for(const tile of tiles){
+    const ax=(PB.ux0+tile.x0)/px,bx=(PB.ux0+tile.x1)/px,ay=(S.box.H-PB.my0-tile.y1)/px,by=(S.box.H-PB.my0-tile.y0)/px;
+    const clip={x0:Math.max(0,Math.floor(ax)),x1:Math.min(G.gw,Math.ceil(bx)),y0:Math.max(0,Math.floor(ay)),y1:Math.min(G.gh,Math.ceil(by))};
+    const part=M.chunks?Mesh(M.name+' · '+tile.id,M.hex):M;
+    if(M.chunks){part.tile=tile;part.offset={x:PB.w-tile.x1,y:tile.y0};}
+    const point=(x,y,z)=>[PB.w-(clamp(x,ax,bx)*px-PB.ux0),S.box.H-clamp(y,ay,by)*px-PB.my0,z];
+    const walls=new Map(),events=new Map(),stride=G.gw+1;
+    const wall=(x,y,z0,z1,dir)=>{
+      if(part.noTri)return;
+      const key=(y*stride+x)*4+dir-2;let edge=walls.get(key);
+      if(!edge){edge={x,y,dir,spans:[]};walls.set(key,edge);}
+      const last=edge.spans[edge.spans.length-1];
+      if(last&&last[1]===z0)last[1]=z1;else edge.spans.push([z0,z1]);
+    };
+    let prev=new Map();
+    for(let k=0;k<=zs.length-1;k++){
+      const z0=zs[k],z1=zs[k+1],rows=k<zs.length-1?seamUnionRows(ops,(z0+z1)/2,clip):new Map();
+      const ys=new Set([...prev.keys(),...rows.keys()]);
+      if(!part.noTri){
+        const down=new Map(),up=new Map();
+        for(const y of ys){
+          const a=seamRunDiff(rows.get(y),prev.get(y)),b=seamRunDiff(prev.get(y),rows.get(y));
+          if(a.length)down.set(y,a);if(b.length)up.set(y,b);
+        }
+        seamUnionCap(part,down,z0,false,point,events,stride);
+        seamUnionCap(part,up,z0,true,point,events,stride);
+      }
+      if(z1>z0)for(const [y,runs] of rows){
+        const cellH=(Math.min(y+1,by)-Math.max(y,ay))*px;
+        for(const [a,b] of runs){
+          wall(a,y,z0,z1,2);wall(b,y,z0,z1,3);
+          part.vol+=(Math.min(b,bx)-Math.max(a,ax))*px*cellH*(z1-z0);
+        }
+        for(const [a,b] of seamRunDiff(runs,rows.get(y-1)))for(let x=a;x<b;x++)wall(x,y,z0,z1,4);
+        for(const [a,b] of seamRunDiff(runs,rows.get(y+1)))for(let x=a;x<b;x++)wall(x,y+1,z0,z1,5);
+      }
+      prev=rows;
+    }
+    for(const {x,y,dir,spans} of walls.values()){
+      const xx=x+(dir>=4?1:0),yy=y+(dir<4?1:0),n=dir<4?[dir===2?1:-1,0,0]:[0,dir===4?1:-1,0];
+      const az=events.get(y*stride+x)||[],bz=events.get(yy*stride+xx)||[];
+      for(const [z0,z1] of spans){
+        const a=[z0,...az.filter(z=>z>z0&&z<z1),z1],b=[z0,...bz.filter(z=>z>z0&&z<z1),z1];
+        seamUnionStrip(part,a,b,z=>point(x,y,z),z=>point(xx,yy,z),n);
+      }
+    }
+    if(part.n||part.noTri){part.x0=PB.w-tile.x1;part.x1=PB.w-tile.x0;part.y0=tile.y0;part.y1=tile.y1;part.z0=zs[0];part.z1=zs[zs.length-1];if(M.chunks)M.chunks.set(tile.id,part);}
+  }
+}
+function seamConnectorParts(production,nt){
+  if(!production)return [];
+  return production.joints.map(j=>{
+    const f=j.footprint,w=f.x1-f.x0,h=f.y1-f.y0,spec=production.spec;
+    const M=Mesh('ตัวต่อ J08 · '+j.id,S.box.frameColor,nt);M.module='joint';M.kind='connector';M.noMirrorX=true;M.printBase=0;M.jointId=j.id;
+    M.assemblyAnchor={x:f.x0,y:f.y0,z:j.baseTop};
+    M.joint={method:'plate',tiles:j.tiles,axis:j.axis,seamIndex:j.seamIndex,tileIndex:j.tileIndex,along:j.along,spec,holes:j.holes,supports:j.pads,
+      hardware:[{id:'insert-custom',name:'อินเสิร์ตตามขนาดรูที่กำหนด',quantity:2,spec:{hole:spec.hole,depth:spec.depth}},
+        {id:'bolt-custom',name:'สกรูตามรูผ่านที่กำหนด (เลือกความยาวไม่ให้ยันก้น)',quantity:2,spec:{clearanceHole:spec.bolt,plateT:spec.plateT}}]};
+    const holes=j.holes.map(p=>{const r=spec.bolt/2;return Array.from({length:48},(_,i)=>{const a=-i*Math.PI/24;return [p.x-f.x0+Math.cos(a)*r,p.y-f.y0+Math.sin(a)*r];});});
+    const saved=ACTIVE_PRINT_PLAN;ACTIVE_PRINT_PLAN=null;
+    try{addPrism(M,[{out:[[0,0],[w,0],[w,h],[0,h]],holes}],0,spec.plateT);}finally{ACTIVE_PRINT_PLAN=saved;}
+    return M;
+  });
 }
 
 /* ตัดสามเหลี่ยมจากเส้นขอบที่เกลี่ยแล้ว แล้วรวมขอบกลับเป็นรูปปิด
@@ -2877,8 +3097,10 @@ function buildParts(nt){
   const plan=printPlan();
   if(plan.error&&!nt) throw new Error(plan.error);
   ACTIVE_PRINT_PLAN=!nt&&plan.enabled&&plan.tiles.length?plan:null;
-  try{ return finishPrintParts(buildPartMeshes(nt),plan); }
-  finally{ ACTIVE_PRINT_PLAN=null; }
+  try{
+    ACTIVE_SEAM_PRODUCTION=seamProductionPlan();
+    return finishPrintParts(buildPartMeshes(nt),plan).concat(seamConnectorParts(ACTIVE_SEAM_PRODUCTION,nt));
+  }finally{ ACTIVE_PRINT_PLAN=null;ACTIVE_SEAM_PRODUCTION=null; }
 }
 
 /* ขอบล่างของรูปทรง — หาช่วงผนังล่างที่ต่อเนื่องยาวพอจะบากสายไฟได้
@@ -3398,8 +3620,13 @@ function buildPartMeshes(nt){
     const thin=clamp(+r.sideT||1.2,0.8,b.frame)/px;
     return maskWhere(i=>mask[i]&&DI[i]<=thin);
   };
-  const addFrame=(mask,za,zb,noMirrorX,boxes,keepFull=false)=>bandSpec.forEach((B,i)=>
-    addSolid(FMs[i],wallForBand(mask,B,keepFull),Math.max(za,B.z0),Math.min(zb,B.z1),noMirrorX,boxes));
+  const frameOps=ACTIVE_SEAM_PRODUCTION?bandSpec.map(()=>[]):null;
+  const addFrame=(mask,za,zb,noMirrorX,boxes,keepFull=false)=>bandSpec.forEach((B,i)=>{
+    const z0=Math.max(za,B.z0),z1=Math.min(zb,B.z1);if(z1<=z0)return;
+    const m=wallForBand(mask,B,keepFull);
+    if(frameOps)frameOps[i].push({z0,z1,runs:seamMaskRuns(m)});
+    else addSolid(FMs[i],m,z0,z1,noMirrorX,boxes);
+  });
   const d=Math.min(S.hw.dia, b.depth-2);
   /* ผนังกรอบหลัก — เว้นกล่องบริเวณหลุมสแนปไว้ก่อน แล้วค่อยเติมเป็นชั้นๆ ทีหลัง */
   const outSnap=(x,y)=>!(SP.length && inBoxes(x,y,SP,pocketR));
@@ -3453,6 +3680,19 @@ function buildPartMeshes(nt){
       const zA = z0-taperH + j*(taperH/NT), zB = zA + taperH/NT;
       addFrame(maskWhereNear(BP,bwc,(i,x,y)=>bossM[i]&&DI[i]<=t), j? zA-ZEPS : zA, zB, false, boxesAt(BP,bwc), true);
     }
+  }
+  if(frameOps){
+    const addRuns=(runs,za,zb)=>bandSpec.forEach((B,i)=>{const z0=Math.max(za,B.z0),z1=Math.min(zb,B.z1);if(z1>z0)frameOps[i].push({z0,z1,runs});});
+    for(const joint of ACTIVE_SEAM_PRODUCTION.joints)for(let i=0;i<joint.pads.length;i++){
+      const pad=joint.pads[i],hole=joint.holes[i],steps=Math.max(2,Math.ceil((joint.baseBottom-pad.taperStart)/.8));
+      for(let n=0;n<steps;n++){
+        const za=pad.taperStart+(joint.baseBottom-pad.taperStart)*n/steps,zb=pad.taperStart+(joint.baseBottom-pad.taperStart)*(n+1)/steps;
+        addRuns(seamPadRuns(pad,b.frame+za-pad.taperStart),za,zb);
+      }
+      addRuns(seamPadRuns(pad),joint.baseBottom,hole.baseZ0);
+      addRuns(seamPadRuns(pad,Infinity,hole),hole.baseZ0,joint.baseTop);
+    }
+    FMs.forEach((M,i)=>seamFrameUnion(M,frameOps[i]));
   }
   FMs.forEach(FM=>{ FM.kind='frame'; FM.module=isFrontModule()?'box':''; FM.bossCount=BP.length; FM.snapCount=SP.length; parts.push(FM); });
 
@@ -3523,19 +3763,25 @@ function buildPartMeshes(nt){
 }
 
 /* จัดวางชิ้นงานบนฐานพิมพ์ — ใช้ทั้งภาพผังและ transform ใน 3MF */
-function platePack(){
+function platePack(parts=[]){
   const BED=bedSize(), BEDH=bedHeight();
   const w=PB.w||S.box.W, h=PB.h||S.box.H;
   const plan=printPlan();
   if(plan.enabled&&plan.tiles.length){
     const modules=isService()?['front','box','back']:isShell()?['shell']:['panel','back'];
-    const count=modules.length*plan.tiles.length, cols=Math.ceil(Math.sqrt(count));
+    const joints=parts.filter(p=>p.module==='joint'&&(p.n||p.noTri));
+    const count=modules.length*plan.tiles.length+joints.length, cols=Math.ceil(Math.sqrt(count));
     const plates=[], items={};
     for(const module of modules) for(const tile of plan.tiles){
       const i=plates.length, bx=(i%cols)*(BED+PGAP), by=Math.floor(i/cols)*(BEDH+PGAP);
       const it={key:module+':'+tile.id,module,tile,bx,by,x:bx+plan.margin,y:by+plan.margin,w:tile.x1-tile.x0,h:tile.y1-tile.y0};
       plates.push(it); items[it.key]=it;
       if(!items[module==='front'||module==='shell'?'panel':module]) items[module==='front'||module==='shell'?'panel':module]=it;
+    }
+    for(const p of joints){
+      const i=plates.length,bx=(i%cols)*(BED+PGAP),by=Math.floor(i/cols)*(BEDH+PGAP),jointId=fileToken(p.jointId);
+      const it={key:'joint:'+jointId,module:'joint',jointId,bx,by,x:bx+plan.margin-p.x0,y:by+plan.margin-p.y0,w:p.x1-p.x0,h:p.y1-p.y0};
+      plates.push(it);items[it.key]=it;
     }
     return {items,plates,plan,bed:BED,bedH:BEDH,maxX:cols*(BED+PGAP)-PGAP,maxY:Math.ceil(count/cols)*(BEDH+PGAP)-PGAP,
       fits:plates.every(p=>p.w<=plan.w+1e-6&&p.h<=plan.h+1e-6)};
@@ -3550,8 +3796,9 @@ function platePack(){
   const maxX=Math.max(...all.map(i=>i.x+i.w)), maxY=Math.max(...all.map(i=>i.y+i.h));
   return {items,maxX,maxY,bed:BED,bedH:BEDH,fits:maxX<=BED&&maxY<=BEDH};
 }
-function printModule(p){ return isShell()?'shell':p.module||(p.kind==='back'?'back':'panel'); }
+function printModule(p){ return p.module==='joint'?'joint':isShell()?'shell':p.module||(p.kind==='back'?'back':'panel'); }
 function printPlace(p,pack=platePack()){
+  if(p.module==='joint') return pack.items['joint:'+fileToken(p.jointId)]||{x:printPlan().margin-p.x0,y:printPlan().margin-p.y0};
   if(p.tile&&pack.plates) return pack.items[printModule(p)+':'+p.tile.id]||{x:0,y:0};
   if(isService()) return pack.items[p.module==='front'?'panel':p.module]||{x:0,y:0};
   return p.place||{x:0,y:0};
@@ -3560,12 +3807,14 @@ function printGroups(parts){
   const groups=new Map();
   for(const p of parts){
     if(!p.n) continue;
-    const key=printModule(p)+':'+p.tile.id;
-    if(!groups.has(key)) groups.set(key,{key,tile:p.tile,module:printModule(p),parts:[]});
+    const jointId=p.module==='joint'?fileToken(p.jointId):null;
+    const key=printModule(p)+':'+(jointId||p.tile?.id||'main');
+    if(!groups.has(key)) groups.set(key,{key,tile:p.tile,module:printModule(p),...(jointId?{jointId}:{}),parts:[]});
     groups.get(key).parts.push(p);
   }
   return [...groups.values()];
 }
+function printGroupId(g){return g.jointId||g.tile?.id||'main';}
 function splitReadme(parts){
   const plan=printPlan();
   return ['YP Lightbox Studio — ผังแบ่งพิมพ์',
@@ -3574,16 +3823,31 @@ function splitReadme(parts){
     'หมายเลข R = แถวจากบนลงล่าง, C = คอลัมน์จากซ้ายไปขวา เมื่อมองด้านหน้าป้ายที่ประกอบแล้ว',
     'ฝาหน้าพิมพ์คว่ำ จึงกลับซ้าย–ขวาบนฐาน แต่หมายเลขตรงกับกล่องและฝาหลังเมื่อประกอบ',
     'วางแต่ละไฟล์กึ่งกลางฐานพิมพ์ พิมพ์แยกรอบ แล้วประกอบตามหมายเลขใน assembly.json',
-    'รอยแบ่งเป็นหน้าตัดชนตรง ต้องยึดชิ้นข้างเคียงด้วยกาวหรือแผ่นเสริมตามวัสดุที่ใช้',
-    ...printGroups(parts).map(g=>`${g.module}_${g.tile.id}: กรอบแบ่ง ${(g.tile.x1-g.tile.x0).toFixed(2)} × ${(g.tile.y1-g.tile.y0).toFixed(2)} มม.`),
+    parts.some(p=>p.module==='joint'&&p.n)?'ตัวกล่องมีฐานและแผ่นประกบ J08 ตาม assembly.json; ผิวหน้าและฝาหลังยังต้องจัดแนวและปิดแสงตามแนวแบ่ง':'รอยแบ่งเป็นหน้าตัดชนตรง ต้องยึดชิ้นข้างเคียงด้วยกาวหรือแผ่นเสริมตามวัสดุที่ใช้',
+    ...printGroups(parts).map(g=>g.jointId?`joint_${g.jointId}: แผ่นประกบ ${(g.parts[0].x1-g.parts[0].x0).toFixed(2)} × ${(g.parts[0].y1-g.parts[0].y0).toFixed(2)} มม. · พิมพ์ 1 ชิ้นต่อป้าย`:`${g.module}_${g.tile.id}: กรอบแบ่ง ${(g.tile.x1-g.tile.x0).toFixed(2)} × ${(g.tile.y1-g.tile.y0).toFixed(2)} มม.`),
     '',readme(parts)].join('\n');
 }
 function splitSupportFiles(parts,name){
   const plan=printPlan();
+  const joints=parts.filter(p=>p.module==='joint'&&p.n);
   const manifest={units:'mm',width:PB.w,height:PB.h,bed:[plan.bed,plan.bedH],margin:plan.margin,
     usable:[plan.w,plan.h],rows:plan.ny,columns:plan.nx,
-    groups:printGroups(parts).map(g=>({file:`${name}_${g.module}_${g.tile.id}`,module:g.module,tile:g.tile,
-      printOrigin:g.parts[0].offset,mirrorX:g.module!=='back'}))};
+    groups:printGroups(parts).map(g=>g.jointId?{file:`${name}_joint_${g.jointId}`,module:'joint',jointId:g.jointId,
+      printOrigin:{x:plan.margin-g.parts[0].x0,y:plan.margin-g.parts[0].y0,z:0},mirrorX:false,quantityPerSign:1}:
+      {file:`${name}_${g.module}_${g.tile.id}`,module:g.module,tile:g.tile,printOrigin:g.parts[0].offset,mirrorX:g.module!=='back'})};
+  if(joints.length){
+    const hardware=new Map();
+    for(const p of joints)for(const h of p.joint.hardware){
+      const key=h.id+'|'+JSON.stringify(h.spec??null),entry=hardware.get(key);
+      if(entry)entry.quantity+=h.quantity;else hardware.set(key,{...h});
+    }
+    const orderQuantity=Math.max(1,Math.floor(+S.price.qty||1));
+    manifest.schemaVersion=2;
+    manifest.joints=joints.map(p=>({jointId:p.jointId,file:`${name}_joint_${fileToken(p.jointId)}`,quantityPerSign:1,
+      assemblyAnchor:p.assemblyAnchor,printBounds:{width:p.x1-p.x0,height:p.y1-p.y0,depth:p.z1-p.z0},...p.joint}));
+    manifest.bom={orderQuantity,printedConnectorsPerSign:joints.length,printedConnectorsTotal:joints.length*orderQuantity,
+      hardwarePerSign:[...hardware.values()],hardwareTotal:[...hardware.values()].map(h=>({...h,quantity:h.quantity*orderQuantity}))};
+  }
   return [{name:'assembly.json',data:enc(JSON.stringify(manifest,null,2))},
     {name:`${name}_ผังประกอบ.txt`,data:enc(splitReadme(parts))}];
 }
@@ -3676,6 +3940,7 @@ const xesc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 
 function make3mf(parts,title){
   const tiled=parts.some(p=>p.tile), baseZ=tiled?printBaseZ(parts):0;
+  const hasJoints=parts.some(p=>p.module==='joint'&&p.n);
   let mats='<basematerials id="1">\n';
   parts.forEach(p=>{ mats+=`  <base name="${xesc(p.name)}" displaycolor="${p.hex.toUpperCase().padEnd(7,'0')}FF"/>\n`; });
   mats+=' </basematerials>\n';
@@ -3683,17 +3948,27 @@ function make3mf(parts,title){
   let objs='', comps='', id=2;
   const panelIds=[], standalone=[], records=[];
   parts.forEach((p,i)=>{
-    const {V,T}=indexMesh(p,tiled?baseZ:p.printBase||0);
+    const meshBase=tiled?baseZ:p.printBase||0,{V,T}=indexMesh(p,meshBase);
     if(!T.length) return;
     let v=''; for(let k=0;k<V.length;k+=3) v+=`<vertex x="${V[k]}" y="${V[k+1]}" z="${V[k+2]}"/>`;
     let t=''; for(let k=0;k<T.length;k+=3) t+=`<triangle v1="${T[k]}" v2="${T[k+1]}" v3="${T[k+2]}"/>`;
     objs+=`<object id="${id}" type="model" pid="1" pindex="${i}" name="${xesc(p.name)}"><mesh><vertices>${v}</vertices><triangles>${t}</triangles></mesh></object>\n`;
     if(p.place) standalone.push({id,place:p.place}); else panelIds.push(id);
-    records.push({id,p});
+    records.push({id,p,meshBase});
     id++;
   });
   let items='';
-  if(parts.some(p=>p.tile)){
+  if(hasJoints){
+    const PK=platePack(parts),groups=printGroups(parts),margin=printPlan().margin;
+    for(const g of groups){
+      const group=records.filter(r=>g.parts.includes(r.p));if(!group.length)continue;
+      const gid=id++,ground=printBaseZ(g.parts),first=g.parts[0];
+      const place=groups.length===1&&g.jointId?{x:margin-first.x0,y:margin-first.y0}:printPlace(first,PK);
+      comps+=`<object id="${gid}" type="model" name="${xesc(title)} — ${xesc(g.key)}"><components>`+
+        group.map(r=>`<component objectid="${r.id}" transform="1 0 0 0 1 0 0 0 1 0 0 ${r.meshBase-ground}"/>`).join('')+'</components></object>\n';
+      items+=`<item objectid="${gid}" transform="1 0 0 0 1 0 0 0 1 ${place.x} ${place.y} 0"/>`;
+    }
+  }else if(parts.some(p=>p.tile)){
     const asmId=id++, margin=printPlan().margin;
     comps=`<object id="${asmId}" type="model" name="${xesc(title)}"><components>`+
       records.map(r=>`<component objectid="${r.id}"/>`).join('')+'</components></object>\n';
@@ -3742,9 +4017,10 @@ ${mats}${objs}${comps} </resources>
 /* OBJ ไม่เก็บสีในตัวไฟล์ จึงส่ง MTL คู่กันใน ZIP — ใช้ดูงานในโปรแกรม 3D ได้
    ไม่ใช่ไฟล์หลักสำหรับ slicer หลายสี; งานพิมพ์ยังใช้ 3MF */
 function objMtl(parts,base){
-  const PK=isFrontModule()?platePack():null;
+  const PK=isFrontModule()?platePack(parts):null;
   const placeOf=p=>{
-    if(p.tile) return printPlace(p);
+    if(p.module==='joint')return printPlace(p,PK||platePack(parts));
+    if(p.tile) return printPlace(p,PK||undefined);
     if(!PK) return p.place||{x:0,y:0};
     if(p.module==='front') return PK.items.panel;
     if(p.module==='box') return PK.items.box;
@@ -3825,6 +4101,7 @@ const safeName = s => (s||'lightbox').replace(/[\\/:*?"<>|]/g,'_').trim().slice(
 const fileToken = s => safeName(s).replace(/\s+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'') || 'งานใหม่';
 const productionBaseName = () => `YP_lightbox_${fileToken(S.name)}`;
 function partFileLabel(M){
+  if(M.module==='joint') return 'joint_'+fileToken(M.jointId);
   if(M.module==='front') return M.kind==='diffuser'?frontModuleLabel()+'_ชั้นกระจายแสง':frontModuleLabel()+'_'+fileToken(M.name.replace(/^ฝาหน้า[^·]* · /,''));
   if(M.module==='box') return 'ตัวกล่อง_ร่องรับฝาหน้า';
   if(M.kind==='shell') return 'ตัวกล่อง';
@@ -3912,7 +4189,7 @@ function draw(){
   const view=S.ui.view;
   let aw=b.W, ah=b.H;
   if(view==='plate'){
-    const pack=platePack();
+    const pack=platePack(QUOTE_CACHE?.grid===G?QUOTE_CACHE.parts:[]);
     aw=(pack.plates?pack.maxX:Math.max(bedSize(),bedHeight()))*1.06;
     ah=(pack.plates?pack.maxY:Math.max(bedSize(),bedHeight()))*1.06;
   }
@@ -4058,7 +4335,7 @@ function syncSeamMethodUI(){
 function changeSeamMethod(id){
   const method=seamMethod(id);if(!method)return;
   S.seam={...seamSettings(),method:id,length:method.length,width:method.width};
-  refreshSeamPlan();queueDraftSave();draw();
+  refreshSeamPlan();queueDraftSave();if(S.seam.production)schedule(false,'m');else draw();
 }
 function drawSeamProcesses(c,cv){
   const plan=SEAM_PLAN;if(plan?.kind!=='process')return;
@@ -4101,6 +4378,7 @@ function syncSeamUI(){
   $('#seamExportHint').hidden=!s.enabled;
   $('#seamLength').value=s.length;$('#seamWidth').value=s.width;
   syncSeamMethodUI();
+  syncSeamProductionUI();
   $('#btnSeamPlan').disabled=!s.enabled||!G?.panel||G.empty||PB.empty;
   const out=$('#seamSummary');
   if(!plan?.applicable){out.className='printer-fit';out.textContent=(plan?.reason||'เปิดพรีวิวเพื่อคำนวณตำแหน่ง')+(plan?.truncated?' · แสดงแนวบางส่วนถึง 2048 ช่วง':'');return;}
@@ -4146,7 +4424,35 @@ function refreshSeamPlan(){
 function updateSeamSelection(selected,focusId){
   S.seam.selected=selected;SEAM_PLAN=buildSeamPlan();
   SEAM_FOCUS=SEAM_PLAN.candidates.find(p=>p.id===focusId)||null;
-  queueDraftSave();syncSeamUI();draw();drawSeamDialog();
+  queueDraftSave();syncSeamUI();if(S.seam.production)schedule(false,'m');else draw();drawSeamDialog();
+}
+function syncSeamProductionUI(){
+  const s=seamSettings(),active=s.production;
+  $('#seamProduction').checked=active;$('#seamProduction').disabled=s.method!=='plate'&&!active;
+  $('#seamHardware').hidden=!active;
+  for(const [id,key] of [['seamHole','hole'],['seamHoleDepth','depth'],['seamBolt','bolt'],['seamPlateT','plateT'],['seamBaseT','baseT']])$('#'+id).value=s.hardware[key];
+  const out=$('#seamProductionStatus');out.hidden=!active;
+  let text='พรีวิวเท่านั้น — ไฟล์พิมพ์ยังไม่มีฐาน รู หรือตัวต่อจากจุดเหล่านี้';
+  if(active){
+    try{const p=seamProductionPlan(SEAM_PLAN);text=`สร้างจริง J08 · ${p.joints.length} แผ่นประกบ · ${p.joints.length*2} ฐานพร้อมรูตัน · ตรวจซ้ำก่อนส่งออก`;out.className='printer-fit ok';}
+    catch(e){if(!(e instanceof SeamProductionError))throw e;text='ยังสร้างไฟล์ตัวต่อไม่ได้: '+e.message;out.className='printer-fit warn';}
+    out.textContent=text;
+  }
+  $('#seamExportHint').textContent=text;$('#seamDialogProductionNote').textContent=text;
+}
+function autoSelectSeamPoints(){
+  const previous=S.seam.selected;S.seam.selected=[];const plan=buildSeamPlan(),chosen=[];
+  for(const p of plan.candidates){
+    if(!p.valid||chosen.some(q=>seamOverlap(p.footprint,q.footprint))||chosen.length>=(S.seam.production?32:128))continue;
+    if(S.seam.production){
+      S.seam.selected=[...chosen,p].map(({axis,seamIndex,tileIndex,along})=>({axis,seamIndex,tileIndex,along}));
+      try{seamProductionPlan({...plan,candidates:[...chosen,p].map(q=>({...q,selected:true}))});}catch(e){if(!(e instanceof SeamProductionError))throw e;continue;}
+    }
+    chosen.push(p);
+  }
+  S.seam.selected=previous;
+  updateSeamSelection(chosen.map(({axis,seamIndex,tileIndex,along})=>({axis,seamIndex,tileIndex,along})));
+  if(!chosen.length&&S.seam.production)toast('ยังไม่มีจุดที่ฐานจริงวางได้ ปรับพื้นที่สำรองหรือความลึกกล่อง');
 }
 function pickSeam(e){
   const plan=SEAM_PLAN,cv=e.currentTarget;
@@ -4238,10 +4544,10 @@ function drawLayers(c,cv,px){
 }
 
 function drawPlate(c,cv,px){
-  const b=S.box, st=geomStack(), BED=bedSize(), BEDH=bedHeight(), PK=platePack();
+  const b=S.box, st=geomStack(), BED=bedSize(), BEDH=bedHeight(), PK=platePack(QUOTE_CACHE?.grid===G?QUOTE_CACHE.parts:[]);
   if(PK.plates){
     const mx=(cv.width-PK.maxX*px)/2,my=(cv.height-PK.maxY*px)/2;
-    const labels={front:'ฝาหน้า',box:'ตัวกล่อง',back:'ฝาหลัง',shell:'ตัวกล่อง',panel:'หน้า+กรอบ'};
+    const labels={front:'ฝาหน้า',box:'ตัวกล่อง',back:'ฝาหลัง',shell:'ตัวกล่อง',panel:'หน้า+กรอบ',joint:'ตัวต่อ'};
     c.font='11px sans-serif'; c.textAlign='left';
     for(const it of PK.plates){
       c.fillStyle='#e7e9ec'; c.strokeStyle='#9aa0a8'; c.setLineDash([]);
@@ -4250,7 +4556,7 @@ function drawPlate(c,cv,px){
       c.strokeRect(mx+it.x*px,my+it.y*px,PK.plan.w*px,PK.plan.h*px);c.setLineDash([]);
       c.fillStyle='#ff2d8f26';c.strokeStyle='#ff2d8f';
       c.fillRect(mx+it.x*px,my+it.y*px,it.w*px,it.h*px);c.strokeRect(mx+it.x*px,my+it.y*px,it.w*px,it.h*px);
-      c.fillStyle='#2a2e35';c.fillText(`${labels[it.module]} ${it.tile.id}`,mx+it.x*px+3,my+it.y*px+13);
+      c.fillStyle='#2a2e35';c.fillText(`${labels[it.module]} ${it.tile?.id||it.jointId}`,mx+it.x*px+3,my+it.y*px+13);
     }
     return;
   }
@@ -4730,8 +5036,22 @@ function syncJobName(name){
 function exportMeshIssues(parts){
   const issues=[];
   const printable=(parts||[]).filter(p=>p&&!p.display);
+  const jointIds=new Set();
   for(const p of printable){
     if(!p.n) continue;                         // สีที่ไม่มีพื้นที่จริงไม่ต้องสร้าง facet
+    if(p.module==='joint'){
+      const plan=printPlan(),id=fileToken(p.jointId),bounds=[p.x0,p.y0,p.z0,p.x1,p.y1,p.z1];
+      if(bounds.some(v=>!Number.isFinite(v))||Math.abs(p.x0)>.001||Math.abs(p.y0)>.001||Math.abs(p.z0)>.001||p.x1<=p.x0||p.y1<=p.y0||p.z1<=p.z0)
+        issues.push(`${p.name}: ตัวต่อต้องมีขนาดจริงและวางฐานที่ X/Y/Z=0`);
+      if(p.x1-p.x0>plan.w+.001||p.y1-p.y0>plan.h+.001)
+        issues.push(`${p.name}: ตัวต่อเกินพื้นที่พิมพ์หลังเผื่อขอบ`);
+      if(!p.jointId||jointIds.has(id))issues.push(`${p.name}: หมายเลขตัวต่อหายหรือซ้ำ`);
+      jointIds.add(id);
+      if(p.tile||p.noMirrorX!==true||!p.assemblyAnchor||!['x','y','z'].every(k=>Number.isFinite(p.assemblyAnchor[k]))||p.joint?.method!=='plate'||!Array.isArray(p.joint?.tiles)||p.joint.tiles.length!==2)
+        issues.push(`${p.name}: ข้อมูลตำแหน่งประกอบตัวต่อไม่ครบ`);
+      if(!Array.isArray(p.joint?.hardware)||!p.joint.hardware.length||p.joint.hardware.some(h=>!h||!h.id||!h.name||!Number.isInteger(h.quantity)||h.quantity<1))
+        issues.push(`${p.name}: รายการฮาร์ดแวร์ตัวต่อไม่ครบ`);
+    }
     if(p.tile){
       const plan=printPlan();
       if(p.x0 < -0.001||p.y0 < -0.001||p.x1>plan.w+0.001||p.y1>plan.h+0.001)
@@ -4813,7 +5133,7 @@ async function generateExportFiles(progress=()=>{}){
       const rounds=splitSupportFiles(pr,name);
       for(let i=0;i<groups.length;i++){
         const g=groups[i];phase('กำลังเขียนไฟล์ 3MF',i,groups.length);
-        rounds.push({name:`${name}_${g.module}_${g.tile.id}.3mf`,data:await make3mf(g.parts,`${S.name} · ${g.module} · ${g.tile.id}`)});
+        rounds.push({name:`${name}_${g.module}_${printGroupId(g)}.3mf`,data:await make3mf(g.parts,`${S.name} · ${g.module} · ${printGroupId(g)}`)});
       }
       phase('กำลังรวมชุด 3MF…',groups.length,groups.length);
       files.push({name:`${name}_แบ่งพิมพ์_3MF.zip`,blob:await zipFiles(rounds,true)});
@@ -4825,7 +5145,7 @@ async function generateExportFiles(progress=()=>{}){
   }
   if(fmt==='stl'||fmt==='both'||fmt==='all'){
     phase('กำลังเขียนไฟล์ STL…');
-    const rounds=divided?groups.map(g=>({name:`${name}_${g.module}_${g.tile.id}.stl`,data:new Blob([stlOf(mergeForSTL(g.key,g.parts,g.parts[0].hex))])})):isFrontModule()?[
+    const rounds=divided?groups.map(g=>({name:`${name}_${g.module}_${printGroupId(g)}.stl`,data:new Blob([stlOf(mergeForSTL(g.key,g.parts,g.parts[0].hex))])})):isFrontModule()?[
       {name:`${name}_ฝาหน้า_รวมชั้นกระจายแสง.stl`,data:new Blob([stlOf(mergeForSTL(frontModuleLabel()+' (รวมชั้นกระจายแสง)',pr.filter(p=>p.module==='front'),'#F2F2E8'))])},
       {name:`${name}_ตัวกล่อง.stl`,data:new Blob([stlOf(mergeForSTL('ตัวกล่อง',pr.filter(p=>p.module==='box'),S.box.frameColor))])},
       {name:`${name}_ฐาน_ฝาหลัง.stl`,data:new Blob([stlOf(mergeForSTL('ฐาน/ฝาหลัง',pr.filter(p=>p.module==='back'),S.box.backColor))])}
@@ -4836,7 +5156,8 @@ async function generateExportFiles(progress=()=>{}){
   }
   if(fmt==='obj'||fmt==='all'){
     phase('กำลังเขียนไฟล์ OBJ + MTL…');const O=objMtl(pr,name);
-    files.push({name:`${name}_พรีวิวสี_OBJ.zip`,blob:await zipFiles([{name:`${name}.obj`,data:enc(O.obj)},{name:`${name}.mtl`,data:enc(O.mtl)}],true)});
+    const support=divided&&pr.some(p=>p.module==='joint'&&p.n)?splitSupportFiles(pr,name):[];
+    files.push({name:`${name}_พรีวิวสี_OBJ.zip`,blob:await zipFiles([{name:`${name}.obj`,data:enc(O.obj)},{name:`${name}.mtl`,data:enc(O.mtl)},...support],true)});
   }
   if(isShell()){
     phase('กำลังเขียนไฟล์ตัดแผ่น…');const blob=await cutFilesZip();
@@ -5012,6 +5333,16 @@ function cutReadme(G0,holes,Gb=G0){
    ,'บ่าหน้าเป็นขั้นราบ ตรวจ overhang/support ในสไลเซอร์ก่อนพิมพ์ ไม่รับประกันว่าพิมพ์ได้โดยไม่รองรับ'].join('\n');
 }
 
+function jointReadme(parts){
+  const joints=parts.filter(p=>p.module==='joint'&&p.n);if(!joints.length)return [];
+  return ['', 'ตัวต่อระหว่างชิ้นกล่อง J08 — ชิ้นพิมพ์จริง',
+    `พิมพ์แผ่นประกบแยก ${joints.length} ชิ้นต่อป้าย แต่ละไฟล์วางฐาน Z=0 และเผื่อขอบเครื่องด้านละ ${printPlan().margin} มม.`,
+    'ประกอบกล่องบนจิ๊กให้ผิวหน้าเสมอ ติดตั้งอินเสิร์ตตามรุ่นและค่าที่กำหนด วางแผ่นบนฐานด้านใน แล้วขันจากฝาหลัง',
+    'หมายเลขแผ่น คู่ชิ้น ตำแหน่งรู และรายการฮาร์ดแวร์ต่อป้ายอยู่ใน assembly.json; จำนวนป้ายใช้คูณ BOM ไม่ได้ทำสำเนาเมชเพิ่ม',
+    ...joints.map(p=>`${p.jointId}: ${(p.joint?.tiles||[]).join(' ↔ ')} · ${(p.joint?.hardware||[]).map(h=>h.name+' '+h.quantity+' ชิ้น').join(' · ')}`),
+    'ฐาน รู และแผ่นประกบเป็นรูปทรงผลิต แต่ระยะสวม อินเสิร์ต สกรู และแรงขันยังต้องทดลองกับ PETG และฮาร์ดแวร์จริงก่อนผลิตทั้งป้าย',
+    'แผ่นประกบรับรอยต่อเฉพาะตัวกล่อง ยังต้องจัดแนวและปิดช่องแสงของฝาหน้า/ฝาหลัง โดยคงทางเปิดฝาหลังซ่อม LED'];
+}
 function readme(parts){
   if(isShellCap()){
     const H=shellSpec();
@@ -5031,7 +5362,8 @@ function readme(parts){
    ,''
    ,'การซ่อม: เปิดฝาหลังตามวิธีประกบที่เลือก นำโมดูลฝาหน้าเดิมออก แล้วสวมฝาหน้าใหม่จากด้านหน้า'
    ,'ห้ามยึดฝาหน้าด้วยกาวถาวร หากต้องการใช้ฟังก์ชันเปลี่ยนเฉพาะฝาหน้า'
-   ,'แนะนำกรอบข้างอย่างน้อย 2 มม. และเผื่อสวม 0.2 มม.'].join('\n');
+   ,'แนะนำกรอบข้างอย่างน้อย 2 มม. และเผื่อสวม 0.2 มม.'
+   ,...jointReadme(parts)].join('\n');
   if(isShell()){
     const H=shellSpec(), M=parts.find(p=>p.kind==='shell')||{};
     return ['YP Lightbox Studio — '+S.name+'  (โหมดพิมพ์เฉพาะตัวกล่อง)',''
@@ -5315,14 +5647,14 @@ function plateRenderLayout(parts=V3.parts||[]){
   const bases=new Map();
   for(const p of parts) if(p.module&&p.n&&Number.isFinite(p.z0))
     bases.set(p.module,Math.min(bases.get(p.module)??Infinity,p.z0));
-  return {pack:platePack(),bases};
+  return {pack:platePack(parts),bases};
 }
 function partMatrix(M,mode,layout){
   const st=geomStack(), W=PB.w||S.box.W, H=PB.h||S.box.H, BED=bedSize();
   const ex = mode==='exp';
   if(mode==='plate'){
     let place=M.place||{x:0,y:0};
-    if(M.tile) place=printPlace(M,layout?.pack);
+    if(M.tile||M.module==='joint') place=printPlace(M,layout?.pack);
     else if(isFrontModule()){
       const PK=layout?.pack||platePack();
       if(M.module==='front') place=PK.items.panel;
@@ -5335,6 +5667,10 @@ function partMatrix(M,mode,layout){
     const baseZ=layout&&M.module ? (layout.bases.get(M.module)||0)
       : printBaseZ(M.module?(V3.parts||[]).filter(p=>p.module===M.module):[M]);
     return mkM(1,0,0, 0,0,1, 0,-1,0, px-BED/2, -baseZ, BED/2-py);
+  }
+  if(M.module==='joint'){
+    const a=M.assemblyAnchor;
+    return mkM(1,0,0, 0,1,0, 0,0,-1,a.x-W/2,a.y-H/2,-a.z-(ex?18:0));
   }
   if(M.kind==='back'){
     /* ฝาหลังพิมพ์ผิวนอกติดฐาน บ่าชี้ขึ้น — ประกอบโดยหันบ่าเข้าในกล่อง
@@ -5723,8 +6059,7 @@ function recompute(reuseGrid=false){
     renderPalette();
     refreshSeamPlan();
     V3.dirty=true;
-    draw();
-    refreshQuote();
+    if(S.seam.production){refreshQuote();draw();}else{draw();refreshQuote();}
     runChecks();
     updateBadges();
     syncJointUI();
@@ -5735,8 +6070,11 @@ function recompute(reuseGrid=false){
 }
 function refreshQuote(reuseParts=false){
   if(!G||G.empty){ QUOTE_CACHE=null; $('#quoteTbl').innerHTML=''; return; }
-  if(!reuseParts||!QUOTE_CACHE||QUOTE_CACHE.grid!==G)
-    QUOTE_CACHE={grid:G,parts:buildParts(true),sheetMetrics:isShell()?sheetCostMetrics():null};
+  if(!reuseParts||!QUOTE_CACHE||QUOTE_CACHE.grid!==G){
+    try{QUOTE_CACHE={grid:G,parts:buildParts(true),sheetMetrics:isShell()?sheetCostMetrics():null};}
+    catch(e){if(!(e instanceof SeamProductionError))throw e;QUOTE_CACHE=null;LAST=null;$('#quoteTbl').textContent='ยังคำนวณงานผลิตไม่ได้: '+e.message;$('#btnQuote').disabled=true;return;}
+  }
+  $('#btnQuote').disabled=false;
   const parts=QUOTE_CACHE.parts;
   LAST=LAST||{}; LAST.parts=parts.length;
   const fm=parts.find(p=>p.kind==='frame');
@@ -6151,13 +6489,22 @@ function showMobilePanel(panel){
 function wire(){
   for(const id of ['seamMethod','seamDialogMethod'])$('#'+id).addEventListener('change',e=>changeSeamMethod(e.target.value));
   $('#seamEnabled').addEventListener('change',e=>{
-    S.seam.enabled=e.target.checked;refreshSeamPlan();queueDraftSave();draw();
+    S.seam.enabled=e.target.checked;if(!e.target.checked)S.seam.production=false;refreshSeamPlan();queueDraftSave();schedule(false,'m');
   });
+  $('#seamProduction').addEventListener('change',e=>{
+    S.seam.production=e.target.checked;
+    if(e.target.checked){S.seam.length=Math.max(32,S.seam.length);S.seam.width=Math.max(12,S.seam.width);autoSelectSeamPoints();}
+    refreshSeamPlan();queueDraftSave();schedule(false,'m');
+  });
+  for(const [id,key,lo,hi] of [['seamHole','hole',2,8],['seamHoleDepth','depth',2,12],['seamBolt','bolt',2,6],['seamPlateT','plateT',2,8],['seamBaseT','baseT',4,16]]){
+    const el=$('#'+id);el.addEventListener('change',()=>{const value=+el.value;if(el.value===''||!Number.isFinite(value)||value<lo||value>hi){el.value=S.seam.hardware[key];return;}S.seam.hardware[key]=value;refreshSeamPlan();schedule(false,'m');});
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'){el.dispatchEvent(new Event('change'));el.blur();}});
+  }
   for(const [id,key,lo,hi] of [['seamLength','length',12,60],['seamWidth','width',4,30]]){
     const el=$('#'+id);el.addEventListener('change',()=>{
       const value=+el.value;
       if(el.value===''||!Number.isFinite(value)||value<lo||value>hi){el.value=S.seam[key];return;}
-      S.seam[key]=value;refreshSeamPlan();queueDraftSave();draw();
+      S.seam[key]=value;refreshSeamPlan();queueDraftSave();if(S.seam.production)schedule(false,'m');else draw();
     });
     el.addEventListener('keydown',e=>{if(e.key==='Enter'){el.dispatchEvent(new Event('change'));el.blur();}});
   }
@@ -6166,13 +6513,7 @@ function wire(){
   $('#seamZoom').addEventListener('change',drawSeamDialog);
   $('#seamView').addEventListener('click',pickSeam);$('#view').addEventListener('click',pickSeam);
   $('#btnSeamClear').addEventListener('click',()=>updateSeamSelection([]));
-  $('#btnSeamAuto').addEventListener('click',()=>{
-    S.seam.selected=[];const plan=buildSeamPlan(),chosen=[];
-    for(const p of plan.candidates){
-      if(p.valid&&!chosen.some(q=>seamOverlap(p.footprint,q.footprint))&&chosen.length<128)chosen.push(p);
-    }
-    updateSeamSelection(chosen.map(({axis,seamIndex,tileIndex,along})=>({axis,seamIndex,tileIndex,along})));
-  });
+  $('#btnSeamAuto').addEventListener('click',autoSelectSeamPoints);
   for(const [id,path,kind,lab,fmt,flag] of BIND){
     const el=document.getElementById(id); if(!el) continue;
     const ev = (kind==='bool'||el.tagName==='SELECT'||(kind==='num'&&el.type==='number'))?'change':'input';

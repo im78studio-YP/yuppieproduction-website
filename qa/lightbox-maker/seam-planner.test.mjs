@@ -10,6 +10,7 @@ const run=(c,s)=>vm.runInContext(s,c),plain=v=>JSON.parse(JSON.stringify(v));
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const methodIds=['butt','lap','scarf','tongue','dowel','butterfly','dovetail','plate','nut','selftap','snap','magnet','weld'];
 const bodyIds=methodIds.slice(1,10);
+const hardwareDefaults={hole:4.2,depth:5,bolt:3.4,plateT:3,baseT:7,clearance:.2};
 
 function setMethod(app,id){
   app.c.testMethodId=id;
@@ -88,7 +89,7 @@ function assertValidFootprintsOnPanel(app,plan){
 
 test('Seam planning defaults off and produces no manufacturing changes implicitly',()=>{
   const {c}=fixture();
-  assert.deepEqual(plain(run(c,'defaults().seam')),{enabled:false,method:'plate',length:24,width:8,selected:[]});
+  assert.deepEqual(plain(run(c,'defaults().seam')),{enabled:false,method:'plate',length:24,width:8,selected:[],production:false,hardware:hardwareDefaults});
   run(c,'S.seam.enabled=false;');const plan=run(c,'buildSeamPlan()');
   assert.equal(plan.requested,false);assert.equal(plan.applicable,false);assert.equal(plan.candidates.length,0);assert.ok(plan.reason);
 });
@@ -96,11 +97,11 @@ test('Seam planning defaults off and produces no manufacturing changes implicitl
 test('Old projects receive disabled defaults and partial seam settings preserve selected placements',()=>{
   const {c}=fixture();
   assert.deepEqual(plain(run(c,'projectState({src:{mode:"text"},box:{W:144,H:100}}).seam')),
-    {enabled:false,method:'plate',length:24,width:8,selected:[]});
+    {enabled:false,method:'plate',length:24,width:8,selected:[],production:false,hardware:hardwareDefaults});
   const selection={axis:'x',seamIndex:1,tileIndex:1,along:12};
   c.savedProject={src:{mode:'text'},box:{W:144,H:100},seam:{enabled:true,width:10,selected:[selection]}};
   const before=JSON.stringify(c.savedProject),state=run(c,'projectState(savedProject)');
-  assert.deepEqual(plain(state.seam),{enabled:true,method:'plate',length:24,width:10,selected:[selection]});
+  assert.deepEqual(plain(state.seam),{enabled:true,method:'plate',length:24,width:10,selected:[selection],production:false,hardware:hardwareDefaults});
   assert.equal(JSON.stringify(c.savedProject),before,'loading must not mutate the saved project');
   c.reloadedProject=plain(state);
   assert.deepEqual(plain(run(c,'projectState(reloadedProject).seam')),plain(state.seam));
