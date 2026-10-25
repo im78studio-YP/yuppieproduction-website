@@ -158,6 +158,71 @@ test('Whole-sign, focused, inside and exploded controls change only the preview 
   assert.ok(run(c,'previewDraws>0&&previewSyncs>0'));
 });
 
+test('Preview cut planes match adjacent print tiles on both axes and never mark outer edges',()=>{
+  const {c}=fixture();
+  for(const [bed,bedH] of [[80,100],[256,256],[400,400],[1200,800]]){
+    c.printer={bed,bedH};
+    const result=plain(run(c,`(()=>{
+      S.build.mode='service';S.exp={...S.exp,bed:printer.bed,bedH:printer.bedH,margin:10,autoSplit:true,smooth:true};
+      PB={...PB,w:1730.25,h:618.45};G.px=.15;
+      const plan=printPlan(),before=JSON.stringify({S,PB});
+      return {plan,cuts:plan.tiles.map(t=>({id:t.id,planes:seamPreviewCutBounds(t,plan)})),unchanged:before===JSON.stringify({S,PB})};
+    })()`));
+    const {plan,cuts}=result,byPosition=new Map(plan.tiles.map(t=>[`${t.row},${t.col}`,t]));
+    assert.equal(result.unchanged,true);assert.ok(plan.nx>1);assert.equal(cuts.length,plan.tiles.length);
+    for(const tile of plan.tiles){
+      const {planes}=cuts.find(c=>c.id===tile.id);assert.equal(planes.length,4);
+      const expected=[
+        [byPosition.get(`${tile.row},${tile.col-1}`),'x1'],[byPosition.get(`${tile.row},${tile.col+1}`),'x0'],
+        [byPosition.get(`${tile.row+1},${tile.col}`),'y1'],[byPosition.get(`${tile.row-1},${tile.col}`),'y0']
+      ];
+      expected.forEach(([neighbor,key],edge)=>{
+        if(neighbor)assert.ok(Math.abs(planes[edge]-neighbor[key])<1e-7,`${bed}x${bedH} ${tile.id} edge ${edge}`);
+        else assert.equal(planes[edge],1e9,`${tile.id}: outside contour is not a print seam`);
+      });
+    }
+    assert.ok(Math.abs(plan.tiles[0].x0+.15)<1e-7,'smoothing allowance is part of the original tile plan');
+    if(bed===400){assert.equal(plan.nx,5);assert.equal(plan.ny,2);}
+  }
+});
+
+test('Showing print seams changes only preview visibility and preserves the manufacturing state',()=>{
+  const {c}=fixture();
+  run(c,`globalThis.beforeCutsState=JSON.stringify(S);globalThis.beforeCutsGrid=G;globalThis.beforeCutsBounds=PB;
+    globalThis.cutDraws=0;globalThis.cutSyncs=0;globalThis.cutMaps=0;
+    seamPreviewRequestRender=()=>cutDraws++;syncSeamPreviewControls=()=>cutSyncs++;drawSeamDialog=()=>cutMaps++;
+    buildParts=generateExportFiles=doExport=()=>{throw new Error('seam visibility must not rebuild or export');};`);
+  assert.equal(run(c,'SEAM_PREVIEW_RENDERER.cuts'),true);
+  for(const show of [false,true,false]){
+    c.showCuts=show;run(c,'seamPreviewSetCuts(showCuts)');assert.equal(run(c,'SEAM_PREVIEW_RENDERER.cuts'),show);
+    assert.equal(run(c,'JSON.stringify(S)===beforeCutsState&&G===beforeCutsGrid&&PB===beforeCutsBounds'),true);
+  }
+  run(c,'seamPreviewReset()');assert.equal(run(c,'SEAM_PREVIEW_RENDERER.cuts'),false,'resetting the camera does not reset a view preference');
+  assert.ok(run(c,'cutDraws>0&&cutSyncs>0&&cutMaps>0'));
+});
+
+test('Assembly guidance covers every physical method and names the real extra joining work',()=>{
+  const {c}=fixture(),before=run(c,'JSON.stringify(S)');
+  const guides=plain(run(c,'Object.fromEntries(SEAM_METHODS.map(m=>[m.id,seamAssemblyGuide(m.id)]))'));
+  assert.equal(Object.keys(guides).length,13);
+  for(const [id,guide] of Object.entries(guides)){
+    for(const key of ['requires','parts','supplies'])assert.ok(typeof guide[key]==='string'&&guide[key].trim(),`${id}: ${key}`);
+    assert.equal(guide.steps.length,3,id);assert.ok(guide.steps.every(s=>typeof s==='string'&&s.trim()),id);
+  }
+  for(const id of ['butt','lap','scarf','tongue','dowel','butterfly','dovetail'])assert.match(guides[id].requires,/กาว/,`${id}: printed parts still need adhesive`);
+  for(const id of ['lap','scarf','tongue','dovetail']){assert.match(guides[id].parts,/A/);assert.match(guides[id].parts,/B/);}
+  assert.match(guides.dowel.parts,/ชิ้นเดียว/);assert.match(guides.dowel.parts,/เดือย\s*2/);
+  assert.ok(guides.dowel.steps.some(s=>/พลิก/.test(s)),'printed-up dowels must be turned into their blind pockets');
+  assert.match(guides.butt.requires,/ชั่วคราว/);assert.ok(guides.butt.steps.some(s=>/ถอด.*จิ๊ก/.test(s)));
+  assert.match(guides.weld.requires,/ถอด.*ก่อน.*ร้อน/);
+  assert.ok(guides.weld.steps.findIndex(s=>/ถอด.*จิ๊ก/.test(s))<guides.weld.steps.findIndex(s=>/^เชื่อม/.test(s)),'the heat process must follow jig removal');
+  assert.match(guides.plate.requires,/อินเสิร์ต/);assert.match(guides.plate.requires,/สกรู/);
+  assert.match(guides.nut.requires,/น็อต/);assert.match(guides.nut.requires,/สกรู/);assert.match(guides.selftap.requires,/พลาสติก/);
+  for(const id of ['snap','magnet'])assert.match(guides[id].requires,/รับแรงถาวร.*แยก/,`${id}: temporary or service closure is not a permanent body joint`);
+  assert.match(guides.magnet.supplies,/แม่เหล็ก.*4/);
+  assert.equal(run(c,'seamAssemblyGuide("future-connector")'),null);assert.equal(run(c,'JSON.stringify(S)'),before);
+});
+
 test('An invalid joint preview clears the old scene without substituting another placement',()=>{
   const {c,nodes,timers}=fixture();
   run(c,`S.seam.production=true;document.querySelector('#seamDialog').open=true;document.querySelector('#seamPreviewViewport').dataset={};

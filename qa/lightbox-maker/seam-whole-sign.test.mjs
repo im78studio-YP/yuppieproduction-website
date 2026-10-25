@@ -36,6 +36,14 @@ for(const method of methods)for(const axis of ['x','y'])test(`Whole-sign ${metho
     const scene=seamPreviewGeometry(production,production.joints[0].id,true);
     if(G!==grid||PB!==bounds||ACTIVE_PRINT_PLAN!==saved)throw new Error('Preview mutated live geometry');return scene;})()`);
   assert.equal(run(c,'JSON.stringify(S)'),before);assert.equal(result.wholeSign,true);assert.equal(result.cutaway,false);
+  const print=plain(run(c,'printPlan()'));
+  assert.deepEqual(plain(result.printTiles),print.tiles);assert.equal(result.printColumns,print.nx);assert.equal(result.printRows,print.ny);
+  const originalTiles=new Map(print.tiles.map(t=>[t.id,t]));
+  for(const part of result.parts.filter(p=>p.role!=='connector'))assert.ok(originalTiles.has(part.tile),`${part.name}: preview must retain an original print tile`);
+  assert.ok(result.parts.filter(p=>p.detail&&p.role.startsWith('body-')).every(p=>{
+    const tile=originalTiles.get(p.tile),roi=result.roi;
+    return tile.x0<roi.x0||tile.x1>roi.x1||tile.y0<roi.y0||tile.y1>roi.y1;
+  }),'support ROI boundaries must not replace original print boundaries');
   assert.ok(result.parts.some(p=>p.role==='front'));assert.ok(result.parts.some(p=>p.role==='back'));
   assert.ok(result.parts.some(p=>p.context&&(p.role==='body-context'||p.role==='body-a'||p.role==='body-b')));
   assert.deepEqual(new Set(result.parts.filter(p=>p.role==='front').map(p=>p.hex)),new Set(['#FF2D8F','#24B7CC']));
@@ -58,6 +66,8 @@ test('Whole-sign preview transfers actual palette geometry through the worker',(
   run(c,'self.onmessage({data:{state:workerState,grid:workerGrid,bounds:workerBounds,production:workerProduction}})');
   assert.equal(response.type,'done',response.message);assert.equal(response.scene.wholeSign,true);
   assert.equal(transfer.length,response.scene.parts.length);assert.ok(response.scene.parts.some(p=>p.hex==='#FF2D8F'));
+  assert.deepEqual(plain(response.scene.printTiles),plain(run(c,'printPlan().tiles')));
+  assert.equal(response.scene.printColumns,run(c,'printPlan().nx'));assert.equal(response.scene.printRows,run(c,'printPlan().ny'));
 });
 
 test('A 173 cm whole-sign context remains a preview, without full export tessellation',()=>{
@@ -66,4 +76,6 @@ test('A 173 cm whole-sign context remains a preview, without full export tessell
   const result=run(c,'seamPreviewGeometry(production,production.joints[0].id,true)');
   assert.ok(result.size.width>1700);assert.ok(result.contextCells<2e6);assert.ok(result.roiCells<result.contextCells*.02);
   assert.ok(run(c,'EXPORT_MESH_BUDGET.used')<32*1024*1024);assert.ok(result.parts.reduce((n,p)=>n+p.n/12,0)<300000);
+  assert.equal(result.printColumns,5);assert.equal(result.printRows,1);
+  assert.deepEqual(plain(result.printTiles),plain(run(c,'printPlan().tiles')));
 });
