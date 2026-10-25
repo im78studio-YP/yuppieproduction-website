@@ -372,3 +372,99 @@ for(const fmt of ['3mf','stl'])test(`${fmt} exports separate grounded joint file
     assert.equal(joint.joint.hardware.reduce((n,h)=>n+h.quantity,0),4);
   }
 });
+
+test('Every joint preview uses distinct closed manufacturing geometry and leaves production state unchanged',()=>{
+  const signatures=new Set();
+  for(const method of methods){
+    const app=fixture({width:120,height:120,px:.2}),{c}=app;c.chosenMethod=method;
+    run(c,`S.seam.method=chosenMethod;S.seam.production=true;S.seam.length=48;S.seam.width=20;S.seam.hardware.clearance=.4;
+      if(chosenMethod==='selftap')S.seam.hardware.hole=2.5;`);
+    const production=app.select(),before=meshDigest(app.build(false));c.previewProduction=production;
+    const result=run(c,`(()=>{
+      const grid=G,bounds=PB,state=JSON.stringify(S),saved={marker:'existing plan'};ACTIVE_PRINT_PLAN=saved;
+      const preview=seamPreviewGeometry(previewProduction,previewProduction.joints[0].id);
+      if(G!==grid||PB!==bounds||JSON.stringify(S)!==state||ACTIVE_PRINT_PLAN!==saved)throw new Error('preview mutated production state');
+      ACTIVE_PRINT_PLAN=null;return preview;
+    })()`);
+    assert.equal(result.method,method);assert.equal(result.cutaway,true);assert.ok(result.roiCells<100000);
+    assert.ok(result.parts.some(p=>p.role==='body-a')&&result.parts.some(p=>p.role==='body-b'));
+    assert.ok(result.parts.some(p=>p.role==='connector'));
+    for(const part of result.parts){assert.equal(part.a.length,part.n);assertClosedConnected(part);assert.ok(part.a.every(Number.isFinite));}
+    const signature=hash(Buffer.concat(result.parts.map(p=>Buffer.from(p.a.buffer,p.a.byteOffset,p.n*4))));
+    assert.ok(!signatures.has(signature),method+': preview aliases another manufacturing design');signatures.add(signature);
+    assert.deepEqual(meshDigest(app.build(false)),before,method+': preview changed printable output');
+  }
+});
+
+test('Local frame and connector previews align with both physical seam axes',()=>{
+  for(const axis of ['x','y']){
+    const app=fixture({width:120,height:120,px:.2}),{c}=app;
+    run(c,`S.seam.method='lap';S.seam.length=48;S.seam.width=20;S.seam.hardware.clearance=.4;`);
+    const production=app.select([axis]),joint=production.joints[0],full=app.build(false),bounds=plain(run(c,'PB'));
+    c.previewProduction=production;const preview=run(c,'seamPreviewGeometry(previewProduction,previewProduction.joints[0].id)');
+    for(const pad of joint.pads){
+      const body=preview.parts.find(p=>p.role===(joint.tiles.indexOf(pad.tile)===0?'body-a':'body-b'));
+      const actual=full.find(p=>p.module==='box'&&p.tile.id===pad.tile);
+      const x=pad.cx+.037,y=pad.cy+.053,local=frameLocal(actual,x,y,bounds);
+      const expected=zHits(actual,local.x,local.y),observed=zHits(body,x-joint.anchorMm.x,y-joint.anchorMm.y);
+      assert.equal(observed.length,expected.length);observed.forEach((z,i)=>near(z,expected[i],1e-4));
+    }
+    const connectors=full.filter(p=>p.module==='joint'),visible=preview.parts.filter(p=>p.role==='connector');
+    assert.equal(connectors.length,visible.length);
+    for(let p=0;p<connectors.length;p++){
+      const actual=connectors[p],shown=visible[p],B=actual.assemblyBasis,A=actual.assemblyAnchor;
+      assert.equal(shown.n,actual.n);
+      for(let i=0;i<actual.n;i+=12)for(let k=0;k<3;k++)for(let d=0;d<3;d++){
+        const at=i+3+k*3,x=actual.a[at],y=actual.a[at+1],z=actual.a[at+2];
+        const expected=A[['x','y','z'][d]]+B[d]*x+B[3+d]*y+B[6+d]*z-(d<2?joint.anchorMm[['x','y'][d]]:0);
+        near(shown.a[at+d],expected,1e-4);
+      }
+    }
+  }
+});
+
+test('A 173 cm preview is bounded to its local raster and does not invoke whole-job builders',()=>{
+  const app=fixture({width:1730,height:318,px:.72}),{c}=app;
+  run(c,'S.exp.bed=S.exp.bedH=400;');const production=app.select();c.previewProduction=production;
+  const result=run(c,`(()=>{
+    buildParts=buildPartMeshes=panelBounds=()=>{throw new Error('whole-job builder called');};
+    const {gw,gh,px,panel,edtIn}=G;G={gw,gh,px,panel,edtIn};
+    return {gridCells:gw*gh,preview:seamPreviewGeometry(previewProduction,previewProduction.joints[0].id)};
+  })()`);
+  assert.ok(result.preview.roiCells<result.gridCells*.02);assert.ok(result.preview.parts.every(p=>p.n>0));
+});
+
+test('Preview failures restore outer print state and connector-local grid mutations',()=>{
+  const app=fixture({px:.2}),{c}=app;
+  run(c,"S.seam.method='lap';S.seam.hardware.clearance=.4;");const production=app.select();c.previewProduction=production;
+  run(c,`globalThis.priorGrid=G;globalThis.priorBounds=PB;globalThis.priorSettings=JSON.stringify(S);globalThis.priorPrint={marker:true};
+    ACTIVE_PRINT_PLAN=priorPrint;const originalUnion=seamFrameUnion;
+    seamFrameUnion=(...args)=>{if(G!==priorGrid)throw new Error('connector CSG failed');return originalUnion(...args);};`);
+  assert.throws(()=>run(c,'seamPreviewGeometry(previewProduction,previewProduction.joints[0].id)'),/connector CSG failed/);
+  assert.equal(run(c,'G===priorGrid&&PB===priorBounds&&JSON.stringify(S)===priorSettings&&ACTIVE_PRINT_PLAN===priorPrint'),true);
+});
+
+test('Joint cutaways hide neighboring hardware and the complete cable notch while visible walls match production',()=>{
+  const app=fixture(),{c}=app;
+  run(c,`S.box.frame=8;S.hw.hole='frame';S.hw.dia=3;S.seam.length=36;S.seam.production=true;
+    const candidate=buildSeamPlan().candidates.find(p=>p.valid&&p.axis==='x'&&p.anchorMm.y<30);
+    if(!candidate)throw new Error('No lower-wall fixture site');
+    S.seam.selected=[{axis:candidate.axis,seamIndex:candidate.seamIndex,tileIndex:candidate.tileIndex,along:candidate.along}];`);
+  const production=app.plan(),joint=production.joints[0],full=app.build(false),bounds=plain(run(c,'PB'));
+  c.previewProduction=production;
+  run(c,'previewProduction.contextKeepouts=buildSeamPlan().keepouts;');
+  const preview=run(c,'seamPreviewGeometry(previewProduction,previewProduction.joints[0].id)');
+  assert.equal(preview.contextHardwareHidden,true);
+  const side=joint.tiles.indexOf(production.joints[0].pads.find(p=>p.cx>joint.anchorMm.x).tile);
+  const body=preview.parts.find(p=>p.role===(side===0?'body-a':'body-b'));
+  const actual=full.find(p=>p.module==='box'&&p.tile.id===joint.tiles[side]);
+  const probe=(x,y)=>({shown:zHits(body,x-joint.anchorMm.x,y-joint.anchorMm.y),
+    printed:zHits(actual,frameLocal(actual,x,y,bounds).x,frameLocal(actual,x,y,bounds).y)});
+  const window=probe(69.25,2.25);assert.ok(window.printed.length>0);assert.deepEqual(window.shown,[],'neighboring hardware window must be explicitly cut away');
+  const notch=probe(71.25,7.25);assert.ok(notch.printed.length>0);assert.deepEqual(notch.shown,[],'thick-wall cable band extends beyond the ordinary hardware keepout');
+  assert.ok(notch.printed.at(-1)<run(c,'geomStack().frameZ0+S.box.depth'),'the probe must cross the actual cable cut');
+  for(const [x,y]of [[50.25,1.25],[54.25,3.25],[62.25,6.25]]){
+    const p=probe(x,y);assert.equal(p.shown.length,p.printed.length);p.shown.forEach((z,i)=>near(z,p.printed[i],1e-4));
+  }
+  for(const part of preview.parts)assertClosedConnected(part);
+});

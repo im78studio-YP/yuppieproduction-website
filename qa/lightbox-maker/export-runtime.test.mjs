@@ -11,7 +11,7 @@ function fixture(){
   const c=vm.createContext({console:{...console,error(){}},TextEncoder,Blob,performance,Promise,structuredClone,
     setTimeout(fn){timers.set(++timerId,fn);return timerId;},clearTimeout(id){timers.delete(id);},
     document:{readyState:'loading',currentScript:{textContent:script},addEventListener(){},querySelector(id){
-      if(!nodes.has(id))nodes.set(id,{inert:false,hidden:true,textContent:'',classList:{toggle(){},add(){},remove(){}},removeAttribute(){}});
+      if(!nodes.has(id))nodes.set(id,{inert:false,hidden:true,textContent:'',classList:{toggle(){},add(){},remove(){}},setAttribute(name,value){this[name]=String(value);},removeAttribute(){}});
       return nodes.get(id);
     }},window:{},URL:{createObjectURL(){return 'blob:test';},revokeObjectURL(){}},
     createImageBitmap:async cv=>({width:cv.width,height:cv.height,close(){}})});
@@ -51,6 +51,62 @@ test('Opening the seam picker for a single plate leaves normal export settings u
   run(c,`globalThis.opened=false;printPlan=()=>({enabled:true,tiles:[{}]});drawSeamDialog=()=>{};
     document.querySelector('#seamDialog').showModal=()=>opened=true;openSeamPicker();`);
   assert.equal(run(c,'opened'),true);assert.equal(run(c,'S.seam.enabled'),false);assert.equal(run(c,'S.seam.production'),false);
+});
+
+test('Joint preview ignores stale worker results and never transfers the live artwork grid',()=>{
+  const {c,nodes,timers}=fixture();
+  run(c,`globalThis.previewWorkers=[];globalThis.previewAccepted=[];S.seam.enabled=S.seam.production=true;
+    document.querySelector('#seamDialog').open=true;document.querySelector('#seamPreviewViewport').dataset={};
+    globalThis.pointA={id:'a',valid:true},globalThis.pointB={id:'b',valid:true};SEAM_FOCUS=pointA;SEAM_PLAN={candidates:[pointA,pointB]};
+    G.edtIn=new Float32Array(1);globalThis.originalGrid=G;globalThis.originalState=JSON.stringify(S);
+    seamPreviewClear=()=>{};seamPreviewRequestRender=()=>{};
+    seamPreviewSetScene=scene=>{previewAccepted.push(scene.tag);return {parts:1,triangles:1};};
+    seamProductionPlan=p=>({spec:{},joints:[{id:p.candidates[0].id,method:'plate',design:{contains(){}}}]});
+    createExportWorker=()=>{const worker={stopped:0,postMessage(data,...transfer){this.sent=data;this.transfer=transfer;},terminate(){this.stopped++;}};
+      previewWorkers.push(worker);return {worker,url:'blob:preview'};};requestSeamPreview();`);
+  const flush=()=>{const queued=[...timers.values()];timers.clear();for(const fn of queued)fn();};
+  flush();assert.equal(run(c,'previewWorkers.length'),1);assert.equal(run(c,'previewWorkers[0].transfer.length'),0);
+  assert.doesNotThrow(()=>run(c,'structuredClone(previewWorkers[0].sent)'));
+  run(c,'SEAM_FOCUS=pointB;requestSeamPreview();');flush();assert.equal(run(c,'previewWorkers[0].stopped'),1);
+  run(c,"previewWorkers[0].onmessage({data:{type:'done',scene:{tag:'stale'}}});previewWorkers[1].onmessage({data:{type:'done',scene:{tag:'current',resolution:.15}}});");
+  assert.deepEqual(plain(run(c,'previewAccepted')),['current']);assert.equal(nodes.get('#seamPreviewViewport').dataset.point,'b');
+  assert.equal(run(c,'G===originalGrid&&G.panel.byteLength===1&&JSON.stringify(S)===originalState'),true);
+  run(c,'SEAM_FOCUS=pointA;requestSeamPreview();');flush();run(c,"stopSeamPreview();previewWorkers[2].onmessage({data:{type:'done',scene:{tag:'closed'}}});");
+  assert.deepEqual(plain(run(c,'previewAccepted')),['current']);assert.equal(run(c,'previewWorkers[2].stopped'),1);
+  run(c,'SEAM_FOCUS=pointB;requestSeamPreview();');flush();
+  run(c,"previewWorkers[3].onerror({preventDefault(){},message:'preview failed'});requestSeamPreview();");flush();
+  assert.equal(run(c,'previewWorkers.length'),5,'the same placement can retry after failure');run(c,'stopSeamPreview();');
+});
+
+test('An invalid joint preview clears the old scene without substituting another placement',()=>{
+  const {c,nodes,timers}=fixture();
+  run(c,`S.seam.production=true;document.querySelector('#seamDialog').open=true;document.querySelector('#seamPreviewViewport').dataset={};
+    globalThis.cleared=0;seamPreviewClear=()=>cleared++;SEAM_FOCUS={id:'invalid',valid:false,reason:'พื้นที่ไม่พอ'};
+    requestSeamPreview();`);
+  assert.equal(timers.size,0);assert.equal(run(c,'cleared'),1);assert.equal(nodes.get('#seamPreviewStatus').textContent,'พื้นที่ไม่พอ');
+  assert.equal(nodes.get('#seamPreviewCanvas').hidden,true);
+});
+
+test('The detail camera keeps assembled and exploded bounds inside narrow and wide viewports',()=>{
+  const {c}=fixture();
+  for(const aspect of [.6,1,2.5])for(const pitch of [-.55,.4])for(const exploded of [false,true]){
+    c.cameraCase={aspect,pitch,exploded};
+    const projected=run(c,`(()=>{
+      const {aspect,pitch,exploded}=cameraCase,fov=.6,cam={yaw:-.35,pitch,zoom:1};
+      const items=[{mn:[-25,-12,2],mx:[0,16,63],offset:[-8,0,0]},
+        {mn:[0,-12,2],mx:[25,16,63],offset:[8,0,0]},{mn:[-14,-5,40],mx:[14,5,43],offset:[0,0,14]}];
+      const min=[0,1,2].map(d=>Math.min(...items.map(p=>p.mn[d]+(exploded?p.offset[d]:0))));
+      const max=[0,1,2].map(d=>Math.max(...items.map(p=>p.mx[d]+(exploded?p.offset[d]:0)))),target=min.map((v,d)=>(v+max[d])/2);
+      const fit=seamPreviewCameraFit(items,target,cam,aspect,fov,exploded),eye=target.map((v,d)=>v+fit.direction[d]*fit.distance);
+      const matrix=m4mul(m4persp(fov,aspect,.1,fit.distance*10),m4look(eye,target,[0,1,0])),points=[];
+      for(const item of items)for(let n=0;n<8;n++){
+        const p=[0,1,2].map(d=>((n&(1<<d))?item.mx[d]:item.mn[d])+(exploded?item.offset[d]:0));
+        const clip=[0,1,2,3].map(d=>matrix[d]*p[0]+matrix[4+d]*p[1]+matrix[8+d]*p[2]+matrix[12+d]);
+        points.push([clip[0]/clip[3],clip[1]/clip[3],clip[3]]);
+      }return points;
+    })()`);
+    assert.ok(projected.every(([x,y,w])=>w>0&&Math.abs(x)<1&&Math.abs(y)<1));
+  }
 });
 
 test('Export is single-flight, snapshots settings, and leaves preview objects unchanged',async()=>{

@@ -377,7 +377,7 @@ test('A selected seam removed by a smaller split count stays removable and its d
     const node=()=>({open:true,clientWidth:600,value:1,textContent:'',replaceChildren:noop,append:noop,
       setAttribute:noop,addEventListener:noop,getContext:()=>drawContext});
     document.querySelector=id=>{if(!testNodes.has(id))testNodes.set(id,node());return testNodes.get(id);};
-    document.createElement=node;SEAM_PLAN=detailPlan;SEAM_FOCUS=detailFocus;SEAM_IMAGE={};`);
+    document.createElement=node;SEAM_PLAN=detailPlan;SEAM_FOCUS=detailFocus;SEAM_IMAGE={};requestSeamPreview=()=>{};`);
   assert.doesNotThrow(()=>run(app.c,'drawSeamDialog()'));
   const detail=run(app.c,'testNodes.get("#seamDetail").textContent');
   assert.ok(detail.includes(stale.reason));assert.doesNotMatch(detail,/undefined|NaN/);
