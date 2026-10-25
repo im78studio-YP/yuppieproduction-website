@@ -124,14 +124,50 @@ input[type=range]{width:100%;accent-color:var(--acc);background:none;border:0;pa
 .stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:16px}
 #view{max-width:100%;max-height:100%;border-radius:6px;box-shadow:0 8px 40px #000a}
 .seam-controls{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+#seamOptions [hidden],#seamDialog [hidden]{display:none!important}
+.seam-quick-method{display:block;margin-top:12px;font-size:14px}
+.seam-launch{width:100%;padding:11px 12px;font-size:14px}
 #seamDialog{width:min(1200px,94vw);max-width:94vw;max-height:92vh;padding:16px;background:var(--panel);color:var(--tx);border:1px solid var(--line);border-radius:12px}
 #seamDialog::backdrop{background:#000b}
-#seamDialog[open]{display:flex;flex-direction:column;height:min(900px,92vh)}
+#seamDialog[open]{display:flex;flex-direction:column;height:min(900px,92vh);overflow:hidden}
+.seam-dialog-body{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px}
+.seam-step{flex:0 0 auto;min-width:0}
+.seam-step-heading{display:flex;align-items:center;gap:8px;margin:0 0 9px;font-size:14px}
+.seam-step-number{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);font-size:12px;flex-shrink:0}
+#seamMethodChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#seamMethodChoices>button{display:flex;align-items:center;gap:10px;min-height:80px;text-align:left;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);cursor:pointer}
+#seamMethodChoices>button:hover{border-color:var(--tx2)}
+#seamMethodChoices>button[aria-pressed="true"]{border-color:var(--acc);background:#ff2d8f14;box-shadow:inset 0 0 0 1px var(--acc)}
+#seamMethodChoices>button:focus-visible,#seamDialog summary:focus-visible{outline:2px solid var(--acc2);outline-offset:3px}
+#seamMethodChoices canvas{width:64px;height:44px;flex-shrink:0;border-radius:6px;background:#10141c}
+#seamMethodChoices strong{display:block;font-size:13px;line-height:1.4}
+#seamMethodChoices small{display:block;margin-top:3px;color:var(--tx2);font-size:11.5px;line-height:1.4}
+#btnSeamMore{margin-top:7px;padding:6px 0;color:var(--acc2);border:0;background:none;text-align:left}
+.seam-fold{border:1px solid var(--line);border-radius:8px;margin-top:8px;padding:8px 10px}
+.seam-fold>summary{cursor:pointer;color:var(--tx2);font-size:12px}
+.seam-fold[open]>summary{margin-bottom:10px;color:var(--tx)}
+.seam-settings-folds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.seam-settings-folds>.seam-fold{margin-top:0}
+.seam-settings-folds>.seam-fold[open]{grid-column:1/-1}
+#seamAdvanced .row select{max-width:440px}
+#seamAdvanced .row label{flex-basis:130px}
+.seam-workspace{flex:1;min-height:240px;display:flex;flex-direction:column}
+.seam-place-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.seam-place-toolbar .seam-step-heading{margin-bottom:0}
+#btnSeamAuto{padding:10px 15px}
+.seam-export-footer{flex:0 0 auto;border-top:1px solid var(--line);padding-top:12px;margin-top:12px;background:var(--panel)}
+.seam-export-row{display:flex;align-items:center;gap:16px;justify-content:space-between}
+.seam-export-copy{min-width:0;flex:1}
+.seam-export-copy .seam-step-heading{margin-bottom:6px}
+.seam-export-check{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--tx2)}
+.seam-export-check input{width:auto;margin:0;accent-color:var(--acc)}
+#btnSeamExport{padding:12px 20px;font-size:14px;white-space:nowrap}
+#seamDialogProductionNote{margin:8px 0 0;line-height:1.45}
 .seam-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .seam-toolbar .grow{flex:1}
 .seam-toolbar select{width:auto}
 .seam-note{font-size:12px;line-height:1.5;color:var(--tx2);margin:8px 0}
-.seam-scroll{flex:1;min-height:120px;max-height:45vh;overflow:auto;background:#e5e7eb;border-radius:6px}
+.seam-scroll{flex:1;min-height:180px;overflow:auto;background:#e5e7eb;border-radius:6px}
 #seamView{display:block;margin-inline:auto;cursor:crosshair}
 #seamDetail{min-height:42px;margin:10px 0;white-space:pre-line}
 #seamList{display:flex;gap:6px;flex-wrap:wrap;max-height:90px;overflow:auto}
@@ -140,8 +176,9 @@ input[type=range]{width:100%;accent-color:var(--acc);background:none;border:0;pa
 .seam-method-card{display:flex;gap:14px;align-items:center;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;margin-bottom:10px}
 #seamMethodView{width:240px;max-width:40%;height:auto;flex-shrink:0;background:#10141c;border-radius:6px}
 .seam-method-card .seam-note{margin:4px 0}
-#seamDialog>.seam-toolbar,#seamDialog>.seam-method-card,#seamDialog>.seam-note,#seamDetail,#seamList{flex-shrink:0}
-@media(max-width:600px){.seam-method-card{align-items:flex-start;flex-direction:column}#seamMethodView{max-width:100%;width:240px}}
+#seamDialog>.seam-toolbar,#seamDetail,#seamList{flex-shrink:0}
+@media(max-width:700px){#seamMethodChoices{grid-template-columns:repeat(2,minmax(0,1fr))}#seamMethodChoices>button{gap:7px;padding:8px}#seamMethodChoices canvas{width:48px;height:38px}.seam-place-toolbar{align-items:flex-start}#btnSeamAuto{width:100%}.seam-export-row{align-items:flex-start;flex-direction:column;gap:10px}#btnSeamExport{width:100%}}
+@media(max-width:600px){#seamDialog{padding:12px}.seam-dialog-body{gap:10px}.seam-method-card{align-items:flex-start;flex-direction:column}#seamMethodView{max-width:100%;width:240px}#seamAdvanced .row{flex-wrap:wrap}#seamAdvanced .row label{flex-basis:100%}#seamMethodChoices canvas{width:40px;height:34px}#seamMethodChoices strong{font-size:12px}#seamMethodChoices small{font-size:11px}}
 .stagelabel{position:absolute;left:14px;top:12px;color:var(--tx2);font-size:11.5px;background:#0008;padding:4px 9px;border-radius:6px}
 #gl{border-radius:6px;box-shadow:0 8px 40px #000a;cursor:grab;display:block}
 #gl:active{cursor:grabbing}
@@ -365,36 +402,13 @@ Studio</textarea>
       <div class="row"><label for="bedMargin">เผื่อขอบทุกด้าน</label><input type="number" id="bedMargin" class="num" min="0" step="1" value="10"><span class="unit">มม. (10 มม. = 1 ซม.)</span></div>
       <div class="printer-fit" id="printerFit">—</div>
       <div class="seam-controls">
-        <div class="row"><label for="seamEnabled">รอยต่อระหว่างชิ้นแบ่ง</label><input type="checkbox" id="seamEnabled"></div>
+        <div class="row"><label for="seamEnabled">ใช้ตัวต่อระหว่างชิ้น</label><input type="checkbox" id="seamEnabled"></div>
+        <button id="btnSeamPlan" class="btn pri seam-launch" type="button">เลือกตัวต่อและส่งออก</button>
         <div id="seamOptions" hidden>
-          <div class="row"><label for="seamMethod">วิธีรอยต่อ · 13 แบบ</label><select id="seamMethod" class="grow"></select></div>
-          <p class="seam-note" id="seamMethodInfo"></p>
-          <div id="seamDimensions">
-          <p class="seam-note">ขนาดพื้นที่สำรองทดลอง · ใช้วิธีที่เลือกกับทุกจุด</p>
-          <div class="row"><label for="seamLength">ยาวข้ามรอยต่อ</label><input type="number" id="seamLength" class="num" min="12" max="60" step="1" value="24"><span class="unit">มม.</span></div>
-          <div class="row"><label for="seamWidth">กว้างตามแนวต่อ</label><input type="number" id="seamWidth" class="num" min="4" max="30" step="1" value="8"><span class="unit">มม.</span></div>
-          </div>
-          <div class="row"><label for="seamProduction">สร้างฐาน รู ตัวต่อจริง</label><input type="checkbox" id="seamProduction"><span class="unit" id="seamProductionCode">13 วิธี</span></div>
-          <div id="seamHardware" hidden>
-            <p class="seam-note" id="seamProfileNote">สร้างเฉพาะจุดที่เลือก รอยต่ออื่นต้องยึดเพิ่มเติม · ขนาดตั้งต้นเป็นตัวอย่าง ต้องปรับและทดลองกับ PETG/ฮาร์ดแวร์จริง</p>
-            <div class="row"><label for="seamHole">รูรับอินเสิร์ต Ø</label><input id="seamHole" class="num" type="number" min="1" max="10" step="0.1"><span class="unit">มม.</span></div>
-            <div class="row"><label for="seamHoleDepth">ความลึกรูตัน</label><input id="seamHoleDepth" class="num" type="number" min="2" max="12" step="0.1"><span class="unit">มม.</span></div>
-            <div class="row"><label for="seamBolt">รูผ่านสกรู Ø</label><input id="seamBolt" class="num" type="number" min="2" max="6" step="0.1"><span class="unit">มม.</span></div>
-            <div class="row"><label for="seamPlateT">หนาแผ่นประกบ</label><input id="seamPlateT" class="num" type="number" min="2" max="8" step="0.2"><span class="unit">มม.</span></div>
-            <div class="row"><label for="seamBaseT">หนาฐานรับ</label><input id="seamBaseT" class="num" type="number" min="4" max="16" step="0.2"><span class="unit">มม.</span></div>
-            <div class="row"><label for="seamFit">ระยะสวม / ข้าง</label><input id="seamFit" class="num" type="number" min="0.1" max="0.6" step="0.05"><span class="unit">มม.</span></div>
-            <div class="row"><label for="seamPin">เดือย Ø</label><input id="seamPin" class="num" type="number" min="2" max="6" step="0.1"><span class="unit">มม.</span></div>
-            <div class="row"><label for="seamNutFlat">น็อตปากประแจ</label><input id="seamNutFlat" class="num" type="number" min="4" max="10" step="0.1"><span class="unit">มม.</span></div>
-            <div class="row"><label for="seamNutT">น็อตหนา</label><input id="seamNutT" class="num" type="number" min="1.5" max="5" step="0.1"><span class="unit">มม.</span></div>
-            <div class="row"><label for="seamMagnetD">แม่เหล็ก Ø</label><input id="seamMagnetD" class="num" type="number" min="3" max="10" step="0.1"><span class="unit">มม.</span></div>
-            <div class="row"><label for="seamMagnetT">แม่เหล็กหนา</label><input id="seamMagnetT" class="num" type="number" min="1" max="5" step="0.1"><span class="unit">มม.</span></div>
-            <p class="seam-note">ฐานรวมกับกรอบ มีลาดรองและรูตัน · แผ่นประกบแยกถาดพิมพ์ · ผนังกล่องในโหมดนี้อิงขอบกริดจริงเพื่อรวมเนื้อสนิท รูฐานอาจกว้างกว่าค่าที่กำหนดได้ถึง 3 เท่าของขนาดช่องกริด ควรพิมพ์ชิ้นทดสอบปรับรูตามอินเสิร์ตจริง</p>
-            <p class="seam-note"><a href="https://www.spirol.com/resources/white-papers/how-to-design-the-proper-hole-for-heat-ultrasonic-inserts/" target="_blank" rel="noopener">แนวทางกำหนดรูอินเสิร์ต</a> · อย่าให้ปลายสกรูยันก้นรู</p>
-          </div>
-          <div id="seamProductionStatus" class="printer-fit" role="status"></div>
-          <div class="row"><button id="btnSeamPlan" class="btn grow">ดูวิธี / วางบนโลโก้จริง</button></div>
+          <strong class="seam-quick-method" id="seamQuickMethod"></strong>
+          <p class="seam-note" id="seamQuickHint"></p>
+          <div id="seamQuickStatus" class="printer-fit" role="status"></div>
           <div class="printer-fit" id="seamSummary" role="status">—</div>
-          <p class="seam-note">เขียว = พื้นที่ผ่านเบื้องต้น · แดง × = วางไม่ได้ · จุดทึบ = เลือกไว้<br>ครบ 13 วิธีสร้างไฟล์จริงได้ · เปลี่ยนวิธีขณะเปิดผลิตจะจัดตำแหน่งใหม่อัตโนมัติ · ตรวจซ้ำด้วยกริดละเอียดก่อนส่งออก</p>
         </div>
       </div>
     </div>
@@ -650,14 +664,73 @@ Studio</textarea>
 </div>
 <div class="toast" id="toast"></div>
 <dialog id="seamDialog" aria-labelledby="seamTitle">
-  <div class="seam-toolbar"><strong id="seamTitle">ตำแหน่งตัวต่อบนโลโก้จริง</strong><span class="grow"></span><button class="btn" id="btnSeamClose">ปิด</button></div>
-  <div class="seam-toolbar"><label for="seamDialogMethod">วิธีรอยต่อ</label><select id="seamDialogMethod"></select><span class="seam-note">13 วิธี · พรีวิวหลักการและพื้นที่สำรอง</span></div>
-  <div class="seam-method-card"><canvas id="seamMethodView" width="360" height="150" aria-label="ภาพหลักการรอยต่อที่เลือก"></canvas><div><strong id="seamMethodName"></strong><p class="seam-note" id="seamMethodGuide"></p><p class="seam-note" id="seamMethodNotice"></p><p class="seam-note">ภาพหลักการ ไม่ใช่รูปทรงผลิต · ค่าพื้นที่สำรองยังต้องทดสอบกับ PETG จริง</p></div></div>
-  <div class="seam-toolbar"><button class="btn" id="btnSeamAuto">เลือกจุดที่ผ่านให้อัตโนมัติ</button><button class="btn" id="btnSeamClear">ล้างจุดที่เลือก</button><label for="seamZoom">ซูม</label><select id="seamZoom"><option value="1">100%</option><option value="2">200%</option><option value="4">400%</option></select></div>
-  <p class="seam-note" id="seamMapLegend">มองจากด้านหน้า · พื้นที่ตัวต่ออยู่ด้านในกล่อง</p>
-  <div class="seam-scroll" id="seamScroll"><canvas id="seamView" aria-label="ผังตำแหน่งตัวต่อบนโลโก้"></canvas></div>
-  <div id="seamDetail" role="status">—</div><div id="seamList" aria-label="จุดตัวต่อที่เลือก"></div>
-  <p class="seam-note" id="seamDialogProductionNote">เปิดสร้างชิ้นงานจริงได้จากเมนูด้านซ้าย ทั้ง 13 วิธี</p>
+  <div class="seam-toolbar"><strong id="seamTitle">เลือกตัวต่อและส่งออก</strong><span class="grow"></span><button class="btn" id="btnSeamClose" type="button">ปิด</button></div>
+  <div class="seam-dialog-body">
+    <section class="seam-step" aria-labelledby="seamChooseTitle">
+      <h2 class="seam-step-heading" id="seamChooseTitle"><span class="seam-step-number" aria-hidden="true">1</span>เลือกวิธีต่อชิ้นงาน</h2>
+      <div id="seamMethodChoices" role="group" aria-label="เลือกวิธีรอยต่อ"></div>
+      <button class="btn gh" id="btnSeamMore" type="button" aria-expanded="false" aria-controls="seamMethodChoices">ดูตัวต่อทั้งหมด 13 แบบ</button>
+      <div class="seam-settings-folds">
+      <details class="seam-fold">
+        <summary>ดูรายละเอียดการประกอบ</summary>
+        <div class="seam-method-card"><canvas id="seamMethodView" width="360" height="150" aria-label="ภาพหลักการรอยต่อที่เลือก"></canvas><div><strong id="seamMethodName"></strong><p class="seam-note" id="seamMethodGuide"></p><p class="seam-note" id="seamMethodNotice"></p><p class="seam-note">ภาพหลักการ · ขนาดสวมต้องทดลองกับ PETG จริง</p></div></div>
+      </details>
+      <details id="seamAdvanced" class="seam-fold">
+        <summary>ปรับขนาดและค่าผลิต (ขั้นสูง)</summary>
+        <div class="row" hidden><label for="seamDialogMethod">วิธีรอยต่อ</label><select id="seamDialogMethod"></select></div>
+          <div class="row"><label for="seamMethod">วิธีรอยต่อ · 13 แบบ</label><select id="seamMethod" class="grow"></select></div>
+          <p class="seam-note" id="seamMethodInfo"></p>
+          <div id="seamDimensions">
+          <p class="seam-note">ขนาดพื้นที่สำรองทดลอง · ใช้วิธีที่เลือกกับทุกจุด</p>
+          <div class="row"><label for="seamLength">ยาวข้ามรอยต่อ</label><input type="number" id="seamLength" class="num" min="12" max="60" step="1" value="24"><span class="unit">มม.</span></div>
+          <div class="row"><label for="seamWidth">กว้างตามแนวต่อ</label><input type="number" id="seamWidth" class="num" min="4" max="30" step="1" value="8"><span class="unit">มม.</span></div>
+          </div>
+          <div class="row"><label for="seamProduction">สร้างฐาน รู ตัวต่อจริง</label><input type="checkbox" id="seamProduction"><span class="unit" id="seamProductionCode">13 วิธี</span></div>
+          <div id="seamHardware" hidden>
+            <p class="seam-note" id="seamProfileNote">สร้างเฉพาะจุดที่เลือก รอยต่ออื่นต้องยึดเพิ่มเติม · ขนาดตั้งต้นเป็นตัวอย่าง ต้องปรับและทดลองกับ PETG/ฮาร์ดแวร์จริง</p>
+            <div class="row"><label for="seamHole">รูรับอินเสิร์ต Ø</label><input id="seamHole" class="num" type="number" min="1" max="10" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamHoleDepth">ความลึกรูตัน</label><input id="seamHoleDepth" class="num" type="number" min="2" max="12" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamBolt">รูผ่านสกรู Ø</label><input id="seamBolt" class="num" type="number" min="2" max="6" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamPlateT">หนาแผ่นประกบ</label><input id="seamPlateT" class="num" type="number" min="2" max="8" step="0.2"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamBaseT">หนาฐานรับ</label><input id="seamBaseT" class="num" type="number" min="4" max="16" step="0.2"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamFit">ระยะสวม / ข้าง</label><input id="seamFit" class="num" type="number" min="0.1" max="0.6" step="0.05"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamPin">เดือย Ø</label><input id="seamPin" class="num" type="number" min="2" max="6" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamNutFlat">น็อตปากประแจ</label><input id="seamNutFlat" class="num" type="number" min="4" max="10" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamNutT">น็อตหนา</label><input id="seamNutT" class="num" type="number" min="1.5" max="5" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamMagnetD">แม่เหล็ก Ø</label><input id="seamMagnetD" class="num" type="number" min="3" max="10" step="0.1"><span class="unit">มม.</span></div>
+            <div class="row"><label for="seamMagnetT">แม่เหล็กหนา</label><input id="seamMagnetT" class="num" type="number" min="1" max="5" step="0.1"><span class="unit">มม.</span></div>
+            <p class="seam-note">ฐานรวมกับกรอบ มีลาดรองและรูตัน · แผ่นประกบแยกถาดพิมพ์ · ผนังกล่องในโหมดนี้อิงขอบกริดจริงเพื่อรวมเนื้อสนิท รูฐานอาจกว้างกว่าค่าที่กำหนดได้ถึง 3 เท่าของขนาดช่องกริด ควรพิมพ์ชิ้นทดสอบปรับรูตามอินเสิร์ตจริง</p>
+            <p class="seam-note"><a href="https://www.spirol.com/resources/white-papers/how-to-design-the-proper-hole-for-heat-ultrasonic-inserts/" target="_blank" rel="noopener">แนวทางกำหนดรูอินเสิร์ต</a> · อย่าให้ปลายสกรูยันก้นรู</p>
+          </div>
+
+        <div id="seamProductionStatus" class="printer-fit" role="status"></div>
+      </details>
+      </div>
+    </section>
+    <section class="seam-step seam-workspace" aria-labelledby="seamPlaceTitle">
+      <div class="seam-place-toolbar">
+        <h2 class="seam-step-heading" id="seamPlaceTitle"><span class="seam-step-number" aria-hidden="true">2</span>วางตัวต่อบนงาน</h2>
+        <button class="btn pri" id="btnSeamAuto" type="button">วางตัวต่ออัตโนมัติ</button>
+      </div>
+      <p class="seam-note" id="seamMapLegend">เขียว = วางได้ · แดง × = วางไม่ได้ · จุดทึบ = เลือกแล้ว</p>
+      <div class="seam-scroll" id="seamScroll"><canvas id="seamView" aria-label="ผังตำแหน่งตัวต่อบนโลโก้"></canvas></div>
+      <details id="seamManual" class="seam-fold">
+        <summary>ปรับตำแหน่งเอง</summary>
+        <div class="seam-toolbar"><button class="btn" id="btnSeamClear" type="button">ล้างจุดที่เลือก</button><label for="seamZoom">ซูม</label><select id="seamZoom"><option value="1">100%</option><option value="2">200%</option><option value="4">400%</option></select></div>
+        <div id="seamDetail" role="status">—</div><div id="seamList" aria-label="จุดตัวต่อที่เลือก"></div>
+      </details>
+    </section>
+  </div>
+  <footer class="seam-export-footer">
+    <div class="seam-export-row">
+      <div class="seam-export-copy">
+        <h2 class="seam-step-heading"><span class="seam-step-number" aria-hidden="true">3</span>ส่งออกไฟล์พิมพ์</h2>
+        <label class="seam-export-check" for="seamQuickProduction"><input type="checkbox" id="seamQuickProduction">รวมตัวต่อในไฟล์พิมพ์</label>
+      </div>
+      <button class="btn pri" id="btnSeamExport" type="button" disabled>ส่งออกไฟล์พิมพ์</button>
+    </div>
+    <p class="seam-note" id="seamDialogProductionNote" role="status">เลือกวิธีและวางตัวต่อเพื่อเตรียมไฟล์พิมพ์</p>
+  </footer>
 </dialog>
 <script>
 /* ══════════════════════════════════════════════════════════════
@@ -2637,7 +2710,7 @@ let ACTIVE_PRINT_PLAN=null;
 
 /* Preview only: use assembly coordinates and the existing raster. Nothing in
    this planner writes to G, PARTS or the production/export builders. */
-let SEAM_PLAN=null, SEAM_FOCUS=null, SEAM_IMAGE=null, SEAM_AUTO_REASON='';
+let SEAM_PLAN=null, SEAM_FOCUS=null, SEAM_IMAGE=null, SEAM_AUTO_REASON='', SEAM_SHOW_ALL=false;
 // Dimensions reserve room for an experimental design; they are not validated
 // fits, hardware specifications or a claim of structural capacity.
 const SEAM_METHODS=[
@@ -4605,6 +4678,42 @@ function drawSeamMethodDiagram(method){
   c.fillStyle='#d8e0ee';c.font='12px sans-serif';c.textAlign='center';c.fillText('A',40,50);c.fillText('B',320,50);
   c.fillText(method.kind==='cover'?'ฝา / ฐานรับ · ภาพหลักการ':method.kind==='process'?'แนวหน้าตัดผนัง · ภาพหลักการ':'พื้นที่สำรองด้านใน · มองจากฝาหลัง',180,140);
 }
+const SEAM_QUICK_LABELS={
+  plate:['สกรู + อินเสิร์ต','ใส่อินเสิร์ตโลหะในฐาน แล้วขันจากด้านหลัง'],
+  lap:['บ่าซ้อน + กาว','ชิ้น A/B ซ้อนกันด้านใน แล้วติดกาว'],
+  dowel:['เดือยคุมแนว + กาว','เสียบเดือยสองฝั่ง ช่วยจัดระดับรอยต่อ'],
+  butt:['ชนตรง + กาว','มีร่องเตรียมกาวและจิ๊กช่วยจัดแนว'],
+  scarf:['ประกบเฉียง + กาว','ชิ้น A/B มีผิวเฉียงแบบขั้นสำหรับติดกาว'],
+  tongue:['ลิ้นเสียบร่อง','สอดชิ้น A เข้าร่อง B แล้วติดกาวบนฐาน'],
+  butterfly:['ลิ่มผีเสื้อ','ใส่ลิ่มจากด้านหลัง แล้วติดกาวกันหลุด'],
+  dovetail:['รางเลื่อนล็อก','เลื่อนชิ้น A ลงราง B จากด้านหลัง'],
+  nut:['สกรู + น็อตฝัง','สอดน็อตเข้าฐาน แล้วขันแผ่นประกบ'],
+  selftap:['สกรูสำหรับพลาสติก','ขันแผ่นประกบลงรูนำบนฐาน'],
+  snap:['คลิปกดล็อก','ใช้จับแนวชั่วคราว ต้องมีตัวยึดถาวรเพิ่ม'],
+  magnet:['แม่เหล็ก + บ่ารับ','ถอดเปิดได้ ต้องมีระบบรับแรงถาวรแยก'],
+  weld:['ร่องเตรียมเชื่อม','มีร่องและจิ๊กจัดแนว ถอดจิ๊กก่อนเชื่อม']
+};
+function renderSeamChoices(){
+  const s=seamSettings(),host=$('#seamMethodChoices'),popular=['plate','lap','dowel'];
+  const methods=SEAM_SHOW_ALL?SEAM_METHODS:[...popular.map(id=>seamMethod(id)),...SEAM_METHODS.filter(m=>m.id===s.method&&!popular.includes(m.id))];
+  const key=s.method+'|'+SEAM_SHOW_ALL;
+  if(host.dataset.key!==key){
+    host.dataset.key=key;host.replaceChildren();
+    for(const m of methods){
+      const [name,description]=SEAM_QUICK_LABELS[m.id],button=document.createElement('button');
+      button.type='button';button.dataset.method=m.id;button.setAttribute('aria-pressed',String(m.id===s.method));
+      button.setAttribute('aria-label','เลือก '+m.code+' '+name);
+      const canvas=document.createElement('canvas');canvas.width=128;canvas.height=88;canvas.setAttribute('aria-hidden','true');
+      const c=canvas.getContext('2d');c.fillStyle='#224f69';c.fillRect(4,12,58,64);c.fillStyle='#62324f';c.fillRect(66,12,58,64);
+      drawSeamGlyph(c,64,44,92,52,m.id,false,'#ffd38c');
+      const copy=document.createElement('span'),title=document.createElement('strong'),detail=document.createElement('small'),code=document.createElement('small');
+      title.textContent=name;detail.textContent=description;code.textContent=m.code+(m.id===s.method?' · ✓ เลือกแล้ว':'');
+      copy.append(title,detail,code);button.append(canvas,copy);
+      button.addEventListener('click',()=>{SEAM_SHOW_ALL=false;changeSeamMethod(m.id);host.querySelector('[data-method="'+m.id+'"]').focus({preventScroll:true});});host.append(button);
+    }
+  }
+  const more=$('#btnSeamMore');more.setAttribute('aria-expanded',String(SEAM_SHOW_ALL));more.textContent=SEAM_SHOW_ALL?'แสดงเฉพาะแบบใช้บ่อย':'ดูตัวต่อทั้งหมด 13 แบบ';
+}
 function syncSeamMethodUI(){
   const s=seamSettings(),method=seamMethod(s.method);
   for(const id of ['seamMethod','seamDialogMethod']){
@@ -4619,10 +4728,41 @@ function syncSeamMethodUI(){
   $('#seamMethodName').textContent=method?method.code+' · '+method.name:'วิธีรอยต่อไม่รองรับ';
   $('#seamMethodGuide').textContent=method?.access||'';
   $('#seamMethodNotice').textContent=method?.notice||'';
+  $('#seamQuickMethod').textContent=method?SEAM_QUICK_LABELS[method.id][0]:'เลือกแบบตัวต่อ';
+  $('#seamQuickHint').textContent=method?SEAM_QUICK_LABELS[method.id][1]:'';
   $('#seamMapLegend').textContent=method?.kind==='body'||s.production
-    ?'มองจากด้านหน้า · เขียว ○ พื้นที่ XY ผ่านเบื้องต้น / แดง × วางไม่ได้ / จุดทึบ เลือกแล้ว · คลิกจุดหรือใกล้แนวตัดเพื่อทดลองตำแหน่ง'
+    ?'จุดทึบ = เลือกแล้ว · วงเขียว = วางได้เบื้องต้น · กากบาทแดง = วางไม่ได้'
     :method?.kind==='process'?'สีส้ม = แนวทำงานเฉพาะหน้าตัดผนังที่รอยแบ่งจริง · ไม่มีจุดตัวต่อรับแรงให้เลือก':'แสดงโลโก้อ้างอิง · วิธีนี้ใช้กับฝาซ่อมหรือจับแนวชั่วคราว จึงไม่แสดงจุดต่อถาวรบนตัวกล่อง';
   drawSeamMethodDiagram(method);
+  renderSeamChoices();
+}
+function openSeamPicker(){
+  const print=printPlan();
+  if(!S.seam.enabled&&print.enabled&&print.tiles.length>1){
+    S.seam={...seamSettings(),enabled:true,production:true};prepareSeamProduction();autoSelectSeamPoints();
+  }
+  $('#seamDialog').showModal();drawSeamDialog();
+}
+function setSeamProduction(active){
+  S.seam.production=active;
+  if(active){prepareSeamProduction();autoSelectSeamPoints();}
+  refreshSeamPlan();queueDraftSave();schedule(false,'m');
+}
+function exportSeamSelection(){
+  if(EXPORT_JOB||PROJECT_LOADING||_sizing){toast('รอเตรียมงานให้เสร็จก่อนส่งออก');return;}
+  try{
+    const s=seamSettings();if(!s.enabled||!s.production)throw new SeamProductionError('เปิดรวมตัวต่อในไฟล์พิมพ์ก่อนส่งออก');
+    seamProductionPlan(SEAM_PLAN);
+  }catch(e){if(!(e instanceof SeamProductionError))throw e;syncSeamProductionUI();toast(seamQuickReason(e.message));return;}
+  // Closing exposes the existing progress and cancel controls while the worker
+  // owns its snapshot; no editable dialog is left above the locked workspace.
+  $('#seamDialog').close();return doExport();
+}
+function seamQuickReason(message){
+  if(/เลือกตำแหน่ง/.test(message))return 'ยังไม่มีจุดตัวต่อ กด “วางตัวต่ออัตโนมัติ” ก่อน';
+  if(/ความลึก|ตื้น/.test(message))return 'กล่องตื้นเกินไปสำหรับตัวต่อนี้ เพิ่มความลึกกล่องหรือเลือกแบบอื่น';
+  if(/มากกว่า 1 ช่อง|แบ่งชิ้นอัตโนมัติ/.test(message))return 'งานนี้ยังไม่มีรอยแบ่งให้ต่อ ตรวจขนาดงานและเปิดแบ่งชิ้นอัตโนมัติ';
+  return message;
 }
 function changeSeamMethod(id){
   const method=seamMethod(id);if(!method)return;
@@ -4678,7 +4818,7 @@ function syncSeamUI(){
   $('#seamLength').value=s.length;$('#seamWidth').value=s.width;
   syncSeamMethodUI();
   syncSeamProductionUI();
-  $('#btnSeamPlan').disabled=!s.enabled||!G?.panel||G.empty||PB.empty;
+  $('#btnSeamPlan').disabled=!G?.panel||G.empty||PB.empty;
   const out=$('#seamSummary');
   if(!plan?.applicable){out.className='printer-fit';out.textContent=(plan?.reason||'เปิดพรีวิวเพื่อคำนวณตำแหน่ง')+(plan?.truncated?' · แสดงแนวบางส่วนถึง 2048 ช่วง':'');return;}
   const valid=plan.candidates.filter(p=>p.valid).length,selected=plan.candidates.filter(p=>p.selected),bad=plan.candidates.length-valid;
@@ -4728,6 +4868,7 @@ function updateSeamSelection(selected,focusId,autoReason=''){
 function syncSeamProductionUI(){
   const s=seamSettings(),active=s.production;
   $('#seamProduction').checked=active;$('#seamProduction').disabled=!seamMethod(s.method);
+  $('#seamQuickProduction').checked=active;
   $('#seamProductionCode').textContent=seamMethod(s.method)?.code||'—';
   $('#seamHardware').hidden=!active;
   for(const [id,key] of [['seamHole','hole'],['seamHoleDepth','depth'],['seamBolt','bolt'],['seamPlateT','plateT'],['seamBaseT','baseT'],['seamFit','clearance'],['seamPin','pin'],['seamNutFlat','nutFlat'],['seamNutT','nutT'],['seamMagnetD','magnetD'],['seamMagnetT','magnetT']])$('#'+id).value=s.hardware[key];
@@ -4737,13 +4878,18 @@ function syncSeamProductionUI(){
   $('label[for="seamHole"]').textContent=s.method==='selftap'?'รูนำพลาสติก Ø':'รูรับอินเสิร์ต Ø';
   $('#seamProfileNote').textContent=seamMethod(s.method)?.code+' · สร้างเฉพาะจุดที่เลือก ขนาดตั้งต้นเป็นตัวอย่าง ต้องทดสอบ PETG และฮาร์ดแวร์จริง'+(['lap','scarf','tongue','dovetail'].includes(s.method)?' · พิมพ์ชุด A/B แยกแล้วติดบนฐานด้วยกาว':'' )+(['snap','magnet'].includes(s.method)?' · ใช้จับแนว/ถอดได้ ต้องมีระบบรับน้ำหนักถาวรแยก':'');
   const out=$('#seamProductionStatus');out.hidden=!active;
+  const print=printPlan(),needsSplit=print.enabled&&print.tiles.length>1;
+  $('#seamQuickProduction').disabled=!needsSplit&&!active;
+  let ready=false,quick=print.error||(!print.enabled?'เปิดแบ่งชิ้นอัตโนมัติในโหมดงานที่รองรับก่อนเพิ่มตัวต่อ':needsSplit?'เปิด “รวมตัวต่อในไฟล์พิมพ์” เพื่อสร้างชิ้นต่อจริง':'งานนี้พิมพ์ชิ้นเดียวได้ ยังไม่ต้องเพิ่มตัวต่อ ปิดหน้านี้แล้วส่งออกตามปกติ');
   let text='พรีวิวเท่านั้น — ไฟล์พิมพ์ยังไม่มีฐาน รู หรือตัวต่อจากจุดเหล่านี้';
   if(active){
-    try{const p=seamProductionPlan(SEAM_PLAN),count=p.joints.reduce((n,j)=>n+(j.design?.components.length||1),0);text=`สร้างจริง ${seamMethod(s.method).code} · ${p.joints.length} จุด · ${count} ชิ้นต่อ/จิ๊ก · ${p.joints.length*2} ฐานรับ · ตรวจซ้ำก่อนส่งออก`;out.className='printer-fit ok';}
-    catch(e){if(!(e instanceof SeamProductionError))throw e;text='ยังสร้างไฟล์ตัวต่อไม่ได้: '+(!s.selected.length&&SEAM_AUTO_REASON?SEAM_AUTO_REASON:e.message);out.className='printer-fit warn';}
+    try{const p=seamProductionPlan(SEAM_PLAN),count=p.joints.reduce((n,j)=>n+(j.design?.components.length||1),0);text=`สร้างจริง ${seamMethod(s.method).code} · ${p.joints.length} จุด · ${count} ชิ้นต่อ/จิ๊ก · ${p.joints.length*2} ฐานรับ · ตรวจซ้ำก่อนส่งออก`;ready=true;quick=`พร้อมส่งออก · ${p.joints.length} จุดต่อ · ${count} ชิ้นต่อ/จิ๊ก`;out.className='printer-fit ok';}
+    catch(e){if(!(e instanceof SeamProductionError))throw e;const reason=!s.selected.length&&SEAM_AUTO_REASON?SEAM_AUTO_REASON:e.message;text='ยังสร้างไฟล์ตัวต่อไม่ได้: '+reason;quick=seamQuickReason(reason);out.className='printer-fit warn';}
     out.textContent=text;
   }
-  $('#seamExportHint').textContent=text;$('#seamDialogProductionNote').textContent=text;
+  $('#seamExportHint').textContent=text;$('#seamDialogProductionNote').textContent=quick+' · ตรวจขนาดละเอียดอีกครั้งตอนส่งออก';
+  $('#seamQuickStatus').textContent=quick;$('#seamQuickStatus').className='printer-fit '+(ready?'ok':'warn');
+  $('#btnSeamExport').disabled=!ready;
 }
 function autoSelectSeamPoints(){
   const previous=S.seam.selected;S.seam.selected=[];const plan=buildSeamPlan(),chosen=[];let reason='';
@@ -6806,11 +6952,9 @@ function wire(){
   $('#seamEnabled').addEventListener('change',e=>{
     S.seam.enabled=e.target.checked;if(!e.target.checked)S.seam.production=false;refreshSeamPlan();queueDraftSave();schedule(false,'m');
   });
-  $('#seamProduction').addEventListener('change',e=>{
-    S.seam.production=e.target.checked;
-    if(e.target.checked){prepareSeamProduction();autoSelectSeamPoints();}
-    refreshSeamPlan();queueDraftSave();schedule(false,'m');
-  });
+  for(const id of ['seamProduction','seamQuickProduction'])$('#'+id).addEventListener('change',e=>setSeamProduction(e.target.checked));
+  $('#btnSeamMore').addEventListener('click',()=>{SEAM_SHOW_ALL=!SEAM_SHOW_ALL;renderSeamChoices();drawSeamDialog();});
+  $('#btnSeamExport').addEventListener('click',exportSeamSelection);
   for(const [id,key,lo,hi] of [['seamHole','hole',1,10],['seamHoleDepth','depth',2,12],['seamBolt','bolt',2,6],['seamPlateT','plateT',2,8],['seamBaseT','baseT',4,16],['seamFit','clearance',.1,.6],['seamPin','pin',2,6],['seamNutFlat','nutFlat',4,10],['seamNutT','nutT',1.5,5],['seamMagnetD','magnetD',3,10],['seamMagnetT','magnetT',1,5]]){
     const el=$('#'+id);el.addEventListener('change',()=>{const value=+el.value;if(el.value===''||!Number.isFinite(value)||value<lo||value>hi){el.value=S.seam.hardware[key];return;}S.seam.hardware[key]=value;refreshSeamPlan();schedule(false,'m');});
     el.addEventListener('keydown',e=>{if(e.key==='Enter'){el.dispatchEvent(new Event('change'));el.blur();}});
@@ -6823,9 +6967,10 @@ function wire(){
     });
     el.addEventListener('keydown',e=>{if(e.key==='Enter'){el.dispatchEvent(new Event('change'));el.blur();}});
   }
-  $('#btnSeamPlan').addEventListener('click',()=>{$('#seamDialog').showModal();drawSeamDialog();});
+  $('#btnSeamPlan').addEventListener('click',openSeamPicker);
   $('#btnSeamClose').addEventListener('click',()=>$('#seamDialog').close());
   $('#seamZoom').addEventListener('change',drawSeamDialog);
+  for(const el of $('#seamDialog').querySelectorAll('details'))el.addEventListener('toggle',drawSeamDialog);
   $('#seamView').addEventListener('click',pickSeam);$('#view').addEventListener('click',pickSeam);
   $('#btnSeamClear').addEventListener('click',()=>updateSeamSelection([]));
   $('#btnSeamAuto').addEventListener('click',autoSelectSeamPoints);

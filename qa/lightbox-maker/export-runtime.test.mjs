@@ -25,6 +25,34 @@ function fixture(){
 }
 const settle=async()=>{for(let i=0;i<12;i++)await Promise.resolve();};
 
+test('The seam picker keeps invalid production in the dialog and never starts an export',async()=>{
+  const {c,nodes}=fixture();
+  run(c,`globalThis.events=[];S.seam.enabled=S.seam.production=true;
+    document.querySelector('#seamDialog').close=()=>events.push('close');
+    doExport=()=>events.push('export');syncSeamProductionUI=()=>events.push('status');
+    seamProductionPlan=()=>{throw new SeamProductionError('เลือกตำแหน่งตัวต่อก่อนเปิดสร้างจริง');};`);
+  await run(c,'exportSeamSelection()');
+  assert.deepEqual(plain(run(c,'events')),['status']);assert.match(nodes.get('#toast').textContent,/วางตัวต่ออัตโนมัติ/);
+  run(c,'events=[];S.seam.production=false;');await run(c,'exportSeamSelection()');
+  assert.deepEqual(plain(run(c,'events')),['status']);assert.match(nodes.get('#toast').textContent,/รวมตัวต่อ/);
+});
+
+test('The seam picker closes before exporting through the existing worker flow',async()=>{
+  const {c}=fixture();
+  run(c,`globalThis.events=[];S.seam.enabled=S.seam.production=true;
+    document.querySelector('#seamDialog').close=()=>events.push('close');
+    seamProductionPlan=()=>({joints:[{}]});doExport=async()=>events.push('export');`);
+  await run(c,'exportSeamSelection()');assert.deepEqual(plain(run(c,'events')),['close','export']);
+  run(c,'events=[];PROJECT_LOADING=true;');await run(c,'exportSeamSelection()');assert.deepEqual(plain(run(c,'events')),[]);
+});
+
+test('Opening the seam picker for a single plate leaves normal export settings unchanged',()=>{
+  const {c}=fixture();
+  run(c,`globalThis.opened=false;printPlan=()=>({enabled:true,tiles:[{}]});drawSeamDialog=()=>{};
+    document.querySelector('#seamDialog').showModal=()=>opened=true;openSeamPicker();`);
+  assert.equal(run(c,'opened'),true);assert.equal(run(c,'S.seam.enabled'),false);assert.equal(run(c,'S.seam.production'),false);
+});
+
 test('Export is single-flight, snapshots settings, and leaves preview objects unchanged',async()=>{
   const {c,nodes}=fixture();
   run(c,"globalThis.preview=G;globalThis.palette=S.pal;globalThis.first=doExport();globalThis.second=doExport();");
