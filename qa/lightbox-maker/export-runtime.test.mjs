@@ -48,18 +48,29 @@ test('The seam picker closes before exporting through the existing worker flow',
 
 test('Opening the seam picker for a single plate leaves normal export settings unchanged',()=>{
   const {c}=fixture();
-  run(c,`globalThis.opened=false;printPlan=()=>({enabled:true,tiles:[{}]});drawSeamDialog=()=>{};
+  run(c,`globalThis.opened=false;printPlan=()=>({enabled:true,tiles:[{}]});refreshSeamPlan=()=>{};
     document.querySelector('#seamDialog').showModal=()=>opened=true;openSeamPicker();`);
   assert.equal(run(c,'opened'),true);assert.equal(run(c,'S.seam.enabled'),false);assert.equal(run(c,'S.seam.production'),false);
 });
 
-test('Joint preview ignores stale worker results and never transfers the live artwork grid',()=>{
+test('Opening a new divided-work picker enables preview without opting into connector export',()=>{
+  const {c}=fixture();
+  run(c,`globalThis.previewPlaced=0;globalThis.originalHardware=JSON.stringify(S.seam.hardware);
+    printPlan=()=>({enabled:true,tiles:[{},{}]});refreshSeamPlan=()=>{};autoSelectSeamPoints=()=>previewPlaced++;
+    document.querySelector('#seamDialog').showModal=()=>{};openSeamPicker();`);
+  assert.equal(run(c,'S.seam.enabled'),true);assert.equal(run(c,'S.seam.production'),false);
+  assert.equal(run(c,'previewPlaced'),1);assert.equal(run(c,'JSON.stringify(S.seam.hardware)===originalHardware'),true);
+});
+
+test('Joint preview works with export disabled, ignores stale workers, and preserves live settings',()=>{
   const {c,nodes,timers}=fixture();
-  run(c,`globalThis.previewWorkers=[];globalThis.previewAccepted=[];S.seam.enabled=S.seam.production=true;
+  run(c,`globalThis.previewWorkers=[];globalThis.previewAccepted=[];S.seam.enabled=true;S.seam.production=false;
     document.querySelector('#seamDialog').open=true;document.querySelector('#seamPreviewViewport').dataset={};
+    document.querySelector('#btnSeamExport').disabled=true;
     globalThis.pointA={id:'a',valid:true},globalThis.pointB={id:'b',valid:true};SEAM_FOCUS=pointA;SEAM_PLAN={candidates:[pointA,pointB]};
     G.edtIn=new Float32Array(1);globalThis.originalGrid=G;globalThis.originalState=JSON.stringify(S);
     seamPreviewClear=()=>{};seamPreviewRequestRender=()=>{};
+    buildSeamPlan=()=>SEAM_PLAN;
     seamPreviewSetScene=scene=>{previewAccepted.push(scene.tag);return {parts:1,triangles:1};};
     seamProductionPlan=p=>({spec:{},joints:[{id:p.candidates[0].id,method:'plate',design:{contains(){}}}]});
     createExportWorker=()=>{const worker={stopped:0,postMessage(data,...transfer){this.sent=data;this.transfer=transfer;},terminate(){this.stopped++;}};
@@ -71,6 +82,7 @@ test('Joint preview ignores stale worker results and never transfers the live ar
   run(c,"previewWorkers[0].onmessage({data:{type:'done',scene:{tag:'stale'}}});previewWorkers[1].onmessage({data:{type:'done',scene:{tag:'current',resolution:.15}}});");
   assert.deepEqual(plain(run(c,'previewAccepted')),['current']);assert.equal(nodes.get('#seamPreviewViewport').dataset.point,'b');
   assert.equal(run(c,'G===originalGrid&&G.panel.byteLength===1&&JSON.stringify(S)===originalState'),true);
+  assert.equal(run(c,'S.seam.production'),false);assert.equal(nodes.get('#btnSeamExport').disabled,true);
   run(c,'SEAM_FOCUS=pointA;requestSeamPreview();');flush();run(c,"stopSeamPreview();previewWorkers[2].onmessage({data:{type:'done',scene:{tag:'closed'}}});");
   assert.deepEqual(plain(run(c,'previewAccepted')),['current']);assert.equal(run(c,'previewWorkers[2].stopped'),1);
   run(c,'SEAM_FOCUS=pointB;requestSeamPreview();');flush();

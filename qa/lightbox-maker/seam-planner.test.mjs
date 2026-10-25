@@ -137,7 +137,7 @@ test('Missing methods retain the plate default while unknown methods remain visi
 test('Changing each method applies its dimensions and preserves selections for revalidation',()=>{
   const app=fixture(),{c}=app,{candidate}=validCandidate(app);
   c.savedSelection={axis:candidate.axis,seamIndex:candidate.seamIndex,tileIndex:candidate.tileIndex,along:candidate.along};
-  run(c,'S.seam.selected=[savedSelection];refreshSeamPlan=queueDraftSave=draw=()=>{};');
+  run(c,'S.seam.selected=[savedSelection];refreshSeamPlan=queueDraftSave=draw=()=>{};document.querySelector=()=>({open:false});');
   const selected=plain(run(c,'S.seam.selected'));
   for(const id of methodIds){
     c.testMethodId=id;run(c,'changeSeamMethod(testMethodId);');

@@ -2818,8 +2818,8 @@ function seamCandidateAt(plan,axis,seamIndex,tileIndex,along){
   if(plan.keepouts.some(k=>seamOverlap(f,k,0)))return fail('hardware','ชนพื้นที่สกรู สแนป รูแขวน หรือช่องสายไฟเดิม');
   p.componentId=component;p.valid=true;p.code='ok';p.reason='พื้นที่ XY ผ่านเบื้องต้น มีเนื้อทั้งสองฝั่งและอยู่ใกล้ผนัง';return p;
 }
-function buildSeamPlan(){
-  const s=seamSettings(),method=seamMethod(s.method),tiles=printPlan();
+function buildSeamPlan(s=seamSettings()){
+  const method=seamMethod(s.method),tiles=printPlan();
   const p={version:2,method:s.method,kind:method?.kind,requested:s.enabled,applicable:false,reason:'',resolution:G?.px||0,seams:[],processSegments:[],candidates:[],keepouts:[],
     spec:{length:s.length,width:s.width,setback:0,minDepth:method?.minDepth||0},truncated:false};
   if(!s.enabled){p.reason='ยังไม่เปิดวางแผนตัวต่อ';return p;}
@@ -2903,10 +2903,10 @@ function buildSeamPlan(){
 
 let ACTIVE_SEAM_PRODUCTION=null;
 class SeamProductionError extends Error{constructor(message){super(message);this.name='SeamProductionError';}}
-function seamProductionPlan(previewPlan=null){
-  const s=seamSettings();if(!s.production)return null;
+function seamProductionPlan(previewPlan=null,s=seamSettings()){
+  if(!s.production)return null;
   if(!s.enabled||!seamMethod(s.method))throw new SeamProductionError('เปิดรอยต่อและเลือกวิธีที่รองรับก่อนสร้างไฟล์จริง');
-  const plan=previewPlan||buildSeamPlan(),h=s.hardware;
+  const plan=previewPlan||buildSeamPlan(s),h=s.hardware;
   if(!plan.applicable||plan.truncated)throw new SeamProductionError('สร้างตัวต่อจริงไม่ได้: '+(plan.reason||'ผังมีจำนวนจุดเกินขีดจำกัด'));
   for(const [key,lo,hi] of [['hole',1,10],['depth',2,12],['bolt',2,6],['plateT',2,8],['baseT',4,16],['clearance',.1,.6],['pin',2,6],['nutFlat',4,10],['nutT',1.5,5],['magnetD',3,10],['magnetT',1,5]])
     if(!Number.isFinite(+h[key])||+h[key]<lo||+h[key]>hi)throw new SeamProductionError('ขนาดฮาร์ดแวร์ '+key+' ไม่อยู่ในช่วงที่รองรับ');
@@ -4985,7 +4985,7 @@ function syncSeamMethodUI(){
   $('#seamQuickMethod').textContent=method?SEAM_QUICK_LABELS[method.id][0]:'เลือกแบบตัวต่อ';
   $('#seamQuickHint').textContent=method?SEAM_QUICK_LABELS[method.id][1]:'';
   $('#seamChosenLabel').textContent=method?SEAM_QUICK_LABELS[method.id][0]:'เลือกแบบที่ต้องการ';
-  $('#seamMapLegend').textContent=method?.kind==='body'||s.production
+  $('#seamMapLegend').textContent=method?.kind==='body'||s.production||$('#seamDialog').open
     ?'คลิกจุดเพื่อดู 3 มิติ · จุดทึบ = รวมในไฟล์ · วงสีฟ้า = จุดที่กำลังดู · × = วางไม่ได้'
     :method?.kind==='process'?'สีส้ม = แนวทำงานเฉพาะหน้าตัดผนังที่รอยแบ่งจริง · ไม่มีจุดตัวต่อรับแรงให้เลือก':'แสดงโลโก้อ้างอิง · วิธีนี้ใช้กับฝาซ่อมหรือจับแนวชั่วคราว จึงไม่แสดงจุดต่อถาวรบนตัวกล่อง';
   drawSeamMethodDiagram(method);
@@ -4994,9 +4994,11 @@ function syncSeamMethodUI(){
 function openSeamPicker(){
   const print=printPlan(),first=!S.seam.enabled;
   if(!S.seam.enabled&&print.enabled&&print.tiles.length>1){
-    S.seam={...seamSettings(),enabled:true,production:true};prepareSeamProduction();autoSelectSeamPoints();
+    S.seam={...seamSettings(),enabled:true};
   }
-  $('#seamChooser').open=first||!S.seam.selected.length;$('#seamDialog').showModal();drawSeamDialog();
+  $('#seamChooser').open=first||!S.seam.selected.length;$('#seamDialog').showModal();
+  if(first&&S.seam.enabled)autoSelectSeamPoints();
+  refreshSeamPlan();
 }
 function setSeamProduction(active){
   S.seam.production=active;
@@ -5023,14 +5025,23 @@ function changeSeamMethod(id){
   const method=seamMethod(id);if(!method)return;
   S.seam={...seamSettings(),method:id,length:method.length,width:method.width};
   if(S.seam.production){prepareSeamProduction();autoSelectSeamPoints();}
+  else if($('#seamDialog').open)autoSelectSeamPoints();
   refreshSeamPlan();queueDraftSave();if(S.seam.production)schedule(false,'m');else draw();
 }
-function prepareSeamProduction(){
-  const s=S.seam; s.length=Math.max(32,s.length);s.width=Math.max(12,s.width);
+function prepareSeamProduction(s=S.seam){
+  s.length=Math.max(32,s.length);s.width=Math.max(12,s.width);
   if(s.method!=='plate')s.hardware.clearance=Math.max(.35,s.hardware.clearance);
   if(s.method==='selftap'&&s.hardware.hole>=s.hardware.bolt)s.hardware.hole=Math.min(2.5,s.hardware.bolt-.5);
   if(s.method==='plate'&&s.hardware.hole<=s.hardware.bolt)s.hardware.hole=Math.max(4.2,s.hardware.bolt+.8);
 }
+function seamPreviewSettings(){
+  const settings=seamSettings();
+  // Preview the defaults that enabling export would prepare, without enabling
+  // export or overwriting an already configured production profile.
+  if(!settings.production)prepareSeamProduction(settings);
+  settings.production=true;return settings;
+}
+function seamUIPlan(){return buildSeamPlan($('#seamDialog').open?seamPreviewSettings():seamSettings());}
 function drawSeamProcesses(c,cv){
   const plan=SEAM_PLAN;if(plan?.kind!=='process')return;
   c.save();c.strokeStyle='#e9a22c';c.lineWidth=4;
@@ -5153,9 +5164,9 @@ function setSeamPreviewView(exploded){
 }
 function requestSeamPreview(){
   if(!$('#seamDialog').open)return;
-  const point=SEAM_FOCUS,s=seamSettings();
-  if(!point||!point.valid||!s.production){
-    stopSeamPreview();setSeamPreviewStatus(!s.production?'เปิด “รวมตัวต่อในไฟล์พิมพ์” เพื่อดูฐานและตัวต่อจริง':point?.reason||'ยังไม่มีตำแหน่งที่วางตัวต่อได้','empty');return;
+  const point=SEAM_FOCUS,s=seamPreviewSettings();
+  if(!point||!point.valid){
+    stopSeamPreview();setSeamPreviewStatus(point?.reason||'ยังไม่มีตำแหน่งที่วางตัวต่อได้','empty');return;
   }
   const key=JSON.stringify([point.id,s.method,s.length,s.width,s.hardware,S.box,S.hw,S.build,S.face,S.shape,S.exp,PB]);
   if(SEAM_DETAIL_KEY===key&&SEAM_DETAIL_GRID===G){seamPreviewRequestRender();return;}
@@ -5165,7 +5176,7 @@ function requestSeamPreview(){
     SEAM_DETAIL_TIMER=null;if(SEAM_DETAIL_KEY!==key||!$('#seamDialog').open)return;
     let job=null;
     try{
-      const production=seamProductionPlan({...SEAM_PLAN,candidates:[{...point,selected:true}]}),joint={...production.joints[0]};delete joint.design;
+      const production=seamProductionPlan({...SEAM_PLAN,candidates:[{...point,selected:true}]},s),joint={...production.joints[0]};delete joint.design;
       const state=projectSnapshot();delete state.src.imgData;delete state.src.imgSrc;delete state.src.fontData;
       job={...createExportWorker(seamPreviewWorkerMain),key,started:performance.now()};SEAM_DETAIL_JOB=job;
       const fail=message=>{if(SEAM_DETAIL_JOB!==job)return;releaseSeamPreviewJob(job);SEAM_DETAIL_KEY='';SEAM_DETAIL_GRID=null;seamPreviewClear();setSeamPreviewStatus(message,'error');};
@@ -5191,10 +5202,11 @@ function requestSeamPreview(){
   },80);
 }
 function refreshSeamPlan(){
-  SEAM_PLAN=buildSeamPlan();SEAM_IMAGE=null;SEAM_FOCUS=null;syncSeamUI();drawSeamDialog();
+  const focusId=$('#seamDialog').open?SEAM_FOCUS?.id:null;
+  SEAM_PLAN=seamUIPlan();SEAM_IMAGE=null;SEAM_FOCUS=SEAM_PLAN.candidates.find(p=>p.id===focusId)||null;syncSeamUI();drawSeamDialog();
 }
 function updateSeamSelection(selected,focusId,autoReason=''){
-  S.seam.selected=selected;SEAM_AUTO_REASON=autoReason;SEAM_PLAN=buildSeamPlan();
+  S.seam.selected=selected;SEAM_AUTO_REASON=autoReason;SEAM_PLAN=seamUIPlan();
   SEAM_FOCUS=SEAM_PLAN.candidates.find(p=>p.id===focusId)||null;
   queueDraftSave();syncSeamUI();if(S.seam.production)schedule(false,'m');else draw();drawSeamDialog();
 }
@@ -5213,8 +5225,8 @@ function syncSeamProductionUI(){
   const out=$('#seamProductionStatus');out.hidden=!active;
   const print=printPlan(),needsSplit=print.enabled&&print.tiles.length>1;
   $('#seamQuickProduction').disabled=!needsSplit&&!active;
-  let ready=false,quick=print.error||(!print.enabled?'เปิดแบ่งชิ้นอัตโนมัติในโหมดงานที่รองรับก่อนเพิ่มตัวต่อ':needsSplit?'เปิด “รวมตัวต่อในไฟล์พิมพ์” เพื่อสร้างชิ้นต่อจริง':'งานนี้พิมพ์ชิ้นเดียวได้ ยังไม่ต้องเพิ่มตัวต่อ ปิดหน้านี้แล้วส่งออกตามปกติ');
-  let text='พรีวิวเท่านั้น — ไฟล์พิมพ์ยังไม่มีฐาน รู หรือตัวต่อจากจุดเหล่านี้';
+  let ready=false,quick=print.error||(!print.enabled?'เปิดแบ่งชิ้นอัตโนมัติในโหมดงานที่รองรับก่อนเพิ่มตัวต่อ':needsSplit?'ดูพรีวิวได้โดยไม่ต้องติ๊ก · ติ๊ก “รวมตัวต่อในไฟล์พิมพ์” เมื่อต้องการส่งออกตัวต่อ':'งานนี้พิมพ์ชิ้นเดียวได้ ยังไม่ต้องเพิ่มตัวต่อ ปิดหน้านี้แล้วส่งออกตามปกติ');
+  let text='ดูพรีวิวได้ · ไฟล์ส่งออกยังไม่รวมตัวต่อจนกว่าจะเปิด “รวมตัวต่อในไฟล์พิมพ์”';
   if(active){
     try{const p=seamProductionPlan(SEAM_PLAN),count=p.joints.reduce((n,j)=>n+(j.design?.components.length||1),0);text=`สร้างจริง ${seamMethod(s.method).code} · ${p.joints.length} จุด · ${count} ชิ้นต่อ/จิ๊ก · ${p.joints.length*2} ฐานรับ · ตรวจซ้ำก่อนส่งออก`;ready=true;quick=`พร้อมส่งออก · ${p.joints.length} จุดต่อ · ${count} ชิ้นต่อ/จิ๊ก`;out.className='printer-fit ok';}
     catch(e){if(!(e instanceof SeamProductionError))throw e;const reason=!s.selected.length&&SEAM_AUTO_REASON?SEAM_AUTO_REASON:e.message;text='ยังสร้างไฟล์ตัวต่อไม่ได้: '+reason;quick=seamQuickReason(reason);out.className='printer-fit warn';}
@@ -5225,18 +5237,17 @@ function syncSeamProductionUI(){
   $('#btnSeamExport').disabled=!ready;
 }
 function autoSelectSeamPoints(){
-  const previous=S.seam.selected;S.seam.selected=[];const plan=buildSeamPlan(),chosen=[];let reason='';
+  const settings=$('#seamDialog').open?seamPreviewSettings():seamSettings();
+  const plan=buildSeamPlan({...settings,selected:[]}),chosen=[];let reason='';
   for(const p of plan.candidates){
-    if(!p.valid||chosen.some(q=>seamOverlap(p.footprint,q.footprint))||chosen.length>=(S.seam.production?32:128))continue;
-    if(S.seam.production){
-      S.seam.selected=[...chosen,p].map(({axis,seamIndex,tileIndex,along})=>({axis,seamIndex,tileIndex,along}));
-      try{seamProductionPlan({...plan,candidates:[...chosen,p].map(q=>({...q,selected:true}))});}catch(e){if(!(e instanceof SeamProductionError))throw e;reason||=e.message;continue;}
+    if(!p.valid||chosen.some(q=>seamOverlap(p.footprint,q.footprint))||chosen.length>=(settings.production?32:128))continue;
+    if(settings.production){
+      try{seamProductionPlan({...plan,candidates:[...chosen,p].map(q=>({...q,selected:true}))},settings);}catch(e){if(!(e instanceof SeamProductionError))throw e;reason||=e.message;continue;}
     }
     chosen.push(p);
   }
-  S.seam.selected=previous;
   updateSeamSelection(chosen.map(({axis,seamIndex,tileIndex,along})=>({axis,seamIndex,tileIndex,along})),undefined,chosen.length?'':reason);
-  if(!chosen.length&&S.seam.production)toast('ยังไม่มีจุดที่ฐานจริงวางได้ ปรับพื้นที่สำรองหรือความลึกกล่อง');
+  if(!chosen.length&&settings.production)toast('ยังไม่มีจุดที่ฐานจริงวางได้ ปรับพื้นที่สำรองหรือความลึกกล่อง');
 }
 function pickSeam(e){
   const plan=SEAM_PLAN,cv=e.currentTarget;
@@ -7314,7 +7325,7 @@ function wire(){
   }
   $('#btnSeamPlan').addEventListener('click',openSeamPicker);
   $('#btnSeamClose').addEventListener('click',()=>$('#seamDialog').close());
-  $('#seamDialog').addEventListener('close',stopSeamPreview);
+  $('#seamDialog').addEventListener('close',()=>{stopSeamPreview();refreshSeamPlan();});
   $('#btnSeamPrev').addEventListener('click',()=>cycleSeamPreview(-1));$('#btnSeamNext').addEventListener('click',()=>cycleSeamPreview(1));
   $('#btnSeamUsePoint').addEventListener('click',toggleSeamPreviewPoint);
   $('#btnSeamAssembled').addEventListener('click',()=>setSeamPreviewView(false));$('#btnSeamExploded').addEventListener('click',()=>setSeamPreviewView(true));

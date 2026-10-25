@@ -396,6 +396,45 @@ test('Every joint preview uses distinct closed manufacturing geometry and leaves
   }
 });
 
+test('All 13 physical previews work with export disabled and leave printable meshes unchanged',()=>{
+  for(const method of methods){
+    const app=fixture({width:120,height:120,px:.2}),{c}=app;c.previewMethod=method;
+    run(c,`S.seam.method=previewMethod;S.seam.production=false;S.seam.length=48;S.seam.width=20;
+      S.seam.hardware.clearance=.4;if(previewMethod==='selftap')S.seam.hardware.hole=2.5;`);
+    const before=meshDigest(app.build(false));
+    const preview=run(c,`(()=>{
+      const before=JSON.stringify(S),grid=G,bounds=PB,settings=seamPreviewSettings(),plan=buildSeamPlan(settings);
+      if(!settings.production||S.seam.production)throw new Error('preview and export settings are not independent');
+      const candidate=plan.candidates.find(p=>p.valid&&p.axis==='x');
+      if(!candidate)throw new Error(previewMethod+': no physical preview site');
+      const production=seamProductionPlan({...plan,candidates:[{...candidate,selected:true}]},settings);
+      const result=seamPreviewGeometry(production,production.joints[0].id);
+      if(JSON.stringify(S)!==before||G!==grid||PB!==bounds)throw new Error('preview changed live artwork or export settings');
+      if(seamProductionPlan()!==null)throw new Error('preview enabled printable joints');
+      return result;
+    })()`);
+    assert.equal(preview.method,method);assert.ok(preview.parts.some(p=>p.role==='connector'));
+    assert.ok(preview.parts.every(p=>p.n>0&&p.n===p.a.length&&p.a.every(Number.isFinite)));
+    assert.equal(run(c,'S.seam.production'),false);assert.deepEqual(plain(run(c,'S.seam.selected')),[]);
+    assert.deepEqual(meshDigest(app.build(false)),before,method+': preview altered export-disabled meshes');
+  }
+});
+
+test('Preview preparation normalizes only a copy of export-disabled settings and preserves active custom profiles',()=>{
+  const {c}=fixture();
+  const result=run(c,`(()=>{
+    S.seam.method='selftap';S.seam.length=20;S.seam.width=8;S.seam.hardware.hole=4.2;S.seam.hardware.clearance=.2;
+    const before=JSON.stringify(S),off=seamPreviewSettings();
+    if(JSON.stringify(S)!==before)throw new Error('preview preparation changed saved settings');
+    S.seam.production=true;const active=seamSettings(),on=seamPreviewSettings();
+    return {off,on,active,hardwareCopied:off.hardware!==S.seam.hardware&&on.hardware!==S.seam.hardware};
+  })()`);
+  assert.equal(result.off.production,true);assert.equal(result.off.length,32);assert.equal(result.off.width,12);
+  assert.equal(result.off.hardware.hole,2.5);assert.equal(result.off.hardware.clearance,.35);
+  assert.deepEqual(plain(result.on),plain(result.active),'active custom profile was silently replaced');
+  assert.equal(result.on.length,20);assert.equal(result.on.hardware.hole,4.2);assert.equal(result.hardwareCopied,true);
+});
+
 test('Local frame and connector previews align with both physical seam axes',()=>{
   for(const axis of ['x','y']){
     const app=fixture({width:120,height:120,px:.2}),{c}=app;
