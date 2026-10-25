@@ -11,7 +11,7 @@ function fixture(){
   const c=vm.createContext({console:{...console,error(){}},TextEncoder,Blob,performance,Promise,structuredClone,
     setTimeout(fn){timers.set(++timerId,fn);return timerId;},clearTimeout(id){timers.delete(id);},
     document:{readyState:'loading',currentScript:{textContent:script},addEventListener(){},querySelector(id){
-      if(!nodes.has(id))nodes.set(id,{inert:false,hidden:true,textContent:'',classList:{toggle(){},add(){},remove(){}},setAttribute(name,value){this[name]=String(value);},removeAttribute(){}});
+      if(!nodes.has(id))nodes.set(id,{inert:false,hidden:true,textContent:'',dataset:{},classList:{toggle(){},add(){},remove(){}},setAttribute(name,value){this[name]=String(value);},removeAttribute(){}});
       return nodes.get(id);
     }},window:{},URL:{createObjectURL(){return 'blob:test';},revokeObjectURL(){}},
     createImageBitmap:async cv=>({width:cv.width,height:cv.height,close(){}})});
@@ -68,26 +68,94 @@ test('Joint preview works with export disabled, ignores stale workers, and prese
     document.querySelector('#seamDialog').open=true;document.querySelector('#seamPreviewViewport').dataset={};
     document.querySelector('#btnSeamExport').disabled=true;
     globalThis.pointA={id:'a',valid:true},globalThis.pointB={id:'b',valid:true};SEAM_FOCUS=pointA;SEAM_PLAN={candidates:[pointA,pointB]};
-    G.edtIn=new Float32Array(1);globalThis.originalGrid=G;globalThis.originalState=JSON.stringify(S);
+    Object.assign(G,{gw:2,gh:2,K:2,panel:new Uint8Array([1,1,0,1]),owner:new Uint8Array([0,1,255,1]),edtIn:new Float32Array([.15,.3,0,.15])});
+    globalThis.originalGrid=G;globalThis.originalState=JSON.stringify(S);
+    globalThis.originalArrays={panel:G.panel,owner:G.owner,edtIn:G.edtIn};
+    globalThis.originalPixels=JSON.stringify(Object.fromEntries(Object.entries(originalArrays).map(([k,a])=>[k,Array.from(a)])));
     seamPreviewClear=()=>{};seamPreviewRequestRender=()=>{};
     buildSeamPlan=()=>SEAM_PLAN;
     seamPreviewSetScene=scene=>{previewAccepted.push(scene.tag);return {parts:1,triangles:1};};
     seamProductionPlan=p=>({spec:{},joints:[{id:p.candidates[0].id,method:'plate',design:{contains(){}}}]});
-    createExportWorker=()=>{const worker={stopped:0,postMessage(data,...transfer){this.sent=data;this.transfer=transfer;},terminate(){this.stopped++;}};
+    createExportWorker=()=>{const worker={stopped:0,postMessage(data,...transfer){this.sent=structuredClone(data,{transfer:transfer[0]||[]});this.transfer=transfer;},terminate(){this.stopped++;}};
       previewWorkers.push(worker);return {worker,url:'blob:preview'};};requestSeamPreview();`);
   const flush=()=>{const queued=[...timers.values()];timers.clear();for(const fn of queued)fn();};
   flush();assert.equal(run(c,'previewWorkers.length'),1);assert.equal(run(c,'previewWorkers[0].transfer.length'),0);
   assert.doesNotThrow(()=>run(c,'structuredClone(previewWorkers[0].sent)'));
+  assert.deepEqual(plain(run(c,'Array.from(previewWorkers[0].sent.grid.owner)')),[0,1,255,1]);
+  assert.equal(run(c,"['panel','owner','edtIn'].every(k=>previewWorkers[0].sent.grid[k].buffer!==G[k].buffer)"),true);
   run(c,'SEAM_FOCUS=pointB;requestSeamPreview();');flush();assert.equal(run(c,'previewWorkers[0].stopped'),1);
   run(c,"previewWorkers[0].onmessage({data:{type:'done',scene:{tag:'stale'}}});previewWorkers[1].onmessage({data:{type:'done',scene:{tag:'current',resolution:.15}}});");
   assert.deepEqual(plain(run(c,'previewAccepted')),['current']);assert.equal(nodes.get('#seamPreviewViewport').dataset.point,'b');
-  assert.equal(run(c,'G===originalGrid&&G.panel.byteLength===1&&JSON.stringify(S)===originalState'),true);
+  assert.equal(run(c,`G===originalGrid&&JSON.stringify(S)===originalState&&
+    Object.entries(originalArrays).every(([k,a])=>G[k]===a&&a.byteLength>0)&&
+    JSON.stringify(Object.fromEntries(Object.entries(originalArrays).map(([k,a])=>[k,Array.from(a)])))===originalPixels`),true);
   assert.equal(run(c,'S.seam.production'),false);assert.equal(nodes.get('#btnSeamExport').disabled,true);
   run(c,'SEAM_FOCUS=pointA;requestSeamPreview();');flush();run(c,"stopSeamPreview();previewWorkers[2].onmessage({data:{type:'done',scene:{tag:'closed'}}});");
   assert.deepEqual(plain(run(c,'previewAccepted')),['current']);assert.equal(run(c,'previewWorkers[2].stopped'),1);
   run(c,'SEAM_FOCUS=pointB;requestSeamPreview();');flush();
   run(c,"previewWorkers[3].onerror({preventDefault(){},message:'preview failed'});requestSeamPreview();");flush();
   assert.equal(run(c,'previewWorkers.length'),5,'the same placement can retry after failure');run(c,'stopSeamPreview();');
+});
+
+test('All 13 whole-sign preview methods use the same worker pipeline without enabling connector export',()=>{
+  const methods=['butt','lap','scarf','tongue','dowel','butterfly','dovetail','plate','nut','selftap','snap','magnet','weld'];
+  for(const method of methods){
+    const {c,timers}=fixture();c.chosenMethod=method;
+    run(c,`S.seam.enabled=true;S.seam.production=false;S.seam.method=chosenMethod;
+      document.querySelector('#seamDialog').open=true;
+      G.owner=new Uint8Array([1]);G.edtIn=new Float32Array([.15]);G.K=1;
+      SEAM_FOCUS={id:'point-'+chosenMethod,valid:true};SEAM_PLAN={candidates:[SEAM_FOCUS]};
+      globalThis.beforePreview=JSON.stringify(S);globalThis.previewMessages=[];globalThis.previewEntries=[];
+      seamPreviewClear=()=>{};seamPreviewRequestRender=()=>{};
+      seamProductionPlan=(plan,settings)=>({method:settings.method,spec:{},joints:[{id:plan.candidates[0].id,method:settings.method,design:{contains(){}}}]});
+      createExportWorker=entry=>{previewEntries.push(entry===seamPreviewWorkerMain);return {url:'blob:preview',worker:{
+        postMessage(data){previewMessages.push(structuredClone(data));},terminate(){}}};};
+      requestSeamPreview();`);
+    const queued=[...timers.values()];timers.clear();for(const fn of queued)fn();
+    assert.deepEqual(plain(run(c,'previewEntries')),[true],method);
+    assert.equal(run(c,'previewMessages.length'),1,method);
+    assert.deepEqual(plain(run(c,`({stateMethod:previewMessages[0].state.seam.method,
+      productionMethod:previewMessages[0].production.method,jointMethod:previewMessages[0].production.joints[0].method,
+      owner:Array.from(previewMessages[0].grid.owner),production:S.seam.production,unchanged:JSON.stringify(S)===beforePreview})`)),
+      {stateMethod:method,productionMethod:method,jointMethod:method,owner:[1],production:false,unchanged:true},method);
+    run(c,'stopSeamPreview();');
+  }
+});
+
+test('Opening the rear hides only the back cover and retains the actual front, body and connectors',()=>{
+  const {c}=fixture();
+  for(const inside of [false,true]){
+    c.inside=inside;
+    for(const role of ['front','box','connector','body-a','body-b']){
+      c.role=role;assert.equal(run(c,'seamPreviewPartVisible(role,inside)'),true,`${role}, inside=${inside}`);
+    }
+    assert.equal(run(c,"seamPreviewPartVisible('back',inside)"),!inside);
+  }
+});
+
+test('Whole-sign, focused, inside and exploded controls change only the preview view',()=>{
+  const {c}=fixture();
+  run(c,`S.seam.enabled=S.seam.production=true;S.seam.selected=[{axis:'x',seamIndex:1,tileIndex:0,along:24}];
+    globalThis.beforeViewState=JSON.stringify(S);globalThis.beforeViewGrid=G;globalThis.beforeViewBounds=PB;
+    globalThis.previewDraws=0;globalThis.previewSyncs=0;
+    seamPreviewRequestRender=()=>previewDraws++;syncSeamPreviewControls=()=>previewSyncs++;
+    buildParts=generateExportFiles=doExport=()=>{throw new Error('view controls must not rebuild or export');};
+    SEAM_PREVIEW_RENDERER.home={yaw:Math.PI+.13,pitch:.48};`);
+  for(const [action,expected] of [
+    ['seamPreviewSetScope("whole",false)',{scope:'whole',inside:false,exploded:false}],
+    ['seamPreviewSetScope("focus",true)',{scope:'focus',inside:true,exploded:false}],
+    ['seamPreviewSetExploded(true)',{scope:'focus',inside:true,exploded:true}],
+    ['seamPreviewSetInside(false)',{scope:'focus',inside:false,exploded:false}],
+    ['seamPreviewSetExploded(true)',{scope:'focus',inside:true,exploded:true}],
+    ['seamPreviewSetScope("whole")',{scope:'whole',inside:true,exploded:false}],
+    ['SEAM_PREVIEW_RENDERER.cam.zoom=4;seamPreviewReset()',{scope:'whole',inside:true,exploded:false}],
+  ]){
+    run(c,action);
+    assert.deepEqual(plain(run(c,'(({scope,inside,exploded})=>({scope,inside,exploded}))(SEAM_PREVIEW_RENDERER)')),expected,action);
+    assert.equal(run(c,'JSON.stringify(S)===beforeViewState&&G===beforeViewGrid&&PB===beforeViewBounds'),true,action);
+    assert.equal(run(c,'SEAM_PREVIEW_RENDERER.cam.zoom'),1,action);
+  }
+  assert.ok(run(c,'previewDraws>0&&previewSyncs>0'));
 });
 
 test('An invalid joint preview clears the old scene without substituting another placement',()=>{
@@ -99,13 +167,15 @@ test('An invalid joint preview clears the old scene without substituting another
   assert.equal(nodes.get('#seamPreviewCanvas').hidden,true);
 });
 
-test('The detail camera keeps assembled and exploded bounds inside narrow and wide viewports',()=>{
+test('The detail and 173 cm whole-sign cameras fit assembled and exploded bounds in narrow and wide viewports',()=>{
   const {c}=fixture();
-  for(const aspect of [.6,1,2.5])for(const pitch of [-.55,.4])for(const exploded of [false,true]){
-    c.cameraCase={aspect,pitch,exploded};
+  for(const whole of [false,true])for(const aspect of [.6,1,2.5])for(const pitch of [-.55,.4])for(const exploded of [false,true]){
+    c.cameraCase={aspect,pitch,exploded,whole};
     const projected=run(c,`(()=>{
-      const {aspect,pitch,exploded}=cameraCase,fov=.6,cam={yaw:-.35,pitch,zoom:1};
-      const items=[{mn:[-25,-12,2],mx:[0,16,63],offset:[-8,0,0]},
+      const {aspect,pitch,exploded,whole}=cameraCase,fov=.6,cam={yaw:-.35,pitch,zoom:1};
+      const items=whole?[{mn:[-865.5,-159.3,0],mx:[865.5,159.3,63],offset:[0,0,0]},
+        {mn:[-12,45,40],mx:[12,65,43],offset:[0,0,50]}]:
+        [{mn:[-25,-12,2],mx:[0,16,63],offset:[-8,0,0]},
         {mn:[0,-12,2],mx:[25,16,63],offset:[8,0,0]},{mn:[-14,-5,40],mx:[14,5,43],offset:[0,0,14]}];
       const min=[0,1,2].map(d=>Math.min(...items.map(p=>p.mn[d]+(exploded?p.offset[d]:0))));
       const max=[0,1,2].map(d=>Math.max(...items.map(p=>p.mx[d]+(exploded?p.offset[d]:0)))),target=min.map((v,d)=>(v+max[d])/2);
