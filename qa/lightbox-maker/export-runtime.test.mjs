@@ -341,7 +341,7 @@ test('Inspecting a valid point opens its inside exploded view without changing p
     globalThis.beforeFocusState=JSON.stringify(S);globalThis.beforeFocusGrid=G;globalThis.beforeFocusBounds=PB;
     globalThis.focusDraws=0;drawSeamDialog=()=>focusDraws++;seamPreviewRequestRender=()=>{};
     updateSeamSelection=buildParts=doExport=()=>{throw new Error('inspection must not change production');};`);
-  nodes.set('#seamPreviewViewport',{scrollIntoView(){scrolled++;}});
+  nodes.set('#seamPreviewViewport',{classList:{toggle(){}},scrollIntoView(){scrolled++;}});
   for(const id of ['selected','available']){
     c.pointId=id;run(c,'seamPreviewSetScope("whole",false);SEAM_PREVIEW_RENDERER.cam.zoom=4;focusSeamPreviewPoint(pointId);');
     assert.deepEqual(plain(run(c,'({id:SEAM_FOCUS.id,scope:SEAM_PREVIEW_RENDERER.scope,inside:SEAM_PREVIEW_RENDERER.inside,exploded:SEAM_PREVIEW_RENDERER.exploded,zoom:SEAM_PREVIEW_RENDERER.cam.zoom})')),
@@ -423,6 +423,77 @@ test('Focused joint framing follows its local geometry rather than the overall s
       c.signHeight=height;run(c,'PB.h=signHeight');assert.equal(run(c,'seamPreviewFocusSpan(focusRoi)'),span);
     }
   }
+});
+
+test('Base inspection shows only the existing body detail, preserves the project, and follows point changes',()=>{
+  const {c,nodes}=fixture();
+  run(c,`SEAM_PLAN={candidates:[{id:'a',valid:true,selected:true,tiles:[]},{id:'b',valid:true,selected:true,tiles:[]}]};
+    globalThis.beforeBase=JSON.stringify(S);globalThis.baseGrid=G;
+    drawSeamDialog=seamPreviewRequestRender=()=>{};focusSeamPreviewPoint('a',true);`);
+  assert.equal(run(c,'SEAM_PREVIEW_RENDERER.baseOnly&&SEAM_PREVIEW_RENDERER.inside&&!SEAM_PREVIEW_RENDERER.exploded'),true);
+  assert.equal(nodes.get('#btnSeamFocus')['aria-pressed'],'true');
+  for(const role of ['body-a','body-b','body-context','connector','front','back'])for(const detail of [true,false]){
+    c.partCase={role,detail};assert.equal(run(c,'seamPreviewPartVisible(partCase.role,true,true,partCase.detail)'),detail&&['body-a','body-b'].includes(role));
+  }
+  run(c,"cycleSeamPreview(1);seamPreviewZoom(.01)");
+  assert.equal(run(c,'SEAM_FOCUS.id'),'b');assert.equal(run(c,'SEAM_PREVIEW_RENDERER.baseOnly'),true);
+  assert.equal(run(c,'SEAM_PREVIEW_RENDERER.cam.zoom'),.5);
+  run(c,'seamPreviewSetExploded(true)');assert.equal(run(c,'SEAM_PREVIEW_RENDERER.baseOnly'),false);
+  assert.equal(run(c,'JSON.stringify(S)===beforeBase&&G===baseGrid'),true);
+});
+
+test('Base camera fits both real supports independently of sign size and connector lift',()=>{
+  const {c}=fixture();
+  c.baseScene={supportRois:[{x0:840,x1:854,y0:320,y1:334},{x0:872,x1:886,y0:320,y1:334}],supportZ:{bottom:18,top:26}};
+  const bounds=plain(run(c,'seamPreviewBaseBounds(baseScene)'));
+  assert.deepEqual(bounds,{mn:[836,316,-28],mx:[890,338,-16],offset:[0,0,0]});
+  for(const aspect of [.8,3]){
+    c.baseAspect=aspect;
+    const projected=plain(run(c,`(()=>{const b=seamPreviewBaseBounds(baseScene),target=b.mn.map((v,i)=>(v+b.mx[i])/2),cam={yaw:Math.PI+.25,pitch:.3,zoom:1};
+      const fit=seamPreviewCameraFit([b],target,cam,baseAspect,.6,false),eye=target.map((v,i)=>v+fit.direction[i]*fit.distance);
+      const pv=m4mul(m4persp(.6,baseAspect,.1,1000),m4look(eye,target,[0,1,0]));
+      return Array.from({length:8},(_,k)=>{const p=target.map((v,d)=>(k&(1<<d))?b.mx[d]:b.mn[d]);
+        const q=[0,1,2,3].map(d=>pv[d]*p[0]+pv[4+d]*p[1]+pv[8+d]*p[2]+pv[12+d]);return [q[0]/q[3],q[1]/q[3]];});})()`));
+    assert.ok(projected.every(p=>p.every(v=>Math.abs(v)<=1)));
+    assert.ok(Math.max(...projected.flat().map(Math.abs))>.6,'supports remain large enough to inspect');
+  }
+  assert.equal(run(c,'seamPreviewBaseBounds({supportRois:[]})'),null);
+  for(const direction of [[1,0],[-1,0],[0,1],[0,-1]]){
+    c.openDirection=direction;
+    const eye=plain(run(c,`(()=>{const cam=seamPreviewBaseCamera({insideDirection:openDirection});
+      return [Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),Math.cos(cam.yaw)*Math.cos(cam.pitch)];})()`));
+    assert.ok(eye[0]*direction[0]+eye[1]*direction[1]>0,'camera approaches from the cavity rather than behind the supporting wall');assert.ok(eye[2]<0);
+  }
+});
+
+test('Explicit connector preparation gives blind holes their required floor without shrinking valid bases',()=>{
+  const {c}=fixture();
+  for(const method of ['plate','selftap'])for(const thickness of [4,7,12]){
+    c.baseCase={method,thickness};run(c,`S.seam.method=baseCase.method;S.seam.hardware.depth=5;S.seam.hardware.baseT=baseCase.thickness;
+      globalThis.beforeBox=JSON.stringify(S.box);prepareSeamProduction();`);
+    assert.equal(run(c,'S.seam.hardware.baseT'),Math.max(6.5,thickness));
+    assert.equal(run(c,'JSON.stringify(S.box)===beforeBox'),true);
+  }
+});
+
+test('A rejected physical base keeps the real artwork visible and reports the reason without permitting export',()=>{
+  const {c,nodes,timers}=fixture();
+  run(c,`document.querySelector('#seamDialog').open=true;
+    SEAM_FOCUS={id:'rejected',valid:true,selected:true,tiles:['R1C1','R1C2']};SEAM_PLAN={candidates:[SEAM_FOCUS]};
+    globalThis.beforeRejected=JSON.stringify(S);globalThis.previewMessages=[];
+    drawSeamDialog=seamPreviewClear=seamPreviewRequestRender=()=>{};
+    seamProductionPlan=()=>{throw new SeamProductionError('ฐานต้องมีเนื้อใต้รูตันอย่างน้อย 1.5 มม.');};
+    createExportWorker=()=>({url:'blob:preview',worker:globalThis.testPreviewWorker={postMessage(m){previewMessages.push(m);},terminate(){}}});
+    seamPreviewSetScene=()=>({parts:3,triangles:12});requestSeamPreview();`);
+  let callbacks=[...timers.values()];timers.clear();callbacks.forEach(fn=>fn());
+  assert.equal(run(c,'previewMessages[0].production.joints.length'),0);
+  assert.equal(nodes.get('#seamPreviewIssue').hidden,false);assert.match(nodes.get('#seamPreviewIssue').textContent,/1.5/);
+  run(c,"testPreviewWorker.onmessage({data:{type:'done',scene:{resolution:.75}}})");
+  assert.equal(nodes.get('#seamPreviewViewport').dataset.state,'ready');
+  assert.match(nodes.get('#seamPreviewCaption').textContent,/ยังไม่มีตัวต่อในภาพ/);
+  assert.equal(nodes.get('#btnSeamFocus').disabled,true);
+  assert.throws(()=>run(c,'seamProductionPlan()'),/1.5/);
+  assert.equal(run(c,'JSON.stringify(S)===beforeRejected'),true);
 });
 
 test('Preview cut planes match adjacent print tiles on both axes and never mark outer edges',()=>{

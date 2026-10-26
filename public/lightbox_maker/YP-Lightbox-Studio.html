@@ -316,6 +316,9 @@ table.kv tr.sub td{color:var(--tx2)}
 #btnSeamFocus,#btnSeamUsePoint{width:100%;margin-top:6px}
 #seamPreviewPoint{margin:0;font-size:11px}.seam-preview-key{flex-wrap:wrap;gap:8px}.seam-preview-actions{margin-top:8px}
 #seamPreviewLeader{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#seamPreviewViewport.base-only .seam-preview-overview{left:auto;width:180px;max-width:45%;right:10px}
+#seamPreviewViewport.base-only .seam-scroll{height:45px}
+#seamPreviewIssue{margin:8px 0;padding:9px 12px;border:1px solid #a77827;border-radius:7px;color:#ffd18a;background:#3b2c18;font-size:12px}
 @media(max-width:760px){.seam-preview-layout{grid-template-columns:minmax(0,1fr)}.seam-preview-pane{order:0;min-height:0}.seam-point-pane{order:1}#seamPreviewViewport{height:410px;min-height:350px}#seamPointChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-height:160px}.seam-preview-tools{top:65px}.seam-preview-overview{left:8px;right:8px}.seam-preview-actions .btn{font-size:11px;padding:7px 8px}.seam-point-nav{margin:6px 0}}
 
 .seam-assembly-guide{padding:8px 11px;border-left:3px solid var(--acc);background:var(--panel2);border-radius:5px;font-size:11px}
@@ -816,6 +819,7 @@ Studio</textarea>
       </div>
       <div class="seam-preview-layout">
       <section class="seam-preview-pane" aria-label="ตัวต่อบนป้ายจริงทั้งชิ้น">
+        <p id="seamPreviewIssue" role="status" hidden></p>
         <div class="seam-preview-heading"><strong>ป้ายจริงและตำแหน่งตัวต่อ</strong><button class="btn" type="button" id="btnSeamWhole">↖ ดูทั้งป้าย</button></div>
         <div id="seamPreviewViewport" aria-busy="false">
           <canvas id="seamPreviewCanvas" tabindex="0" role="img" aria-label="ป้ายและตัวต่อจริง หมุนด้วยการลากหรือปุ่มลูกศร ซูมด้วยปุ่มบวกหรือลบ"></canvas>
@@ -829,7 +833,7 @@ Studio</textarea>
         <div class="seam-preview-key"><span style="--key:#f4b544">ตัวต่อ A</span><span style="--key:#df752a">ตัวต่อ B / ชิ้นถัดไป</span><span style="--key:#3b929c">ฐานรวมกับกล่อง</span><span style="--key:#10bcee">แนวแบ่งพิมพ์</span><span style="--key:#ffc72b">รอยต่อที่กำลังดู</span></div>
         <p id="seamPreviewCaption">รูปทรงตามโลโก้ที่กำลังออกแบบ · ตัวต่อและฐานใช้รูปทรงผลิตของแบบที่เลือก</p>
       </section>
-      <aside class="seam-point-pane" aria-label="เลือกจุดยึดบนป้าย"><h3>เลือกจุดบนป้าย</h3><p class="seam-note">กดหมายเลขเพื่อซูมและเปิดดูการยึด</p><div id="seamPointChoices"></div><div class="seam-point-nav"><span id="seamPreviewPoint"></span><button class="btn" type="button" id="btnSeamPrev" aria-label="ดูจุดต่อก่อนหน้า">‹</button><button class="btn" type="button" id="btnSeamNext" aria-label="ดูจุดต่อถัดไป">›</button></div><button class="btn pri" type="button" id="btnSeamFocus">เปิดดูการยึดจุดนี้ →</button><button class="btn" type="button" id="btnSeamUsePoint">ใช้จุดนี้</button><p class="seam-note" id="seamPointPosition"></p></aside>
+      <aside class="seam-point-pane" aria-label="เลือกจุดยึดบนป้าย"><h3>เลือกจุดบนป้าย</h3><p class="seam-note">กดหมายเลขเพื่อซูมและเปิดดูการยึด</p><div id="seamPointChoices"></div><div class="seam-point-nav"><span id="seamPreviewPoint"></span><button class="btn" type="button" id="btnSeamPrev" aria-label="ดูจุดต่อก่อนหน้า">‹</button><button class="btn" type="button" id="btnSeamNext" aria-label="ดูจุดต่อถัดไป">›</button></div><button class="btn pri" type="button" id="btnSeamFocus" aria-pressed="false">ขยายฐานและรูยึด</button><button class="btn" type="button" id="btnSeamUsePoint">ใช้จุดนี้</button><p class="seam-note" id="seamPointPosition"></p></aside>
       </div>
       <details id="seamManual" class="seam-fold">
         <summary>ปรับตำแหน่งเอง</summary>
@@ -847,6 +851,7 @@ Studio</textarea>
       <button class="btn pri" id="btnSeamExport" type="button" disabled>ส่งออกไฟล์พิมพ์</button>
     </div>
     <p class="seam-note" id="seamDialogProductionNote" role="status">เลือกวิธีและวางตัวต่อเพื่อเตรียมไฟล์พิมพ์</p>
+    <button class="btn" id="btnSeamPrepare" type="button" hidden>จัดจุดและปรับค่าตัวต่อให้พร้อมพิมพ์</button>
   </footer>
 </dialog>
 <script>
@@ -2996,7 +3001,7 @@ function seamProductionPlan(previewPlan=null,s=seamSettings()){
   if(!plan.applicable||plan.truncated)throw new SeamProductionError('สร้างตัวต่อจริงไม่ได้: '+(plan.reason||'ผังมีจำนวนจุดเกินขีดจำกัด'));
   for(const [key,lo,hi] of [['hole',1,10],['depth',2,12],['bolt',2,6],['plateT',2,8],['baseT',4,16],['clearance',.1,.6],['pin',2,6],['nutFlat',4,10],['nutT',1.5,5],['magnetD',3,10],['magnetT',1,5]])
     if(!Number.isFinite(+h[key])||+h[key]<lo||+h[key]>hi)throw new SeamProductionError('ขนาดฮาร์ดแวร์ '+key+' ไม่อยู่ในช่วงที่รองรับ');
-  if(['plate','selftap'].includes(s.method)&&h.baseT-h.depth<1.5)throw new SeamProductionError('ฐานต้องมีเนื้อใต้รูตันอย่างน้อย 1.5 มม.');
+  if(['plate','selftap'].includes(s.method)&&h.baseT-h.depth<1.5)throw new SeamProductionError(`ฐานต้องมีเนื้อใต้รูตันอย่างน้อย 1.5 มม. — รูลึก ${h.depth} มม. ต้องใช้ฐานอย่างน้อย ${h.depth+1.5} มม. (ตอนนี้ ${h.baseT} มม.)`);
   if(s.method==='plate'&&h.bolt>=h.hole)throw new SeamProductionError('รูผ่านสกรูต้องเล็กกว่ารูรับอินเสิร์ตของฐาน');
   if(s.method==='selftap'&&h.hole>=h.bolt)throw new SeamProductionError('รูนำสกรูพลาสติกต้องเล็กกว่ารูผ่านของแผ่นประกบ');
   const resolutionError=G.px<=S.exp.res*1.001?seamProductionResolutionError(s,G.px):'';
@@ -3014,7 +3019,7 @@ function seamProductionPlan(previewPlan=null,s=seamSettings()){
     const joint={...c,method:s.method,length:s.length,width:s.width,baseTop,baseBottom,spec:{...h},holes:[],pads:[]};
     const radius=s.method==='plate'?Math.max(h.hole/2+2,4):Math.max(3,Math.min(s.width/2-1,5)),normal=s.length*.3;
     if(s.width<radius*2+G.px*2||s.length/2-normal<radius+G.px)
-      throw new SeamProductionError('พื้นที่เล็กเกินไปสำหรับฐานรับ เพิ่มความยาว/กว้างพื้นที่สำรอง');
+      throw new SeamProductionError(`พื้นที่เล็กเกินไปสำหรับฐานรับ: ต้องยาวอย่างน้อย ${Math.ceil((radius+G.px)/.2*10)/10} × กว้าง ${Math.ceil((radius*2+G.px*2)*10)/10} มม. (ตอนนี้ ${s.length} × ${s.width} มม.)`);
     for(const sign of [-1,1]){
       const cx=c.anchorMm.x+(c.axis==='x'?sign*normal:0),cy=c.anchorMm.y+(c.axis==='y'?sign*normal:0);
       const own=c.tiles.find(id=>{const t=tiles.get(id);return cx>t.x0&&cx<t.x1&&cy>t.y0&&cy<t.y1;});
@@ -3042,7 +3047,7 @@ function seamProductionPlan(previewPlan=null,s=seamSettings()){
       let depthFromWall=2;
       for(let n=0;n<mask.length;n+=3)for(let x=mask[n+1];x<mask[n+2];x++)depthFromWall=Math.max(depthFromWall,G.edtIn[mask[n]*G.gw+x]*G.px-S.box.frame);
       pad.taperStart=baseBottom-depthFromWall;
-      if(pad.taperStart<frontKeep)throw new SeamProductionError('ความลึกไม่พอทำลาดรองฐาน '+c.id+' เพิ่มความลึกกล่อง');
+      if(pad.taperStart<frontKeep)throw new SeamProductionError(`ความลึกไม่พอทำลาดรองฐาน ${c.id}: กล่องลึก ${S.box.depth} มม. ต้องอย่างน้อย ${Math.ceil((S.box.depth+frontKeep-pad.taperStart)*10)/10} มม. หรือเลือกจุดที่ใกล้ผนังกว่านี้`);
       joint.pads.push(pad);joint.holes.push({x:cx,y:cy,diameter:+h.hole,baseZ0:baseTop-h.depth,baseZ1:baseTop,tile:own});
     }
     if(s.method!=='plate'){
@@ -3247,7 +3252,7 @@ function seamPreviewGeometry(production,jointId,wholeSign=false){
     for(const p of parts)for(let i=0;i<p.n;i+=12)for(let k=0;k<3;k++)for(let d=0;d<3;d++){
       const v=p.a[i+3+k*3+d];bounds.min[d]=Math.min(bounds.min[d],v);bounds.max[d]=Math.max(bounds.max[d],v);
     }
-    return {...detail,parts,bounds,focusBounds,anchor,anchorZ:joint?.baseTop??null,roi,supportRois:joint?joint.pads.map(p=>({...p.roi})):[],wholeSign:true,cutaway:false,contextHardwareHidden:true,printTiles:plan.tiles.map(t=>({...t})),printColumns:plan.nx,printRows:plan.ny,
+    return {...detail,parts,bounds,focusBounds,anchor,anchorZ:joint?.baseTop??null,roi,supportRois:joint?joint.pads.map(p=>({...p.roi})):[],supportZ:joint?{bottom:joint.baseBottom,top:joint.baseTop}:null,wholeSign:true,cutaway:false,contextHardwareHidden:true,printTiles:plan.tiles.map(t=>({...t})),printColumns:plan.nx,printRows:plan.ny,
       size:{width:PB.w,height:PB.h,depth:st.total},contextCells:G.gw*G.gh};
   }
   const b=S.box,st=geomStack(),px=G.px,original=printPlan(),foot=joint.footprint,margin=6;
@@ -4979,7 +4984,7 @@ function drawSeamMethodDiagram(method){
   c.fillStyle='#d8e0ee';c.font='12px sans-serif';c.textAlign='center';c.fillText('A',40,50);c.fillText('B',320,50);
   c.fillText(method.kind==='cover'?'ฝา / ฐานรับ · ภาพหลักการ':method.kind==='process'?'แนวหน้าตัดผนัง · ภาพหลักการ':'พื้นที่สำรองด้านใน · มองจากฝาหลัง',180,140);
 }
-const SEAM_PREVIEW_RENDERER={gl:null,prog:null,loc:null,buffers:[],raf:null,bound:false,ready:false,exploded:false,
+const SEAM_PREVIEW_RENDERER={gl:null,prog:null,loc:null,buffers:[],raf:null,bound:false,ready:false,exploded:false,baseOnly:false,issue:null,
   scope:'whole',inside:false,cuts:true,scene:null,pv:null,home:null,cam:{yaw:.03,pitch:.1,zoom:1},drag:null};
 function seamPreviewError(error){$('#seamPreviewCanvas')?.dispatchEvent(new CustomEvent('seampreviewerror',{detail:{message:error.message||String(error)}}));}
 function seamPreviewRequestRender(){
@@ -5049,7 +5054,7 @@ function seamPreviewSetScene(scene){
       if(offset.length!==3||offset.some(v=>!Number.isFinite(v)))throw new Error('ตำแหน่งภาพแยกชิ้นไม่ถูกต้อง');
       const hex=/^#[\da-f]{6}$/i.test(part.hex||'')?part.hex:'#38424f';
       let color=hex2rgb(hex).map(v=>v/255);if(scene.wholeSign&&part.role.startsWith('body'))color=color.map(v=>v*.7+.12);if(part.role==='connector')color=hex2rgb(view.buffers.filter(p=>p.role==='connector').length%2?'#df752a':'#f3b44f').map(v=>v/255);
-      const buffer=gl.createBuffer();view.buffers.push({buffer,count:n/4,mn,mx,offset,color,name:part.name,role:part.role,componentId:part.componentId,tile:part.tile,label:part.componentRole==='temporary-jig'?'จิ๊กชั่วคราว':['A','B'].includes(part.componentId)?part.componentId:part.componentLabel,cutBounds:seamPreviewCutBounds(tiles.get(part.tile),plan)});
+      const buffer=gl.createBuffer();view.buffers.push({buffer,count:n/4,mn,mx,offset,color,name:part.name,role:part.role,detail:!!part.detail,componentId:part.componentId,tile:part.tile,label:part.componentRole==='temporary-jig'?'จิ๊กชั่วคราว':['A','B'].includes(part.componentId)?part.componentId:part.componentLabel,cutBounds:seamPreviewCutBounds(tiles.get(part.tile),plan)});
       gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);triangles+=n/12;
     }
     if(!view.buffers.length)throw new Error('รูปทรงรอยต่อนี้ยังไม่มีเนื้อให้แสดง');
@@ -5076,7 +5081,16 @@ function seamPreviewCutBounds(tile,plan){
   const off=1e9;if(!tile||!plan)return [off,off,off,off];
   return [tile.col>1?tile.x0:off,tile.col<plan.nx?tile.x1:off,tile.row<plan.ny?tile.y0:off,tile.row>1?tile.y1:off];
 }
-function seamPreviewPartVisible(role,inside){return role!=='back'||!inside;}
+function seamPreviewPartVisible(role,inside,baseOnly=false,detail=false){return baseOnly?detail&&['body-a','body-b'].includes(role):role!=='back'||!inside;}
+function seamPreviewBaseBounds(scene){
+  const pads=scene?.supportRois,z=scene?.supportZ;if(!pads?.length||!z)return null;
+  return {mn:[Math.min(...pads.map(p=>p.x0))-4,Math.min(...pads.map(p=>p.y0))-4,-z.top-2],
+    mx:[Math.max(...pads.map(p=>p.x1))+4,Math.max(...pads.map(p=>p.y1))+4,-z.bottom+2],offset:[0,0,0]};
+}
+function seamPreviewBaseCamera(scene){
+  const d=scene?.insideDirection||[0,0],length=Math.hypot(...d)||1,x=d[0]/length*.65,y=d[1]/length*.65;
+  return {yaw:Math.atan2(x,-1),pitch:Math.atan2(y,Math.hypot(x,1)),zoom:1};
+}
 function seamPreviewProject(point,w,h){
   const pv=SEAM_PREVIEW_RENDERER.pv;if(!pv)return null;
   const p=[point[0],point[1],-point[2]],q=[0,1,2,3].map(d=>pv[d]*p[0]+pv[4+d]*p[1]+pv[8+d]*p[2]+pv[12+d]);
@@ -5097,7 +5111,9 @@ function seamPreviewRender(){
     const shift=view.exploded?item.offset[axis]:0;mn[axis]=Math.min(mn[axis],item.mn[axis]+shift);mx[axis]=Math.max(mx[axis],item.mx[axis]+shift);
   }
   let fitItems=view.buffers,target=mn.map((v,i)=>(v+mx[i])/2);
-  if(view.scope==='focus'&&view.scene.anchor){
+  const baseBounds=view.baseOnly?seamPreviewBaseBounds(view.scene):null;
+  if(baseBounds){fitItems=[baseBounds];target=baseBounds.mn.map((v,i)=>(v+baseBounds.mx[i])/2);}
+  else if(view.scope==='focus'&&view.scene.anchor){
     const a=view.scene.anchor,span=seamPreviewFocusSpan(view.scene.roi);
     target=[a[0],a[1]-span*.1,-a[2]*.7];
     fitItems=[{mn:[target[0]-span*.62,target[1]-span*.4,mn[2]],mx:[target[0]+span*.62,target[1]+span*.4,0],offset:[0,0,0]}];
@@ -5112,7 +5128,7 @@ function seamPreviewRender(){
   gl.uniform4fv(L.FocusCut,seam?[seam.axis==='x'?0:1,seam.coord,seam.start,seam.end]:[0,1e9,1,0]);
   for(let i=0;i<2;i++){const r=view.scene.supportRois?.[i]||{x0:0,y0:0,x1:0,y1:0};gl.uniform4f(L[i?'RoiB':'RoiA'],r.x0,r.y0,r.x1,r.y1);}
   for(const item of view.buffers){
-    if(!seamPreviewPartVisible(item.role,view.inside))continue;
+    if(!seamPreviewPartVisible(item.role,view.inside,view.baseOnly,item.detail))continue;
     gl.uniform1f(L.Cuts,view.cuts&&view.scene.wholeSign&&item.role!=='connector'?1:0);gl.uniform4fv(L.CutBounds,item.cutBounds);
     gl.uniform1f(L.Base,view.inside&&view.scope==='focus'&&['body-a','body-b'].includes(item.role)?1:0);
     gl.uniform3fv(L.Offset,view.exploded&&item.role==='connector'?item.offset:[0,0,0]);gl.uniform3fv(L.Color,item.color);gl.bindBuffer(gl.ARRAY_BUFFER,item.buffer);
@@ -5126,10 +5142,10 @@ function seamPreviewRender(){
   let selectedProjection=null;
   [...pins.children].forEach((b,i)=>{
     const point=points[i],selected=point.id===SEAM_FOCUS?.id,pos=seamPreviewProject([point.anchorMm.x,point.anchorMm.y,view.inside?(view.scene.anchor?.[2]||0):0],w,h);
-    b.hidden=!pos||(view.scope==='focus'&&!selected);b.setAttribute('aria-pressed',String(selected));
+    b.hidden=view.baseOnly||!pos||(view.scope==='focus'&&!selected);b.setAttribute('aria-pressed',String(selected));
     if(pos){b.style.left=(pos.x-(view.scope==='focus'?55:0))+'px';b.style.top=(pos.y-(view.scope==='focus'?38:0))+'px';if(selected)selectedProjection=pos;}
   });
-  const leader=$('#seamPreviewLeader');leader.hidden=view.scope!=='focus'||!selectedProjection;leader.style.display=leader.hidden?'none':'block';
+  const leader=$('#seamPreviewLeader');leader.hidden=view.baseOnly||view.scope!=='focus'||!selectedProjection;leader.style.display=leader.hidden?'none':'block';
   if(!leader.hidden){const line=$('#seamPreviewLeaderLine');line.setAttribute('x1',selectedProjection.x-55);line.setAttribute('y1',selectedProjection.y-38);line.setAttribute('x2',selectedProjection.x);line.setAttribute('y2',selectedProjection.y);}
   const labels=$('#seamPreviewPartLabels'),connectors=view.buffers.filter(p=>p.role==='connector');
   labels.hidden=!(view.scope==='focus'&&view.inside&&view.exploded);
@@ -5141,42 +5157,46 @@ function seamPreviewRender(){
 }
 function syncSeamPreviewControls(){
   const view=SEAM_PREVIEW_RENDERER;
-  const hasJoint=!!SEAM_FOCUS?.valid;
+  const issue=view.issue&&view.issue.point===SEAM_FOCUS?.id?view.issue.message:'',hasJoint=!!SEAM_FOCUS?.valid&&!issue;
   $('#btnSeamFocus').disabled=$('#btnSeamExploded').disabled=!hasJoint;
+  $('#btnSeamFocus').setAttribute('aria-pressed',String(view.baseOnly));$('#seamPreviewViewport').classList.toggle('base-only',view.baseOnly);
+  $('#seamPreviewIssue').hidden=!issue;$('#seamPreviewIssue').textContent=issue?'จุดนี้ยังสร้างฐานไม่ได้: '+issue+' · ภาพด้านล่างยังแสดงชิ้นงานจริง ลองจัดจุดใหม่หรือเลือกจุดอื่น':'';
   $('#btnSeamCuts').setAttribute('aria-pressed',String(view.cuts));$('#btnSeamCuts').textContent=view.cuts?'ซ่อนเส้นรอยต่อ':'แสดงเส้นรอยต่อ';
   $('#btnSeamFront').setAttribute('aria-pressed',String(!view.inside));$('#btnSeamInside').setAttribute('aria-pressed',String(view.inside));
   $('#btnSeamAssembled').setAttribute('aria-pressed',String(!view.exploded));$('#btnSeamExploded').setAttribute('aria-pressed',String(view.exploded));
   $('#btnSeamAssembled').hidden=!view.exploded;
   $('#seamOverview').hidden=view.scope==='whole'&&!view.inside;
-  $('#seamPreviewSide').textContent=view.inside?'ด้านในกล่อง · เปิดฝาหลังแล้ว':'ด้านหน้าป้าย';
+  $('#seamPreviewSide').textContent=view.baseOnly?'ฐานและรูจริง · ซ่อนตัวต่อและส่วนรอบนอก':view.inside?'ด้านในกล่อง · เปิดฝาหลังแล้ว':'ด้านหน้าป้าย';
   const points=seamPreviewPoints(),i=points.findIndex(p=>p.id===SEAM_FOCUS?.id);
   $('#seamPreviewLocation').textContent=view.scope==='focus'?'จุดยึด '+(i>=0?i+1:'ทดลอง')+' · '+(SEAM_FOCUS?.tiles||[]).join(' ↔ '):points.length?'กดหมายเลขเพื่อดูการยึดบนชิ้นงาน':'แสดงชิ้นงานจริง · ยังไม่มีจุดยึดที่วางได้';
 }
 function seamPreviewSetCuts(show){SEAM_PREVIEW_RENDERER.cuts=!!show;syncSeamPreviewControls();seamPreviewRequestRender();drawSeamDialog();}
 function seamPreviewSetScope(scope,inside=SEAM_PREVIEW_RENDERER.inside){
   const view=SEAM_PREVIEW_RENDERER;view.scope=scope;view.inside=!!inside;
+  view.baseOnly=false;
   if(scope==='whole')view.exploded=false;
   seamPreviewReset();
 }
 function seamPreviewSetInside(inside){
-  const view=SEAM_PREVIEW_RENDERER;view.inside=!!inside;if(!inside)view.exploded=false;seamPreviewReset();
+  const view=SEAM_PREVIEW_RENDERER;view.baseOnly=false;view.inside=!!inside;if(!inside)view.exploded=false;seamPreviewReset();
 }
 function seamPreviewSetExploded(exploded){
-  const view=SEAM_PREVIEW_RENDERER;view.exploded=!!exploded;
+  const view=SEAM_PREVIEW_RENDERER;view.baseOnly=false;view.exploded=!!exploded;
   if(exploded){view.inside=true;view.scope='focus';}
   seamPreviewReset();
 }
-function seamPreviewZoom(factor){SEAM_PREVIEW_RENDERER.cam.zoom=clamp(SEAM_PREVIEW_RENDERER.cam.zoom*factor,.2,5);seamPreviewRequestRender();}
+function seamPreviewZoom(factor){const view=SEAM_PREVIEW_RENDERER;view.cam.zoom=clamp(view.cam.zoom*factor,view.baseOnly?.5:.2,5);seamPreviewRequestRender();}
 function seamPreviewReset(){
-  const view=SEAM_PREVIEW_RENDERER;view.cam={...(view.inside?(view.home||{yaw:Math.PI+.13,pitch:.38}):{yaw:.03,pitch:.1}),zoom:1};syncSeamPreviewControls();seamPreviewRequestRender();
+  const view=SEAM_PREVIEW_RENDERER;view.cam=view.baseOnly?seamPreviewBaseCamera(view.scene):{...(view.inside?(view.home||{yaw:Math.PI+.13,pitch:.38}):{yaw:.03,pitch:.1}),zoom:1};syncSeamPreviewControls();seamPreviewRequestRender();
 }
 function seamPreviewFocusSpan(roi){
   return Math.max(70,roi?(roi.x1-roi.x0)*1.5:0,roi?(roi.y1-roi.y0)*1.5:0);
 }
-function focusSeamPreviewPoint(id){
+function focusSeamPreviewPoint(id,baseOnly=SEAM_PREVIEW_RENDERER.baseOnly){
   const p=(SEAM_PLAN?.candidates||[]).find(p=>p.id===id);if(!p)return;
   SEAM_FOCUS=p;
   if(p.valid)seamPreviewSetExploded(true);else seamPreviewSetScope('whole',true);
+  if(p.valid&&baseOnly){SEAM_PREVIEW_RENDERER.baseOnly=true;SEAM_PREVIEW_RENDERER.exploded=false;seamPreviewReset();}
   drawSeamDialog();$('#seamPreviewViewport').scrollIntoView?.({block:'nearest'});
 }
 function renderSeamPointChoices(){
@@ -5197,7 +5217,7 @@ function seamPreviewInitEvents(){
   cv.addEventListener('dblclick',seamPreviewReset);
   cv.addEventListener('keydown',e=>{
     if(e.key==='ArrowLeft')view.cam.yaw-=.12;else if(e.key==='ArrowRight')view.cam.yaw+=.12;else if(e.key==='ArrowUp')view.cam.pitch=clamp(view.cam.pitch+.12,-1.45,1.45);else if(e.key==='ArrowDown')view.cam.pitch=clamp(view.cam.pitch-.12,-1.45,1.45);
-    else if(e.key==='+'||e.key==='=')view.cam.zoom=clamp(view.cam.zoom*.88,.2,5);else if(e.key==='-')view.cam.zoom=clamp(view.cam.zoom/.88,.2,5);
+    else if(e.key==='+'||e.key==='='){e.preventDefault();seamPreviewZoom(.88);return;}else if(e.key==='-'){e.preventDefault();seamPreviewZoom(1/.88);return;}
     else if(e.key==='Home'||e.key==='0'){e.preventDefault();seamPreviewSetScope('whole',false);return;}else return;
     e.preventDefault();seamPreviewRequestRender();
   });
@@ -5294,7 +5314,7 @@ function openSeamPicker(){
   if(!S.seam.enabled&&print.enabled&&print.tiles.length>1){
     S.seam={...seamSettings(),enabled:true};
   }
-  SEAM_PREVIEW_RENDERER.scope='whole';SEAM_PREVIEW_RENDERER.inside=false;SEAM_PREVIEW_RENDERER.exploded=false;
+  SEAM_PREVIEW_RENDERER.scope='whole';SEAM_PREVIEW_RENDERER.inside=false;SEAM_PREVIEW_RENDERER.exploded=false;SEAM_PREVIEW_RENDERER.baseOnly=false;
   $('#seamChooser').open=!seamMethod(S.seam.method);$('#seamDialog').showModal();
   if(first&&S.seam.enabled)autoSelectSeamPoints();
   refreshSeamPlan();
@@ -5331,6 +5351,7 @@ function changeSeamMethod(id){
 }
 function prepareSeamProduction(s=S.seam){
   s.length=Math.max(32,s.length);s.width=Math.max(12,s.width);
+  if(['plate','selftap'].includes(s.method))s.hardware.baseT=Math.max(s.hardware.baseT,s.hardware.depth+1.5);
   if(s.method!=='plate')s.hardware.clearance=Math.max(.35,s.hardware.clearance);
   if(s.method==='selftap'&&s.hardware.hole>=s.hardware.bolt)s.hardware.hole=Math.min(2.5,s.hardware.bolt-.5);
   if(s.method==='plate'&&s.hardware.hole<=s.hardware.bolt)s.hardware.hole=Math.max(4.2,s.hardware.bolt+.8);
@@ -5359,7 +5380,8 @@ function drawSeamOverlay(c,cv){
     c.save();const points=seamPreviewPoints();
     if(!simpleMain&&SEAM_PREVIEW_RENDERER.scope==='focus'&&SEAM_FOCUS?.valid){
       const p=SEAM_FOCUS,view=SEAM_PREVIEW_RENDERER,roi=view.ready&&$('#seamPreviewViewport').dataset.point===p.id?view.scene?.roi:null,span=seamPreviewFocusSpan(roi||p.footprint);
-      const a=seamCanvasPoint(cv,p.anchorMm.x-span*.62,p.anchorMm.y+span*.3),b=seamCanvasPoint(cv,p.anchorMm.x+span*.62,p.anchorMm.y-span*.5);
+      const base=view.baseOnly&&roi?seamPreviewBaseBounds(view.scene):null;
+      const a=seamCanvasPoint(cv,base?base.mn[0]:p.anchorMm.x-span*.62,base?base.mx[1]:p.anchorMm.y+span*.3),b=seamCanvasPoint(cv,base?base.mx[0]:p.anchorMm.x+span*.62,base?base.mn[1]:p.anchorMm.y-span*.5);
       c.strokeStyle='#ff2d8f';c.lineWidth=1.5;c.strokeRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);
     }
     points.forEach((p,i)=>{const [x,y]=seamCanvasPoint(cv,p.anchorMm.x,p.anchorMm.y);c.beginPath();c.arc(x,y,simpleMain?9:6,0,Math.PI*2);c.fillStyle=p.id===SEAM_FOCUS?.id?'#ff2d8f':'#253345';c.fill();c.strokeStyle='#fff';c.lineWidth=simpleMain?1.5:1;c.stroke();c.fillStyle='#fff';c.font=simpleMain?'bold 10px sans-serif':'bold 8px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(i+1,x,y);});
@@ -5482,11 +5504,12 @@ function requestSeamPreview(){
   if(!G?.panel||G.empty||PB.empty){
     stopSeamPreview();setSeamPreviewStatus('ยังไม่มีชิ้นงานสำหรับแสดงภาพ','empty');return;
   }
-  if(!point){SEAM_PREVIEW_RENDERER.scope='whole';SEAM_PREVIEW_RENDERER.exploded=false;}
+  if(!point){SEAM_PREVIEW_RENDERER.scope='whole';SEAM_PREVIEW_RENDERER.exploded=false;SEAM_PREVIEW_RENDERER.baseOnly=false;}
   syncSeamPreviewControls();
   const key=JSON.stringify([point?.id||null,s.method,s.length,s.width,s.hardware,S.box,S.hw,S.build,S.face,S.shape,S.exp,PB]);
   if(SEAM_DETAIL_KEY===key&&SEAM_DETAIL_GRID===G){seamPreviewRequestRender();return;}
   stopSeamPreview();SEAM_DETAIL_KEY=key;SEAM_DETAIL_GRID=G;
+  SEAM_PREVIEW_RENDERER.issue=null;syncSeamPreviewControls();
   $('#seamPreviewCaption').textContent='';
   setSeamPreviewStatus(point?'กำลังสร้างป้ายจริงและตัวต่อที่เลือก…':'กำลังสร้างพรีวิวชิ้นงานจริง…','loading');
   SEAM_DETAIL_TIMER=setTimeout(()=>{
@@ -5495,7 +5518,13 @@ function requestSeamPreview(){
     try{
       // A printable artwork does not require a valid connector placement.
       // Keep invalid placements out of manufacturing while showing the sign.
-      const production=point?seamProductionPlan({...SEAM_PLAN,candidates:[{...point,selected:true}]},s):{joints:[]};
+      let production={joints:[]};
+      if(point)try{production=seamProductionPlan({...SEAM_PLAN,candidates:[{...point,selected:true}]},s);}
+      catch(e){
+        if(!(e instanceof SeamProductionError))throw e;
+        SEAM_PREVIEW_RENDERER.issue={point:point.id,message:e.message};seamPreviewSetScope('whole',false);
+      }
+      const hasJoint=production.joints.length>0;
       const joints=production.joints.map(j=>{const joint={...j};delete joint.design;return joint;});
       const state=projectSnapshot();delete state.src.imgData;delete state.src.imgSrc;delete state.src.fontData;
       job={...createExportWorker(seamPreviewWorkerMain),key,started:performance.now()};SEAM_DETAIL_JOB=job;
@@ -5510,8 +5539,8 @@ function requestSeamPreview(){
           const info=seamPreviewSetScene(data.scene);setSeamPreviewStatus('','ready');
           $('#seamPreviewViewport').dataset.point=point?.id||'';
           drawSeamDialog();
-          $('#seamPreviewCaption').textContent='ป้าย '+nf(PB.w/10,1)+' × '+nf(PB.h/10,1)+' ซม. · ขอบป้ายอิงกริดพรีวิว '+nf(data.scene.resolution,2)+' มม. · '+(point?'ตัวต่อและฐานจุดที่เลือกตามรูปทรงผลิต':'แสดงเฉพาะชิ้นงาน ยังไม่มีตัวต่อในภาพ')+' · ซ่อนฮาร์ดแวร์อื่น';
-          $('#seamPreviewCanvas').title=`ขอบชิ้นงานจากกริดพรีวิว ${nf(data.scene.resolution,2)} มม.${point?' ตัวต่อใช้รูปทรงผลิตจริง':''}`;
+          $('#seamPreviewCaption').textContent='ป้าย '+nf(PB.w/10,1)+' × '+nf(PB.h/10,1)+' ซม. · ขอบป้ายอิงกริดพรีวิว '+nf(data.scene.resolution,2)+' มม. · '+(hasJoint?'ตัวต่อและฐานจุดที่เลือกตามรูปทรงผลิต':'แสดงเฉพาะชิ้นงาน ยังไม่มีตัวต่อในภาพ')+' · ซ่อนฮาร์ดแวร์อื่น';
+          $('#seamPreviewCanvas').title=`ขอบชิ้นงานจากกริดพรีวิว ${nf(data.scene.resolution,2)} มม.${hasJoint?' ตัวต่อใช้รูปทรงผลิตจริง':''}`;
           console.info('Lightbox joint preview',JSON.stringify({method:s.method,point:point?.id||null,ms:performance.now()-job.started,...info}));
         }catch(e){SEAM_DETAIL_KEY='';SEAM_DETAIL_GRID=null;seamPreviewClear();setSeamPreviewStatus(e.message,'error');}
         releaseSeamPreviewJob(job);
@@ -5556,6 +5585,7 @@ function syncSeamProductionUI(){
   $('#seamExportHint').textContent=text;$('#seamDialogProductionNote').textContent=quick+' · ตรวจขนาดละเอียดอีกครั้งตอนส่งออก';
   $('#seamQuickStatus').textContent=quick;$('#seamQuickStatus').className='printer-fit '+(ready?'ok':'warn');
   $('#btnSeamExport').disabled=!ready;
+  $('#btnSeamPrepare').hidden=!needsSplit||ready||S.build.mode!=='service';
 }
 function autoSelectSeamPoints(){
   const settings=$('#seamDialog').open?seamPreviewSettings():seamSettings();
@@ -5567,8 +5597,9 @@ function autoSelectSeamPoints(){
     }
     chosen.push(p);
   }
+  reason||=plan.reason||plan.candidates.find(p=>!p.valid)?.reason||'ไม่พบแนวตัดผ่านเนื้อโลโก้';
   updateSeamSelection(chosen.map(({axis,seamIndex,tileIndex,along})=>({axis,seamIndex,tileIndex,along})),undefined,chosen.length?'':reason);
-  if(!chosen.length&&settings.production)toast('ยังไม่มีจุดที่ฐานจริงวางได้ ปรับพื้นที่สำรองหรือความลึกกล่อง');
+  if(!chosen.length&&settings.production)toast(seamQuickReason(reason));
 }
 function pickSeam(e){
   const plan=SEAM_PLAN,cv=e.currentTarget;
@@ -7652,7 +7683,7 @@ function syncWorkflowSummary(){
 }
 function preparePrintableProject(){
   if(EXPORT_JOB||PROJECT_LOADING||_sizing){toast('รอให้งานปัจจุบันเสร็จก่อน');return;}
-  const before=+S.exp.res,workspace=exportWorkspaceCheck(),print=printPlan();
+  const before=+S.exp.res,beforeBase=S.seam.hardware.baseT,workspace=exportWorkspaceCheck(),print=printPlan();
   const join=S.build.mode==='service'&&print.enabled&&print.tiles.length>1,fitJoint=join&&S.seam.method!=='plate';
   let resolution=before;
   if(!workspace.fits||(fitJoint&&before>.25)){
@@ -7671,7 +7702,7 @@ function preparePrintableProject(){
     try{seamProductionPlan(SEAM_PLAN);}
     catch(e){if(!(e instanceof SeamProductionError))throw e;toast(seamQuickReason(e.message));return;}
   }
-  toast((resolution!==before?`ปรับไฟล์พิมพ์เป็น ${resolution} มม. · คงขนาดงานเดิม · `:'')+(join?`จัดตัวต่อใหม่ ${S.seam.selected.length} จุดแล้ว`:'เตรียมขนาดไฟล์แล้ว'));
+  toast((resolution!==before?`ปรับไฟล์พิมพ์เป็น ${resolution} มม. · คงขนาดงานเดิม · `:'')+(join&&S.seam.hardware.baseT!==beforeBase?`ปรับฐานเป็น ${S.seam.hardware.baseT} มม. เพื่อเหลือก้นรู 1.5 มม. · `:'')+(join?`จัดตัวต่อใหม่ ${S.seam.selected.length} จุดแล้ว`:'เตรียมขนาดไฟล์แล้ว'));
 }
 
 /* แท็บล่างบนมือถือ: เปิดเฉพาะชุดเมนูที่เกี่ยวข้อง โดยคงพรีวิวไว้ด้านหลังตลอด */
@@ -7689,6 +7720,7 @@ function showMobilePanel(panel){
 function wire(){
   $('#btnWorkspaceAdvanced').addEventListener('click',()=>setWorkspaceAdvanced(!WORKSPACE_ADVANCED));
   $('#btnPrepareExport').addEventListener('click',preparePrintableProject);
+  $('#btnSeamPrepare').addEventListener('click',preparePrintableProject);
   for(const id of ['seamMethod','seamDialogMethod'])$('#'+id).addEventListener('change',e=>changeSeamMethod(e.target.value));
   $('#seamEnabled').addEventListener('change',e=>{
     S.seam.enabled=e.target.checked;if(!e.target.checked)S.seam.production=false;refreshSeamPlan();queueDraftSave();schedule(false,'m');
@@ -7718,7 +7750,7 @@ function wire(){
   $('#btnSeamCuts').addEventListener('click',()=>seamPreviewSetCuts(!SEAM_PREVIEW_RENDERER.cuts));
   $('#btnSeamZoomIn').addEventListener('click',()=>seamPreviewZoom(.85));$('#btnSeamZoomOut').addEventListener('click',()=>seamPreviewZoom(1/.85));
   $('#btnSeamWhole').addEventListener('click',()=>{seamPreviewSetScope('whole',false);drawSeamDialog();});
-  $('#btnSeamFocus').addEventListener('click',()=>focusSeamPreviewPoint(SEAM_FOCUS?.id));
+  $('#btnSeamFocus').addEventListener('click',()=>focusSeamPreviewPoint(SEAM_FOCUS?.id,true));
   $('#btnSeamFront').addEventListener('click',()=>{seamPreviewSetInside(false);drawSeamDialog();});
   $('#btnSeamInside').addEventListener('click',()=>{seamPreviewSetInside(true);drawSeamDialog();});
   seamPreviewInitEvents();
