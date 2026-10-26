@@ -404,6 +404,85 @@ test('Process line generation reports truncation when many thin wall cuts exceed
   assert.equal(plan.processSegments.length,2048);assert.equal(plan.truncated,true);
 });
 
+function overlayFixture(){
+  const {c}=fixture();
+  run(c,`WORKSPACE_ADVANCED=false;globalThis.manualOpen=false;
+    const point=(id,x,y,valid,selected=false)=>({id,anchorMm:{x,y},valid,selected,
+      axis:'x',seamIndex:1,tileIndex:1,along:y,tiles:['R1C1','R1C2'],footprint:{x0:x-4,x1:x+4,y0:y-3,y1:y+3}});
+    SEAM_PLAN={applicable:true,kind:'body',method:'plate',seams:[],candidates:[
+      point('selected',20,20,true,true),point('available',60,20,true),point('invalid',80,40,false)]};
+    SEAM_FOCUS=SEAM_PLAN.candidates[2];S.seam.selected=[{axis:'x',seamIndex:1,tileIndex:1,along:20}];
+    document.querySelector=()=>({open:manualOpen});seamCanvasPoint=(cv,x,y)=>[x,y];
+    globalThis.paint={arcs:[],texts:[],rects:[],strokes:[],glyphs:0};
+    globalThis.overlayContext=new Proxy({
+      arc(x,y){paint.arcs.push([x,y]);},fillText(text){paint.texts.push(String(text));},
+      strokeRect(){paint.rects.push('outline');},fillRect(){paint.rects.push('fill');},
+      stroke(){paint.strokes.push(this.strokeStyle);}
+    },{get(target,key){return key in target?target[key]:()=>{};},set(target,key,value){target[key]=value;return true;}});
+    drawSeamGlyph=()=>paint.glyphs++;
+    globalThis.mainCanvas={id:'view',width:100,height:100,getBoundingClientRect:()=>({left:0,top:0,width:100,height:100})};`);
+  return c;
+}
+
+test('The simple main preview shows numbered valid pins without diagnostic clutter',()=>{
+  const c=overlayFixture(),before=run(c,'JSON.stringify(S.seam.selected)');
+  run(c,'drawSeamOverlay(overlayContext,mainCanvas)');
+  const paint=plain(run(c,'paint'));
+  assert.deepEqual(paint.arcs,[[20,20]]);assert.deepEqual(paint.texts,['1']);
+  assert.deepEqual(paint.rects,[]);assert.equal(paint.glyphs,0);assert.ok(!paint.strokes.includes('#db293e'));
+  assert.equal(run(c,'JSON.stringify(S.seam.selected)'),before);
+  run(c,'SEAM_PLAN.candidates[0].selected=false;paint.arcs=[];paint.texts=[];drawSeamOverlay(overlayContext,mainCanvas)');
+  assert.deepEqual(plain(run(c,'paint.arcs')),[[20,20],[60,20]]);
+  assert.deepEqual(plain(run(c,'paint.texts')),['1','2']);
+});
+
+test('Advanced main and manual dialog retain invalid markers and diagnostic footprints',()=>{
+  for(const manual of [false,true]){
+    const c=overlayFixture();c.manualCase=manual;
+    run(c,`WORKSPACE_ADVANCED=!manualCase;manualOpen=manualCase;
+      drawSeamOverlay(overlayContext,manualCase?{id:'seamView'}:mainCanvas);`);
+    const paint=plain(run(c,'paint'));
+    assert.deepEqual(paint.arcs,manual?[[20,20],[60,20],[80,40],[80,40]]:[[20,20],[60,20],[80,40]]);
+    assert.ok(paint.strokes.includes('#db293e'));assert.ok(paint.rects.length>=2);assert.equal(paint.glyphs,2);
+  }
+});
+
+test('Simple preview clicks inspect visible pins and never edit connector selections',()=>{
+  const c=overlayFixture();
+  run(c,`globalThis.pinClicks=[];globalThis.beforeClick=JSON.stringify(S);
+    openSeamPicker=()=>pinClicks.push('open');focusSeamPreviewPoint=id=>pinClicks.push(id);
+    updateSeamSelection=()=>{throw new Error('Simple preview changed selection');};
+    pickSeam({currentTarget:mainCanvas,clientX:20,clientY:20});
+    pickSeam({currentTarget:mainCanvas,clientX:60,clientY:20});
+    pickSeam({currentTarget:mainCanvas,clientX:80,clientY:40});
+    pickSeam({currentTarget:mainCanvas,clientX:45,clientY:70});`);
+  assert.deepEqual(plain(run(c,'pinClicks')),['open','selected']);
+  assert.equal(run(c,'JSON.stringify(S)===beforeClick'),true);
+});
+
+test('Advanced main and manual dialog retain selection toggling on click',()=>{
+  for(const manual of [false,true]){
+    const c=overlayFixture();c.manualCase=manual;
+    run(c,`WORKSPACE_ADVANCED=!manualCase;manualOpen=manualCase;globalThis.toggleCalls=[];
+      openSeamPicker=()=>{throw new Error('Manual click opened picker');};
+      updateSeamSelection=(selection,id)=>toggleCalls.push({selection,id});
+      const cv=manualCase?{...mainCanvas,id:'seamView'}:mainCanvas;
+      pickSeam({currentTarget:cv,clientX:20,clientY:20});`);
+    assert.deepEqual(plain(run(c,'toggleCalls')),[{selection:[],id:'selected'}]);
+  }
+});
+
+test('Simple workflow explains unsupported modes without asking users to enable disabled controls',()=>{
+  for(const mode of ['face5d','face5dChamfer','shell','full']){
+    const {c}=fixture();c.mode=mode;c.summary={textContent:''};
+    run(c,`S.build.mode=mode;document.querySelector=()=>summary;SEAM_PLAN=buildSeamPlan();
+      globalThis.beforeSummary=JSON.stringify(S);syncWorkflowSummary();`);
+    assert.match(c.summary.textContent,mode.startsWith('face5d')?/5D.*ไม่รองรับแบ่งอัตโนมัติ/:/ตัวต่อใช้กับรูปแบบฝาหน้าถอดเปลี่ยนได้/);
+    assert.doesNotMatch(c.summary.textContent,/เปิด “แบ่งชิ้นอัตโนมัติ”|กดดูเพื่อวางตัวต่อ/);
+    assert.equal(run(c,'JSON.stringify(S)===beforeSummary'),true);
+  }
+});
+
 test('All 13 enabled preview methods with retained selections leave exported module meshes byte-for-byte unchanged',()=>{
   const app=fixture(),{c}=app;
   run(c,'S.seam.enabled=false;');

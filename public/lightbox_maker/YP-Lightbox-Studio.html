@@ -102,6 +102,7 @@ input[type=range]{width:100%;accent-color:var(--acc);background:none;border:0;pa
   cursor:pointer;transition:.15s
 }
 .drop:hover,.drop.over{border-color:var(--acc);color:var(--tx)}
+#imgDrop{white-space:pre-line}
 
 /* palette */
 .pal{display:flex;flex-direction:column;gap:6px}
@@ -261,7 +262,7 @@ table.kv tr.sub td{color:var(--tx2)}
     border-radius:16px 16px 0 0;box-shadow:0 -12px 30px #0008}
   #app.mobile-panel-work #left,#app.mobile-panel-colors #left,
   #app.mobile-panel-box #right,#app.mobile-panel-production #right{display:block}
-  #app.mobile-panel-work #left .sec:not([data-sec="src"]):not([data-sec="fit"]),
+  #app.mobile-panel-work #left .sec:not([data-sec="src"]):not([data-sec="fit"]):not([data-sec="seam"]),
   #app.mobile-panel-colors #left .sec:not([data-sec="color"]):not([data-sec="shape"]),
   #app.mobile-panel-box #right .sec:not([data-sec="dim"]):not([data-sec="hw"]):not([data-sec="joint"]),
   #app.mobile-panel-production #right .sec:not([data-sec="check"]):not([data-sec="price"]):not([data-sec="exp"]){display:none}
@@ -321,10 +322,42 @@ table.kv tr.sub td{color:var(--tx2)}
 .seam-assembly-guide>strong{font-size:12px;color:var(--tx)}.seam-assembly-guide p{margin:3px 0;color:var(--tx2);line-height:1.5}
 .seam-assembly-guide summary{cursor:pointer;color:var(--acc2);margin-top:5px}.seam-assembly-guide ol{margin:7px 0;padding-left:21px}.seam-assembly-guide li{padding:3px 0}
 .seam-part-label{position:absolute;pointer-events:none;transform:translate(-50%,-100%);color:#17202e;background:#fff;border:1px solid #c0cbd5;padding:1px 5px;border-radius:3px;font-size:10px;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+/* Production controls stay available without making them the starting task. */
+.workspace-toggle{white-space:nowrap}
+.workflow-summary{margin:0 0 12px;color:var(--tx2);line-height:1.6;font-size:13px}
+.workspace-simple-note{display:none}
+#app.simple-workspace #left{width:340px}
+#app.simple-workspace #right,#app.simple-workspace #left>.sec[data-sec="color"],
+#app.simple-workspace .workspace-advanced{display:none}
+#app.simple-workspace .workspace-simple-note{display:block}
+#app.simple-workspace .sec>h3{font-size:15px;padding-top:15px;padding-bottom:12px}
+#app.simple-workspace .sec>.body{padding-bottom:18px}
+#app.simple-workspace .row{margin:8px 0}
+#app.simple-workspace input,#app.simple-workspace select,#app.simple-workspace textarea{font-size:14px}
+#app.simple-workspace #srcTabs button[data-t="tpl"]{display:none}
+#app.simple-workspace #imgDrop{padding:18px 10px;color:var(--tx);border-color:#59616e}
+#app.simple-workspace .seam-controls{margin:0;padding:0;border:0}
+#app.simple-workspace #seamQuickHint,#app.simple-workspace #seamQuickStatus,#app.simple-workspace #seamSummary{display:none}
+#app.simple-workspace #seamQuickMethod{font-size:12px;color:var(--tx2);margin-top:10px}
+#app.simple-workspace .stage{background:#171a20}
+#app.simple-workspace #triBadge,#app.simple-workspace .viewbar>label{display:none}
+#app.simple-workspace .viewbar{min-height:48px;flex-wrap:wrap}
+#app.simple-workspace #status{max-height:36px;overflow:auto}
+#app.simple-workspace .sec[data-sec="seam"] .workspace-simple-note{color:var(--tx2);font-size:12px;line-height:1.6;margin:10px 0 0}
+@media(max-width:1000px){header{gap:7px}.docname{width:160px}#draftStatus{display:none}header>.btn{padding-inline:9px}}
+@media(max-width:720px){
+  #app.simple-workspace #left{width:auto}
+  #app.simple-workspace.mobile-panel-colors #left>.sec[data-sec="color"]{display:block}
+  #app.simple-workspace.mobile-panel-box #right,#app.simple-workspace.mobile-panel-production #right{display:block}
+  #app.simple-workspace.mobile-panel-work #left .sec[data-sec="seam"]{display:block}
+  #app.simple-workspace .viewbar{gap:5px}
+  header>.workspace-toggle{padding:7px 8px;font-size:11px}
+  header>.docname{display:none}
+}
 </style>
 </head>
 <body>
-<div id="app">
+<div id="app" class="simple-workspace">
 
 <header>
   <div class="brand">YP <span>Lightbox</span> Studio</div>
@@ -333,7 +366,8 @@ table.kv tr.sub td{color:var(--tx2)}
   <button class="btn gh" id="btnNew">ล้าง</button>
   <span id="draftStatus" role="status"></span>
   <button class="btn gh" id="btnSaveProj">บันทึกโปรเจ็ค</button>
-  <button class="btn gh" id="btnOpenProj">เปิดไฟล์</button>
+  <button class="btn gh" id="btnOpenProj">เปิดโปรเจกต์</button>
+  <button class="btn gh workspace-toggle" id="btnWorkspaceAdvanced" aria-pressed="false">ตั้งค่าละเอียด</button>
   <button class="btn pri" id="btnExport">ส่งออกไฟล์พิมพ์</button>
 </header>
 <div id="draftRecovery" hidden role="status">พบร่างงานที่บันทึกไว้ <span id="draftName"></span> <button class="btn" id="btnRestoreDraft">กู้คืนงาน</button> <button class="btn gh" id="btnSkipDraft">ข้าม</button></div>
@@ -355,6 +389,7 @@ table.kv tr.sub td{color:var(--tx2)}
       <div data-pane="text">
         <textarea id="txtContent">YP Lightbox
 Studio</textarea>
+        <div class="workspace-advanced">
         <div class="row"><label>ฟอนต์</label><select id="txtFont" class="grow"></select></div>
         <div class="row"><label>อัปโหลดฟอนต์</label>
           <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" style="display:none">
@@ -372,6 +407,7 @@ Studio</textarea>
         <div class="row"><label>ระยะห่างตัวอักษร</label><input type="range" id="txtTrack" min="-8" max="30" step="1" value="0"><span class="unit" id="txtTrackV">0</span></div>
         <div class="row"><label>ระยะห่างบรรทัด</label><input type="range" id="txtLead" min="80" max="200" step="5" value="110"><span class="unit" id="txtLeadV">110%</span></div>
         <div id="lineStyleRows"></div>
+        </div>
         <div id="shapeControls">
         <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
         <div class="row"><label style="flex-basis:auto;color:var(--tx);font-weight:600">ขอบและรูปทรงป้าย</label></div>
@@ -399,7 +435,7 @@ Studio</textarea>
         </div>
         <input type="file" id="imgFile" accept="image/*" style="display:none">
         <div class="row"><label>ลบพื้นหลัง</label><input type="checkbox" id="imgRemoveBg" checked><span class="unit">ตัดสีมุมภาพออก</span></div>
-        <div class="row"><label>ความคลาดสี</label><input type="range" id="imgTol" min="2" max="90" step="1" value="26"><span class="unit" id="imgTolV">26</span></div>
+        <div class="row workspace-advanced"><label>ความคลาดสี</label><input type="range" id="imgTol" min="2" max="90" step="1" value="26"><span class="unit" id="imgTolV">26</span></div>
         <p class="hint">โลโก้ที่เป็น SVG หรือ PNG พื้นใสจะได้ผลดีที่สุด ภาพถ่ายไม่เหมาะกับงานไลท์บ็อกซ์</p>
       </div>
 
@@ -417,8 +453,8 @@ Studio</textarea>
       <div class="row"><label>ขนาดชิ้นงาน</label>
         <input type="number" id="sizeW" class="num" step="1"><span class="unit">×</span>
         <input type="number" id="sizeH" class="num" step="1"><span class="unit">มม.</span></div>
-      <div class="row"><label>ล็อกสัดส่วน</label><input type="checkbox" id="uniformScale" checked>
-        <span class="unit">Uniform Scale</span></div>
+      <div class="row workspace-advanced"><label>ล็อกสัดส่วน</label><input type="checkbox" id="uniformScale" checked>
+        <span class="unit">กว้าง–สูงสัมพันธ์กัน</span></div>
       <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
       <div class="row" style="margin-top:13px"><label>เครื่องพิมพ์</label>
         <select id="expBed" class="grow">
@@ -454,14 +490,14 @@ Studio</textarea>
             <option value="sgs-ultra-1200">SG-S 3D Ultra · 1,200 × 1,200 มม.</option>
           </optgroup>
         </select></div>
-      <div class="row"><label>พื้นที่ทำงาน</label><input type="number" id="bW" class="num" value="256" readonly>
+      <div class="row workspace-advanced"><label>พื้นที่ทำงาน</label><input type="number" id="bW" class="num" value="256" readonly>
         <span class="unit">×</span><input type="number" id="bH" class="num" value="256" readonly><span class="unit">มม.</span></div>
       <div class="row"><label for="autoSplit">แบ่งชิ้นอัตโนมัติ</label><input type="checkbox" id="autoSplit" checked></div>
       <div class="row"><label for="bedMargin">เผื่อขอบทุกด้าน</label><input type="number" id="bedMargin" class="num" min="0" step="1" value="10"><span class="unit">มม. (10 มม. = 1 ซม.)</span></div>
       <div class="printer-fit" id="printerFit">—</div>
       <div class="seam-controls">
-        <div class="row"><label for="seamEnabled">ใช้ตัวต่อระหว่างชิ้น</label><input type="checkbox" id="seamEnabled"></div>
-        <button id="btnSeamPlan" class="btn pri seam-launch" type="button">เลือกตัวต่อและส่งออก</button>
+        <div class="row workspace-advanced"><label for="seamEnabled">ใช้ตัวต่อระหว่างชิ้น</label><input type="checkbox" id="seamEnabled"></div>
+        <button id="btnSeamPlan" class="btn pri seam-launch" type="button">ดูรอยแบ่งและตัวต่อ</button>
         <div id="seamOptions" hidden>
           <strong class="seam-quick-method" id="seamQuickMethod"></strong>
           <p class="seam-note" id="seamQuickHint"></p>
@@ -4832,7 +4868,7 @@ function draw(){
     const d=S.src.diag, img=S.src.mode==='image'&&S.src.imgData;
   let t1='ยังไม่มีไฟล์', t2='พิมพ์ข้อความ หรืออัปโหลดโลโก้ทางแผงซ้าย';
     if(img&&d&&d.tainted){ t1='อ่านพิกเซลของรูปนี้ไม่ได้'; t2='ลองเซฟเป็น PNG แล้วอัปโหลดใหม่'; }
-    else if(img&&d&&d.raw===0){ t1='ไฟล์เปิดได้ แต่วาดออกมาว่างเปล่า'; t2='ดูสาเหตุที่หัวข้อ 7 · ตรวจก่อนพิมพ์ ทางแผงขวา'; }
+    else if(img&&d&&d.raw===0){ t1='ไฟล์เปิดได้ แต่วาดออกมาว่างเปล่า'; t2=WORKSPACE_ADVANCED?'ดูสาเหตุที่หัวข้อ 7 · ตรวจก่อนพิมพ์ ทางแผงขวา':'กด “ตั้งค่าละเอียด” แล้วดูหัวข้อ “ตรวจก่อนพิมพ์”'; }
     else if(img&&d&&d.bgAte){ t1='ลบพื้นหลังตัดทั้งภาพออกหมด'; t2='ลดค่า “ความคลาดสี” หรือปิดตัวเลือกลบพื้นหลัง'; }
     else if(img){ t1='แปลงรูปเป็นชั้นสีไม่ได้'; t2='ลองปิดลบพื้นหลัง หรือใช้ PNG พื้นใส'; }
     c.fillText(t1,cv.width/2,cv.height/2-8);
@@ -4860,7 +4896,7 @@ function draw(){
   if(view==='design'){
     const plan=printPlan();
     if(plan.enabled&&plan.tiles.length>1){
-      c.save(); c.strokeStyle='#ff2d8f'; c.fillStyle='#b40058'; c.lineWidth=1; c.setLineDash([5,4]); c.font='11px sans-serif';
+      c.save(); c.strokeStyle=WORKSPACE_ADVANCED?'#ff2d8f':'#079ebf'; c.fillStyle=WORKSPACE_ADVANCED?'#b40058':'#526174'; c.lineWidth=1; c.setLineDash([5,4]); c.font='11px sans-serif';
       for(const tile of plan.tiles){
         const x=(PB.ux0+tile.x0)*px,y=(b.H-PB.my0-tile.y1)*px;
         c.strokeRect(x,y,(tile.x1-tile.x0)*px,(tile.y1-tile.y0)*px);
@@ -5304,14 +5340,15 @@ function drawSeamProcesses(c,cv){
 }
 function drawSeamOverlay(c,cv){
   const plan=SEAM_PLAN;drawSeamProcesses(c,cv);if(!plan?.applicable)return;
-  if(cv.id==='seamView'&&!$('#seamManual').open){
+  const simpleMain=cv.id==='view'&&!WORKSPACE_ADVANCED;
+  if(simpleMain||(cv.id==='seamView'&&!$('#seamManual').open)){
     c.save();const points=seamPreviewPoints();
-    if(SEAM_PREVIEW_RENDERER.scope==='focus'&&SEAM_FOCUS?.valid){
+    if(!simpleMain&&SEAM_PREVIEW_RENDERER.scope==='focus'&&SEAM_FOCUS?.valid){
       const p=SEAM_FOCUS,f=p.footprint,span=Math.max(85,Math.min(240,PB.h*.7),(f.x1-f.x0)*2,(f.y1-f.y0)*2);
       const a=seamCanvasPoint(cv,p.anchorMm.x-span*.62,p.anchorMm.y+span*.3),b=seamCanvasPoint(cv,p.anchorMm.x+span*.62,p.anchorMm.y-span*.5);
       c.strokeStyle='#ff2d8f';c.lineWidth=1.5;c.strokeRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);
     }
-    points.forEach((p,i)=>{const [x,y]=seamCanvasPoint(cv,p.anchorMm.x,p.anchorMm.y);c.beginPath();c.arc(x,y,6,0,Math.PI*2);c.fillStyle=p.id===SEAM_FOCUS?.id?'#ff2d8f':'#253345';c.fill();c.strokeStyle='#fff';c.lineWidth=1;c.stroke();c.fillStyle='#fff';c.font='bold 8px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(i+1,x,y);});
+    points.forEach((p,i)=>{const [x,y]=seamCanvasPoint(cv,p.anchorMm.x,p.anchorMm.y);c.beginPath();c.arc(x,y,simpleMain?9:6,0,Math.PI*2);c.fillStyle=p.id===SEAM_FOCUS?.id?'#ff2d8f':'#253345';c.fill();c.strokeStyle='#fff';c.lineWidth=simpleMain?1.5:1;c.stroke();c.fillStyle='#fff';c.font=simpleMain?'bold 10px sans-serif':'bold 8px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(i+1,x,y);});
     c.restore();return;
   }
   c.save();c.lineWidth=2;
@@ -5341,6 +5378,7 @@ function drawSeamOverlay(c,cv){
 }
 function syncSeamUI(){
   const s=seamSettings(),plan=SEAM_PLAN;
+  syncWorkflowSummary();
   $('#seamOptions').hidden=!s.enabled;$('#seamEnabled').checked=s.enabled;
   $('#seamExportHint').hidden=!s.enabled;
   $('#seamLength').value=s.length;$('#seamWidth').value=s.width;
@@ -5520,11 +5558,16 @@ function autoSelectSeamPoints(){
 function pickSeam(e){
   const plan=SEAM_PLAN,cv=e.currentTarget;
   if(!plan?.applicable||EXPORT_JOB||PROJECT_LOADING||(cv.id==='view'&&S.ui.view!=='design'))return;
+  const simpleMain=cv.id==='view'&&!WORKSPACE_ADVANCED;
   const r=cv.getBoundingClientRect(),u=(e.clientX-r.left)*cv.width/r.width,v=(e.clientY-r.top)*cv.height/r.height;
   let focus=null,best=11;
-  for(const p of plan.candidates){
+  for(const p of simpleMain?seamPreviewPoints():plan.candidates){
     const a=seamCanvasPoint(cv,p.anchorMm.x,p.anchorMm.y),d=Math.hypot((a[0]-u)*r.width/cv.width,(a[1]-v)*r.height/cv.height);
     if(d<best){focus=p;best=d;}
+  }
+  if(simpleMain){
+    if(focus){const id=focus.id;openSeamPicker();focusSeamPreviewPoint(id);}
+    return;
   }
   if(!focus){
     const {x,y}=seamCanvasPosition(cv,u,v),frame=seamCanvasFrame(cv);
@@ -7228,6 +7271,9 @@ function pushToUI(){
   $('#expBed').value=S.exp.printer||'bambu-a1';
   $$('#srcTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.src.mode));
   $$('#left [data-pane]').forEach(p=>p.style.display = p.dataset.pane===S.src.mode?'':'none');
+  const drop=$('#imgDrop'),image=S.src.imgData;
+  const imageLabel=image?(S.src.imgName||'โลโก้ที่เปิดอยู่')+'\nคลิกเพื่อเปลี่ยนโลโก้':'ลากไฟล์มาวาง หรือคลิกเพื่อเลือก\nPNG · JPG · SVG · WEBP';
+  if(drop.textContent!==imageLabel)drop.textContent=imageLabel;
   $$('#viewseg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.ui.view));
   $('#colN').disabled = S.src.mode!=='image';
   const cn=NUMBOX.get('colNV'); if(cn) cn.inp.disabled = S.src.mode!=='image';
@@ -7559,6 +7605,28 @@ async function setPartSize(axis,target){
   finally{ _sizing=false; busy(false); }
 }
 
+let WORKSPACE_ADVANCED=false;
+function setWorkspaceAdvanced(advanced){
+  WORKSPACE_ADVANCED=!!advanced;
+  $('#app').classList.toggle('simple-workspace',!WORKSPACE_ADVANCED);
+  const button=$('#btnWorkspaceAdvanced');
+  button.setAttribute('aria-pressed',String(WORKSPACE_ADVANCED));
+  button.textContent=WORKSPACE_ADVANCED?'กลับโหมดใช้ง่าย':'ตั้งค่าละเอียด';
+  if(!WORKSPACE_ADVANCED){
+    $('#left').scrollTop=0;
+    for(const section of $$('#left>.sec'))if(['src','fit','seam'].includes(section.dataset.sec))section.classList.remove('closed');
+  }
+  draw();
+}
+function syncWorkflowSummary(){
+  const out=$('#workflowSummary');if(!out)return;
+  if(!G?.panel||G.empty||!PB||PB.empty){out.textContent='ใส่โลโก้และตั้งขนาดก่อนดูรอยแบ่ง';return;}
+  const print=printPlan(),selected=(SEAM_PLAN?.candidates||[]).filter(p=>p.selected);
+  out.textContent=print.error||(!print.enabled?(isFace5D()?'โหมด 5D ยังไม่รองรับแบ่งอัตโนมัติ · เปลี่ยนรูปแบบงานในตั้งค่าละเอียด':'เปิด “แบ่งชิ้นอัตโนมัติ” เพื่อแบ่งตามเครื่องพิมพ์'):print.tiles.length===1?'ชิ้นงานพอดีพื้นที่พิมพ์ ไม่ต้องแบ่ง':
+    `แบ่ง ${print.nx} คอลัมน์ × ${print.ny} แถว`+(S.build.mode!=='service'?' · ตัวต่อใช้กับรูปแบบฝาหน้าถอดเปลี่ยนได้':selected.length?` · เลือกตัวต่อ ${selected.filter(p=>p.valid).length} จุด`:' · กดดูเพื่อวางตัวต่อ'));
+  if(selected.some(p=>!p.valid))out.textContent+=' · มีตำแหน่งที่ต้องแก้';
+}
+
 /* แท็บล่างบนมือถือ: เปิดเฉพาะชุดเมนูที่เกี่ยวข้อง โดยคงพรีวิวไว้ด้านหลังตลอด */
 function showMobilePanel(panel){
   const app=$('#app'), key='mobile-panel-';
@@ -7567,11 +7635,12 @@ function showMobilePanel(panel){
   ['work','colors','box','production'].forEach(p=>app.classList.toggle(key+p,p===next));
   $$('#mobileNav .mobile-tab').forEach(b=>b.classList.toggle('on',b.dataset.panel===next));
   if(!next) return;
-  const wanted={work:['src','fit'],colors:['color','shape'],box:['dim','hw','joint'],production:['check','price','exp']}[next];
+  const wanted={work:['src','fit','seam'],colors:['color','shape'],box:['dim','hw','joint'],production:['check','price','exp']}[next];
   wanted.forEach(k=>{ const sec=$(`.sec[data-sec="${k}"]`); if(sec) sec.classList.remove('closed'); });
 }
 
 function wire(){
+  $('#btnWorkspaceAdvanced').addEventListener('click',()=>setWorkspaceAdvanced(!WORKSPACE_ADVANCED));
   for(const id of ['seamMethod','seamDialogMethod'])$('#'+id).addEventListener('change',e=>changeSeamMethod(e.target.value));
   $('#seamEnabled').addEventListener('change',e=>{
     S.seam.enabled=e.target.checked;if(!e.target.checked)S.seam.production=false;refreshSeamPlan();queueDraftSave();schedule(false,'m');
@@ -7688,7 +7757,6 @@ function wire(){
       syncJobName(nameFromUpload(file.name));
       S.src.svgNotes=notes||null; S.src.diag=null;
       if(S.art.n<2) S.art.n=2;
-      $('#imgDrop').innerHTML=`<b>${file.name}</b><br><span style="font-size:11px">${label} · คลิกเพื่อเปลี่ยน</span>`;
       pushToUI(); schedule(true);
     };
     im.onerror=()=>toast('เปิดรูปไม่ได้ — ไฟล์อาจเสียหรือไม่ใช่รูปภาพ');
@@ -7811,22 +7879,24 @@ function wire(){
   });
 }
 
-/* ---------- จัดลำดับเมนูสำหรับลูกค้า ----------
-   เมนู 1 = เลือกรูปแบบ + ขนาด/เครื่องพิมพ์, เมนู 3 = สีข้อความ + ขอบรูปทรง
-   ย้าย DOM ก่อน wire event จึงไม่เกิด ID ซ้ำและการควบคุมเดิมยังทำงานทุกจุด */
+/* Move the existing controls before binding events; each setting keeps one input. */
 function arrangeMenuFlow(){
   const srcSec=document.querySelector('.sec[data-sec="src"]');
   const srcBody=srcSec&&srcSec.querySelector(':scope > .body');
   const fitSec=document.querySelector('.sec[data-sec="fit"]');
   if(srcSec&&srcBody&&fitSec){
     const fitBody=fitSec.querySelector(':scope > .body');
-    const group=document.createElement('div'); group.id='fitControls';
-    group.innerHTML='<hr style="border:0;border-top:1px solid var(--line);margin:16px 0 14px">'+
-      '<div class="row"><label style="flex-basis:auto;color:var(--tx);font-weight:600">ขนาดชิ้นงานและฐานพิมพ์</label></div>';
-    while(fitBody&&fitBody.firstChild) group.appendChild(fitBody.firstChild);
-    srcBody.appendChild(group);
-    fitSec.remove();
-    const title=srcSec.querySelector('h3'); if(title) title.textContent='1 · เลือกรูปแบบ ขนาดชิ้นงาน และฐานพิมพ์';
+    fitBody.id='fitControls';
+    srcSec.querySelector('h3').textContent='1 · โลโก้หรือข้อความ';
+    fitSec.querySelector('h3').textContent='2 · ขนาดและเครื่องพิมพ์';
+    const controls=fitBody.querySelector('.seam-controls');
+    if(controls){
+      const section=document.createElement('div');section.className='sec';section.dataset.sec='seam';
+      section.innerHTML='<h3>3 · รอยแบ่งและตัวต่อ</h3><div class="body"><p class="workflow-summary" id="workflowSummary" role="status"></p></div>';
+      const body=section.querySelector('.body');body.append(controls);
+      const note=document.createElement('p');note.className='workspace-simple-note';note.textContent='เส้นสีฟ้า = รอยแบ่ง · กดจุดบนป้ายเพื่อดูตัวต่อ';body.append(note);
+      fitSec.after(section);
+    }
   }
   const shape=$('#shapeControls'), art=$('#artColor');
   if(shape&&art&&shape.parentElement!==art.parentElement) art.after(shape);
