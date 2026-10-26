@@ -487,7 +487,7 @@ test('A rejected physical base keeps the real artwork visible and reports the re
     seamPreviewSetScene=()=>({parts:3,triangles:12});requestSeamPreview();`);
   let callbacks=[...timers.values()];timers.clear();callbacks.forEach(fn=>fn());
   assert.equal(run(c,'previewMessages[0].production.joints.length'),0);
-  assert.equal(nodes.get('#seamPreviewIssue').hidden,false);assert.match(nodes.get('#seamPreviewIssue').textContent,/1.5/);
+  assert.equal(nodes.get('#seamPlacementHelp').hidden,false);assert.match(nodes.get('#seamPlacementReason').textContent,/1.5/);
   run(c,"testPreviewWorker.onmessage({data:{type:'done',scene:{resolution:.75}}})");
   assert.equal(nodes.get('#seamPreviewViewport').dataset.state,'ready');
   assert.match(nodes.get('#seamPreviewCaption').textContent,/ยังไม่มีตัวต่อในภาพ/);

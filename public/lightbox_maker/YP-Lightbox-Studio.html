@@ -318,7 +318,6 @@ table.kv tr.sub td{color:var(--tx2)}
 #seamPreviewLeader{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #seamPreviewViewport.base-only .seam-preview-overview{left:auto;width:180px;max-width:45%;right:10px}
 #seamPreviewViewport.base-only .seam-scroll{height:45px}
-#seamPreviewIssue{margin:8px 0;padding:9px 12px;border:1px solid #a77827;border-radius:7px;color:#ffd18a;background:#3b2c18;font-size:12px}
 @media(max-width:760px){.seam-preview-layout{grid-template-columns:minmax(0,1fr)}.seam-preview-pane{order:0;min-height:0}.seam-point-pane{order:1}#seamPreviewViewport{height:410px;min-height:350px}#seamPointChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-height:160px}.seam-preview-tools{top:65px}.seam-preview-overview{left:8px;right:8px}.seam-preview-actions .btn{font-size:11px;padding:7px 8px}.seam-point-nav{margin:6px 0}}
 
 .seam-assembly-guide{padding:8px 11px;border-left:3px solid var(--acc);background:var(--panel2);border-radius:5px;font-size:11px}
@@ -826,7 +825,6 @@ Studio</textarea>
       </div>
       <div class="seam-preview-layout">
       <section class="seam-preview-pane" aria-label="ตัวต่อบนป้ายจริงทั้งชิ้น">
-        <p id="seamPreviewIssue" role="status" hidden></p>
         <div class="seam-preview-heading"><strong>ป้ายจริงและตำแหน่งตัวต่อ</strong><button class="btn" type="button" id="btnSeamWhole">↖ ดูทั้งป้าย</button></div>
         <div id="seamPreviewViewport" aria-busy="false">
           <canvas id="seamPreviewCanvas" tabindex="0" role="img" aria-label="ป้ายและตัวต่อจริง หมุนด้วยการลากหรือปุ่มลูกศร ซูมด้วยปุ่มบวกหรือลบ"></canvas>
@@ -5175,7 +5173,6 @@ function syncSeamPreviewControls(){
   const issue=view.issue&&view.issue.point===SEAM_FOCUS?.id?view.issue.message:'',hasJoint=!!SEAM_FOCUS?.valid&&!issue;
   $('#btnSeamFocus').disabled=$('#btnSeamExploded').disabled=!hasJoint;
   $('#btnSeamFocus').setAttribute('aria-pressed',String(view.baseOnly));$('#seamPreviewViewport').classList.toggle('base-only',view.baseOnly);
-  $('#seamPreviewIssue').hidden=!issue;$('#seamPreviewIssue').textContent=issue?'จุดนี้ยังสร้างฐานไม่ได้: '+issue+' · ภาพด้านล่างยังแสดงชิ้นงานจริง ลองจัดจุดใหม่หรือเลือกจุดอื่น':'';
   $('#btnSeamCuts').setAttribute('aria-pressed',String(view.cuts));$('#btnSeamCuts').textContent=view.cuts?'ซ่อนเส้นรอยต่อ':'แสดงเส้นรอยต่อ';
   $('#btnSeamFront').setAttribute('aria-pressed',String(!view.inside));$('#btnSeamInside').setAttribute('aria-pressed',String(view.inside));
   $('#btnSeamAssembled').setAttribute('aria-pressed',String(!view.exploded));$('#btnSeamExploded').setAttribute('aria-pressed',String(view.exploded));
@@ -5597,7 +5594,7 @@ function syncSeamProductionUI(){
     catch(e){if(!(e instanceof SeamProductionError))throw e;const reason=!s.selected.length&&SEAM_AUTO_REASON?SEAM_AUTO_REASON:e.message;out.dataset.reason=reason;text='ยังสร้างไฟล์ตัวต่อไม่ได้: '+reason;quick=seamQuickReason(reason);out.className='printer-fit warn';}
     out.textContent=text;
   }
-  $('#seamExportHint').textContent=text;$('#seamDialogProductionNote').textContent=quick+' · ตรวจขนาดละเอียดอีกครั้งตอนส่งออก';
+  $('#seamExportHint').textContent=text;$('#seamDialogProductionNote').textContent=active&&!ready?'ยังส่งออกพร้อมตัวต่อไม่ได้ · ดูสาเหตุและวิธีแก้ในกรอบเหนือภาพ':quick+' · ตรวจขนาดละเอียดอีกครั้งตอนส่งออก';
   $('#seamQuickStatus').textContent=quick;$('#seamQuickStatus').className='printer-fit '+(ready?'ok':'warn');
   $('#btnSeamExport').disabled=!ready;
   $('#btnSeamPrepare').hidden=!needsSplit||ready||S.build.mode!=='service';
