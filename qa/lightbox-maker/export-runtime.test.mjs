@@ -223,13 +223,36 @@ test('Assembly guidance covers every physical method and names the real extra jo
   assert.equal(run(c,'seamAssemblyGuide("future-connector")'),null);assert.equal(run(c,'JSON.stringify(S)'),before);
 });
 
-test('An invalid joint preview clears the old scene without substituting another placement',()=>{
+test('Missing and invalid joint placements still preview the artwork without manufacturing a connector',()=>{
+  for(const focus of [null,{id:'invalid',valid:false,reason:'พื้นที่ไม่พอ'}]){
+    const {c,nodes,timers}=fixture();c.testFocus=focus;
+    run(c,`S.seam.production=false;document.querySelector('#seamDialog').open=true;
+      SEAM_FOCUS=testFocus;SEAM_PLAN={reason:'งานนี้พิมพ์ชิ้นเดียวได้',candidates:[]};
+      SEAM_PREVIEW_RENDERER.scope='focus';SEAM_PREVIEW_RENDERER.exploded=true;
+      globalThis.beforePreview=JSON.stringify(S);globalThis.accepted=0;
+      seamPreviewClear=()=>{};seamPreviewRequestRender=()=>{};
+      seamProductionPlan=buildParts=()=>{throw new Error('Invalid joint reached manufacturing');};
+      seamPreviewSetScene=()=>{accepted++;return {parts:3,triangles:12};};requestSeamPreview();`);
+    const queued=[...timers.values()];timers.clear();for(const fn of queued)fn();
+    assert.equal(run(c,'sent.length'),1);assert.deepEqual(plain(run(c,'sent[0].production.joints')),[]);
+    assert.deepEqual(plain(run(c,'sent[0].production.contextKeepouts')),[]);
+    assert.equal(run(c,'JSON.stringify(S)===beforePreview'),true);assert.equal(run(c,'SEAM_FOCUS'),focus===null?null:run(c,'testFocus'));
+    assert.equal(run(c,'SEAM_PREVIEW_RENDERER.scope'),'whole');assert.equal(run(c,'SEAM_PREVIEW_RENDERER.exploded'),false);
+    assert.equal(nodes.get('#btnSeamFocus').disabled,true);assert.equal(nodes.get('#btnSeamExploded').disabled,true);
+    run(c,"SEAM_DETAIL_JOB.worker.onmessage({data:{type:'done',scene:{resolution:.15}}});");
+    assert.equal(run(c,'accepted'),1);assert.equal(nodes.get('#seamPreviewViewport').dataset.state,'ready');
+    assert.equal(nodes.get('#seamPreviewCanvas').hidden,false);assert.equal(nodes.get('#seamPreviewViewport').dataset.point,'');
+    assert.match(nodes.get('#seamPreviewCaption').textContent,/ยังไม่มีตัวต่อในภาพ/);
+  }
+});
+
+test('An empty artwork clears the previous preview without starting a worker',()=>{
   const {c,nodes,timers}=fixture();
-  run(c,`S.seam.production=true;document.querySelector('#seamDialog').open=true;document.querySelector('#seamPreviewViewport').dataset={};
-    globalThis.cleared=0;seamPreviewClear=()=>cleared++;SEAM_FOCUS={id:'invalid',valid:false,reason:'พื้นที่ไม่พอ'};
-    requestSeamPreview();`);
-  assert.equal(timers.size,0);assert.equal(run(c,'cleared'),1);assert.equal(nodes.get('#seamPreviewStatus').textContent,'พื้นที่ไม่พอ');
+  run(c,`document.querySelector('#seamDialog').open=true;G.empty=true;
+    globalThis.cleared=0;seamPreviewClear=()=>cleared++;requestSeamPreview();`);
+  assert.equal(timers.size,0);assert.equal(run(c,'cleared'),1);assert.equal(run(c,'sent.length'),0);
   assert.equal(nodes.get('#seamPreviewCanvas').hidden,true);
+  assert.equal(nodes.get('#seamPreviewStatus').textContent,'ยังไม่มีชิ้นงานสำหรับแสดงภาพ');
 });
 
 test('The detail and 173 cm whole-sign cameras fit assembled and exploded bounds in narrow and wide viewports',()=>{

@@ -2591,7 +2591,7 @@ function reserveExportMesh(bytes,oldBytes=0){
     throw new Error('เมชใหญ่เกินขีดจำกัดหน่วยความจำ กรุณาแยกงานหรือเลือกความละเอียดหยาบขึ้น');
   EXPORT_MESH_BUDGET.used+=bytes-oldBytes;
 }
-function Mesh(name,hex,noTri){ if(!noTri)reserveExportMesh(12*4096*4);return {name,hex,noTri:!!noTri,a:noTri?new Float32Array(0):new Float32Array(12*4096),n:0,vol:0,
+function Mesh(name,hex,noTri){ const capacity=noTri?0:12*(EXPORT_MESH_BUDGET?.initialTriangles||4096);if(!noTri)reserveExportMesh(capacity*4);return {name,hex,noTri:!!noTri,a:new Float32Array(capacity),n:0,vol:0,
     x0:1e9,x1:-1e9,y0:1e9,y1:-1e9,z0:1e9,z1:-1e9}; }
 function _grow(M,need){
   if(M.n+need<=M.a.length) return;
@@ -3114,17 +3114,20 @@ function seamJointVolumeOps(production,addRuns){
   }
 }
 function seamPreviewGeometry(production,jointId,wholeSign=false){
-  const joint=production?.joints.find(j=>j.id===jointId);
-  if(!joint||!G?.panel||!G.edtIn)throw new SeamProductionError('ไม่พบจุดตัวต่อสำหรับพรีวิวชิ้นงาน');
+  const joint=production?.joints?.find(j=>j.id===jointId);
+  if(!G?.panel||!G.edtIn||(!wholeSign&&!joint))throw new SeamProductionError('ไม่พบจุดตัวต่อสำหรับพรีวิวชิ้นงาน');
   if(wholeSign){
     // Keep the fine manufacturing joint unchanged. Only its surrounding artwork
     // is rebuilt, using the already-bounded live preview grid rather than export.
-    const detail=seamPreviewGeometry(production,jointId),b=S.box,st=geomStack(),px=G.px,plan=printPlan(),saved=ACTIVE_PRINT_PLAN;
-    const anchor=[joint.anchorMm.x,joint.anchorMm.y,joint.baseTop],foot=joint.footprint,margin=6;
-    const roi={x0:Math.max(0,Math.min(foot.x0,...joint.pads.map(p=>p.roi.x0))-margin),
+    const detail=joint?seamPreviewGeometry(production,jointId):{parts:[],resolution:G.px},b=S.box,st=geomStack(),px=G.px,plan=printPlan(),saved=ACTIVE_PRINT_PLAN;
+    // Invalid print settings must not erase the artwork. This fallback is only
+    // a display boundary; printTiles below still reports the original plan.
+    const renderPlan=plan.tiles.length?plan:{...plan,nx:1,ny:1,tiles:[{id:'preview',row:1,col:1,x0:0,x1:PB.w,y0:0,y1:PB.h,previewOnly:true}]};
+    const anchor=joint?[joint.anchorMm.x,joint.anchorMm.y,joint.baseTop]:null,foot=joint?.footprint,margin=6;
+    const roi=joint?{x0:Math.max(0,Math.min(foot.x0,...joint.pads.map(p=>p.roi.x0))-margin),
       x1:Math.min(PB.w,Math.max(foot.x1,...joint.pads.map(p=>p.roi.x1))+margin),
       y0:Math.max(0,Math.min(foot.y0,...joint.pads.map(p=>p.roi.y0))-margin),
-      y1:Math.min(PB.h,Math.max(foot.y1,...joint.pads.map(p=>p.roi.y1))+margin)};
+      y1:Math.min(PB.h,Math.max(foot.y1,...joint.pads.map(p=>p.roi.y1))+margin)}:null;
     let connectorIndex=0;
     const parts=detail.parts.map(p=>{
       const a=p.a.slice();for(let i=0;i<p.n;i+=12)for(let k=0;k<3;k++){a[i+3+k*3]+=anchor[0];a[i+4+k*3]+=anchor[1];}
@@ -3132,8 +3135,8 @@ function seamPreviewGeometry(production,jointId,wholeSign=false){
       return {...p,a,...(p.role.startsWith('body-')?{hex:b.frameColor||'#1a1a1a'}:{}),detail:true,tile:p.role==='body-a'?joint.tiles[0]:p.role==='body-b'?joint.tiles[1]:null,
         ...(p.role==='connector'?{componentId:component?.id||'bridge',componentLabel:component?.label||'แผ่นประกบ',componentRole:component?.role||'installed'}:{})};
     });
-    const bounds={min:[Infinity,Infinity,Infinity],max:[-Infinity,-Infinity,-Infinity]},focusBounds={
-      min:detail.bounds.min.map((v,k)=>v+(k<2?anchor[k]:0)),max:detail.bounds.max.map((v,k)=>v+(k<2?anchor[k]:0))};
+    const bounds={min:[Infinity,Infinity,Infinity],max:[-Infinity,-Infinity,-Infinity]},focusBounds=joint?{
+      min:detail.bounds.min.map((v,k)=>v+(k<2?anchor[k]:0)),max:detail.bounds.max.map((v,k)=>v+(k<2?anchor[k]:0))}:null;
     const append=(M,role,hex,explode,back=false)=>{
       if(!M.n)return;
       const a=new Float32Array(M.n);
@@ -3147,24 +3150,24 @@ function seamPreviewGeometry(production,jointId,wholeSign=false){
       parts.push({name:M.name,role,a,n:M.n,hex,explode,vol:M.vol,tile:M.tile?.previewTile||M.tile?.id||null,context:true});
     };
     const bodyStyle=tile=>{
-      const side=joint.tiles.indexOf(tile),t=plan.tiles.find(t=>t.id===tile);
-      const sign=t?(Math.sign(joint.axis==='x'?(t.x0+t.x1)/2-anchor[0]:(t.y0+t.y1)/2-anchor[1])||1):0;
+      const side=joint?joint.tiles.indexOf(tile):-1,t=plan.tiles.find(t=>t.id===tile);
+      const sign=joint&&t?(Math.sign(joint.axis==='x'?(t.x0+t.x1)/2-anchor[0]:(t.y0+t.y1)/2-anchor[1])||1):0;
       return {role:side===0?'body-a':side===1?'body-b':'body-context',hex:b.frameColor||'#1a1a1a',
         explode:side<0?[0,0,0]:joint.axis==='x'?[sign*8,0,0]:[0,sign*8,0]};
     };
     // Subtract the exact local rectangle from context tiles. Their shared cut
     // planes meet the original detail without hiding it behind duplicate walls.
     const contextTiles=[];
-    for(const t of plan.tiles){
-      if(!joint.tiles.includes(t.id)){contextTiles.push({...t,id:t.id+':context0',previewTile:t.id});continue;}
+    for(const t of renderPlan.tiles){
+      if(!joint||!joint.tiles.includes(t.id)){contextTiles.push({...t,id:t.id+':context0',previewTile:t.id});continue;}
       const x0=Math.max(t.x0,roi.x0),x1=Math.min(t.x1,roi.x1),y0=Math.max(t.y0,roi.y0),y1=Math.min(t.y1,roi.y1);
       const rectangles=x1<=x0||y1<=y0?[t]:[
         {...t,x1:x0},{...t,x0:x1},{...t,x0,x1,y1:y0},{...t,x0,x1,y0:y1}];
       rectangles.filter(r=>r.x1>r.x0&&r.y1>r.y0).forEach((r,i)=>contextTiles.push({...r,id:t.id+':context'+i,previewTile:t.id}));
     }
-    const wallRuns=new Map(),keepouts=production.contextKeepouts||[],cable=S.hw.hole==='frame'?bottomInfo():null;
+    const wallRuns=new Map(),keepouts=production?.contextKeepouts||[],cable=S.hw.hole==='frame'?bottomInfo():null;
     try{
-      ACTIVE_PRINT_PLAN={...plan,tiles:contextTiles};
+      ACTIVE_PRINT_PLAN={...renderPlan,tiles:contextTiles};
       for(const band of frameBandSpec(st.frameZ0,st.frameZ0+b.depth)){
         const rule=band.i>0?(b.bandRules[band.i-1]||{}):null,wallT=rule?.sideGlow?clamp(+rule.sideT||1.2,.8,b.frame):b.frame;
         if(!wallRuns.has(wallT)){
@@ -3184,7 +3187,7 @@ function seamPreviewGeometry(production,jointId,wholeSign=false){
         const M=Mesh('ตัวกล่องทั้งป้าย',band.hex);seamFrameUnion(M,[{runs:wallRuns.get(wallT),z0:band.z0,z1:band.z1}]);
         for(const part of M.chunks?.values()||[]){const style=bodyStyle(part.tile.previewTile);append(part,style.role,style.hex,style.explode);}
       }
-      ACTIVE_PRINT_PLAN=plan;
+      ACTIVE_PRINT_PLAN=renderPlan;
       const emit=(M,role,explode,back=false)=>{for(const part of M.chunks?.values()||[M])append(part,role,M.hex,explode,back);};
       const fit=maskWhere(i=>G.panel[i]&&G.edtIn[i]*px>.2);
       if(G.owner){
@@ -3201,7 +3204,7 @@ function seamPreviewGeometry(production,jointId,wholeSign=false){
     for(const p of parts)for(let i=0;i<p.n;i+=12)for(let k=0;k<3;k++)for(let d=0;d<3;d++){
       const v=p.a[i+3+k*3+d];bounds.min[d]=Math.min(bounds.min[d],v);bounds.max[d]=Math.max(bounds.max[d],v);
     }
-    return {...detail,parts,bounds,focusBounds,anchor,anchorZ:joint.baseTop,roi,supportRois:joint.pads.map(p=>({...p.roi})),wholeSign:true,cutaway:false,contextHardwareHidden:true,printTiles:plan.tiles.map(t=>({...t})),printColumns:plan.nx,printRows:plan.ny,
+    return {...detail,parts,bounds,focusBounds,anchor,anchorZ:joint?.baseTop??null,roi,supportRois:joint?joint.pads.map(p=>({...p.roi})):[],wholeSign:true,cutaway:false,contextHardwareHidden:true,printTiles:plan.tiles.map(t=>({...t})),printColumns:plan.nx,printRows:plan.ny,
       size:{width:PB.w,height:PB.h,depth:st.total},contextCells:G.gw*G.gh};
   }
   const b=S.box,st=geomStack(),px=G.px,original=printPlan(),foot=joint.footprint,margin=6;
@@ -5095,6 +5098,8 @@ function seamPreviewRender(){
 }
 function syncSeamPreviewControls(){
   const view=SEAM_PREVIEW_RENDERER;
+  const hasJoint=!!SEAM_FOCUS?.valid;
+  $('#btnSeamFocus').disabled=$('#btnSeamExploded').disabled=!hasJoint;
   $('#btnSeamCuts').setAttribute('aria-pressed',String(view.cuts));$('#btnSeamCuts').textContent=view.cuts?'ซ่อนเส้นรอยต่อ':'แสดงเส้นรอยต่อ';
   $('#btnSeamFront').setAttribute('aria-pressed',String(!view.inside));$('#btnSeamInside').setAttribute('aria-pressed',String(view.inside));
   $('#btnSeamAssembled').setAttribute('aria-pressed',String(!view.exploded));$('#btnSeamExploded').setAttribute('aria-pressed',String(view.exploded));
@@ -5102,7 +5107,7 @@ function syncSeamPreviewControls(){
   $('#seamOverview').hidden=view.scope==='whole'&&!view.inside;
   $('#seamPreviewSide').textContent=view.inside?'ด้านในกล่อง · เปิดฝาหลังแล้ว':'ด้านหน้าป้าย';
   const points=seamPreviewPoints(),i=points.findIndex(p=>p.id===SEAM_FOCUS?.id);
-  $('#seamPreviewLocation').textContent=view.scope==='focus'?'จุดยึด '+(i>=0?i+1:'ทดลอง')+' · '+(SEAM_FOCUS?.tiles||[]).join(' ↔ '):'กดหมายเลขเพื่อดูการยึดบนชิ้นงาน';
+  $('#seamPreviewLocation').textContent=view.scope==='focus'?'จุดยึด '+(i>=0?i+1:'ทดลอง')+' · '+(SEAM_FOCUS?.tiles||[]).join(' ↔ '):points.length?'กดหมายเลขเพื่อดูการยึดบนชิ้นงาน':'แสดงชิ้นงานจริง · ยังไม่มีจุดยึดที่วางได้';
 }
 function seamPreviewSetCuts(show){SEAM_PREVIEW_RENDERER.cuts=!!show;syncSeamPreviewControls();seamPreviewRequestRender();drawSeamDialog();}
 function seamPreviewSetScope(scope,inside=SEAM_PREVIEW_RENDERER.inside){
@@ -5129,7 +5134,9 @@ function focusSeamPreviewPoint(id){
 function renderSeamPointChoices(){
   const host=$('#seamPointChoices'),points=seamPreviewPoints();host.replaceChildren();
   points.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='btn';b.setAttribute('aria-pressed',String(p.id===SEAM_FOCUS?.id));const num=document.createElement('span');num.className='seam-point-number';num.textContent=i+1;const text=document.createElement('span');text.textContent=p.tiles.join(' ↔ ');b.append(num,text);b.addEventListener('click',()=>focusSeamPreviewPoint(p.id));host.append(b);});
-  const p=SEAM_FOCUS;$('#seamPointPosition').textContent=Number.isFinite(p?.anchorMm?.x)&&Number.isFinite(p?.anchorMm?.y)?'X '+nf(p.anchorMm.x,1)+' · Y '+nf(p.anchorMm.y,1)+' มม.':p?.reason||'';
+  const p=SEAM_FOCUS,print=!points.length?printPlan():null;
+  const reason=p?.reason||print?.error||(print?.enabled&&print.tiles.length===1?'งานนี้พิมพ์ชิ้นเดียวได้ ไม่จำเป็นต้องมีตัวต่อ':SEAM_PLAN?.reason)||(!points.length?'ยังไม่พบพื้นที่วางตัวต่อ ลองปรับขนาดตัวต่อหรือตำแหน่งแบ่งชิ้น':'');
+  $('#seamPointPosition').textContent=Number.isFinite(p?.anchorMm?.x)&&Number.isFinite(p?.anchorMm?.y)?'X '+nf(p.anchorMm.x,1)+' · Y '+nf(p.anchorMm.y,1)+' มม.'+(p.valid?'':' · '+reason):reason;
 }
 function seamPreviewInitEvents(){
   const view=SEAM_PREVIEW_RENDERER,cv=$('#seamPreviewCanvas');if(!cv||view.bound)return;view.bound=true;
@@ -5419,19 +5426,25 @@ function setSeamPreviewView(exploded){
 }
 function requestSeamPreview(){
   if(!$('#seamDialog').open)return;
-  const point=SEAM_FOCUS,s=seamPreviewSettings();
-  if(!point||!point.valid){
-    stopSeamPreview();setSeamPreviewStatus(point?.reason||'ยังไม่มีตำแหน่งที่วางตัวต่อได้','empty');return;
+  const point=SEAM_FOCUS?.valid?SEAM_FOCUS:null,s=seamPreviewSettings();
+  if(!G?.panel||G.empty||PB.empty){
+    stopSeamPreview();setSeamPreviewStatus('ยังไม่มีชิ้นงานสำหรับแสดงภาพ','empty');return;
   }
-  const key=JSON.stringify([point.id,s.method,s.length,s.width,s.hardware,S.box,S.hw,S.build,S.face,S.shape,S.exp,PB]);
+  if(!point){SEAM_PREVIEW_RENDERER.scope='whole';SEAM_PREVIEW_RENDERER.exploded=false;}
+  syncSeamPreviewControls();
+  const key=JSON.stringify([point?.id||null,s.method,s.length,s.width,s.hardware,S.box,S.hw,S.build,S.face,S.shape,S.exp,PB]);
   if(SEAM_DETAIL_KEY===key&&SEAM_DETAIL_GRID===G){seamPreviewRequestRender();return;}
   stopSeamPreview();SEAM_DETAIL_KEY=key;SEAM_DETAIL_GRID=G;
-  setSeamPreviewStatus('กำลังสร้างป้ายจริงและตัวต่อที่เลือก…','loading');
+  $('#seamPreviewCaption').textContent='';
+  setSeamPreviewStatus(point?'กำลังสร้างป้ายจริงและตัวต่อที่เลือก…':'กำลังสร้างพรีวิวชิ้นงานจริง…','loading');
   SEAM_DETAIL_TIMER=setTimeout(()=>{
     SEAM_DETAIL_TIMER=null;if(SEAM_DETAIL_KEY!==key||!$('#seamDialog').open)return;
     let job=null;
     try{
-      const production=seamProductionPlan({...SEAM_PLAN,candidates:[{...point,selected:true}]},s),joint={...production.joints[0]};delete joint.design;
+      // A printable artwork does not require a valid connector placement.
+      // Keep invalid placements out of manufacturing while showing the sign.
+      const production=point?seamProductionPlan({...SEAM_PLAN,candidates:[{...point,selected:true}]},s):{joints:[]};
+      const joints=production.joints.map(j=>{const joint={...j};delete joint.design;return joint;});
       const state=projectSnapshot();delete state.src.imgData;delete state.src.imgSrc;delete state.src.fontData;
       job={...createExportWorker(seamPreviewWorkerMain),key,started:performance.now()};SEAM_DETAIL_JOB=job;
       const fail=message=>{if(SEAM_DETAIL_JOB!==job)return;releaseSeamPreviewJob(job);SEAM_DETAIL_KEY='';SEAM_DETAIL_GRID=null;seamPreviewClear();setSeamPreviewStatus(message,'error');};
@@ -5443,16 +5456,16 @@ function requestSeamPreview(){
         if(data.type!=='done')return;
         try{
           const info=seamPreviewSetScene(data.scene);setSeamPreviewStatus('','ready');
-          $('#seamPreviewViewport').dataset.point=point.id;
-          $('#seamPreviewCaption').textContent='ป้าย '+nf(PB.w/10,1)+' × '+nf(PB.h/10,1)+' ซม. · ขอบป้ายอิงกริดพรีวิว '+nf(data.scene.resolution,2)+' มม. · ตัวต่อและฐานจุดที่เลือกตามรูปทรงผลิต · ซ่อนฮาร์ดแวร์อื่น';
-          $('#seamPreviewCanvas').title=`ขอบชิ้นงานจากกริดพรีวิว ${nf(data.scene.resolution,2)} มม. ตัวต่อใช้รูปทรงผลิตจริง`;
-          console.info('Lightbox joint preview',JSON.stringify({method:s.method,point:point.id,ms:performance.now()-job.started,...info}));
+          $('#seamPreviewViewport').dataset.point=point?.id||'';
+          $('#seamPreviewCaption').textContent='ป้าย '+nf(PB.w/10,1)+' × '+nf(PB.h/10,1)+' ซม. · ขอบป้ายอิงกริดพรีวิว '+nf(data.scene.resolution,2)+' มม. · '+(point?'ตัวต่อและฐานจุดที่เลือกตามรูปทรงผลิต':'แสดงเฉพาะชิ้นงาน ยังไม่มีตัวต่อในภาพ')+' · ซ่อนฮาร์ดแวร์อื่น';
+          $('#seamPreviewCanvas').title=`ขอบชิ้นงานจากกริดพรีวิว ${nf(data.scene.resolution,2)} มม.${point?' ตัวต่อใช้รูปทรงผลิตจริง':''}`;
+          console.info('Lightbox joint preview',JSON.stringify({method:s.method,point:point?.id||null,ms:performance.now()-job.started,...info}));
         }catch(e){SEAM_DETAIL_KEY='';SEAM_DETAIL_GRID=null;seamPreviewClear();setSeamPreviewStatus(e.message,'error');}
         releaseSeamPreviewJob(job);
       };
       // Structured clone copies these preview masks. Never transfer/detach the
       // live artwork arrays: editing and export retain their own grid.
-      job.worker.postMessage({state,grid:{gw:G.gw,gh:G.gh,px:G.px,panel:G.panel,edtIn:G.edtIn,owner:G.owner},bounds:{...PB},production:{...production,contextKeepouts:SEAM_PLAN.keepouts,joints:[joint]}});
+      job.worker.postMessage({state,grid:{gw:G.gw,gh:G.gh,px:G.px,panel:G.panel,edtIn:G.edtIn,owner:G.owner},bounds:{...PB},production:{...production,contextKeepouts:SEAM_PLAN?.keepouts||[],joints}});
     }catch(e){releaseSeamPreviewJob(job);SEAM_DETAIL_KEY='';SEAM_DETAIL_GRID=null;seamPreviewClear();setSeamPreviewStatus(e.message,'error');}
   },80);
 }
@@ -6249,10 +6262,10 @@ function exportWorkerMain(){
 function seamPreviewWorkerMain(){
   self.onmessage=({data})=>{
     try{
-      S=data.state;G=data.grid;PB=data.bounds;EXPORT_MESH_BUDGET={used:0,limit:32*1024*1024};
+      S=data.state;G=data.grid;PB=data.bounds;EXPORT_MESH_BUDGET={used:0,limit:32*1024*1024,initialTriangles:256};
       const production=data.production,joint=production.joints[0];
-      if(joint.method!=='plate')joint.design=seamMethodDesign(joint,production.spec);
-      const scene=seamPreviewGeometry(production,joint.id,true);
+      if(joint&&joint.method!=='plate')joint.design=seamMethodDesign(joint,production.spec);
+      const scene=seamPreviewGeometry(production,joint?.id??null,true);
       self.postMessage({type:'done',scene},scene.parts.map(p=>p.a.buffer));
     }catch(e){self.postMessage({type:'error',message:e.message});}
   };
