@@ -11,7 +11,7 @@ function fixture(){
   const c=vm.createContext({console:{...console,error(){}},TextEncoder,Blob,performance,Promise,structuredClone,
     setTimeout(fn){timers.set(++timerId,fn);return timerId;},clearTimeout(id){timers.delete(id);},
     document:{readyState:'loading',currentScript:{textContent:script},addEventListener(){},querySelector(id){
-      if(!nodes.has(id))nodes.set(id,{inert:false,hidden:true,textContent:'',dataset:{},classList:{toggle(){},add(){},remove(){}},setAttribute(name,value){this[name]=String(value);},removeAttribute(){}});
+      if(!nodes.has(id))nodes.set(id,{inert:false,hidden:true,textContent:'',dataset:{},classList:{toggle(){},add(){},remove(){}},closest(){return this;},setAttribute(name,value){this[name]=String(value);},removeAttribute(){}});
       return nodes.get(id);
     }},window:{},URL:{createObjectURL(){return 'blob:test';},revokeObjectURL(){}},
     createImageBitmap:async cv=>({width:cv.width,height:cv.height,close(){}})});
@@ -24,6 +24,179 @@ function fixture(){
   return {c,nodes,timers};
 }
 const settle=async()=>{for(let i=0;i<12;i++)await Promise.resolve();};
+
+test('Export readiness uses the existing raster budget without changing project resolution or geometry',()=>{
+  const {c}=fixture();
+  run(c,`S.box.W=1730;S.box.H=630;S.exp.res=.15;
+    PB={ux0:0,my0:0,w:1730,h:630,empty:false};globalThis.beforeCheck=JSON.stringify(S);
+    globalThis.previewGrid=G;globalThis.beforePanel=G.panel;globalThis.tooFine=exportWorkspaceCheck();`);
+  const tooFine=plain(run(c,'tooFine'));
+  assert.equal(tooFine.fits,false);assert.equal(tooFine.res,.15);assert.match(tooFine.error,/32 ล้านช่อง/);
+  assert.equal(run(c,'JSON.stringify(S)===beforeCheck&&G===previewGrid&&G.panel===beforePanel'),true);
+  run(c,'S.exp.res=.25;beforeCheck=JSON.stringify(S);globalThis.supported=exportWorkspaceCheck();');
+  assert.deepEqual(plain(run(c,'supported')),{before:17438400,cells:17438400,res:.25,fits:true,error:''});
+  assert.equal(run(c,'JSON.stringify(S)===beforeCheck&&G===previewGrid&&G.panel===beforePanel'),true);
+});
+
+test('Export readiness allows a bounded crop while preserving live transforms, bounds and source',()=>{
+  const {c}=fixture();
+  run(c,`S.box.W=2400;S.box.H=1400;S.exp.res=.25;
+    S.tr={...S.tr,dx:17,dy:-10,scale:190,uniform:false,scaleY:85};
+    PB={ux0:100,my0:150,w:1730,h:630,empty:false};
+    globalThis.beforeCheck=JSON.stringify({S,PB,source:SRC_CACHE});
+    globalThis.originals={box:S.box,tr:S.tr,exp:S.exp,bounds:PB,source:SRC_CACHE.cv};
+    globalThis.result=exportWorkspaceCheck();`);
+  const result=plain(run(c,'result'));
+  assert.equal(result.fits,true);assert.equal(result.error,'');assert.equal(result.before,53760000);
+  assert.ok(result.cells<32000000&&result.cells>17438400);
+  assert.equal(run(c,`JSON.stringify({S,PB,source:SRC_CACHE})===beforeCheck&&
+    S.box===originals.box&&S.tr===originals.tr&&S.exp===originals.exp&&PB===originals.bounds&&SRC_CACHE.cv===originals.source`),true);
+});
+
+test('Connector readiness cannot advertise export while its full-resolution raster exceeds the limit',()=>{
+  const {c,nodes}=fixture();
+  run(c,`S.seam.enabled=S.seam.production=true;S.box.W=1730;S.box.H=630;S.exp.res=.15;
+    PB={ux0:0,my0:0,w:1730,h:630,empty:false};globalThis.planned=0;
+    seamProductionPlan=()=>{planned++;return {joints:[{},{}]};};syncSeamProductionUI();`);
+  assert.equal(nodes.get('#btnSeamExport').disabled,true);
+  assert.match(nodes.get('#seamQuickStatus').textContent,/32 ล้านช่อง/);
+  assert.doesNotMatch(nodes.get('#seamQuickStatus').textContent,/พร้อมส่งออก/);assert.equal(run(c,'planned'),0);
+  run(c,'S.exp.res=.25;syncSeamProductionUI();');
+  assert.equal(nodes.get('#btnSeamExport').disabled,false);
+  assert.match(nodes.get('#seamQuickStatus').textContent,/พร้อมส่งออก/);assert.equal(run(c,'planned'),1);
+});
+
+test('Every fit joint shares the same pure full-resolution limits while plate keeps its existing exception',()=>{
+  const {c}=fixture();
+  for(const method of ['butt','lap','scarf','tongue','dowel','butterfly','dovetail','plate','nut','selftap','snap','magnet','weld']){
+    for(const [res,clearance,compliant] of [[.15,.3,true],[.25,.5,true],[.25,.35,false],[.4,.6,false]]){
+      c.checkSettings={method,hardware:{clearance}};c.checkResolution=res;
+      const before=JSON.stringify(c.checkSettings),error=run(c,'seamProductionResolutionError(checkSettings,checkResolution)');
+      assert.equal(error==='',method==='plate'||compliant,`${method}: ${res}/${clearance}`);
+      if(error)assert.match(error,/กริดไม่เกิน 0\.25 มม.*2 เท่าของกริด/);
+      assert.equal(JSON.stringify(c.checkSettings),before);
+    }
+  }
+});
+
+test('Readiness enforces fit clearance and resolution before the full-resolution worker runs',()=>{
+  const {c,nodes}=fixture();
+  run(c,`S.seam.enabled=S.seam.production=true;S.seam.method='lap';S.exp.res=.25;G.px=.75;
+    S.seam.hardware.clearance=.35;globalThis.planned=0;
+    seamProductionPlan=()=>{planned++;return {joints:[{}]};};syncSeamProductionUI();`);
+  assert.equal(nodes.get('#btnSeamExport').disabled,true);assert.equal(run(c,'planned'),0);
+  assert.match(nodes.get('#seamQuickStatus').textContent,/กริดไม่เกิน 0\.25/);
+  run(c,'S.seam.hardware.clearance=.5;syncSeamProductionUI();');
+  assert.equal(nodes.get('#btnSeamExport').disabled,false);assert.equal(run(c,'planned'),1);
+  run(c,'S.exp.res=.4;S.seam.hardware.clearance=.6;syncSeamProductionUI();');
+  assert.equal(nodes.get('#btnSeamExport').disabled,true);assert.equal(run(c,'planned'),1);
+});
+
+test('Production preserves its bounded coarse-preview exception while enforcing exact-grid fit limits',()=>{
+  const {c}=fixture();
+  run(c,`S.seam.enabled=S.seam.production=true;S.seam.method='lap';S.exp.res=.25;
+    S.seam.hardware.clearance=.35;buildSeamPlan=()=>({applicable:true,candidates:[]});G.px=.75;`);
+  assert.throws(()=>run(c,'seamProductionPlan()'),/เลือกตำแหน่งตัวต่อ/);
+  run(c,'G.px=.25;');assert.throws(()=>run(c,'seamProductionPlan()'),/กริดไม่เกิน 0\.25/);
+});
+
+function prepareRepairFixture({width=1730,height=630,res=.15}={}){
+  const app=fixture(),{c}=app;c.repairCase={width,height,res};
+  run(c,`S.box.W=repairCase.width;S.box.H=repairCase.height;S.exp.res=repairCase.res;S.exp.fmt='all';
+    S.tr={...S.tr,dx:17,dy:-10,scale:190,scaleY:85,uniform:false};
+    PB={ux0:0,my0:0,w:repairCase.width,h:repairCase.height,empty:false};
+    G.px=gridSpec(true).px;
+    globalThis.repairEvents=[];globalThis.repairReferences={box:S.box,tr:S.tr,grid:G,bounds:PB,panel:G.panel};
+    globalThis.repairPhysicalBefore=JSON.stringify({box:S.box,tr:S.tr,PB,panel:Array.from(G.panel)});
+    pushToUI=()=>repairEvents.push('ui');schedule=(source,mode)=>repairEvents.push(['schedule',source,mode]);
+    buildGrid=preview=>{repairEvents.push(['refresh',preview]);G={...G,px:gridSpec(preview).px};return G;};
+    autoSelectSeamPoints=()=>{globalThis.repairAutoClearance=S.seam.hardware.clearance;globalThis.repairAutoPx=G.px;repairEvents.push({production:S.seam.production,enabled:S.seam.enabled,length:S.seam.length,width:S.seam.width,res:S.exp.res});
+      S.seam.selected=[{axis:'x',seamIndex:1,tileIndex:1,along:20}];};
+    seamProductionPlan=()=>{repairEvents.push('validate');return {joints:[{}]};};`);
+  return app;
+}
+
+test('Explicit print preparation selects the finest fitting offered resolution without changing physical artwork',()=>{
+  const {c,nodes}=prepareRepairFixture();
+  run(c,'preparePrintableProject();');
+  assert.equal(run(c,'S.exp.res'),.25);assert.equal(run(c,'S.exp.fmt'),'all');
+  assert.equal(run(c,`S.box===repairReferences.box&&S.tr===repairReferences.tr&&G===repairReferences.grid&&
+    PB===repairReferences.bounds&&G.panel===repairReferences.panel&&
+    JSON.stringify({box:S.box,tr:S.tr,PB,panel:Array.from(G.panel)})===repairPhysicalBefore`),true);
+  const events=plain(run(c,'repairEvents'));
+  assert.deepEqual(events,[{production:true,enabled:true,length:32,width:12,res:.25},'ui',['schedule',false,'m'],'validate']);
+  assert.match(nodes.get('#toast').textContent,/0\.25 มม.*คงขนาดงานเดิม/);
+  assert.match(nodes.get('#toast').textContent,/จัดตัวต่อใหม่ 1 จุดแล้ว/);
+});
+
+test('Explicit preparation keeps a configured fitting resolution and only enables connectors for divided service work',()=>{
+  for(const res of [.25,.4]){
+    const {c}=prepareRepairFixture({res});run(c,'preparePrintableProject();');
+    assert.equal(run(c,'S.exp.res'),res);assert.equal(run(c,'S.seam.production'),true);
+  }
+  const {c}=prepareRepairFixture({width:100,height:60,res:.15});
+  run(c,'globalThis.beforeSeam=JSON.stringify(S.seam);preparePrintableProject();');
+  assert.equal(run(c,'S.exp.res'),.15);assert.equal(run(c,'JSON.stringify(S.seam)===beforeSeam'),true);
+  assert.deepEqual(plain(run(c,'repairEvents')),['ui',['schedule',false,'m']]);
+});
+
+test('Explicit preparation reserves the required fit clearance before auto-placement at the chosen resolution',()=>{
+  const {c}=prepareRepairFixture();run(c,"S.seam.method='lap';S.seam.hardware.clearance=.2;preparePrintableProject();");
+  assert.equal(run(c,'S.exp.res'),.25);assert.equal(run(c,'S.seam.hardware.clearance'),.5);
+  assert.equal(run(c,'repairAutoClearance'),.5,'auto-placement must see the actual intended production clearance');
+  assert.equal(run(c,'seamProductionResolutionError(seamSettings(),S.exp.res)'),'');
+  assert.equal(run(c,'JSON.stringify({box:S.box,tr:S.tr,PB,panel:Array.from(G.panel)})===repairPhysicalBefore'),true);
+});
+
+test('Fit-joint preparation cannot claim success when only a resolution above its production limit fits',()=>{
+  for(const res of [.15,.4]){
+    const {c,nodes}=prepareRepairFixture({width:2500,height:1800,res});
+    run(c,"S.seam.method='lap';globalThis.beforeRepair=JSON.stringify(S);");
+    assert.equal(run(c,'exportWorkspaceCheck({...S,exp:{...S.exp,res:.4}}).fits'),true);
+    assert.equal(run(c,'exportWorkspaceCheck({...S,exp:{...S.exp,res:.25}}).fits'),false);
+    run(c,'preparePrintableProject();');
+    assert.equal(run(c,'JSON.stringify(S)===beforeRepair'),true);assert.deepEqual(plain(run(c,'repairEvents')),[]);
+    assert.doesNotMatch(nodes.get('#toast').textContent,/จัดตัวต่อใหม่.*แล้ว|เตรียมขนาดไฟล์แล้ว/);
+  }
+});
+
+test('Fit-joint preparation restores a legal finer resolution when an old project configured .4 mm',()=>{
+  const {c}=prepareRepairFixture({res:.4});run(c,"S.seam.method='lap';preparePrintableProject();");
+  assert.equal(run(c,'S.exp.res'),.25);assert.equal(run(c,'S.seam.hardware.clearance'),.5);
+  assert.equal(run(c,'seamProductionResolutionError(seamSettings(),S.exp.res)'),'');
+});
+
+test('Repair refreshes a changed preview lattice before placing fit joints on a small split artwork',()=>{
+  const {c}=prepareRepairFixture({width:200,height:100,res:.4});
+  run(c,"S.seam.method='lap';S.exp.bed=S.exp.bedH=80;preparePrintableProject();");
+  assert.equal(run(c,'S.exp.res'),.25);assert.equal(run(c,'G.px'),.25);assert.equal(run(c,'repairAutoPx'),.25);
+  assert.equal(run(c,'G!==repairReferences.grid'),true,'the preview lattice identity changes before the new plan is selected');
+  assert.equal(run(c,`S.box===repairReferences.box&&S.tr===repairReferences.tr&&
+    JSON.stringify({box:S.box,tr:S.tr,PB,panel:Array.from(G.panel)})===repairPhysicalBefore`),true);
+  assert.deepEqual(plain(run(c,'repairEvents')),[['refresh',true],
+    {production:true,enabled:true,length:32,width:12,res:.25},'ui',['schedule',false,'m'],'validate']);
+});
+
+test('Print preparation makes no changes when none of the offered resolutions can fit the raster budget',()=>{
+  const {c,nodes}=prepareRepairFixture({width:10000,height:10000});
+  run(c,'globalThis.beforeRepair=JSON.stringify(S);preparePrintableProject();');
+  assert.equal(run(c,'JSON.stringify(S)===beforeRepair'),true);
+  assert.deepEqual(plain(run(c,'repairEvents')),[]);assert.equal(run(c,'S.exp.res'),.15);
+  assert.match(nodes.get('#toast').textContent,/32 ล้านช่อง/);
+});
+
+test('Print preparation respects in-flight work and never announces success for an invalid repaired plan',()=>{
+  for(const flag of ['EXPORT_JOB','PROJECT_LOADING','_sizing']){
+    const {c,nodes}=prepareRepairFixture();
+    run(c,`globalThis.beforeRepair=JSON.stringify(S);${flag}=true;preparePrintableProject();`);
+    assert.equal(run(c,'JSON.stringify(S)===beforeRepair'),true);assert.deepEqual(plain(run(c,'repairEvents')),[]);
+    assert.match(nodes.get('#toast').textContent,/รอให้งานปัจจุบันเสร็จ/);
+  }
+  const {c,nodes}=prepareRepairFixture();
+  run(c,`seamProductionPlan=()=>{throw new SeamProductionError('ไม่มีผนังรับฐาน');};preparePrintableProject();`);
+  assert.match(nodes.get('#toast').textContent,/ไม่มีผนังรับฐาน/);
+  assert.doesNotMatch(nodes.get('#toast').textContent,/จัดตัวต่อใหม่.*แล้ว|เตรียมขนาดไฟล์แล้ว/);
+});
 
 test('The seam picker keeps invalid production in the dialog and never starts an export',async()=>{
   const {c,nodes}=fixture();

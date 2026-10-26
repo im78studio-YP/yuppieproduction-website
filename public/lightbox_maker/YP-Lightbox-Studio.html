@@ -325,6 +325,8 @@ table.kv tr.sub td{color:var(--tx2)}
 /* Production controls stay available without making them the starting task. */
 .workspace-toggle{white-space:nowrap}
 .workflow-summary{margin:0 0 12px;color:var(--tx2);line-height:1.6;font-size:13px}
+#btnPrepareExport{width:100%;margin-top:8px}#btnPrepareExport[hidden]{display:none}
+#exportPreparationNote{font-size:12px;color:var(--tx2);line-height:1.5;margin:8px 0 0}
 .workspace-simple-note{display:none}
 #app.simple-workspace #left{width:340px}
 #app.simple-workspace #right,#app.simple-workspace #left>.sec[data-sec="color"],
@@ -2983,6 +2985,10 @@ function buildSeamPlan(s=seamSettings()){
 
 let ACTIVE_SEAM_PRODUCTION=null;
 class SeamProductionError extends Error{constructor(message){super(message);this.name='SeamProductionError';}}
+function seamProductionResolutionError(settings,res){
+  return settings.method!=='plate'&&(res>.25||+settings.hardware.clearance+1e-6<res*2)
+    ?'งานสวมประกอบต้องใช้กริดไม่เกิน 0.25 มม. และระยะสวมต่อข้างอย่างน้อย 2 เท่าของกริด':'';
+}
 function seamProductionPlan(previewPlan=null,s=seamSettings()){
   if(!s.production)return null;
   if(!s.enabled||!seamMethod(s.method))throw new SeamProductionError('เปิดรอยต่อและเลือกวิธีที่รองรับก่อนสร้างไฟล์จริง');
@@ -2993,7 +2999,8 @@ function seamProductionPlan(previewPlan=null,s=seamSettings()){
   if(['plate','selftap'].includes(s.method)&&h.baseT-h.depth<1.5)throw new SeamProductionError('ฐานต้องมีเนื้อใต้รูตันอย่างน้อย 1.5 มม.');
   if(s.method==='plate'&&h.bolt>=h.hole)throw new SeamProductionError('รูผ่านสกรูต้องเล็กกว่ารูรับอินเสิร์ตของฐาน');
   if(s.method==='selftap'&&h.hole>=h.bolt)throw new SeamProductionError('รูนำสกรูพลาสติกต้องเล็กกว่ารูผ่านของแผ่นประกบ');
-  if(s.method!=='plate'&&G.px<=S.exp.res*1.001&&(G.px>.25||h.clearance+1e-6<G.px*2))throw new SeamProductionError('งานสวมประกอบต้องใช้กริดไม่เกิน 0.25 มม. และระยะสวมต่อข้างอย่างน้อย 2 เท่าของกริด');
+  const resolutionError=G.px<=S.exp.res*1.001?seamProductionResolutionError(s,G.px):'';
+  if(resolutionError)throw new SeamProductionError(resolutionError);
   const chosen=plan.candidates.filter(p=>p.selected);
   if(!chosen.length)throw new SeamProductionError('เลือกตำแหน่งตัวต่อก่อนเปิดสร้างจริง หรือกดเลือกจุดอัตโนมัติ');
   if(chosen.length>32)throw new SeamProductionError('สร้างจริงได้ไม่เกิน 32 ตัวต่อในหนึ่งงาน กรุณาแบ่งงาน');
@@ -5534,7 +5541,7 @@ function syncSeamProductionUI(){
   let ready=false,quick=print.error||(!print.enabled?'เปิดแบ่งชิ้นอัตโนมัติในโหมดงานที่รองรับก่อนเพิ่มตัวต่อ':needsSplit?'ดูพรีวิวได้โดยไม่ต้องติ๊ก · ติ๊ก “รวมตัวต่อในไฟล์พิมพ์” เมื่อต้องการส่งออกตัวต่อ':'งานนี้พิมพ์ชิ้นเดียวได้ ยังไม่ต้องเพิ่มตัวต่อ ปิดหน้านี้แล้วส่งออกตามปกติ');
   let text='ดูพรีวิวได้ · ไฟล์ส่งออกยังไม่รวมตัวต่อจนกว่าจะเปิด “รวมตัวต่อในไฟล์พิมพ์”';
   if(active){
-    try{const p=seamProductionPlan(SEAM_PLAN),count=p.joints.reduce((n,j)=>n+(j.design?.components.length||1),0);text=`สร้างจริง ${seamMethod(s.method).code} · ${p.joints.length} จุด · ${count} ชิ้นต่อ/จิ๊ก · ${p.joints.length*2} ฐานรับ · ตรวจซ้ำก่อนส่งออก`;ready=true;quick=`พร้อมส่งออก · ${p.joints.length} จุดต่อ · ${count} ชิ้นต่อ/จิ๊ก`;out.className='printer-fit ok';}
+    try{const workspace=exportWorkspaceCheck();if(!workspace.fits)throw new SeamProductionError(workspace.error);const resolutionError=seamProductionResolutionError(s,+S.exp.res);if(resolutionError)throw new SeamProductionError(resolutionError);const p=seamProductionPlan(SEAM_PLAN),count=p.joints.reduce((n,j)=>n+(j.design?.components.length||1),0);text=`สร้างจริง ${seamMethod(s.method).code} · ${p.joints.length} จุด · ${count} ชิ้นต่อ/จิ๊ก · ${p.joints.length*2} ฐานรับ · ตรวจซ้ำก่อนส่งออก`;ready=true;quick=`พร้อมส่งออก · ${p.joints.length} จุดต่อ · ${count} ชิ้นต่อ/จิ๊ก`;out.className='printer-fit ok';}
     catch(e){if(!(e instanceof SeamProductionError))throw e;const reason=!s.selected.length&&SEAM_AUTO_REASON?SEAM_AUTO_REASON:e.message;text='ยังสร้างไฟล์ตัวต่อไม่ได้: '+reason;quick=seamQuickReason(reason);out.className='printer-fit warn';}
     out.textContent=text;
   }
@@ -6221,6 +6228,12 @@ function exportWorkspace(state,source,bounds,previewPx=1){
   if(!Number.isFinite(cells)||cells>32000000)
     throw new Error('งานนี้ใช้กริดเกิน 32 ล้านช่อง กรุณาแบ่งงานหรือเลือกความละเอียดหยาบขึ้นก่อนส่งออก');
   return {before,cells,res};
+}
+
+function exportWorkspaceCheck(state=S,source=SRC_CACHE?.cv,bounds=PB,previewPx=G?.px||1){
+  const copy={...state,box:{...state.box},tr:{...state.tr},exp:{...state.exp}};
+  try{return {...exportWorkspace(copy,source,bounds,previewPx),fits:true,error:''};}
+  catch(e){return {res:+state.exp.res,fits:false,error:e.message};}
 }
 
 async function generateExportFiles(progress=()=>{}){
@@ -7620,11 +7633,38 @@ function setWorkspaceAdvanced(advanced){
 }
 function syncWorkflowSummary(){
   const out=$('#workflowSummary');if(!out)return;
-  if(!G?.panel||G.empty||!PB||PB.empty){out.textContent='ใส่โลโก้และตั้งขนาดก่อนดูรอยแบ่ง';return;}
+  const repair=$('#btnPrepareExport'),note=$('#exportPreparationNote');
+  if(!G?.panel||G.empty||!PB||PB.empty){out.textContent='ใส่โลโก้และตั้งขนาดก่อนดูรอยแบ่ง';if(repair)repair.hidden=true;if(note)note.textContent='';return;}
   const print=printPlan(),selected=(SEAM_PLAN?.candidates||[]).filter(p=>p.selected);
   out.textContent=print.error||(!print.enabled?(isFace5D()?'โหมด 5D ยังไม่รองรับแบ่งอัตโนมัติ · เปลี่ยนรูปแบบงานในตั้งค่าละเอียด':'เปิด “แบ่งชิ้นอัตโนมัติ” เพื่อแบ่งตามเครื่องพิมพ์'):print.tiles.length===1?'ชิ้นงานพอดีพื้นที่พิมพ์ ไม่ต้องแบ่ง':
     `แบ่ง ${print.nx} คอลัมน์ × ${print.ny} แถว`+(S.build.mode!=='service'?' · ตัวต่อใช้กับรูปแบบฝาหน้าถอดเปลี่ยนได้':selected.length?` · เลือกตัวต่อ ${selected.filter(p=>p.valid).length} จุด`:' · กดดูเพื่อวางตัวต่อ'));
   if(selected.some(p=>!p.valid))out.textContent+=' · มีตำแหน่งที่ต้องแก้';
+  const workspace=exportWorkspaceCheck(),invalid=selected.some(p=>!p.valid),fitError=S.seam.production?seamProductionResolutionError(seamSettings(),+S.exp.res):'';
+  if(repair)repair.hidden=workspace.fits&&!invalid&&!fitError;
+  if(note)note.textContent=`ไฟล์พิมพ์ ${S.exp.res} มม.`+(!workspace.fits?' · '+(/32 ล้าน/.test(workspace.error)?'งานใหญ่เกินสำหรับความละเอียดนี้':workspace.error):fitError?' · ตัวต่อนี้ต้องปรับความละเอียดหรือระยะสวม':invalid?' · ตำแหน่งตัวต่อเดิมต้องจัดใหม่':'');
+}
+function preparePrintableProject(){
+  if(EXPORT_JOB||PROJECT_LOADING||_sizing){toast('รอให้งานปัจจุบันเสร็จก่อน');return;}
+  const before=+S.exp.res,workspace=exportWorkspaceCheck(),print=printPlan();
+  const join=S.build.mode==='service'&&print.enabled&&print.tiles.length>1,fitJoint=join&&S.seam.method!=='plate';
+  let resolution=before;
+  if(!workspace.fits||(fitJoint&&before>.25)){
+    resolution=[.1,.15,.25,.4].find(res=>res>=Math.min(before,fitJoint ? .25 : before)&&(!fitJoint||res<=.25)&&exportWorkspaceCheck({...S,exp:{...S.exp,res}}).fits);
+    if(!resolution){toast(fitJoint?'งานนี้ใหญ่เกินสำหรับกริดตัวต่อสวมประกอบ เลือกสกรู + อินเสิร์ต หรือแยกเป็นหลายโปรเจกต์':workspace.error);return;}
+  }
+  S.exp.res=resolution;
+  if(G&&Math.abs(gridSpec(true).px-G.px)>1e-8)buildGrid(true);
+  if(join){
+    S.seam={...seamSettings(),enabled:true,production:true};prepareSeamProduction();
+    if(fitJoint)S.seam.hardware.clearance=Math.max(S.seam.hardware.clearance,2*resolution);
+    autoSelectSeamPoints();
+  }
+  pushToUI();schedule(false,'m');
+  if(join){
+    try{seamProductionPlan(SEAM_PLAN);}
+    catch(e){if(!(e instanceof SeamProductionError))throw e;toast(seamQuickReason(e.message));return;}
+  }
+  toast((resolution!==before?`ปรับไฟล์พิมพ์เป็น ${resolution} มม. · คงขนาดงานเดิม · `:'')+(join?`จัดตัวต่อใหม่ ${S.seam.selected.length} จุดแล้ว`:'เตรียมขนาดไฟล์แล้ว'));
 }
 
 /* แท็บล่างบนมือถือ: เปิดเฉพาะชุดเมนูที่เกี่ยวข้อง โดยคงพรีวิวไว้ด้านหลังตลอด */
@@ -7641,6 +7681,7 @@ function showMobilePanel(panel){
 
 function wire(){
   $('#btnWorkspaceAdvanced').addEventListener('click',()=>setWorkspaceAdvanced(!WORKSPACE_ADVANCED));
+  $('#btnPrepareExport').addEventListener('click',preparePrintableProject);
   for(const id of ['seamMethod','seamDialogMethod'])$('#'+id).addEventListener('change',e=>changeSeamMethod(e.target.value));
   $('#seamEnabled').addEventListener('change',e=>{
     S.seam.enabled=e.target.checked;if(!e.target.checked)S.seam.production=false;refreshSeamPlan();queueDraftSave();schedule(false,'m');
@@ -7894,6 +7935,8 @@ function arrangeMenuFlow(){
       const section=document.createElement('div');section.className='sec';section.dataset.sec='seam';
       section.innerHTML='<h3>3 · รอยแบ่งและตัวต่อ</h3><div class="body"><p class="workflow-summary" id="workflowSummary" role="status"></p></div>';
       const body=section.querySelector('.body');body.append(controls);
+      const repair=document.createElement('button');repair.id='btnPrepareExport';repair.type='button';repair.className='btn';repair.hidden=true;repair.textContent='จัดตัวต่อและเตรียมไฟล์ให้อัตโนมัติ';body.append(repair);
+      const exportNote=document.createElement('p');exportNote.id='exportPreparationNote';exportNote.setAttribute('role','status');body.append(exportNote);
       const note=document.createElement('p');note.className='workspace-simple-note';note.textContent='เส้นสีฟ้า = รอยแบ่ง · กดจุดบนป้ายเพื่อดูตัวต่อ';body.append(note);
       fitSec.after(section);
     }

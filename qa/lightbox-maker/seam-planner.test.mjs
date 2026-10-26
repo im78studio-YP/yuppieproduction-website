@@ -475,7 +475,7 @@ test('Advanced main and manual dialog retain selection toggling on click',()=>{
 test('Simple workflow explains unsupported modes without asking users to enable disabled controls',()=>{
   for(const mode of ['face5d','face5dChamfer','shell','full']){
     const {c}=fixture();c.mode=mode;c.summary={textContent:''};
-    run(c,`S.build.mode=mode;document.querySelector=()=>summary;SEAM_PLAN=buildSeamPlan();
+    run(c,`S.build.mode=mode;document.querySelector=id=>id==='#workflowSummary'?summary:null;SEAM_PLAN=buildSeamPlan();
       globalThis.beforeSummary=JSON.stringify(S);syncWorkflowSummary();`);
     assert.match(c.summary.textContent,mode.startsWith('face5d')?/5D.*ไม่รองรับแบ่งอัตโนมัติ/:/ตัวต่อใช้กับรูปแบบฝาหน้าถอดเปลี่ยนได้/);
     assert.doesNotMatch(c.summary.textContent,/เปิด “แบ่งชิ้นอัตโนมัติ”|กดดูเพื่อวางตัวต่อ/);
