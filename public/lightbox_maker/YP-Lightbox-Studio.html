@@ -5098,7 +5098,7 @@ function seamPreviewRender(){
   }
   let fitItems=view.buffers,target=mn.map((v,i)=>(v+mx[i])/2);
   if(view.scope==='focus'&&view.scene.anchor){
-    const a=view.scene.anchor,roi=view.scene.roi,span=Math.max(85,Math.min(240,PB.h*.7),roi?(roi.x1-roi.x0)*2:0,roi?(roi.y1-roi.y0)*2:0);
+    const a=view.scene.anchor,span=seamPreviewFocusSpan(view.scene.roi);
     target=[a[0],a[1]-span*.1,-a[2]*.7];
     fitItems=[{mn:[target[0]-span*.62,target[1]-span*.4,mn[2]],mx:[target[0]+span*.62,target[1]+span*.4,0],offset:[0,0,0]}];
   }
@@ -5170,9 +5170,14 @@ function seamPreviewZoom(factor){SEAM_PREVIEW_RENDERER.cam.zoom=clamp(SEAM_PREVI
 function seamPreviewReset(){
   const view=SEAM_PREVIEW_RENDERER;view.cam={...(view.inside?(view.home||{yaw:Math.PI+.13,pitch:.38}):{yaw:.03,pitch:.1}),zoom:1};syncSeamPreviewControls();seamPreviewRequestRender();
 }
+function seamPreviewFocusSpan(roi){
+  return Math.max(70,roi?(roi.x1-roi.x0)*1.5:0,roi?(roi.y1-roi.y0)*1.5:0);
+}
 function focusSeamPreviewPoint(id){
   const p=(SEAM_PLAN?.candidates||[]).find(p=>p.id===id);if(!p)return;
-  SEAM_FOCUS=p;seamPreviewSetScope('focus',true);drawSeamDialog();
+  SEAM_FOCUS=p;
+  if(p.valid)seamPreviewSetExploded(true);else seamPreviewSetScope('whole',true);
+  drawSeamDialog();$('#seamPreviewViewport').scrollIntoView?.({block:'nearest'});
 }
 function renderSeamPointChoices(){
   const host=$('#seamPointChoices'),points=seamPreviewPoints();host.replaceChildren();
@@ -5256,7 +5261,7 @@ function renderSeamChoices(){
       const copy=document.createElement('span'),title=document.createElement('strong'),detail=document.createElement('small'),code=document.createElement('small');
       title.textContent=name;detail.textContent=description;code.textContent=m.code+(m.id===s.method?' · ✓ เลือกแล้ว':'');
       copy.append(title,detail,code);button.append(canvas,copy);
-      button.addEventListener('click',()=>{SEAM_SHOW_ALL=false;changeSeamMethod(m.id);$('#seamChooser').open=false;$('#seamChooser>summary').focus({preventScroll:true});drawSeamDialog();});host.append(button);
+      button.addEventListener('click',()=>{SEAM_SHOW_ALL=false;$('#seamChooser').open=false;changeSeamMethod(m.id);$('#seamChooser>summary').focus({preventScroll:true});drawSeamDialog();});host.append(button);
     }
   }
   const more=$('#btnSeamMore');more.setAttribute('aria-expanded',String(SEAM_SHOW_ALL));more.textContent=SEAM_SHOW_ALL?'แสดงเฉพาะแบบใช้บ่อย':'ดูตัวต่อทั้งหมด 13 แบบ';
@@ -5320,7 +5325,9 @@ function changeSeamMethod(id){
   S.seam={...seamSettings(),method:id,length:method.length,width:method.width};
   if(S.seam.production){prepareSeamProduction();autoSelectSeamPoints();}
   else if($('#seamDialog').open)autoSelectSeamPoints();
-  refreshSeamPlan();queueDraftSave();if(S.seam.production)schedule(false,'m');else draw();
+  refreshSeamPlan();
+  if($('#seamDialog').open){if(SEAM_FOCUS?.valid)focusSeamPreviewPoint(SEAM_FOCUS.id);else seamPreviewSetScope('whole',true);}
+  queueDraftSave();if(S.seam.production)schedule(false,'m');else draw();
 }
 function prepareSeamProduction(s=S.seam){
   s.length=Math.max(32,s.length);s.width=Math.max(12,s.width);
@@ -5351,7 +5358,7 @@ function drawSeamOverlay(c,cv){
   if(simpleMain||(cv.id==='seamView'&&!$('#seamManual').open)){
     c.save();const points=seamPreviewPoints();
     if(!simpleMain&&SEAM_PREVIEW_RENDERER.scope==='focus'&&SEAM_FOCUS?.valid){
-      const p=SEAM_FOCUS,f=p.footprint,span=Math.max(85,Math.min(240,PB.h*.7),(f.x1-f.x0)*2,(f.y1-f.y0)*2);
+      const p=SEAM_FOCUS,view=SEAM_PREVIEW_RENDERER,roi=view.ready&&$('#seamPreviewViewport').dataset.point===p.id?view.scene?.roi:null,span=seamPreviewFocusSpan(roi||p.footprint);
       const a=seamCanvasPoint(cv,p.anchorMm.x-span*.62,p.anchorMm.y+span*.3),b=seamCanvasPoint(cv,p.anchorMm.x+span*.62,p.anchorMm.y-span*.5);
       c.strokeStyle='#ff2d8f';c.lineWidth=1.5;c.strokeRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);
     }
@@ -5427,7 +5434,7 @@ function drawSeamDialog(){
   const list=$('#seamList');list.replaceChildren();
   for(const p of (plan?.candidates||[]).filter(p=>p.selected)){
     const button=document.createElement('button');button.className='btn';button.textContent=(p.valid?'✓ ':'× ')+p.id;button.setAttribute('aria-pressed','true');
-    button.addEventListener('click',()=>{SEAM_FOCUS=p;drawSeamDialog();});list.append(button);
+    button.addEventListener('click',()=>focusSeamPreviewPoint(p.id));list.append(button);
     const remove=document.createElement('button');remove.className='btn';remove.textContent='ลบ';remove.setAttribute('aria-label','ลบจุด '+p.id);
     remove.addEventListener('click',()=>updateSeamSelection(S.seam.selected.filter(s=>!(s.axis===p.axis&&s.seamIndex===p.seamIndex&&s.tileIndex===p.tileIndex&&s.along===p.along))));list.append(remove);
   }
@@ -5447,7 +5454,7 @@ function syncSeamPreviewPoint(){
 function cycleSeamPreview(direction){
   const points=seamPreviewPoints();if(!points.length)return;
   const i=points.findIndex(p=>p.id===SEAM_FOCUS?.id),next=i<0?(direction>0?0:points.length-1):(i+direction+points.length)%points.length;
-  SEAM_FOCUS=points[next];seamPreviewSetScope('focus',true);drawSeamDialog();
+  focusSeamPreviewPoint(points[next].id);
 }
 function toggleSeamPreviewPoint(){
   const p=SEAM_FOCUS;if(!p?.valid)return;
@@ -5502,6 +5509,7 @@ function requestSeamPreview(){
         try{
           const info=seamPreviewSetScene(data.scene);setSeamPreviewStatus('','ready');
           $('#seamPreviewViewport').dataset.point=point?.id||'';
+          drawSeamDialog();
           $('#seamPreviewCaption').textContent='ป้าย '+nf(PB.w/10,1)+' × '+nf(PB.h/10,1)+' ซม. · ขอบป้ายอิงกริดพรีวิว '+nf(data.scene.resolution,2)+' มม. · '+(point?'ตัวต่อและฐานจุดที่เลือกตามรูปทรงผลิต':'แสดงเฉพาะชิ้นงาน ยังไม่มีตัวต่อในภาพ')+' · ซ่อนฮาร์ดแวร์อื่น';
           $('#seamPreviewCanvas').title=`ขอบชิ้นงานจากกริดพรีวิว ${nf(data.scene.resolution,2)} มม.${point?' ตัวต่อใช้รูปทรงผลิตจริง':''}`;
           console.info('Lightbox joint preview',JSON.stringify({method:s.method,point:point?.id||null,ms:performance.now()-job.started,...info}));
@@ -5565,15 +5573,15 @@ function autoSelectSeamPoints(){
 function pickSeam(e){
   const plan=SEAM_PLAN,cv=e.currentTarget;
   if(!plan?.applicable||EXPORT_JOB||PROJECT_LOADING||(cv.id==='view'&&S.ui.view!=='design'))return;
-  const simpleMain=cv.id==='view'&&!WORKSPACE_ADVANCED;
+  const simpleMain=cv.id==='view'&&!WORKSPACE_ADVANCED, simpleMap=cv.id==='seamView'&&!$('#seamManual').open;
   const r=cv.getBoundingClientRect(),u=(e.clientX-r.left)*cv.width/r.width,v=(e.clientY-r.top)*cv.height/r.height;
   let focus=null,best=11;
-  for(const p of simpleMain?seamPreviewPoints():plan.candidates){
+  for(const p of simpleMain||simpleMap?seamPreviewPoints():plan.candidates){
     const a=seamCanvasPoint(cv,p.anchorMm.x,p.anchorMm.y),d=Math.hypot((a[0]-u)*r.width/cv.width,(a[1]-v)*r.height/cv.height);
     if(d<best){focus=p;best=d;}
   }
-  if(simpleMain){
-    if(focus){const id=focus.id;openSeamPicker();focusSeamPreviewPoint(id);}
+  if(simpleMain||simpleMap){
+    if(focus){const id=focus.id;if(simpleMain)openSeamPicker();focusSeamPreviewPoint(id);}
     return;
   }
   if(!focus){
@@ -5588,7 +5596,6 @@ function pickSeam(e){
     focus=seamCandidateAt(plan,edge.axis,edge.seamIndex,edge.tileIndex,+(edge.axis==='x'?y:x).toFixed(2));
     if(focus.valid&&plan.candidates.some(p=>p.selected&&p.valid&&seamOverlap(p.footprint,focus.footprint))){focus.valid=false;focus.code='overlap';focus.reason='พื้นที่ซ้อนกับตัวต่อที่เลือกแล้ว';}
   }
-  if(cv.id==='seamView'&&!$('#seamManual').open){SEAM_FOCUS=focus;seamPreviewSetScope('focus',true);drawSeamDialog();return;}
   if(focus.selected){updateSeamSelection(S.seam.selected.filter(s=>!(s.axis===focus.axis&&s.seamIndex===focus.seamIndex&&s.tileIndex===focus.tileIndex&&s.along===focus.along)),focus.id);return;}
   if(focus.valid){
     if(S.seam.selected.length>=128){toast('เลือกได้ไม่เกิน 128 จุด');return;}
@@ -7711,7 +7718,7 @@ function wire(){
   $('#btnSeamCuts').addEventListener('click',()=>seamPreviewSetCuts(!SEAM_PREVIEW_RENDERER.cuts));
   $('#btnSeamZoomIn').addEventListener('click',()=>seamPreviewZoom(.85));$('#btnSeamZoomOut').addEventListener('click',()=>seamPreviewZoom(1/.85));
   $('#btnSeamWhole').addEventListener('click',()=>{seamPreviewSetScope('whole',false);drawSeamDialog();});
-  $('#btnSeamFocus').addEventListener('click',()=>{seamPreviewSetScope('focus',true);drawSeamDialog();});
+  $('#btnSeamFocus').addEventListener('click',()=>focusSeamPreviewPoint(SEAM_FOCUS?.id));
   $('#btnSeamFront').addEventListener('click',()=>{seamPreviewSetInside(false);drawSeamDialog();});
   $('#btnSeamInside').addEventListener('click',()=>{seamPreviewSetInside(true);drawSeamDialog();});
   seamPreviewInitEvents();

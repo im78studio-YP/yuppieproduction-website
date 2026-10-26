@@ -460,6 +460,37 @@ test('Simple preview clicks inspect visible pins and never edit connector select
   assert.equal(run(c,'JSON.stringify(S)===beforeClick'),true);
 });
 
+test('Clicking a simple picker map pin opens the inside exploded joint without editing print selections',()=>{
+  const c=overlayFixture();
+  run(c,`globalThis.beforeMapFocus=JSON.stringify(S);globalThis.beforeMapGrid=G;globalThis.beforeMapBounds=PB;
+    drawSeamDialog=syncSeamPreviewControls=seamPreviewRequestRender=()=>{};
+    openSeamPicker=updateSeamSelection=()=>{throw new Error('map inspection must not reopen or edit');};
+    SEAM_PREVIEW_RENDERER.scope='whole';SEAM_PREVIEW_RENDERER.inside=false;SEAM_PREVIEW_RENDERER.exploded=false;
+    const map={...mainCanvas,id:'seamView'};pickSeam({currentTarget:map,clientX:20,clientY:20});`);
+  assert.deepEqual(plain(run(c,'({id:SEAM_FOCUS.id,scope:SEAM_PREVIEW_RENDERER.scope,inside:SEAM_PREVIEW_RENDERER.inside,exploded:SEAM_PREVIEW_RENDERER.exploded})')),
+    {id:'selected',scope:'focus',inside:true,exploded:true});
+  run(c,`pickSeam({currentTarget:{...mainCanvas,id:'seamView'},clientX:60,clientY:20});`);
+  assert.equal(run(c,'SEAM_FOCUS.id'),'selected','unlisted pins cannot be inspected by a hidden hitbox');
+  assert.equal(run(c,'JSON.stringify(S)===beforeMapFocus&&G===beforeMapGrid&&PB===beforeMapBounds'),true);
+});
+
+test('The mini-map focus frame uses only the matching ready scene and stays local on a tall sign',()=>{
+  const c=overlayFixture();
+  run(c,`SEAM_FOCUS=SEAM_PLAN.candidates[0];SEAM_PREVIEW_RENDERER.scope='focus';
+    SEAM_PREVIEW_RENDERER.scene={roi:{x0:0,x1:100,y0:0,y1:20}};
+    globalThis.mapScenePoint='selected';globalThis.focusFrames=[];
+    document.querySelector=()=>({open:false,dataset:{point:mapScenePoint}});
+    overlayContext.strokeRect=(...args)=>focusFrames.push(args);`);
+  for(const [ready,point,height,width] of [[false,'selected',60,86.8],[false,'selected',1730,86.8],
+    [true,'stale',1730,86.8],[true,'selected',1730,186]]){
+    c.frameCase={ready,point,height};
+    run(c,`SEAM_PREVIEW_RENDERER.ready=frameCase.ready;mapScenePoint=frameCase.point;PB.h=frameCase.height;
+      focusFrames=[];drawSeamOverlay(overlayContext,{...mainCanvas,id:'seamView'});`);
+    const frames=plain(run(c,'focusFrames'));
+    assert.equal(frames.length,1);assert.ok(Math.abs(frames[0][2]-width)<1e-8);
+  }
+});
+
 test('Advanced main and manual dialog retain selection toggling on click',()=>{
   for(const manual of [false,true]){
     const c=overlayFixture();c.manualCase=manual;

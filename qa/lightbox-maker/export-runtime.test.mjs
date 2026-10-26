@@ -246,6 +246,7 @@ test('Joint preview works with export disabled, ignores stale workers, and prese
     globalThis.originalArrays={panel:G.panel,owner:G.owner,edtIn:G.edtIn};
     globalThis.originalPixels=JSON.stringify(Object.fromEntries(Object.entries(originalArrays).map(([k,a])=>[k,Array.from(a)])));
     seamPreviewClear=()=>{};seamPreviewRequestRender=()=>{};
+    globalThis.previewMaps=[];drawSeamDialog=()=>previewMaps.push(document.querySelector('#seamPreviewViewport').dataset.point);
     buildSeamPlan=()=>SEAM_PLAN;
     seamPreviewSetScene=scene=>{previewAccepted.push(scene.tag);return {parts:1,triangles:1};};
     seamProductionPlan=p=>({spec:{},joints:[{id:p.candidates[0].id,method:'plate',design:{contains(){}}}]});
@@ -259,6 +260,7 @@ test('Joint preview works with export disabled, ignores stale workers, and prese
   run(c,'SEAM_FOCUS=pointB;requestSeamPreview();');flush();assert.equal(run(c,'previewWorkers[0].stopped'),1);
   run(c,"previewWorkers[0].onmessage({data:{type:'done',scene:{tag:'stale'}}});previewWorkers[1].onmessage({data:{type:'done',scene:{tag:'current',resolution:.15}}});");
   assert.deepEqual(plain(run(c,'previewAccepted')),['current']);assert.equal(nodes.get('#seamPreviewViewport').dataset.point,'b');
+  assert.deepEqual(plain(run(c,'previewMaps')),['b'],'the map redraw uses the newly accepted point');
   assert.equal(run(c,`G===originalGrid&&JSON.stringify(S)===originalState&&
     Object.entries(originalArrays).every(([k,a])=>G[k]===a&&a.byteLength>0)&&
     JSON.stringify(Object.fromEntries(Object.entries(originalArrays).map(([k,a])=>[k,Array.from(a)])))===originalPixels`),true);
@@ -308,7 +310,7 @@ test('Opening the rear hides only the back cover and retains the actual front, b
 
 test('Whole-sign, focused, inside and exploded controls change only the preview view',()=>{
   const {c}=fixture();
-  run(c,`S.seam.enabled=S.seam.production=true;S.seam.selected=[{axis:'x',seamIndex:1,tileIndex:0,along:24}];
+  run(c,`S.seam.enabled=S.seam.production=true;S.seam.selected=[{axis:'x',seamIndex:1,tileIndex:1,along:24}];
     globalThis.beforeViewState=JSON.stringify(S);globalThis.beforeViewGrid=G;globalThis.beforeViewBounds=PB;
     globalThis.previewDraws=0;globalThis.previewSyncs=0;
     seamPreviewRequestRender=()=>previewDraws++;syncSeamPreviewControls=()=>previewSyncs++;
@@ -329,6 +331,98 @@ test('Whole-sign, focused, inside and exploded controls change only the preview 
     assert.equal(run(c,'SEAM_PREVIEW_RENDERER.cam.zoom'),1,action);
   }
   assert.ok(run(c,'previewDraws>0&&previewSyncs>0'));
+});
+
+test('Inspecting a valid point opens its inside exploded view without changing printable selections',()=>{
+  const {c,nodes}=fixture();let scrolled=0;
+  run(c,`S.seam.enabled=S.seam.production=true;S.seam.selected=[{axis:'x',seamIndex:1,tileIndex:0,along:24}];
+    SEAM_PLAN={candidates:[{id:'selected',valid:true,selected:true,tiles:['R1C1','R1C2']},
+      {id:'available',valid:true,selected:false,tiles:['R2C1','R2C2']},{id:'invalid',valid:false,tiles:['R3C1','R3C2']}]};
+    globalThis.beforeFocusState=JSON.stringify(S);globalThis.beforeFocusGrid=G;globalThis.beforeFocusBounds=PB;
+    globalThis.focusDraws=0;drawSeamDialog=()=>focusDraws++;seamPreviewRequestRender=()=>{};
+    updateSeamSelection=buildParts=doExport=()=>{throw new Error('inspection must not change production');};`);
+  nodes.set('#seamPreviewViewport',{scrollIntoView(){scrolled++;}});
+  for(const id of ['selected','available']){
+    c.pointId=id;run(c,'seamPreviewSetScope("whole",false);SEAM_PREVIEW_RENDERER.cam.zoom=4;focusSeamPreviewPoint(pointId);');
+    assert.deepEqual(plain(run(c,'({id:SEAM_FOCUS.id,scope:SEAM_PREVIEW_RENDERER.scope,inside:SEAM_PREVIEW_RENDERER.inside,exploded:SEAM_PREVIEW_RENDERER.exploded,zoom:SEAM_PREVIEW_RENDERER.cam.zoom})')),
+      {id,scope:'focus',inside:true,exploded:true,zoom:1});
+    assert.equal(nodes.get('#btnSeamExploded')['aria-pressed'],'true');
+    assert.equal(nodes.get('#seamPreviewSide').textContent,'ด้านในกล่อง · เปิดฝาหลังแล้ว');
+    assert.equal(run(c,'JSON.stringify(S)===beforeFocusState&&G===beforeFocusGrid&&PB===beforeFocusBounds'),true);
+  }
+  run(c,'focusSeamPreviewPoint("invalid")');
+  assert.deepEqual(plain(run(c,'({scope:SEAM_PREVIEW_RENDERER.scope,exploded:SEAM_PREVIEW_RENDERER.exploded,disabled:document.querySelector("#btnSeamFocus").disabled})')),
+    {scope:'whole',exploded:false,disabled:true});
+  assert.equal(run(c,'SEAM_FOCUS.id'),'invalid');
+  run(c,'focusSeamPreviewPoint("missing")');assert.equal(run(c,'SEAM_FOCUS.id'),'invalid');
+  assert.equal(run(c,'focusDraws'),3);assert.equal(scrolled,3);
+  assert.equal(run(c,'JSON.stringify(S)===beforeFocusState&&G===beforeFocusGrid&&PB===beforeFocusBounds'),true);
+});
+
+test('Numbered choices, next/previous controls and the manual point list open the focused joint view',()=>{
+  const {c,nodes}=fixture();
+  c.makePreviewElement=()=>({children:[],listeners:{},setAttribute(name,value){this[name]=String(value);},
+    append(...children){this.children.push(...children);},addEventListener(type,fn){this.listeners[type]=fn;}});
+  nodes.set('#seamPointChoices',{children:[],replaceChildren(){this.children=[];},append(child){this.children.push(child);}});
+  run(c,`document.createElement=()=>makePreviewElement();
+    SEAM_PLAN={candidates:[{id:'a',valid:true,selected:true,tiles:['R1C1','R1C2']},
+      {id:'b',valid:true,selected:true,tiles:['R2C1','R2C2']},{id:'bad',valid:false,selected:true,tiles:[]}]};
+    S.seam.selected=[{axis:'x',seamIndex:1,tileIndex:1,along:24}];globalThis.beforePointButtons=JSON.stringify(S);
+    SEAM_FOCUS=SEAM_PLAN.candidates[0];globalThis.drawPickerDialog=drawSeamDialog;drawSeamDialog=()=>{};seamPreviewRequestRender=()=>{};
+    updateSeamSelection=()=>{throw new Error('inspection changed selections');};renderSeamPointChoices();`);
+  const choices=nodes.get('#seamPointChoices').children;
+  assert.equal(choices.length,2);assert.equal(choices[0]['aria-pressed'],'true');
+  choices[1].listeners.click();
+  assert.equal(run(c,'SEAM_FOCUS.id'),'b');
+  for(const [action,id] of [['cycleSeamPreview(1)','a'],['cycleSeamPreview(-1)','b']]){
+    run(c,`seamPreviewSetScope('whole',false);${action}`);
+    assert.deepEqual(plain(run(c,'({id:SEAM_FOCUS.id,scope:SEAM_PREVIEW_RENDERER.scope,inside:SEAM_PREVIEW_RENDERER.inside,exploded:SEAM_PREVIEW_RENDERER.exploded})')),
+      {id,scope:'focus',inside:true,exploded:true});
+  }
+  nodes.set('#seamDialog',{open:true});
+  nodes.set('#seamList',{children:[],replaceChildren(){this.children=[];},append(child){this.children.push(child);}});
+  nodes.set('#seamScroll',{clientWidth:300,clientHeight:100});
+  nodes.set('#seamView',{getContext:()=>new Proxy({},{get:()=>()=>{}})});
+  run(c,`SEAM_PLAN.candidates.forEach(p=>p.anchorMm={x:20,y:20});
+    gridImage=()=>({});seamCanvasFrame=()=>({x0:0,y0:0,width:100,height:60});
+    drawSeamOverlay=requestSeamPreview=()=>{};drawSeamDialog=drawPickerDialog;drawSeamDialog();
+    seamPreviewSetScope('whole',false);`);
+  nodes.get('#seamList').children[2].listeners.click();
+  assert.deepEqual(plain(run(c,'({id:SEAM_FOCUS.id,scope:SEAM_PREVIEW_RENDERER.scope,inside:SEAM_PREVIEW_RENDERER.inside,exploded:SEAM_PREVIEW_RENDERER.exploded})')),
+    {id:'b',scope:'focus',inside:true,exploded:true});
+  assert.equal(run(c,'JSON.stringify(S)===beforePointButtons'),true);
+});
+
+test('Changing a method in the open picker focuses the refreshed placement and keeps unavailable joints in overview',()=>{
+  for(const valid of [true,false,null]){
+    const {c}=fixture();c.refreshedValid=valid;
+    run(c,`document.querySelector('#seamDialog').open=true;S.seam.production=false;
+      S.seam.selected=[{axis:'x',seamIndex:1,tileIndex:1,along:24}];
+      globalThis.beforeMethodSelection=JSON.stringify(S.seam.selected);globalThis.beforeMethodHardware=JSON.stringify(S.seam.hardware);
+      SEAM_FOCUS={id:'stale',valid:true};SEAM_PREVIEW_RENDERER.exploded=true;
+      autoSelectSeamPoints=()=>{};refreshSeamPlan=()=>{
+        SEAM_PLAN={candidates:refreshedValid===null?[]:[{id:'fresh',valid:refreshedValid,tiles:['R1C1','R1C2']}]};
+        SEAM_FOCUS=SEAM_PLAN.candidates[0]||null;
+      };
+      drawSeamDialog=queueDraftSave=draw=seamPreviewRequestRender=()=>{};
+      doExport=buildParts=()=>{throw new Error('changing a preview method must not export');};changeSeamMethod('dowel');`);
+    assert.equal(run(c,'S.seam.method'),'dowel');assert.equal(run(c,'S.seam.production'),false);
+    assert.equal(run(c,'JSON.stringify(S.seam.selected)===beforeMethodSelection&&JSON.stringify(S.seam.hardware)===beforeMethodHardware'),true);
+    assert.deepEqual(plain(run(c,'({scope:SEAM_PREVIEW_RENDERER.scope,inside:SEAM_PREVIEW_RENDERER.inside,exploded:SEAM_PREVIEW_RENDERER.exploded})')),
+      {scope:valid?'focus':'whole',inside:true,exploded:!!valid});
+    assert.equal(run(c,'SEAM_FOCUS?.id||null'),valid===null?null:'fresh');
+  }
+});
+
+test('Focused joint framing follows its local geometry rather than the overall sign height',()=>{
+  const {c}=fixture();
+  for(const [roi,span] of [[null,70],[{x0:20,x1:52,y0:3,y1:15},70],
+    [{x0:20,x1:80,y0:3,y1:15},90],[{x0:20,x1:52,y0:3,y1:83},120]]){
+    c.focusRoi=roi;
+    for(const height of [60,630,1730]){
+      c.signHeight=height;run(c,'PB.h=signHeight');assert.equal(run(c,'seamPreviewFocusSpan(focusRoi)'),span);
+    }
+  }
 });
 
 test('Preview cut planes match adjacent print tiles on both axes and never mark outer edges',()=>{
@@ -403,7 +497,7 @@ test('Missing and invalid joint placements still preview the artwork without man
       SEAM_FOCUS=testFocus;SEAM_PLAN={reason:'งานนี้พิมพ์ชิ้นเดียวได้',candidates:[]};
       SEAM_PREVIEW_RENDERER.scope='focus';SEAM_PREVIEW_RENDERER.exploded=true;
       globalThis.beforePreview=JSON.stringify(S);globalThis.accepted=0;
-      seamPreviewClear=()=>{};seamPreviewRequestRender=()=>{};
+      seamPreviewClear=()=>{};seamPreviewRequestRender=()=>{};drawSeamDialog=()=>{};
       seamProductionPlan=buildParts=()=>{throw new Error('Invalid joint reached manufacturing');};
       seamPreviewSetScene=()=>{accepted++;return {parts:3,triangles:12};};requestSeamPreview();`);
     const queued=[...timers.values()];timers.clear();for(const fn of queued)fn();
