@@ -817,6 +817,13 @@ Studio</textarea>
         <h2 class="seam-step-heading" id="seamPlaceTitle"><span class="seam-step-number" aria-hidden="true">2</span>ดูตัวต่อบนชิ้นงานจริง</h2>
         <button class="btn pri" id="btnSeamAuto" type="button">วางตัวต่ออัตโนมัติ</button>
       </div>
+      <div id="seamPlacementHelp" class="printer-fit warn" role="status" hidden>
+        <strong>ทำไมวางฐานไม่ได้ และต้องแก้ตรงไหน</strong>
+        <p id="seamPlacementReason"></p>
+        <p class="seam-note">ลองกด “จัดจุดและปรับค่าตัวต่อให้พร้อมพิมพ์” เพื่อหาจุดที่ผ่านการตรวจ หากยังไม่ผ่าน ให้แก้ตามเหตุผลด้านบน ระบบจะไม่ฝืนสร้างฐานที่ล้นเนื้อหรือชนชิ้นส่วน</p>
+        <button class="btn" id="btnSeamFixDimensions" type="button">ปรับขนาดตัวต่อ</button>
+        <button class="btn" id="btnSeamFixPosition" type="button">เลือกตำแหน่งเอง</button>
+      </div>
       <div class="seam-preview-layout">
       <section class="seam-preview-pane" aria-label="ตัวต่อบนป้ายจริงทั้งชิ้น">
         <p id="seamPreviewIssue" role="status" hidden></p>
@@ -2879,30 +2886,31 @@ function seamCandidateAt(plan,axis,seamIndex,tileIndex,along){
   if(!plan.applicable||!edge||!Number.isFinite(along))return fail('inactive','แนวต่อนี้ไม่มีในผังแบ่งปัจจุบัน');
   const f=p.footprint, guard=Math.max(.5,G.px);
   if(f.x0<edge.bounds.x0+guard||f.x1>edge.bounds.x1-guard||f.y0<edge.bounds.y0+guard||f.y1>edge.bounds.y1-guard)
-    return fail('tile','พื้นที่ตัวต่อชนแนวตัดอื่นหรือขอบชิ้นพิมพ์');
+    return fail('tile',`ฐาน ${plan.spec.length} × ${plan.spec.width} มม. ชนแนวตัดอื่นหรือขอบชิ้นพิมพ์ — เปิด “เลือกตำแหน่งเอง” แล้วเลื่อนจุดออกจากมุมรอยตัด; หากลด “ยาวข้ามรอยต่อ / กว้างตามแนวต่อ” ต้องผ่านการตรวจฐานและรูอีกครั้ง`);
   const center=seamCell(x,y),lab=G.comp.lab;
   const left=seamCell(x-(axis==='x'?G.px:0),y-(axis==='y'?G.px:0));
   const right=seamCell(x+(axis==='x'?G.px:0),y+(axis==='y'?G.px:0));
-  if(center<0||!G.panel[center]||left<0||right<0||!G.panel[left]||!G.panel[right])return fail('outside','แนวต่อตรงนี้เป็นช่องว่างหรือไม่มีเนื้อทั้งสองฝั่ง');
+  if(center<0||!G.panel[center]||left<0||right<0||!G.panel[left]||!G.panel[right])return fail('outside','แนวต่อตรงนี้เป็นช่องว่างหรือไม่มีเนื้อทั้งสองฝั่ง — เลื่อนจุดตามเส้นรอยต่อไปยังเนื้อโลโก้ที่ต่อเนื่องทั้งสองด้าน');
   const component=lab[center];
   if(lab[left]!==component||lab[right]!==component)return fail('component','รูปทรงคนละชิ้น ไม่ต่อเนื่องข้ามแนวตัด');
   // Inspect every cell intersecting the whole footprint plus a safety border;
   // testing only its centre/corners misses holes and thin notches inside it.
   const gx0=Math.floor((PB.ux0+f.x0-guard)/G.px),gx1=Math.floor((PB.ux0+f.x1+guard)/G.px);
   const gy0=Math.floor((S.box.H-PB.my0-f.y1-guard)/G.px),gy1=Math.floor((S.box.H-PB.my0-f.y0+guard)/G.px);
-  if(gx0<0||gy0<0||gx1>=G.gw||gy1>=G.gh)return fail('outside','พื้นที่ตัวต่อออกนอกโลโก้');
+  if(gx0<0||gy0<0||gx1>=G.gw||gy1>=G.gh)return fail('outside',`พื้นที่ฐาน ${plan.spec.length} × ${plan.spec.width} มม. ออกนอกโลโก้ — เลื่อนจุดไปส่วนที่กว้างกว่า หรือปรับขนาดตัวต่อแล้วตรวจใหม่`);
   for(let gy=gy0;gy<=gy1;gy++)for(let gx=gx0;gx<=gx1;gx++){
     const i=gy*G.gw+gx;
-    if(!G.panel[i]||G.edtIn[i]*G.px<plan.spec.setback)return fail('outside','พื้นที่ตัวต่อไม่พอ หรือใกล้ขอบ / บ่าฝาหลังเกินไป');
+    if(!G.panel[i])return fail('outside',`พื้นที่ฐาน ${plan.spec.length} × ${plan.spec.width} มม. คร่อมช่องว่างหรือขอบโลโก้ — เลื่อนจุดไปส่วนที่กว้างกว่า; การเพิ่มความหนาฐานไม่ช่วยให้ฐานที่ล้นขอบวางได้`);
+    if(G.edtIn[i]*G.px<plan.spec.setback)return fail('outside',`ขอบพื้นที่ฐานใกล้ขอบโลโก้เกินไป: จุดที่ตรวจไม่ผ่านห่าง ${ (G.edtIn[i]*G.px).toFixed(1)} มม. ต้องอย่างน้อย ${plan.spec.setback.toFixed(1)} มม. เพื่อหลบผนังและบ่าฝาหลัง — เลื่อนจุดเข้าด้านในหรือเลือกส่วนที่กว้างกว่า ไม่ใช่เพิ่ม “หนาฐานรับ”`);
     if(lab[i]!==component)return fail('component','พื้นที่ตัวต่อคร่อมรูปทรงคนละชิ้น');
   }
   for(const sign of [-1,1]){
     const i=seamCell(x+(axis==='x'?sign*plan.spec.length*.3:0),y+(axis==='y'?sign*plan.spec.length*.3:0));
     if(i<0||G.edtIn[i]*G.px>plan.spec.setback+plan.spec.width/2+4)
-      return fail('support','ปีกตัวต่ออยู่ห่างผนังเกินระยะฐานรับที่สำรอง');
+      return fail('support',`ปีกตัวต่ออยู่ห่างผนังเกินระยะฐานรับ: ${i<0?'อยู่นอกกริด':(G.edtIn[i]*G.px).toFixed(1)+' มม.'} (รองรับไม่เกิน ${(plan.spec.setback+plan.spec.width/2+4).toFixed(1)} มม.) — เลื่อนจุดตามรอยต่อให้ใกล้ผนังโลโก้มากขึ้น แล้วตรวจใหม่`);
   }
-  if(S.box.depth<jointSpec().lipH+(plan.spec.minDepth??8))return fail('depth','กล่องตื้นเกินไปสำหรับพื้นที่สำรองทดลองของวิธีนี้ใต้บ่าฝาหลัง');
-  if(plan.keepouts.some(k=>seamOverlap(f,k,0)))return fail('hardware','ชนพื้นที่สกรู สแนป รูแขวน หรือช่องสายไฟเดิม');
+  if(S.box.depth<jointSpec().lipH+(plan.spec.minDepth??8))return fail('depth',`กล่องตื้นเกินไป: ลึก ${S.box.depth} มม. ต้องอย่างน้อย ${(jointSpec().lipH+(plan.spec.minDepth??8)).toFixed(1)} มม. สำหรับพื้นที่ใต้บ่าฝาหลัง — ปิดหน้าต่างนี้ แล้วแก้ “ความลึกกล่อง” ในเมนูโครงสร้างกล่อง; ยังต้องตรวจฐานจริงอีกครั้ง`);
+  if(plan.keepouts.some(k=>seamOverlap(f,k,0)))return fail('hardware','ฐานชนพื้นที่สกรู สแนป รูแขวน หรือช่องสายไฟเดิม — เปิด “เลือกตำแหน่งเอง” แล้วเลื่อนจุดออกจากฮาร์ดแวร์เดิม โดยไม่ต้องปิดอุปกรณ์นั้น');
   p.componentId=component;p.valid=true;p.code='ok';p.reason='พื้นที่ XY ผ่านเบื้องต้น มีเนื้อทั้งสองฝั่งและอยู่ใกล้ผนัง';return p;
 }
 function buildSeamPlan(s=seamSettings()){
@@ -3001,7 +3009,7 @@ function seamProductionPlan(previewPlan=null,s=seamSettings()){
   if(!plan.applicable||plan.truncated)throw new SeamProductionError('สร้างตัวต่อจริงไม่ได้: '+(plan.reason||'ผังมีจำนวนจุดเกินขีดจำกัด'));
   for(const [key,lo,hi] of [['hole',1,10],['depth',2,12],['bolt',2,6],['plateT',2,8],['baseT',4,16],['clearance',.1,.6],['pin',2,6],['nutFlat',4,10],['nutT',1.5,5],['magnetD',3,10],['magnetT',1,5]])
     if(!Number.isFinite(+h[key])||+h[key]<lo||+h[key]>hi)throw new SeamProductionError('ขนาดฮาร์ดแวร์ '+key+' ไม่อยู่ในช่วงที่รองรับ');
-  if(['plate','selftap'].includes(s.method)&&h.baseT-h.depth<1.5)throw new SeamProductionError(`ฐานต้องมีเนื้อใต้รูตันอย่างน้อย 1.5 มม. — รูลึก ${h.depth} มม. ต้องใช้ฐานอย่างน้อย ${h.depth+1.5} มม. (ตอนนี้ ${h.baseT} มม.)`);
+  if(['plate','selftap'].includes(s.method)&&h.baseT-h.depth<1.5)throw new SeamProductionError(`ฐานต้องมีเนื้อใต้รูตันอย่างน้อย 1.5 มม. — รูลึก ${h.depth} มม. ต้องใช้ฐานอย่างน้อย ${h.depth+1.5} มม. (ตอนนี้ ${h.baseT} มม.) — กด “จัดจุดและปรับค่าตัวต่อให้พร้อมพิมพ์” หรือแก้ “หนาฐานรับ” ในปรับขนาดตัวต่อ`);
   if(s.method==='plate'&&h.bolt>=h.hole)throw new SeamProductionError('รูผ่านสกรูต้องเล็กกว่ารูรับอินเสิร์ตของฐาน');
   if(s.method==='selftap'&&h.hole>=h.bolt)throw new SeamProductionError('รูนำสกรูพลาสติกต้องเล็กกว่ารูผ่านของแผ่นประกบ');
   const resolutionError=G.px<=S.exp.res*1.001?seamProductionResolutionError(s,G.px):'';
@@ -3012,14 +3020,14 @@ function seamProductionPlan(previewPlan=null,s=seamSettings()){
   const bad=chosen.find(p=>!p.valid);if(bad)throw new SeamProductionError('จุด '+bad.id+' ใช้สร้างจริงไม่ได้: '+bad.reason);
   const st=geomStack(),J=jointSpec(),baseTop=st.frameZ0+S.box.depth-J.lipH-h.plateT-.5;
   const baseBottom=baseTop-h.baseT,frontKeep=st.colorT+st.faceBaseT+FRONT_LIP_HEIGHT+1;
-  if(baseBottom<frontKeep+2)throw new SeamProductionError('กล่องตื้นเกินไปสำหรับฐาน รูตัน แผ่นประกบ และช่องเปิดซ่อม');
+  if(baseBottom<frontKeep+2)throw new SeamProductionError(`กล่องตื้นเกินไปสำหรับฐานและแผ่นประกบ: ลึก ${S.box.depth} มม. ต้องอย่างน้อย ${Math.ceil((S.box.depth+frontKeep+2-baseBottom)*10)/10} มม. — ปิดหน้าต่างนี้ แล้วเพิ่ม “ความลึกกล่อง” ในเมนูโครงสร้างกล่อง`);
   const out={version:2,method:s.method,resolution:G.px,joints:[],spec:{...h},frameRaster:true};
   const tiles=new Map(printPlan().tiles.map(t=>[t.id,t]));
   for(const c of chosen){
     const joint={...c,method:s.method,length:s.length,width:s.width,baseTop,baseBottom,spec:{...h},holes:[],pads:[]};
     const radius=s.method==='plate'?Math.max(h.hole/2+2,4):Math.max(3,Math.min(s.width/2-1,5)),normal=s.length*.3;
     if(s.width<radius*2+G.px*2||s.length/2-normal<radius+G.px)
-      throw new SeamProductionError(`พื้นที่เล็กเกินไปสำหรับฐานรับ: ต้องยาวอย่างน้อย ${Math.ceil((radius+G.px)/.2*10)/10} × กว้าง ${Math.ceil((radius*2+G.px*2)*10)/10} มม. (ตอนนี้ ${s.length} × ${s.width} มม.)`);
+      throw new SeamProductionError(`พื้นที่เล็กเกินไปสำหรับฐานรับ: ต้องยาวอย่างน้อย ${Math.ceil((radius+G.px)/.2*10)/10} × กว้าง ${Math.ceil((radius*2+G.px*2)*10)/10} มม. (ตอนนี้ ${s.length} × ${s.width} มม.) — เปิด “ปรับขนาดตัวต่อ” แล้วแก้ “ยาวข้ามรอยต่อ / กว้างตามแนวต่อ” ตามค่าขั้นต่ำ; ถ้าฐานใหม่ล้นโลโก้ต้องย้ายจุด`);
     for(const sign of [-1,1]){
       const cx=c.anchorMm.x+(c.axis==='x'?sign*normal:0),cy=c.anchorMm.y+(c.axis==='y'?sign*normal:0);
       const own=c.tiles.find(id=>{const t=tiles.get(id);return cx>t.x0&&cx<t.x1&&cy>t.y0&&cy<t.y1;});
@@ -5155,6 +5163,13 @@ function seamPreviewRender(){
   }
   return true;
 }
+function syncSeamPlacementHelp(){
+  const focus=SEAM_FOCUS,issue=SEAM_PREVIEW_RENDERER.issue;
+  const reason=(issue?.point===focus?.id?issue?.message:'')||
+    (focus&&!focus.valid?`จุด ${focus.id}: ${focus.reason}`:'')||$('#seamProductionStatus').dataset.reason||
+    (SEAM_PLAN?.applicable&&!SEAM_PLAN.candidates.some(p=>p.valid)?SEAM_AUTO_REASON||SEAM_PLAN.candidates.find(p=>!p.valid)?.reason||SEAM_PLAN.reason||'ไม่พบแนวรอยต่อที่มีเนื้อโลโก้ทั้งสองฝั่ง — ตรวจรูปทรงและเส้นแบ่งก่อนวางฐาน; ช่องว่างระหว่างตัวอักษรใช้เป็นฐานรับไม่ได้':'');
+  $('#seamPlacementHelp').hidden=!reason;$('#seamPlacementReason').textContent=reason||'';
+}
 function syncSeamPreviewControls(){
   const view=SEAM_PREVIEW_RENDERER;
   const issue=view.issue&&view.issue.point===SEAM_FOCUS?.id?view.issue.message:'',hasJoint=!!SEAM_FOCUS?.valid&&!issue;
@@ -5166,6 +5181,7 @@ function syncSeamPreviewControls(){
   $('#btnSeamAssembled').setAttribute('aria-pressed',String(!view.exploded));$('#btnSeamExploded').setAttribute('aria-pressed',String(view.exploded));
   $('#btnSeamAssembled').hidden=!view.exploded;
   $('#seamOverview').hidden=view.scope==='whole'&&!view.inside;
+  syncSeamPlacementHelp();
   $('#seamPreviewSide').textContent=view.baseOnly?'ฐานและรูจริง · ซ่อนตัวต่อและส่วนรอบนอก':view.inside?'ด้านในกล่อง · เปิดฝาหลังแล้ว':'ด้านหน้าป้าย';
   const points=seamPreviewPoints(),i=points.findIndex(p=>p.id===SEAM_FOCUS?.id);
   $('#seamPreviewLocation').textContent=view.scope==='focus'?'จุดยึด '+(i>=0?i+1:'ทดลอง')+' · '+(SEAM_FOCUS?.tiles||[]).join(' ↔ '):points.length?'กดหมายเลขเพื่อดูการยึดบนชิ้นงาน':'แสดงชิ้นงานจริง · ยังไม่มีจุดยึดที่วางได้';
@@ -5335,8 +5351,7 @@ function exportSeamSelection(){
   $('#seamDialog').close();return doExport();
 }
 function seamQuickReason(message){
-  if(/เลือกตำแหน่ง/.test(message))return 'ยังไม่มีจุดตัวต่อ กด “วางตัวต่ออัตโนมัติ” ก่อน';
-  if(/ความลึก|ตื้น/.test(message))return 'กล่องตื้นเกินไปสำหรับตัวต่อนี้ เพิ่มความลึกกล่องหรือเลือกแบบอื่น';
+  if(message.startsWith('เลือกตำแหน่งตัวต่อก่อน'))return 'ยังไม่มีจุดตัวต่อ กด “วางตัวต่ออัตโนมัติ” ก่อน';
   if(/มากกว่า 1 ช่อง|แบ่งชิ้นอัตโนมัติ/.test(message))return 'งานนี้ยังไม่มีรอยแบ่งให้ต่อ ตรวจขนาดงานและเปิดแบ่งชิ้นอัตโนมัติ';
   return message;
 }
@@ -5572,20 +5587,21 @@ function syncSeamProductionUI(){
   show('seamFit',s.method!=='plate');show('seamPin',['butt','dowel','weld'].includes(s.method));show('seamNutFlat',s.method==='nut');show('seamNutT',s.method==='nut');show('seamMagnetD',s.method==='magnet');show('seamMagnetT',s.method==='magnet');
   $('label[for="seamHole"]').textContent=s.method==='selftap'?'รูนำพลาสติก Ø':'รูรับอินเสิร์ต Ø';
   $('#seamProfileNote').textContent=seamMethod(s.method)?.code+' · สร้างเฉพาะจุดที่เลือก ขนาดตั้งต้นเป็นตัวอย่าง ต้องทดสอบ PETG และฮาร์ดแวร์จริง'+(['lap','scarf','tongue','dovetail'].includes(s.method)?' · พิมพ์ชุด A/B แยกแล้วติดบนฐานด้วยกาว':'' )+(['snap','magnet'].includes(s.method)?' · ใช้จับแนว/ถอดได้ ต้องมีระบบรับน้ำหนักถาวรแยก':'');
-  const out=$('#seamProductionStatus');out.hidden=!active;
+  const out=$('#seamProductionStatus');out.hidden=!active;out.dataset.reason='';
   const print=printPlan(),needsSplit=print.enabled&&print.tiles.length>1;
   $('#seamQuickProduction').disabled=!needsSplit&&!active;
   let ready=false,quick=print.error||(!print.enabled?'เปิดแบ่งชิ้นอัตโนมัติในโหมดงานที่รองรับก่อนเพิ่มตัวต่อ':needsSplit?'ดูพรีวิวได้โดยไม่ต้องติ๊ก · ติ๊ก “รวมตัวต่อในไฟล์พิมพ์” เมื่อต้องการส่งออกตัวต่อ':'งานนี้พิมพ์ชิ้นเดียวได้ ยังไม่ต้องเพิ่มตัวต่อ ปิดหน้านี้แล้วส่งออกตามปกติ');
   let text='ดูพรีวิวได้ · ไฟล์ส่งออกยังไม่รวมตัวต่อจนกว่าจะเปิด “รวมตัวต่อในไฟล์พิมพ์”';
   if(active){
     try{const workspace=exportWorkspaceCheck();if(!workspace.fits)throw new SeamProductionError(workspace.error);const resolutionError=seamProductionResolutionError(s,+S.exp.res);if(resolutionError)throw new SeamProductionError(resolutionError);const p=seamProductionPlan(SEAM_PLAN),count=p.joints.reduce((n,j)=>n+(j.design?.components.length||1),0);text=`สร้างจริง ${seamMethod(s.method).code} · ${p.joints.length} จุด · ${count} ชิ้นต่อ/จิ๊ก · ${p.joints.length*2} ฐานรับ · ตรวจซ้ำก่อนส่งออก`;ready=true;quick=`พร้อมส่งออก · ${p.joints.length} จุดต่อ · ${count} ชิ้นต่อ/จิ๊ก`;out.className='printer-fit ok';}
-    catch(e){if(!(e instanceof SeamProductionError))throw e;const reason=!s.selected.length&&SEAM_AUTO_REASON?SEAM_AUTO_REASON:e.message;text='ยังสร้างไฟล์ตัวต่อไม่ได้: '+reason;quick=seamQuickReason(reason);out.className='printer-fit warn';}
+    catch(e){if(!(e instanceof SeamProductionError))throw e;const reason=!s.selected.length&&SEAM_AUTO_REASON?SEAM_AUTO_REASON:e.message;out.dataset.reason=reason;text='ยังสร้างไฟล์ตัวต่อไม่ได้: '+reason;quick=seamQuickReason(reason);out.className='printer-fit warn';}
     out.textContent=text;
   }
   $('#seamExportHint').textContent=text;$('#seamDialogProductionNote').textContent=quick+' · ตรวจขนาดละเอียดอีกครั้งตอนส่งออก';
   $('#seamQuickStatus').textContent=quick;$('#seamQuickStatus').className='printer-fit '+(ready?'ok':'warn');
   $('#btnSeamExport').disabled=!ready;
   $('#btnSeamPrepare').hidden=!needsSplit||ready||S.build.mode!=='service';
+  syncSeamPlacementHelp();
 }
 function autoSelectSeamPoints(){
   const settings=$('#seamDialog').open?seamPreviewSettings():seamSettings();
@@ -7721,6 +7737,8 @@ function wire(){
   $('#btnWorkspaceAdvanced').addEventListener('click',()=>setWorkspaceAdvanced(!WORKSPACE_ADVANCED));
   $('#btnPrepareExport').addEventListener('click',preparePrintableProject);
   $('#btnSeamPrepare').addEventListener('click',preparePrintableProject);
+  $('#btnSeamFixDimensions').addEventListener('click',()=>{$('#seamChooser').open=true;$('#seamAdvanced').open=true;$('#seamAdvanced').scrollIntoView({block:'start'});$(/ฐานต้องมีเนื้อใต้รูตัน|พื้นก้นบาง/.test($('#seamPlacementReason').textContent)&&!$('#seamHardware').hidden?'#seamBaseT':'#seamLength').focus({preventScroll:true});});
+  $('#btnSeamFixPosition').addEventListener('click',()=>{$('#seamManual').open=true;$('#seamManual').scrollIntoView({block:'start'});$('#seamView').focus({preventScroll:true});});
   for(const id of ['seamMethod','seamDialogMethod'])$('#'+id).addEventListener('change',e=>changeSeamMethod(e.target.value));
   $('#seamEnabled').addEventListener('change',e=>{
     S.seam.enabled=e.target.checked;if(!e.target.checked)S.seam.production=false;refreshSeamPlan();queueDraftSave();schedule(false,'m');

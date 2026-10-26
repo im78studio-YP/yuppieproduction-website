@@ -537,3 +537,12 @@ test('All 13 enabled preview methods with retained selections leave exported mod
     assert.deepEqual(digest(),before,`${id} preview selections must never add production geometry`);
   }
 });
+
+test('Rejected support positions explain the measured limit and a physical repair',()=>{
+  const app=fixture(),plan=app.plan(),seam=plan.seams.find(s=>s.axis==='x'&&s.start===0);
+  const far=app.probe(plan,seam,(seam.start+seam.end)/2);
+  assert.equal(far.code,'support');assert.match(far.reason,/รองรับไม่เกิน [0-9.]+ มม/);assert.match(far.reason,/เลื่อนจุด/);
+  const good=validCandidate(app,'x');run(app.c,'S.box.depth=12;');
+  const shallow=app.probe(app.plan(),good.seam,good.candidate.along);
+  assert.equal(shallow.code,'depth');assert.match(shallow.reason,/ลึก 12 มม/);assert.match(shallow.reason,/ต้องอย่างน้อย [0-9.]+ มม/);assert.match(shallow.reason,/ความลึกกล่อง/);
+});

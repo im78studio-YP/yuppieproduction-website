@@ -799,3 +799,17 @@ test('Draft transaction resolves on commit rather than request success',async()=
   await settle();run(c,'request.onsuccess();');await settle();assert.equal(run(c,'finished'),false);
   run(c,'tx.oncomplete();');await run(c,'waiting');assert.equal(run(c,'finished'),true);
 });
+
+test('Placement help preserves measured failures and clears when the current plan is repaired',()=>{
+  const {c,nodes}=fixture();
+  run(c,`SEAM_PLAN={applicable:true,candidates:[{valid:false,reason:'ขอบฐานห่าง 2.0 มม. ต้อง 6.0 มม. — เลื่อนจุด'}]};syncSeamPlacementHelp();`);
+  assert.equal(nodes.get('#seamPlacementHelp').hidden,false);
+  assert.match(nodes.get('#seamPlacementReason').textContent,/2.0.*6.0.*เลื่อนจุด/);
+  run(c,`SEAM_FOCUS={id:'x1',valid:true};SEAM_PREVIEW_RENDERER.issue={point:'x1',message:'กล่องลึก 10 มม. ต้อง 20 มม.'};syncSeamPlacementHelp();`);
+  assert.equal(nodes.get('#seamPlacementReason').textContent,'กล่องลึก 10 มม. ต้อง 20 มม.');
+  assert.equal(run(c,`seamQuickReason('กล่องลึก 10 มม. ต้อง 20 มม.')`),'กล่องลึก 10 มม. ต้อง 20 มม.');
+  assert.equal(run(c,`seamQuickReason('ฐานชนขอบ — เปิด เลือกตำแหน่งเอง')`),'ฐานชนขอบ — เปิด เลือกตำแหน่งเอง');
+  run(c,`SEAM_PREVIEW_RENDERER.issue=null;SEAM_PLAN.candidates=[{valid:true}];syncSeamPlacementHelp();`);
+  assert.equal(nodes.get('#seamPlacementHelp').hidden,true);
+  assert.equal(nodes.get('#seamPlacementReason').textContent,'');
+});
